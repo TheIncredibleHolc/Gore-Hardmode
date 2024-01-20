@@ -1,0 +1,17 @@
+extern const GeoLayout ring_geo[];
+extern Lights1 ring_Star_Sides_lights;
+extern Lights1 ring_Bricks_lights;
+extern u8 ring_dark_stars_ci8[];
+extern u8 ring_dark_stars_pal_rgba16[];
+extern u8 ring_dark_bricks_ci8[];
+extern u8 ring_dark_bricks_pal_rgba16[];
+extern Vtx ring_Cylinder_mesh_layer_1_vtx_0[64];
+extern Gfx ring_Cylinder_mesh_layer_1_tri_0[];
+extern Vtx ring_Cylinder_mesh_layer_1_vtx_1[38];
+extern Gfx ring_Cylinder_mesh_layer_1_tri_1[];
+extern Gfx mat_ring_Star_Sides[];
+extern Gfx mat_revert_ring_Star_Sides[];
+extern Gfx mat_ring_Bricks[];
+extern Gfx mat_revert_ring_Bricks[];
+extern Gfx ring_Cylinder_mesh_layer_1[];
+extern Gfx ring_material_revert_render_settings[];
