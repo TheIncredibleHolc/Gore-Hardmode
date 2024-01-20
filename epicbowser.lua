@@ -8,8 +8,6 @@ function testing(m)
     end
 end
 
-local texWhite = get_texture_info('white')
-
 ------------------------------------------------------------------------------
 function custom_bowser(obj)
 	local m = gMarioStates[0]
@@ -94,14 +92,12 @@ function grand_star_init(o)
     spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, 0, 0, 0, nil)
     set_override_envfx(ENVFX_LAVA_BUBBLES)
     --spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, o.oPosX, 250, o.oPosY, nil) 
-    djui_hud_set_resolution(RESOLUTION_N64)
-	djui_hud_set_color(255, 255, 255, 255)
-	djui_hud_render_texture(texWhite, 0, 0, 1, 1)
     spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, m.pos.y - 9500, 0, nil)
     spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, m.pos.y + 500, 0, nil)
     spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, nil)
-    spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, m.pos.y - 300, 0, function(o)
-        obj_scale(o, 0.6)
+    spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, m.pos.y - 300, 0, function(obj)
+        obj_scale(obj, 0.6)
+        obj.header.gfx.skipInViewCheck = true
     end)
 
     --[[
@@ -117,8 +113,7 @@ function grand_star_init(o)
     ]]
 
 
-    audioSample = audio_sample_load("thunder.mp3")
-    audio_sample_play(audioSample, gMarioStates[0].pos, 1);
+    local_play(sThunder, gMarioStates[0].marioObj.header.gfx.cameraToObject, 1);
     audio_stream_play(boss, true, 1)
 
     o.hitboxRadius = 160
@@ -152,19 +147,8 @@ function act_intro(o)
             cur_obj_play_sound_2(SOUND_GENERAL_GRAND_STAR)
             o.oForwardVel = 0
             o.oVelY = 60
-        elseif o.oTimer == 2 then
-            djui_hud_set_color(255, 255, 255, 200)
-
-        elseif o.oTimer == 3 then
-            djui_hud_set_color(255, 255, 255, 120)
-
-        elseif o.oTimer == 4 then
-            djui_hud_set_color(255, 255, 255, 60)
-
-        elseif o.oTimer == 5 then
-            djui_hud_set_color(255, 255, 255, 0)
-
-
+            play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 5, 255, 255, 255)
+            play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 5, 0, 0, 0)
         elseif o.oTimer < 30 then
             -- During the first second of the intro, make the grand star spin
             o.oFaceAngleYaw = o.oFaceAngleYaw + 0x1000  -- Adjust the rotation speed as needed
@@ -379,7 +363,9 @@ end
 
 function minion_act_shockwave(o)
     if o.oAction == STAR_MINION_ACT_SHOCKWAVE then
-        spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, nil)
+        if o.oTimer == 1 then
+            spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, nil)
+        end
         obj_move(o)
         o.oFaceAngleYaw = o.oFaceAngleYaw + 0x800
         if o.oTimer <= 10 then
