@@ -205,7 +205,7 @@ end
 function bhv_custom_kingwhomp(obj) -- makes king whomp give you quicksand
 	local m = nearest_mario_state_to_object(obj)
 	if obj.oHealth == 3 then
-		obj_scale(obj, .2)
+		cur_obj_scale(.2)
 	end
 	if obj.oHealth == 2 then
 		whompblood = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, obj.oPosX, obj.oPosY + 1, obj.oPosZ, nil)
@@ -231,34 +231,32 @@ function bhv_custom_kingbobomb(obj) -- Funny boss battle
 		--obj.oHealth = obj.oHealth - 1
 	end
 	if obj.oHealth == 6 then
-		obj_scale(obj, 1.6)
+		cur_obj_scale(1.6)
 		gBehaviorValues.KingBobombFVel = 3
 		gBehaviorValues.KingBobombYawVel = 160
 	elseif obj.oHealth == 5 then
-		obj_scale(obj, 1.1)
+		cur_obj_scale(1.1)
 		gBehaviorValues.KingBobombFVel = 6.0
 		gBehaviorValues.KingBobombYawVel = 320
 	elseif obj.oHealth == 4 then
-		obj_scale(obj, .7)
+		cur_obj_scale(.7)
 		gBehaviorValues.KingBobombFVel = 12.0
 		gBehaviorValues.KingBobombYawVel = 640
 	elseif obj.oHealth == 3 then
-		obj_scale(obj, .5)
+		cur_obj_scale(.5)
 		gBehaviorValues.KingBobombFVel = 24.0
 		gBehaviorValues.KingBobombYawVel = 1280
 	elseif obj.oHealth == 2 then
-		obj_scale(obj, .25)
+		cur_obj_scale(.25)
 		gBehaviorValues.KingBobombFVel = 26
 		gBehaviorValues.KingBobombYawVel = 1400
-	end
-	if obj.oHealth == 1 then
-		bobsplat = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, obj.oPosX, obj.oPosY + 1, obj.oPosZ, nil)
-		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
+	elseif obj.oHealth == 1 then
+		local bobsplat = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, obj.oPosX, obj.oPosY + 1, obj.oPosZ, nil)
 		obj_scale(bobsplat, .4)
 		local_play(sSplatter, m.pos, 1)
-		obj_mark_for_deletion(obj)
-		stop_background_music(SEQ_EVENT_BOSS)
-		spawn_default_star(m.pos.x, m.pos.y + 200, m.pos.z)
+		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
+		obj.oAction = 8
+		obj.oHealth = 0
 	end
 end
 
@@ -330,13 +328,10 @@ function bhv_custom_bully(obj)
 	obj.oHomeX = m.pos.x
 	obj.oHomeY = m.pos.y
 	obj.oHomeZ = m.pos.z
-	if (obj.oAction == BULLY_ACT_CHASE_MARIO) then
+	if obj.oAction == BULLY_ACT_CHASE_MARIO or
+	   obj.oAction == BULLY_ACT_PATROL then
 		obj.oForwardVel = 30
 	end
-	if (obj.oAction == BULLY_ACT_PATROL) then
-		obj.oForwardVel = 30
-	end
-
 end
 
 function bhv_custom_explosion(obj) -- replaces generic explosions with NUKES! (Bigger radius, bigger explosion, louder)
@@ -425,7 +420,7 @@ end
 
 --Whomps jump FAR now!
 function bhv_custom_whomp(obj)
-	obj_scale(obj, 2)
+	cur_obj_scale(2)
 	--obj.oForwardVel = 9.0
 	obj.oTimer = 101
 
