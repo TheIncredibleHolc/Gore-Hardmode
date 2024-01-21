@@ -230,9 +230,8 @@ function bhv_custom_kingbobomb(obj) -- Funny boss battle
 	if obj.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
 		--obj.oHealth = obj.oHealth - 1
 	end
-	print(obj.oHealth)
 	if obj.oHealth == 6 then
-		obj_scale(obj, 3)
+		obj_scale(obj, 1.6)
 		gBehaviorValues.KingBobombFVel = 3
 		gBehaviorValues.KingBobombYawVel = 160
 	elseif obj.oHealth == 5 then
