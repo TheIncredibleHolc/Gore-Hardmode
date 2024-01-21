@@ -45,6 +45,7 @@ GRAND_STAR_ACT_FALLING_MINIONS = 3
 GRAND_STAR_ACT_VULNERABLE = 4
 GRAND_STAR_SUB_ACT_NONE = 0
 GRAND_STAR_SUB_ACT_SUMMON_MINIONS = 1
+GRAND_STAR_ATTACK_SELECT = 6
 numBombMinions = 5
 
 STAR_MINION_ACT_SHOCKWAVE = 0
@@ -246,10 +247,32 @@ function sub_act_summon_minions(o)
                 end)
             end
         else
-            o.oSubAction = GRAND_STAR_SUB_ACT_NONE
+            o.oSubAction = GRAND_STAR_ATTACK_SELECT --This is the last part of where we've left off. This WAS GRAND_STAR_SUB_ACT_NONE but I'm going to test something by making a function to randomly select the stars next attack..
         end
     end
 end
+
+function GRAND_STAR_ATTACK_SELECT (o)
+    if o.oSubAction == GRAND_STAR_ATTACK_SELECT then
+        local attack = math.random(1,2)
+        if attack == 1 then
+            o.oAction = GRAND_STAR_ACT_SHOCKWAVE
+        end
+        if attack == 2 then
+            o.oAction = GRAND_STAR_ACT_FALLING_MINIONS
+        end
+        if attack == 3 then
+            
+        end
+        
+    
+    end
+end
+
+
+
+
+
 
 -- Function for the grand star to spawn falling minions in a circle formation
 function act_falling_minions(o, m)
@@ -471,7 +494,7 @@ function small_explosion_loop(o)
     obj_mark_for_deletion(o)
 end
 
-
+---------------------------------Environment-----------------------------------------
 
 function skybox1_init (o)
     o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
@@ -536,6 +559,9 @@ function lightning_loop(obj)
         obj_mark_for_deletion(obj)
     end
 end
+-----------------------------------------------------------------------------------
+
+
 
 -- Hook behaviors for Grand Star and Star Minions
 hook_event(HOOK_MARIO_UPDATE, testing)
