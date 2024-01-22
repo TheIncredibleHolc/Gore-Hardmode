@@ -43,9 +43,10 @@ GRAND_STAR_ACT_GO_HOME = 1
 GRAND_STAR_ACT_SHOCKWAVE = 2
 GRAND_STAR_ACT_FALLING_MINIONS = 3
 GRAND_STAR_ACT_VULNERABLE = 4
+
 GRAND_STAR_SUB_ACT_NONE = 0
 GRAND_STAR_SUB_ACT_SUMMON_MINIONS = 1
-GRAND_STAR_ATTACK_SELECT = 6
+GRAND_STAR_SUB_ACT_ATTACK_SELECT = 2
 numBombMinions = 5
 
 STAR_MINION_ACT_SHOCKWAVE = 0
@@ -85,9 +86,9 @@ function grand_star_init(o)
     obj_set_secondary_camera_focus()
     gCutsceneFocus = o
     gSecondCameraFocus = o
-     
-    
-    
+
+
+
     o.oFlags = (OBJ_FLAG_MOVE_XZ_USING_FVEL | OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
     o.oInteractType = INTERACT_DAMAGE
     spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, 0, 0, 0, nil)
@@ -165,7 +166,6 @@ end
 
 -- Function to handle jump behavior
 function act_jump_towards_mario(o, m)
-    local nearestM = nearest_mario_state_to_object(o)
     if o.oAction == GRAND_STAR_ACT_SHOCKWAVE then
         obj_move(o)
         o.oForwardVel = 15
@@ -175,7 +175,7 @@ function act_jump_towards_mario(o, m)
         if o.oTimer <= 10 then
             o.oVelY = 100
             cur_obj_play_sound_2(SOUND_OBJ_KING_BOBOMB_JUMP)
-            obj_turn_toward_object(o, nearestM.marioObj, 16, 12384)
+            obj_turn_toward_object(o, m.marioObj, 16, 12384)
         end
 
         if o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then
@@ -247,19 +247,21 @@ function sub_act_summon_minions(o)
                 end)
             end
         else
-            o.oSubAction = GRAND_STAR_ATTACK_SELECT --This is the last part of where we've left off. This WAS GRAND_STAR_SUB_ACT_NONE but I'm going to test something by making a function to randomly select the stars next attack..
+            o.oSubAction = GRAND_STAR_SUB_ACT_ATTACK_SELECT --This is the last part of where we've left off. This WAS GRAND_STAR_SUB_ACT_NONE but I'm going to test something by making a function to randomly select the stars next attack..
         end
     end
 end
 
-function GRAND_STAR_ATTACK_SELECT (o)
-    if o.oSubAction == GRAND_STAR_ATTACK_SELECT then
-        local attack = math.random(1,2)
+function sub_act_attack_select(o)
+    if o.oSubAction == GRAND_STAR_SUB_ACT_ATTACK_SELECT then
+        djui_chat_message_create("selecting...")
+
+        local attack = math.random(2)
         if attack == 1 then
-            o.oAction = GRAND_STAR_ACT_SHOCKWAVE
+            obj_change_action(o, GRAND_STAR_ACT_SHOCKWAVE)
         end
         if attack == 2 then
-            o.oAction = GRAND_STAR_ACT_FALLING_MINIONS
+            obj_change_action(o, GRAND_STAR_ACT_FALLING_MINIONS)
         end
         if attack == 3 then
             
@@ -355,6 +357,7 @@ function grand_star_loop(o)
     act_jump_towards_mario(o, m)
     act_falling_minions(o, m)
     sub_act_summon_minions(o)
+    sub_act_attack_select(o)
     --djui_chat_message_create(tostring(o.oAngleToHome))
     --djui_chat_message_create(tostring(o.oAction))
     --djui_chat_message_create(tostring(o.oTimer))
