@@ -141,6 +141,7 @@ E_MODEL_LIGHTNING = smlua_model_util_get_id("lightning_geo")
 E_MODEL_LIGHTNING2 = smlua_model_util_get_id("lightning2_geo")
 E_MODEL_LIGHTNING3 = smlua_model_util_get_id("lightning3_geo")
 E_MODEL_RING = smlua_model_util_get_id("ring_geo")
+E_MODEL_GSCHARGE = smlua_model_util_get_id("gscharge_geo")
 
 gStateExtras = {}
 for i = 0, MAX_PLAYERS-1 do
@@ -1583,7 +1584,6 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 		local_play(sBoneBreak, victim.pos, 1)
 		set_mario_action(victim, ACT_NECKSNAP, 0)
 	end
-
 
 
 

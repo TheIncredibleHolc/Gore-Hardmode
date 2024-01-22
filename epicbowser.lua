@@ -46,6 +46,7 @@ GRAND_STAR_ACT_VULNERABLE = 4
 GRAND_STAR_SUB_ACT_NONE = 0
 GRAND_STAR_SUB_ACT_SUMMON_MINIONS = 1
 GRAND_STAR_ATTACK_SELECT = 6
+GRAND_STAR_SHOOTING = 7
 numBombMinions = 5
 
 STAR_MINION_ACT_SHOCKWAVE = 0
@@ -96,10 +97,10 @@ function grand_star_init(o)
     spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, m.pos.y - 9500, 0, nil)
     spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, m.pos.y + 500, 0, nil)
     spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, nil)
-    spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, m.pos.y - 300, 0, function(obj)
-        obj_scale(obj, 0.6)
-        obj.header.gfx.skipInViewCheck = true
-    end)
+    --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, m.pos.y - 300, 0, function(obj)
+    --    obj_scale(obj, 0.6)
+    --    obj.header.gfx.skipInViewCheck = true
+    --end)
 
     --[[
     spawn_non_sync_object(id_bhvStaticObject, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 200, o.oPosZ, function (obj)
@@ -247,14 +248,61 @@ function sub_act_summon_minions(o)
                 end)
             end
         else
-            o.oSubAction = GRAND_STAR_ATTACK_SELECT --This is the last part of where we've left off. This WAS GRAND_STAR_SUB_ACT_NONE but I'm going to test something by making a function to randomly select the stars next attack..
+            o.oSubAction = GRAND_STAR_SUB_ACT_NONE --This is the last part of where we've left off. This WAS GRAND_STAR_SUB_ACT_NONE but I'm going to test something by making a function to randomly select the stars next attack..
+            --o.oAction = GRAND_STAR_ATTACK_SELECT
+            o.oTimer = 0
+            o.oAction = GRAND_STAR_SHOOTING
         end
     end
 end
 
+
+
+function act_shooting_attack (o)
+    m = nearest_mario_state_to_object(o)
+    o.oAction = GRAND_STAR_SHOOTING
+    if o.oAction == GRAND_STAR_SHOOTING then
+
+        local star_angletomario = obj_angle_to_object(o, m.marioObj)
+        local star_pitchtomario = obj_pitch_to_object(o, m.marioObj)
+        o.oFaceAngleYaw = star_angletomario
+        o.oFaceAnglePitch = star_pitchtomario
+    
+        if o.oTimer == 90 then
+            spawn_non_sync_object(id_bhvGscharge, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, nil)    
+        end
+
+        if o.oTimer <= 150 and o.oTimer > 50 then --GS starts spinning to "charge" his attack. 
+            o.oFaceAngleRoll = o.oFaceAngleRoll + 50 * o.oTimer
+        elseif o.oTimer > 150 then
+            o.oFaceAngleRoll = o.oFaceAngleRoll + 8000
+        end
+
+        if o.oTimer == 151 then
+            spawn_non_sync_object(id_bhvSnufitBalls, E_MODEL_BOWLING_BALL, o.oPosX, o.oPosY, o.oPosZ, function (bullet)
+            bullet.oFaceAnglePitch = star_pitchtomario
+            bullet.oFaceAngleYaw = star_angletomario
+            end)
+        end
+
+    
+        
+    
+    
+    
+    end
+
+
+
+end
+
+
+
+
+
 function GRAND_STAR_ATTACK_SELECT (o)
-    if o.oSubAction == GRAND_STAR_ATTACK_SELECT then
-        local attack = math.random(1,2)
+    if o.oAction == GRAND_STAR_ATTACK_SELECT then
+        local attack = math.random(3,3)
         if attack == 1 then
             o.oAction = GRAND_STAR_ACT_SHOCKWAVE
         end
@@ -262,15 +310,12 @@ function GRAND_STAR_ATTACK_SELECT (o)
             o.oAction = GRAND_STAR_ACT_FALLING_MINIONS
         end
         if attack == 3 then
-            
+            o.oAction = GRAND_STAR_SHOOTING
         end
         
     
     end
 end
-
-
-
 
 
 
@@ -350,11 +395,18 @@ end
 function grand_star_loop(o)
     local m = nearest_mario_state_to_object(o)
     local p = nearest_player_to_object(o)
+
+    act_shooting_attack(o)
+    --[[
+    act_go_home(o) 
+    act_intro(o) --Spawns GS, starts the fight.
+    act_jump_towards_mario(o, m) --The star lunges at Mario and leaves shockwaves
+    act_falling_minions(o, m) --The GS summons jumping minions that leave shockwaves
+    sub_act_summon_minions(o) --The GS summons explosive minions
     act_go_home(o)
-    act_intro(o)
-    act_jump_towards_mario(o, m)
-    act_falling_minions(o, m)
-    sub_act_summon_minions(o)
+    act_shooting_attack(o)
+    ]]
+
     --djui_chat_message_create(tostring(o.oAngleToHome))
     --djui_chat_message_create(tostring(o.oAction))
     --djui_chat_message_create(tostring(o.oTimer))
@@ -559,8 +611,41 @@ function lightning_loop(obj)
         obj_mark_for_deletion(obj)
     end
 end
------------------------------------------------------------------------------------
+------------------------------ STAR EFFECTS -----------------------------------------
 
+function gscharge_init(o)
+end
+
+function gscharge_loop(o)
+    local obj = obj_get_nearest_object_with_behavior_id(o, id_bhvGrandStar)
+
+    if obj ~= nil then
+        
+        local star_angletomario = obj_angle_to_object(o, m.marioObj)
+        local star_pitchtomario = obj_pitch_to_object(o, m.marioObj)
+        --local gschargescale = 8
+        obj_scale(o, 8)
+        
+        o.oPosX = obj.oPosX
+        o.oPosY = obj.oPosY
+        o.oPosZ = obj.oPosZ
+        o.oFaceAnglePitch = star_pitchtomario
+        o.oFaceAngleYaw = star_angletomario
+        
+        if o.oTimer <= 60 then
+            --gschargescale = gschargescale - 0.05
+        end
+        if o.oTimer == 61 then
+            spawn_non_sync_object(id_bhvWhitePuffExplosion, E_MODEL_WHITE_PUFF, o.oPosX, o.oPosY, o.oPosZ, nil)
+            --obj_mark_for_deletion(o)
+        end
+    else
+        obj_mark_for_deletion(o)
+        local_play(sSplatter, m.pos, 1)
+    end
+
+end
+-----------------------------------------------------------------------------------
 
 
 -- Hook behaviors for Grand Star and Star Minions
@@ -571,3 +656,4 @@ id_bhvSmallExplosion = hook_behavior(nil, OBJ_LIST_LEVEL, true, small_explosion_
 id_bhvSkybox1 = hook_behavior(nil, OBJ_LIST_LEVEL, true, skybox1_init, skybox1_loop, "bhvSkybox1")
 id_bhvSkybox2 = hook_behavior(nil, OBJ_LIST_LEVEL, true, skybox2_init, skybox2_loop, "bhvSkybox1")
 id_bhvLightning = hook_behavior(nil, OBJ_LIST_GENACTOR, false, lightning_init, lightning_loop, "bhvLightning")
+id_bhvGscharge = hook_behavior(nil, OBJ_LIST_GENACTOR, false, gscharge_init, gscharge_loop, "bhvGscharge")
