@@ -162,7 +162,7 @@ for i = 0, MAX_PLAYERS-1 do
 		penguinholding = 0,
 		penguintimer = 0,
 		objtimer = 0,
-		
+
 		ishigh = 0,
 		outsidegastimer = 60,
 		highdeathtimer = 0,
@@ -286,12 +286,15 @@ function bhv_custom_boulder(obj) --Locks onto mario and homes-in on him.
 	obj_turn_toward_object(obj, m, 16, 0x800)
 end
 
+---@param bowsbomb Object
 function bhv_custom_bowserbomb(bowsbomb) --Oscillates up and down
 	local m = nearest_mario_state_to_object(bowsbomb)
 	if bowsbomb.oTimer >= 10 then
-		bowsbomb.oPosY = math.random(-1500, 1500)
+		bowsbomb.oHomeY = math.random(-1500, 1500)
 		bowsbomb.oTimer = 0
 	end
+	bowsbomb.oVelY = bowsbomb.oVelY + (bowsbomb.oHomeY - bowsbomb.oPosY) * .02
+	object_step()
 end
 
 function bhv_custom_bouncing_fireball(obj) --Locks onto mario and homes-in on him.
@@ -395,7 +398,7 @@ end
 
 function bhv_custom_thwomp(obj)
 	local m = nearest_player_to_object(obj)
-	if lateral_dist_between_objects(m, obj) < 150 and (floodenabled ~= true) then --Without disabling, TTC is nearly unbeatable thanks to the thwomp at the top.
+	if lateral_dist_between_objects(m, obj) < 150 and not floodenabled then --Without disabling, TTC is nearly unbeatable thanks to the thwomp at the top.
 		obj.oPosY = m.oPosY
 	end
 end
@@ -579,7 +582,7 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 		end
 	end
 	if (s.splattimer) == 80 then
-		if (floodenabled ~= true) then
+		if not floodenabled then
 		level_trigger_warp(m, WARP_OP_DEATH) --Official Death Warp
 		end
 	end
@@ -898,7 +901,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 	if (s.snowdeathtimer) == 60 then
 		if ia(m) then gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1 end
-		if (floodenabled ~= true) then
+		if not floodenabled then
 			level_trigger_warp(m, WARP_OP_DEATH)
 		end
 		s.snowdeathtimer = 0
@@ -1229,7 +1232,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	
 	-- Custom shocking amp Kill
 	if obj_has_behavior_id(o, id_bhvCirclingAmp) ~= 0 and (m.hurtCounter > 0) then
-		if (floodenabled ~= true) then
+		if not floodenabled then
 			--m.health = 120 
 		end
 	end
@@ -1281,7 +1284,7 @@ function before_mario_action(m, action)
 		m.health = 120
 		if ia(m) then gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1 end
 		if not s.isdead then
-			if (floodenabled ~= true) then
+			if not floodenabled then
 				print("deathed")
 				level_trigger_warp(m, WARP_OP_DEATH)
 				
@@ -1308,7 +1311,7 @@ function before_mario_action(m, action)
 	if (action == ACT_FALLING_EXIT_AIRBORNE) then
 		m.health = 120
 		if ia(m) then gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1 end
-		if (floodenabled ~= true) then
+		if not floodenabled then
 			level_trigger_warp(m, WARP_OP_DEATH)
 		end
 		return ACT_GONE

@@ -43,6 +43,7 @@ GRAND_STAR_ACT_GO_HOME = 1
 GRAND_STAR_ACT_SHOCKWAVE = 2
 GRAND_STAR_ACT_FALLING_MINIONS = 3
 GRAND_STAR_ACT_VULNERABLE = 4
+
 GRAND_STAR_SUB_ACT_NONE = 0
 GRAND_STAR_SUB_ACT_SUMMON_MINIONS = 1
 GRAND_STAR_ATTACK_SELECT = 6
@@ -86,9 +87,9 @@ function grand_star_init(o)
     obj_set_secondary_camera_focus()
     gCutsceneFocus = o
     gSecondCameraFocus = o
-     
-    
-    
+
+
+
     o.oFlags = (OBJ_FLAG_MOVE_XZ_USING_FVEL | OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
     o.oInteractType = INTERACT_DAMAGE
     spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, 0, 0, 0, nil)
@@ -166,7 +167,6 @@ end
 
 -- Function to handle jump behavior
 function act_jump_towards_mario(o, m)
-    local nearestM = nearest_mario_state_to_object(o)
     if o.oAction == GRAND_STAR_ACT_SHOCKWAVE then
         obj_move(o)
         o.oForwardVel = 15
@@ -176,7 +176,7 @@ function act_jump_towards_mario(o, m)
         if o.oTimer <= 10 then
             o.oVelY = 100
             cur_obj_play_sound_2(SOUND_OBJ_KING_BOBOMB_JUMP)
-            obj_turn_toward_object(o, nearestM.marioObj, 16, 12384)
+            obj_turn_toward_object(o, m.marioObj, 16, 12384)
         end
 
         if o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then
@@ -304,10 +304,10 @@ function GRAND_STAR_ATTACK_SELECT (o)
     if o.oAction == GRAND_STAR_ATTACK_SELECT then
         local attack = math.random(3,3)
         if attack == 1 then
-            o.oAction = GRAND_STAR_ACT_SHOCKWAVE
+            obj_change_action(o, GRAND_STAR_ACT_SHOCKWAVE)
         end
         if attack == 2 then
-            o.oAction = GRAND_STAR_ACT_FALLING_MINIONS
+            obj_change_action(o, GRAND_STAR_ACT_FALLING_MINIONS)
         end
         if attack == 3 then
             o.oAction = GRAND_STAR_SHOOTING
