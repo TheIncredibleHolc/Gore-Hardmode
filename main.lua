@@ -1,22 +1,6 @@
 -- name: GORE / Hard-Mode! 
 -- description: Gore and dismemberment! Made by IncredibleHolc and cooliokid956 (Great Kingdom Official), with additional help from Blocky.cmd and the community!
 
-----------------------------CHANGE LOG----------------------------------
-
---TEST TEST TEST!! REPO TEST!! 
-
---------Recently Added--------
---All goomba 'home' locations are now the closest mario's position.
---Boulders now lock-on to mario and insta-kill.
---Skeeters and scuttlebugs now insta-kill mario on any damage taken.
---Made the "MAAA MAAA" fire scream interruptable if Mario dies or level warps.
---Mario can now "cool off" from being on fire if he jumps into water before death.
---REBALANCED HAZY MAZE CAVE; Gas will rise as soon as mario enters it. Mario can't jump high enough for fresh air anymore.
---Racing penguin is very fast now and will psycologically roast mario to death if mario loses the race.
---Jolly Roger Bay is now Jolly Roger Hell. There's no obtainable stars with the lava lake.
---Bowser Bombs now randomly teleport around their Y-axis.
---Flyguys will now kamakazi themselves at Mario randomly.  
---Mario didn't tie his shows and now trips when approaching the princess.
 
 -------TESTING NOTES AND KNOWN BUGS-------------
 --Bowser minigame spawns multiple Ukiki's if multiple players are around.
@@ -76,9 +60,7 @@ function testing(m)
 		--warp_to_level(2, 1, 1)
 		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
 
-		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, m.pos.y - 100, 0, function(o)
-			obj_scale(o, 0.6)
-		end)
+		spawn_non_sync_object(id_bhvGSBeam, E_MODEL_GSBEAM, m.pos.x, m.pos.y, m.pos.z, nil)
 
 		--spawn_non_sync_object(id_bhvSkybox1, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 0, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, m.pos.x, m.pos.y - 9500, m.pos.z, nil)
@@ -142,6 +124,8 @@ E_MODEL_LIGHTNING2 = smlua_model_util_get_id("lightning2_geo")
 E_MODEL_LIGHTNING3 = smlua_model_util_get_id("lightning3_geo")
 E_MODEL_RING = smlua_model_util_get_id("ring_geo")
 E_MODEL_GSCHARGE = smlua_model_util_get_id("gscharge_geo")
+E_MODEL_GSBEAM = smlua_model_util_get_id("gsbeam_geo")
+COL_GSBEAM = smlua_collision_util_get("gsbeamcol_collision")
 
 gStateExtras = {}
 for i = 0, MAX_PLAYERS-1 do

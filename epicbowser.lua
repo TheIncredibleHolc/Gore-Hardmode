@@ -301,17 +301,33 @@ function act_shooting_attack (o)
             gscharge.oFaceAnglePitch = star_pitchtomario
         end
 
+        if o.oTimer == 135 then
+            local_play(sGsbeam, gsvec, 1)
+        end
+
         if o.oTimer == 147 then
             obj_mark_for_deletion(gscharge)
         end
 
         if o.oTimer == 151 then
-            spawn_non_sync_object(id_bhvSnufitBalls, E_MODEL_BOWLING_BALL, o.oPosX, o.oPosY, o.oPosZ, function (bullet)
-            bullet.oFaceAnglePitch = star_pitchtomario
-            bullet.oFaceAngleYaw = star_angletomario
+            GSBeam = spawn_non_sync_object(id_bhvGSBeam, E_MODEL_GSBEAM, o.oPosX, o.oPosY, o.oPosZ, function (beam)
+            beam.oFaceAnglePitch = star_pitchtomario
+            beam.oFaceAngleYaw = star_angletomario
             end)
+
         end
 
+        if o.oTimer >= 152 and o.oTimer < 250 then
+            GSBeam.oPosX = o.oPosX
+            GSBeam.oPosY = o.oPosY
+            GSBeam.oPosZ = o.oPosZ
+            GSBeam.oFaceAngleYaw = star_angletomario
+            GSBeam.oFaceAnglePitch = star_pitchtomario
+        end
+        
+        if o.oTimer == 250 then
+            obj_mark_for_deletion(GSBeam)
+        end
     
         
     
@@ -641,6 +657,20 @@ end
 
 -----------------------------------------------------------------------------------
 
+function gsbeam_init (o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.collisionData = COL_GSBEAM
+	o.oCollisionDistance = 10000
+    o.header.gfx.skipInViewCheck = true
+end
+
+function gsbeam_loop (o)
+    m = nearest_mario_state_to_object(o)
+    o.oFaceAngleRoll = o.oFaceAngleRoll + 8000
+    if obj_check_if_collided_with_object(o, m.marioObj) ~= 0 then
+        m.squishTimer = 50
+    end
+end
 
 -- Hook behaviors for Grand Star and Star Minions
 hook_event(HOOK_MARIO_UPDATE, testing)
@@ -650,3 +680,4 @@ id_bhvSmallExplosion = hook_behavior(nil, OBJ_LIST_LEVEL, true, small_explosion_
 id_bhvSkybox1 = hook_behavior(nil, OBJ_LIST_LEVEL, true, skybox1_init, skybox1_loop, "bhvSkybox1")
 id_bhvSkybox2 = hook_behavior(nil, OBJ_LIST_LEVEL, true, skybox2_init, skybox2_loop, "bhvSkybox1")
 id_bhvLightning = hook_behavior(nil, OBJ_LIST_GENACTOR, false, lightning_init, lightning_loop, "bhvLightning")
+id_bhvGSBeam = hook_behavior(nil, OBJ_LIST_GENACTOR, false, gsbeam_init, gsbeam_loop, "bhvGSBeam")

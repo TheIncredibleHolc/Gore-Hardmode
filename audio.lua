@@ -19,7 +19,9 @@ gSamples = {
 	audio_sample_load("agonymario.mp3"),
 	audio_sample_load("cooloff.mp3"),
 	audio_sample_load("thunder.mp3"),
-	audio_sample_load("gslaser.mp3")
+	audio_sample_load("gslaser.mp3"),
+	audio_sample_load("gsbeam.mp3")
+	
 
 }
 
@@ -40,6 +42,7 @@ sAgonyMario = 14
 sCoolOff = 15
 sThunder = 16
 sGslaser = 17
+sGsbeam = 18
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))
