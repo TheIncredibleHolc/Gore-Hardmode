@@ -262,20 +262,47 @@ function act_shooting_attack (o)
     m = nearest_mario_state_to_object(o)
     o.oAction = GRAND_STAR_SHOOTING
     if o.oAction == GRAND_STAR_SHOOTING then
-
+        djui_popup_create(tostring(o.oTimer), 1)
+        local gsvec = {x=o.oPosX, y=o.oPosY, z=o.oPosZ}
         local star_angletomario = obj_angle_to_object(o, m.marioObj)
         local star_pitchtomario = obj_pitch_to_object(o, m.marioObj)
         o.oFaceAngleYaw = star_angletomario
         o.oFaceAnglePitch = star_pitchtomario
-    
-        if o.oTimer == 90 then
-            spawn_non_sync_object(id_bhvGscharge, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, nil)    
-        end
 
         if o.oTimer <= 150 and o.oTimer > 50 then --GS starts spinning to "charge" his attack. 
             o.oFaceAngleRoll = o.oFaceAngleRoll + 50 * o.oTimer
         elseif o.oTimer > 150 then
             o.oFaceAngleRoll = o.oFaceAngleRoll + 8000
+        end
+
+        if o.oTimer == 60 then
+            local_play(sGslaser, gsvec, 1)
+        end
+
+        if o.oTimer == 90 then
+            gscharge = spawn_non_sync_object(id_bhvStaticObject, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, function(obj)
+                obj.oFaceAngleYaw = star_angletomario
+                obj.oFaceAnglePitch = star_pitchtomario
+            end)
+            gschargescale = 10
+            gscharge.oOpacity = 0
+            obj_scale(gscharge, gschargescale)
+        end
+        if o.oTimer >= 91 and o.oTimer < 146 then
+            if gscharge.oOpacity <= 250 then
+                gscharge.oOpacity = gscharge.oOpacity + 1
+            end
+            gschargescale = gschargescale - 0.2
+            obj_scale(gscharge, gschargescale)
+            gscharge.oPosX = o.oPosX
+            gscharge.oPosY = o.oPosY
+            gscharge.oPosZ = o.oPosZ
+            gscharge.oFaceAngleYaw = star_angletomario
+            gscharge.oFaceAnglePitch = star_pitchtomario
+        end
+
+        if o.oTimer == 147 then
+            obj_mark_for_deletion(gscharge)
         end
 
         if o.oTimer == 151 then
@@ -620,17 +647,19 @@ function gscharge_loop(o)
     local obj = obj_get_nearest_object_with_behavior_id(o, id_bhvGrandStar)
 
     if obj ~= nil then
-        
+
         local star_angletomario = obj_angle_to_object(o, m.marioObj)
         local star_pitchtomario = obj_pitch_to_object(o, m.marioObj)
+        --o.oPosX = o.oParentRelativePosX
+        o.oPosX = o.oParentObj.oPosX
+        o.oPosY = o.oParentRelativePosY
+        o.oPosZ = o.oParentRelativePosZ
+        o.oFaceAnglePitch = star_pitchtomario
+        o.oFaceAngleYaw = star_angletomario
         --local gschargescale = 8
         obj_scale(o, 8)
         
-        o.oPosX = obj.oPosX
-        o.oPosY = obj.oPosY
-        o.oPosZ = obj.oPosZ
-        o.oFaceAnglePitch = star_pitchtomario
-        o.oFaceAngleYaw = star_angletomario
+
         
         if o.oTimer <= 60 then
             --gschargescale = gschargescale - 0.05
@@ -641,7 +670,7 @@ function gscharge_loop(o)
         end
     else
         obj_mark_for_deletion(o)
-        local_play(sSplatter, m.pos, 1)
+        local_play(sSplatter, m.pos, 1) --literally just here to alert me if the Grand_Star isn't detected. Will delete this before release. 
     end
 
 end
