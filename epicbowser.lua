@@ -98,10 +98,10 @@ function grand_star_init(o)
     spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, m.pos.y - 9500, 0, nil)
     spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, m.pos.y + 500, 0, nil)
     spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, nil)
-    --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, m.pos.y - 300, 0, function(obj)
-    --    obj_scale(obj, 0.6)
-    --    obj.header.gfx.skipInViewCheck = true
-    --end)
+    spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, m.pos.y - 300, 0, function(obj)
+        obj_scale(obj, 0.6)
+        obj.header.gfx.skipInViewCheck = true
+    end)
 
     --[[
     spawn_non_sync_object(id_bhvStaticObject, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 200, o.oPosZ, function (obj)
@@ -250,8 +250,7 @@ function sub_act_summon_minions(o)
         else
             o.oSubAction = GRAND_STAR_SUB_ACT_NONE --This is the last part of where we've left off. This WAS GRAND_STAR_SUB_ACT_NONE but I'm going to test something by making a function to randomly select the stars next attack..
             --o.oAction = GRAND_STAR_ATTACK_SELECT
-            o.oTimer = 0
-            o.oAction = GRAND_STAR_SHOOTING
+            --o.oTimer = 0
         end
     end
 end
@@ -260,7 +259,6 @@ end
 
 function act_shooting_attack (o)
     m = nearest_mario_state_to_object(o)
-    o.oAction = GRAND_STAR_SHOOTING
     if o.oAction == GRAND_STAR_SHOOTING then
         -- djui_popup_create(tostring(o.oTimer), 1)
         local gsvec = {x=o.oPosX, y=o.oPosY, z=o.oPosZ}
@@ -319,6 +317,7 @@ function act_shooting_attack (o)
         end
 
         if o.oTimer >= 152 and o.oTimer < 250 then
+            o.oForwardVel = -15
             GSBeam.oPosX = o.oPosX
             GSBeam.oPosY = o.oPosY
             GSBeam.oPosZ = o.oPosZ
@@ -327,6 +326,7 @@ function act_shooting_attack (o)
         end
         
         if o.oTimer == 250 then
+            o.oForwardVel = 0
             obj_mark_for_deletion(GSBeam)
         end
     
@@ -342,7 +342,7 @@ end
 
 
 
-
+--[[
 
 function GRAND_STAR_ATTACK_SELECT (o)
     if o.oAction == GRAND_STAR_ATTACK_SELECT then
@@ -360,7 +360,7 @@ function GRAND_STAR_ATTACK_SELECT (o)
     
     end
 end
-
+]]
 
 
 -- Function for the grand star to spawn falling minions in a circle formation
@@ -415,7 +415,7 @@ function act_falling_minions(o, m)
                 o.oTimer = 0
                 o.oVelY = 0
             else
-                obj_change_action(o, GRAND_STAR_ACT_VULNERABLE)
+                --obj_change_action(o, GRAND_STAR_ACT_VULNERABLE)
             end
         end
     end
@@ -440,8 +440,8 @@ function grand_star_loop(o)
     local m = nearest_mario_state_to_object(o)
     local p = nearest_player_to_object(o)
 
-    act_shooting_attack(o)
-    --[[
+    --act_shooting_attack(o)
+
     act_go_home(o) 
     act_intro(o) --Spawns GS, starts the fight.
     act_jump_towards_mario(o, m) --The star lunges at Mario and leaves shockwaves
@@ -449,7 +449,7 @@ function grand_star_loop(o)
     sub_act_summon_minions(o) --The GS summons explosive minions
     act_go_home(o)
     act_shooting_attack(o)
-    ]]
+
 
     --djui_chat_message_create(tostring(o.oAngleToHome))
     --djui_chat_message_create(tostring(o.oAction))
@@ -555,7 +555,7 @@ function minion_act_falling(o)
             end
 
             if o.oTimer >= 85 and o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then
-                obj_get_first_with_behavior_id(id_bhvGrandStar).oAction = GRAND_STAR_ACT_VULNERABLE
+                obj_get_first_with_behavior_id(id_bhvGrandStar).oAction = GRAND_STAR_SHOOTING
                 obj_mark_for_deletion(o)
                 explode = true
             end
