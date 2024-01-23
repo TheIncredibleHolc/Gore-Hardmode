@@ -398,14 +398,8 @@ end
 
 function bhv_custom_thwomp(obj)
 	local m = nearest_player_to_object(obj)
-	if lateral_dist_between_objects(m, obj) < 150 and not floodenabled then --Without disabling, TTC is nearly unbeatable thanks to the thwomp at the top.
-		obj.oPosY = m.oPosY
-	end
-end
-
-function bhv_custom_thwomp2(obj)
-	local m = nearest_player_to_object(obj)
-	if lateral_dist_between_objects(m, obj) < 150 then
+	local n = gNetworkPlayers[0]
+	if lateral_dist_between_objects(m, obj) < 150 and n.currLevelNum ~= LEVEL_TTC then --TTC is excluded for flood as its nearly unbeatable. Giving the player mercy by turning it off in regular game mode too.
 		obj.oPosY = m.oPosY
 	end
 end
@@ -1710,7 +1704,7 @@ hook_behavior(id_bhvWhompKingBoss, OBJ_LIST_SURFACE, false, nil, bhv_custom_king
 hook_behavior(id_bhvKingBobomb, OBJ_LIST_GENACTOR, false, nil, bhv_custom_kingbobomb)
 hook_behavior(id_bhvSmallWhomp, OBJ_LIST_SURFACE, false, nil, bhv_custom_whomp)
 hook_behavior(id_bhvThwomp, OBJ_LIST_SURFACE, false, nil, bhv_custom_thwomp)
-hook_behavior(id_bhvThwomp2, OBJ_LIST_SURFACE, false, nil, bhv_custom_thwomp2)
+hook_behavior(id_bhvThwomp2, OBJ_LIST_SURFACE, false, nil, bhv_custom_thwomp)
 hook_behavior(id_bhvPitBowlingBall, OBJ_LIST_GENACTOR, false, nil, bhv_custom_pitbowlball)
 hook_behavior(id_bhvBowlingBall, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bowlball)
 hook_behavior(id_bhvBobBowlingBallSpawner, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bowlballspawner)
