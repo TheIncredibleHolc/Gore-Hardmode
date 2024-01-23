@@ -638,42 +638,7 @@ function lightning_loop(obj)
         obj_mark_for_deletion(obj)
     end
 end
------------------------------- STAR EFFECTS -----------------------------------------
 
-function gscharge_init(o)
-end
-
-function gscharge_loop(o)
-    local obj = obj_get_nearest_object_with_behavior_id(o, id_bhvGrandStar)
-
-    if obj ~= nil then
-
-        local star_angletomario = obj_angle_to_object(o, m.marioObj)
-        local star_pitchtomario = obj_pitch_to_object(o, m.marioObj)
-        --o.oPosX = o.oParentRelativePosX
-        o.oPosX = o.oParentObj.oPosX
-        o.oPosY = o.oParentRelativePosY
-        o.oPosZ = o.oParentRelativePosZ
-        o.oFaceAnglePitch = star_pitchtomario
-        o.oFaceAngleYaw = star_angletomario
-        --local gschargescale = 8
-        obj_scale(o, 8)
-        
-
-        
-        if o.oTimer <= 60 then
-            --gschargescale = gschargescale - 0.05
-        end
-        if o.oTimer == 61 then
-            spawn_non_sync_object(id_bhvWhitePuffExplosion, E_MODEL_WHITE_PUFF, o.oPosX, o.oPosY, o.oPosZ, nil)
-            --obj_mark_for_deletion(o)
-        end
-    else
-        obj_mark_for_deletion(o)
-        local_play(sSplatter, m.pos, 1) --literally just here to alert me if the Grand_Star isn't detected. Will delete this before release. 
-    end
-
-end
 -----------------------------------------------------------------------------------
 
 
@@ -685,4 +650,3 @@ id_bhvSmallExplosion = hook_behavior(nil, OBJ_LIST_LEVEL, true, small_explosion_
 id_bhvSkybox1 = hook_behavior(nil, OBJ_LIST_LEVEL, true, skybox1_init, skybox1_loop, "bhvSkybox1")
 id_bhvSkybox2 = hook_behavior(nil, OBJ_LIST_LEVEL, true, skybox2_init, skybox2_loop, "bhvSkybox1")
 id_bhvLightning = hook_behavior(nil, OBJ_LIST_GENACTOR, false, lightning_init, lightning_loop, "bhvLightning")
-id_bhvGscharge = hook_behavior(nil, OBJ_LIST_GENACTOR, false, gscharge_init, gscharge_loop, "bhvGscharge")
