@@ -262,7 +262,7 @@ function act_shooting_attack (o)
     m = nearest_mario_state_to_object(o)
     o.oAction = GRAND_STAR_SHOOTING
     if o.oAction == GRAND_STAR_SHOOTING then
-        djui_popup_create(tostring(o.oTimer), 1)
+        -- djui_popup_create(tostring(o.oTimer), 1)
         local gsvec = {x=o.oPosX, y=o.oPosY, z=o.oPosZ}
         local star_angletomario = obj_angle_to_object(o, m.marioObj)
         local star_pitchtomario = obj_pitch_to_object(o, m.marioObj)
@@ -288,9 +288,10 @@ function act_shooting_attack (o)
             gscharge.oOpacity = 0
             obj_scale(gscharge, gschargescale)
         end
-        if o.oTimer >= 91 and o.oTimer < 146 then
+        if 91 <= o.oTimer and o.oTimer < 146 then
             if gscharge.oOpacity <= 250 then
-                gscharge.oOpacity = gscharge.oOpacity + 1
+                gscharge.oOpacity = gscharge.oOpacity + 3
+                djui_popup_create(tostring(gscharge.oOpacity), 1)
             end
             gschargescale = gschargescale - 0.2
             obj_scale(gscharge, gschargescale)
