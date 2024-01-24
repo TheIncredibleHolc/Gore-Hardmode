@@ -158,7 +158,9 @@ function act_intro(o)
 
         elseif o.oTimer >= 30 then
             -- At the end of the intro animation, switch to the next action
-            obj_change_action(o, GRAND_STAR_ACT_SHOCKWAVE)
+            obj_change_action(o, GRAND_STAR_ACT_SHOCKWAVE) --ORIGINAL CODE THAT WILL PLAY OUT THE FIGHT LIKE NORMAL
+            --obj_change_action(o, GRAND_STAR_SHOOTING) --THIS IS JUST FOR QUICK TESTING. SWITCH BACK TO ABOVE LINE WHEN DONE.
+
         end
     end
 end
@@ -182,7 +184,9 @@ function act_jump_towards_mario(o, m)
         if o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then
         --if o.oPosY <= 200 and o.oTimer >= 2.5 then
             -- Create a shockwave when landing
-            spawn_non_sync_object(id_bhvBowserShockWave, E_MODEL_BOWSER_WAVE, o.oPosX, 320, o.oPosZ, nil)
+            spawn_non_sync_object(id_bhvBowserShockWave, E_MODEL_BOWSER_WAVE, o.oPosX, 320, o.oPosZ, function (obj)
+                obj.oFaceAnglePitch = 0
+            end)
             spawn_mist_particles_variable(0, 0, 200.0)
             spawn_triangle_break_particles(20, 138, 3.0, 4)
             cur_obj_shake_screen(SHAKE_POS_LARGE)
@@ -212,17 +216,17 @@ function act_go_home(o)
         o.oGravity = 0
         obj_move(o)
 
-        if o.oTimer < 60 then
+        if o.oTimer < 60 then --I think this pulls the star DOWNWARD into the ground to 'disappear' from the player.
             o.oFaceAngleYaw = o.oFaceAngleYaw + 0x1000
             o.oVelY = -20
 
         -- Check if the grand star has finished digging
-        elseif o.oTimer >= 60 and o.oTimer <= 120 then
+        elseif o.oTimer >= 60 and o.oTimer <= 108 then --This WAS 120, but shortening it to make the star go less high up in the air.
             o.oFaceAngleYaw = o.oFaceAngleYaw + 0x800 --This WAS 0x800. Gonna fiddle and see if it fixes the minions spawn offset. 
             o.oPosX = 0
             o.oPosZ = 0
             o.oVelY = 40
-        elseif o.oTimer > 120 then
+        elseif o.oTimer > 108 then --This WAS 120, but shortening it to make the star go less high up in the air.
             o.oVelY = 0
             o.oFaceAngleYaw = o.oFaceAngleYaw + 0x600
             if obj_count_objects_with_behavior_id(id_bhvStarMinions) < 5 and o.oTimer < 122 then --THIS OTIMER WAS 122. Adjusting to see if I can get minions to spawn on the star platform tips.
@@ -273,7 +277,7 @@ function act_shooting_attack (o)
             o.oFaceAngleRoll = o.oFaceAngleRoll + 8000
         end
 
-        if o.oTimer == 60 then
+        if o.oTimer == 45 then
             local_play(sGslaser, gsvec, 1)
         end
 
@@ -282,16 +286,16 @@ function act_shooting_attack (o)
                 obj.oFaceAngleYaw = star_angletomario
                 obj.oFaceAnglePitch = star_pitchtomario
             end)
-            gschargescale = 10
+            gschargescale = 14
             gscharge.oOpacity = 0
             obj_scale(gscharge, gschargescale)
         end
         if 91 <= o.oTimer and o.oTimer < 146 then
             if gscharge.oOpacity <= 250 then
-                gscharge.oOpacity = gscharge.oOpacity + 3
+                gscharge.oOpacity = gscharge.oOpacity + 5
                 djui_popup_create(tostring(gscharge.oOpacity), 1)
             end
-            gschargescale = gschargescale - 0.2
+            gschargescale = gschargescale - 0.3
             obj_scale(gscharge, gschargescale)
             gscharge.oPosX = o.oPosX
             gscharge.oPosY = o.oPosY
@@ -300,7 +304,7 @@ function act_shooting_attack (o)
             gscharge.oFaceAnglePitch = star_pitchtomario
         end
 
-        if o.oTimer == 135 then
+        if o.oTimer == 130 then
             local_play(sGsbeam, gsvec, 1)
         end
 
@@ -316,7 +320,7 @@ function act_shooting_attack (o)
 
         end
 
-        if o.oTimer >= 152 and o.oTimer < 250 then
+        if o.oTimer >= 152 and o.oTimer < 225 then
             o.oForwardVel = -15
             GSBeam.oPosX = o.oPosX
             GSBeam.oPosY = o.oPosY
@@ -325,7 +329,8 @@ function act_shooting_attack (o)
             GSBeam.oFaceAnglePitch = star_pitchtomario
         end
         
-        if o.oTimer == 250 then
+
+        if o.oTimer == 225 then
             o.oForwardVel = 0
             obj_mark_for_deletion(GSBeam)
         end
@@ -554,7 +559,8 @@ function minion_act_falling(o)
                 end
             end
 
-            if o.oTimer >= 85 and o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then
+            --if o.oTimer >= 85 and o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then --This line seems weird to me. I'm going to remove the 2.5 part and see if that fixes the star jumping actions before the explosions finish.
+            if o.oTimer >= 145 and o.oPosY <= o.oFloorHeight then
                 obj_get_first_with_behavior_id(id_bhvGrandStar).oAction = GRAND_STAR_SHOOTING
                 obj_mark_for_deletion(o)
                 explode = true
@@ -666,8 +672,7 @@ function gsbeam_init (o)
 end
 
 function gsbeam_loop (o)
-    m = nearest_mario_state_to_object(o)
-    o.oFaceAngleRoll = o.oFaceAngleRoll + 8000
+    o.oFaceAngleRoll = o.oFaceAngleRoll + 14000
     if obj_check_if_collided_with_object(o, m.marioObj) ~= 0 then
         m.squishTimer = 50
     end
