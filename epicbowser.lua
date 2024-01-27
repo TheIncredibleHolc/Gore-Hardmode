@@ -158,8 +158,8 @@ function act_intro(o)
 
         elseif o.oTimer >= 30 then
             -- At the end of the intro animation, switch to the next action
-            obj_change_action(o, GRAND_STAR_ACT_SHOCKWAVE) --ORIGINAL CODE THAT WILL PLAY OUT THE FIGHT LIKE NORMAL
-            --obj_change_action(o, GRAND_STAR_SHOOTING) --THIS IS JUST FOR QUICK TESTING. SWITCH BACK TO ABOVE LINE WHEN DONE.
+            --obj_change_action(o, GRAND_STAR_ACT_SHOCKWAVE) --ORIGINAL CODE THAT WILL PLAY OUT THE FIGHT LIKE NORMAL
+            obj_change_action(o, GRAND_STAR_SHOOTING) --THIS IS JUST FOR QUICK TESTING. SWITCH BACK TO ABOVE LINE WHEN DONE.
 
         end
     end
@@ -268,8 +268,14 @@ function act_shooting_attack (o)
         local gsvec = {x=o.oPosX, y=o.oPosY, z=o.oPosZ}
         local star_angletomario = obj_angle_to_object(o, m.marioObj)
         local star_pitchtomario = obj_pitch_to_object(o, m.marioObj)
-        o.oFaceAngleYaw = star_angletomario
-        o.oFaceAnglePitch = star_pitchtomario
+        --o.oFaceAngleYaw = star_angletomario
+        --o.oFaceAnglePitch = star_pitchtomario
+
+        o.oAngleVelYaw = (star_angletomario - o.oFaceAngleYaw) * .8
+        o.oAngleVelPitch = (star_pitchtomario - o.oFaceAnglePitch) * .8
+
+        o.oFaceAngleYaw = o.oAngleVelYaw
+        o.oFaceAnglePitch = o.oAngleVelPitch
 
         if o.oTimer <= 150 and o.oTimer > 50 then --GS starts spinning to "charge" his attack. 
             o.oFaceAngleRoll = o.oFaceAngleRoll + 50 * o.oTimer
@@ -560,11 +566,12 @@ function minion_act_falling(o)
             end
 
             --if o.oTimer >= 85 and o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then --This line seems weird to me. I'm going to remove the 2.5 part and see if that fixes the star jumping actions before the explosions finish.
-            if o.oTimer >= 145 and o.oPosY <= o.oFloorHeight then
+            if o.oTimer >= 120 and o.oPosY <= o.oFloorHeight then --Was >= 145, dropped 3 bombs
                 obj_get_first_with_behavior_id(id_bhvGrandStar).oAction = GRAND_STAR_SHOOTING
                 obj_mark_for_deletion(o)
                 explode = true
             end
+                
         end
     end
 end
@@ -673,6 +680,11 @@ end
 
 function gsbeam_loop (o)
     o.oFaceAngleRoll = o.oFaceAngleRoll + 14000
+
+    if obj_check_hitbox_overlap (o, m.marioObj) ~= 0 then
+        m.squishTimer = 50
+    end
+
     if obj_check_if_collided_with_object(o, m.marioObj) ~= 0 then
         m.squishTimer = 50
     end
