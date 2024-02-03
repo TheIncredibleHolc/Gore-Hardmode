@@ -43,11 +43,13 @@ GRAND_STAR_ACT_GO_HOME = 1
 GRAND_STAR_ACT_SHOCKWAVE = 2
 GRAND_STAR_ACT_FALLING_MINIONS = 3
 GRAND_STAR_ACT_VULNERABLE = 4
+GRAND_STAR_ACT_ATTACKED = 5
 
 GRAND_STAR_SUB_ACT_NONE = 0
 GRAND_STAR_SUB_ACT_SUMMON_MINIONS = 1
 GRAND_STAR_ATTACK_SELECT = 6
 GRAND_STAR_SHOOTING = 7
+GRAND_STAR_WAIT = 8
 numBombMinions = 5
 
 STAR_MINION_ACT_SHOCKWAVE = 0
@@ -91,7 +93,7 @@ function grand_star_init(o)
 
 
     o.oFlags = (OBJ_FLAG_MOVE_XZ_USING_FVEL | OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
-    o.oInteractType = INTERACT_DAMAGE
+    --o.oInteractType = INTERACT_DAMAGE
     spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, 0, 0, 0, nil)
     set_override_envfx(ENVFX_LAVA_BUBBLES)
     --spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, o.oPosX, 250, o.oPosY, nil) 
@@ -158,14 +160,12 @@ function act_intro(o)
 
         elseif o.oTimer >= 30 then
             -- At the end of the intro animation, switch to the next action
-            --obj_change_action(o, GRAND_STAR_ACT_SHOCKWAVE) --ORIGINAL CODE THAT WILL PLAY OUT THE FIGHT LIKE NORMAL
-            obj_change_action(o, GRAND_STAR_SHOOTING) --THIS IS JUST FOR QUICK TESTING. SWITCH BACK TO ABOVE LINE WHEN DONE.
+            obj_change_action(o, GRAND_STAR_ACT_SHOCKWAVE) --ORIGINAL CODE THAT WILL PLAY OUT THE FIGHT LIKE NORMAL
+            --obj_change_action(o, GRAND_STAR_SHOOTING) --THIS IS JUST FOR QUICK TESTING. SWITCH BACK TO ABOVE LINE WHEN DONE.
 
         end
     end
 end
-
-
 
 -- Function to handle jump behavior
 function act_jump_towards_mario(o, m)
@@ -259,23 +259,56 @@ function sub_act_summon_minions(o)
     end
 end
 
-
+function act_wait(o)
+    if o.oAction == GRAND_STAR_WAIT then
+        o.oFaceAngleYaw = o.oFaceAngleYaw + 0x1000
+        if o.oPosY > 630 then
+            o.oPosY = o.oPosY - 10
+        end
+        if o.oTimer == 150 then
+            o.oAction = GRAND_STAR_SHOOTING
+        end
+    end
+end
 
 function act_shooting_attack (o)
     m = nearest_mario_state_to_object(o)
     if o.oAction == GRAND_STAR_SHOOTING then
+        
+        --hitbox = obj_check_hitbox_overlap(o, m.marioObj)
+        --djui_popup_create(tostring(hitbox), 1)
+
+        -----------------------Star Attackable------------------------
+        if obj_check_hitbox_overlap(o, m.marioObj) ~= false and m.action == ACT_JUMP_KICK then
+            
+            --Delete the laser beam and star laser charging effect if interrupted during laser attack--
+            if GSBeam ~= nil then
+                obj_mark_for_deletion(GSBeam)
+                audio_sample_stop(sGsbeam)
+            end
+            if gscharge ~= nil then
+                if o.oTimer > 45 and o.oTimer < 120 then
+                    audio_sample_stop(sGslaser)
+                end
+                obj_mark_for_deletion(gscharge)
+                
+            end
+            o.oVelY = 50
+            o.oTimer = 0
+            o.oAction = GRAND_STAR_ACT_ATTACKED
+        end
+
+
+
+
+        -----------------------Star Shoots Laser---------------------
         -- djui_popup_create(tostring(o.oTimer), 1)
         local gsvec = {x=o.oPosX, y=o.oPosY, z=o.oPosZ}
         local star_angletomario = obj_angle_to_object(o, m.marioObj)
         local star_pitchtomario = obj_pitch_to_object(o, m.marioObj)
-        --o.oFaceAngleYaw = star_angletomario
-        --o.oFaceAnglePitch = star_pitchtomario
+        o.oFaceAngleYaw = star_angletomario
+        o.oFaceAnglePitch = star_pitchtomario
 
-        o.oAngleVelYaw = (star_angletomario - o.oFaceAngleYaw) * .8
-        o.oAngleVelPitch = (star_pitchtomario - o.oFaceAnglePitch) * .8
-
-        o.oFaceAngleYaw = o.oAngleVelYaw
-        o.oFaceAnglePitch = o.oAngleVelPitch
 
         if o.oTimer <= 150 and o.oTimer > 50 then --GS starts spinning to "charge" his attack. 
             o.oFaceAngleRoll = o.oFaceAngleRoll + 50 * o.oTimer
@@ -299,7 +332,6 @@ function act_shooting_attack (o)
         if 91 <= o.oTimer and o.oTimer < 146 then
             if gscharge.oOpacity <= 250 then
                 gscharge.oOpacity = gscharge.oOpacity + 5
-                djui_popup_create(tostring(gscharge.oOpacity), 1)
             end
             gschargescale = gschargescale - 0.3
             obj_scale(gscharge, gschargescale)
@@ -311,7 +343,7 @@ function act_shooting_attack (o)
         end
 
         if o.oTimer == 130 then
-            local_play(sGsbeam, gsvec, 1)
+            local_play(sGsbeam, gsvec, 1) 
         end
 
         if o.oTimer == 147 then
@@ -338,10 +370,13 @@ function act_shooting_attack (o)
 
         if o.oTimer == 225 then
             o.oForwardVel = 0
+            --o.oGravity = -30
             obj_mark_for_deletion(GSBeam)
         end
     
-        
+        if o.oTimer == 250 then
+            o.oAction = GRAND_STAR_ACT_INTRO
+        end
     
     
     
@@ -350,8 +385,6 @@ function act_shooting_attack (o)
 
 
 end
-
-
 
 --[[
 
@@ -372,7 +405,6 @@ function GRAND_STAR_ATTACK_SELECT (o)
     end
 end
 ]]
-
 
 -- Function for the grand star to spawn falling minions in a circle formation
 function act_falling_minions(o, m)
@@ -436,13 +468,56 @@ function act_vulnerable(o)
     local m = nearest_mario_state_to_object(o)
     if o.oAction == GRAND_STAR_ACT_VULNERABLE then
         obj_move(o)
-        if (o.oPosY ~= o.oFloorHeight) then
+        if (o.oPosY <= o.oFloorHeight + 50) then
             o.oVelY = -5
             o.oTimer = 0
         end
         obj_scale(o, math.sin(math.pi / 2))
         if o.oTimer >= 300 then
             o.oAction = GRAND_STAR_ACT_SHOCKWAVE
+        end
+    end
+end
+
+function act_attacked(o)
+    if o.oAction == GRAND_STAR_ACT_ATTACKED then
+
+        --Actions to do after being attacked--
+        if o.oTimer == 1 then
+            cur_obj_play_sound_2(SOUND_OBJ2_KING_BOBOMB_DAMAGE)
+            cur_obj_play_sound_2(SOUND_ACTION_HIT_2)
+            cur_obj_play_sound_2(SOUND_ACTION_BONK)
+            spawn_mist_particles_variable(0, 0, 20.0)
+            o.oFaceAngleRoll = 300 
+            --spawn_triangle_break_particles(20, 138, 3.0, 4)
+            --o.oVelY = 30
+        end
+        
+        if o.oPosY <= o.oFloorHeight + 95 then --IF Star has hit the floor.
+            o.oForwardVel = 0
+            o.oVelY = 0
+            o.oFaceAnglePitch = 0x4000
+            o.oFaceAngleRoll = o.oFaceAngleRoll
+            if o.oFaceAngleRoll >= 1 then
+                o.oFaceAngleRoll = o.oFaceAngleRoll - 30
+            end
+            --o.oGravity = 1
+        else --IF Star hasn't hit the floor yet then...
+            o.oFaceAnglePitch = o.oFaceAnglePitch + 3600
+            if o.oTimer >= 60 then
+                o.oForwardVel = 0
+            else
+                o.oForwardVel = 19 - 0.5
+                --o.oGravity = o.oGravity + 1
+            end
+            
+            if o.oTimer <= 10 then
+            o.oVelY = o.oVelY - 0.2
+            end
+            
+            cur_obj_move_using_fvel_and_gravity()
+            cur_obj_move_using_vel()
+            
         end
     end
 end
@@ -460,6 +535,8 @@ function grand_star_loop(o)
     sub_act_summon_minions(o) --The GS summons explosive minions
     act_go_home(o)
     act_shooting_attack(o)
+    act_attacked(o)
+    act_wait(o)
 
 
     --djui_chat_message_create(tostring(o.oAngleToHome))
@@ -535,7 +612,7 @@ function spawn_explosion_ring(o, x, z, radius, numSegments)
     end
 end
 
-local explode = true
+
 
 function minion_act_falling(o)
     if o.oAction == STAR_MINION_ACT_FALL then
@@ -567,15 +644,14 @@ function minion_act_falling(o)
 
             --if o.oTimer >= 85 and o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then --This line seems weird to me. I'm going to remove the 2.5 part and see if that fixes the star jumping actions before the explosions finish.
             if o.oTimer >= 120 and o.oPosY <= o.oFloorHeight then --Was >= 145, dropped 3 bombs
-                obj_get_first_with_behavior_id(id_bhvGrandStar).oAction = GRAND_STAR_SHOOTING
+                obj_get_first_with_behavior_id(id_bhvGrandStar).oAction = GRAND_STAR_WAIT
                 obj_mark_for_deletion(o)
-                explode = true
+                o.oTimer = 0
             end
                 
         end
     end
 end
-
 
 function grand_star_minion_loop(o)
     local m = nearest_mario_state_to_object(o)
