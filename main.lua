@@ -32,7 +32,8 @@ gBehaviorValues.KingBobombHealth = 6
 gLevelValues.pssSlideStarTime = 570 -- 19 Seconds
 gLevelValues.metalCapDuration = 90 -- 3 seconds, LOL.
 
-
+-- Unlock JRB cannon
+save_file_set_star_flags(get_current_save_file_num() - 1, COURSE_JRB, 0x80)
 
 ----helpers------
 
@@ -141,8 +142,6 @@ for i = 0, MAX_PLAYERS-1 do
 		stomped = false,
 
 		disableuntilnextwarp = false,
-		snowdeathtimer = 0,
-		snowdeath = 0,
 		penguinholding = 0,
 		penguintimer = 0,
 		objtimer = 0,
@@ -157,21 +156,26 @@ for i = 0, MAX_PLAYERS-1 do
 		mariotouchingwater = 0,
 	}
 end
-toadgui = 0
 toadguitimer = 0
 
 ukikiheldby = -1
 ukikiholding = 0
 ukikitimer = 0
 
-mariohighalpha = 0
-mariobloodalpha = 0
+highalpha = 0
+bloodalpha = 0
 mariohallucinate = 0
 
-ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE)
+ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 
 function act_gone(m)
     m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
+	m.actionTimer = m.actionTimer + 1
+	if m.actionTimer == m.actionArg then
+		local savedY = m.pos.y
+		common_death_handler(m, 0, -1)
+		m.pos.y = savedY
+	end
 end
 hook_mario_action(ACT_GONE, act_gone)
 
@@ -536,14 +540,14 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 		m.health = 120
 		set_mario_action(m, ACT_THROWN_FORWARD, 0) --Throws mario forward more to "sell" the fall damage big impact.
 		if (s.disappear) == 1 then --No fall damage, so Mario got squished. No corpse. It's funnier this way. 
-			set_mario_action(m, ACT_GONE, 0)
-			if not s.isdead and ia(m) then
-				gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
-			end
-			s.isdead = true
+			set_mario_action(m, ACT_GONE, 78)
+			-- if not s.isdead and ia(m) then
+			-- 	gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
+			-- end
+			-- s.isdead = true
 		end
 		if (s.disappear) == 1 then --Not a fall damage death, so cap won't fly as far. Works better since this is mostly triggered by enemies or objects smashing mario.
-			mario_blow_off_cap(m, 15) 
+			mario_blow_off_cap(m, 15)
 		else --Fall damage death means bigger impact, so hat is blown off more violently than above.
 			mario_blow_off_cap(m, 45)
 		end
@@ -557,11 +561,11 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 	if (s.splattimer) == 20 then
 		if (s.disappear) == 0 then
 			set_mario_action(m, ACT_DEATH_ON_STOMACH, 0)
-		end
-	end
-	if (s.splattimer) == 80 then
-		if not floodenabled then
-		level_trigger_warp(m, WARP_OP_DEATH) --Official Death Warp
+		else
+			s.enablesplattimer = 0
+			s.splatter = 1
+			s.splattimer = 0
+			s.disappear = 0
 		end
 	end
 	if (s.splattimer) == 150 then
@@ -579,7 +583,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
 	--IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
 	--This gets set to '0' when Mario IS splattered. After the splatter timer is up, it sets s.splatter back to 1 to re-enable splattering. 
-	if (s.splatter) == 1 then 
+	if (s.splatter) == 1 and m.action & (ACT_FLAG_INVULNERABLE|ACT_FLAG_INTANGIBLE) == 0 then
 		if m.peakHeight >= 750 and m.vel.y <= -55 then  --Checks if Mario takes fall damage
 			s.jumpland = 1 --If fall damage, then 1
 		else
@@ -635,8 +639,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		end
 	end
 	if ia(m) then
-		if mariohighalpha ~= 0 then
-			set_override_fov(lerp(45, lerp(140, 30, .5+math.cos(m.marioObj.oTimer*.02)/2), mariohighalpha/255))
+		if highalpha ~= 0 then
+			set_override_fov(lerp(45, lerp(140, 30, .5+math.cos(m.marioObj.oTimer*.02)/2), highalpha/255))
 		else
 			set_override_fov(0)
 		end
@@ -768,11 +772,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		if (peach.oTimer == 957) then
 			spawn_mist_particles()
 			play_character_sound(m, CHAR_SOUND_ATTACKED)
-			local_play(sSplatter, gMarioStates[0].marioObj.header.gfx.cameraToObject, 1)	
+			local_play(sSplatter, gMarioStates[0].marioObj.header.gfx.cameraToObject, 1)
 		end
 		if (peach.oTimer == 960) then
 			squishblood(m.marioObj)
-			
 		end
 		if (peach.oTimer == 965) then
 			smlua_anim_util_set_animation(m.marioObj, "MARIO_DYING_CUTSCENE")
@@ -870,21 +873,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--Switches snow landing to snow drowning
 	if (m.action == ACT_HEAD_STUCK_IN_GROUND) or (m.action == ACT_BUTT_STUCK_IN_GROUND) or (m.action == ACT_FEET_STUCK_IN_GROUND) then
 		m.particleFlags = PARTICLE_MIST_CIRCLE
-		set_mario_action(m, ACT_GONE, 0)
+		set_mario_action(m, ACT_GONE, 60)
 		m.health = 0xff
-		s.snowdeath = 1
  	end
-	 if (s.snowdeath == 1) then
-		s.snowdeathtimer = s.snowdeathtimer + 1
-	end
-	if (s.snowdeathtimer) == 60 then
-		if ia(m) then gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1 end
-		if not floodenabled then
-			level_trigger_warp(m, WARP_OP_DEATH)
-		end
-		s.snowdeathtimer = 0
-		s.snowdeath = 0
-	end
 ----------------------------------------------------------------------------------------------------------------------------------
 
 	if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj, id_bhvUkiki) ~= 0) then
@@ -1184,21 +1175,14 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
 	end
 
-	if (m.hurtCounter > 0) and 
-	-- Custom Bobomb explosion Mario death
-	obj_has_behavior_id(o, id_bhvExplosion) +
-	-- (BoB) Custom pit bowling ball death 
-	obj_has_behavior_id(o, id_bhvPitBowlingBall) +
-	-- Custom Goomba Mario Kill
-	obj_has_behavior_id(o, id_bhvGoomba) +
-	-- Custom Piranha Plant death
-	obj_has_behavior_id(o, id_bhvPiranhaPlant) +
-	-- twirling guys insta-death
-	obj_has_behavior_id(o, id_bhvSpindrift) +
-	-- Mr.Blizzard insta-death
-	obj_has_behavior_id(o, id_bhvMrBlizzard) +
-	-- cannon bubble insta-death
-	obj_has_behavior_id(o, id_bhvWaterBomb) ~= 0
+	if (m.hurtCounter > 0) and
+		obj_has_behavior_id(o, id_bhvExplosion) + -- Custom Bobomb explosion Mario death
+		obj_has_behavior_id(o, id_bhvPitBowlingBall) + -- (BoB) Custom pit bowling ball death 
+		obj_has_behavior_id(o, id_bhvGoomba) + -- Custom Goomba Mario Kill
+		obj_has_behavior_id(o, id_bhvPiranhaPlant) + -- Custom Piranha Plant death
+		obj_has_behavior_id(o, id_bhvSpindrift) + -- twirling guys insta-death
+		obj_has_behavior_id(o, id_bhvMrBlizzard) + -- Mr.Blizzard insta-death
+		obj_has_behavior_id(o, id_bhvWaterBomb) ~= 0 -- cannon bubble insta-death
 	or (
 		obj_has_behavior_id(o, id_bhvBowserBodyAnchor) ~= 0
 		and (o.parentObj.oAction == 4 or o.parentObj.oAction == 12)
@@ -1239,7 +1223,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		m.health = 0xff
 
 		m.particleFlags = PARTICLE_MIST_CIRCLE
-		set_mario_action(m, ACT_GONE, 0)
+		set_mario_action(m, ACT_GONE, 80)
 		m.squishTimer = 50
 	end
 
@@ -1256,18 +1240,10 @@ function before_mario_action(m, action)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 	--Disables LAVA_BOOST and replaces with a splash and insta-death... KERPLUNK!!
 	if (action == ACT_LAVA_BOOST) then
-		set_mario_action(m, ACT_GONE, 0)
+		set_mario_action(m, ACT_GONE, 1)
 		network_play(sSplash, m.pos, 1, m.playerIndex)
 		spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
 		m.health = 120
-		if ia(m) then gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1 end
-		if not s.isdead then
-			if not floodenabled then
-				print("deathed")
-				level_trigger_warp(m, WARP_OP_DEATH)
-				
-			end
-		end
 		return 1
 	end
 -------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1283,16 +1259,6 @@ function before_mario_action(m, action)
 			deathflame = spawn_sync_object(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil)
 			network_play(sAgonyMario, m.pos, 1, m.playerIndex)
 		end
-	end
--------------------------------------------------------------------------------------------------------------------------------------------------
-	--Disables falling death and gives mario a custom death. Not really anything different, just fixes the death counter from adding +20 on a single fall. 
-	if (action == ACT_FALLING_EXIT_AIRBORNE) then
-		m.health = 120
-		if ia(m) then gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1 end
-		if not floodenabled then
-			level_trigger_warp(m, WARP_OP_DEATH)
-		end
-		return ACT_GONE
 	end
 -------------------------------------------------------------------------------------------------------------------------------------------------
 end
@@ -1354,77 +1320,63 @@ function toaddeath(o)
 		if (deaths == 30) then
 			bhv_spawn_star_no_level_exit(o, 2, 1)
 		end
-		toadgui = 1
+		toadguitimer = 150
 	end
 end
 
 function deathcounthud() -- Displays the total amount of mario deaths a server has incurred since opening. 
 	screenHeight = djui_hud_get_screen_height()
 	screenWidth = djui_hud_get_screen_width()
-	local timerValFrames = hud_get_value(HUD_DISPLAY_TIMER)
-	local timerX = 0
-	local timerY = 0
-
-	-- Move HUD graphics away from the TIMER HUD
-	if timerValFrames ~= 0 then
-		timerX = 60
-		timerY = 17
-	end
-	
 
 	--TOAD DEATH COUNTER. Each time you kill toad, the count goes up. It compares the number with the PreviousToadDeath variable, which tells it to update and triggers commands.
-	--Toad gives 3 stars. I have set this to give these stars after every 100 toad kills. 
-	djui_hud_print_text("Total server death count:", screenWidth - 280 - timerX, screenHeight - 78 - timerY, 1)
-	djui_hud_print_text(tostring(gGlobalSyncTable.deathcounter), screenWidth - 46 - timerX, screenHeight - 78 - timerY, 1)
+	--Toad gives 3 stars. I have set this to give these stars after every 100 toad kills.
+	local deathcount = "Total server death count: "..gGlobalSyncTable.deathcounter
+	djui_hud_print_text(deathcount, screenWidth - 30 - djui_hud_measure_text(deathcount), screenHeight - 78, 1)
 	local s = gStateExtras[0]
 	local m = gMarioStates[0]
-	if (toadgui) == 1 then
-		toadguitimer = toadguitimer + 1
-		djui_hud_set_color(255, 255, 0, lerp(0, 255, (math.max(0, 150-toadguitimer))/150))
-		
-		djui_hud_print_text("Server Toad death count:", screenWidth - 280 - timerX, screenHeight - 48 - timerY, 1)
-		djui_hud_print_text(tostring(gGlobalSyncTable.toaddeathcounter), screenWidth - 46 - timerX, screenHeight - 48 - timerY, 1)
-	end
-	if (toadguitimer) == 150 then
-		toadgui = 0
-		toadguitimer = 0
+	if (toadguitimer) ~= 0 then
+		toadguitimer = toadguitimer - 1
+		djui_hud_set_color(255, 255, 0, lerp(0, 255, (math.max(0, toadguitimer))/150))
+
+		local toaddeathcount = "Server Toad death count: "..gGlobalSyncTable.toaddeathcounter
+		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), screenHeight - 48, 1)
 	end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	--MARIO HIGH IN GAS OVERLAY
 		djui_hud_set_resolution(RESOLUTION_N64)
-		djui_hud_set_color(255, 255, 255, mariohighalpha)
+		djui_hud_set_color(255, 255, 255, highalpha)
 		djui_hud_render_texture(texMarioLessHigh, 0, 0, .87, .5)
 
 	if (s.highdeathtimer) >= 1 then --Mario is high, therefore a hazy green gas overlay comes up on the screen.
-		if mariohighalpha <= 254 then
-			mariohighalpha = mariohighalpha + 1
+		if highalpha <= 254 then
+			highalpha = highalpha + 1
 		end
 	end
 	if (s.ishigh == 0) or (s.highdeathtimer >= 940) then --Mario is not high, therefore this will remove the gas effect on the hud.
-		if (mariohighalpha >= 2) then
-			mariohighalpha = mariohighalpha - 2
+		if (highalpha >= 2) then
+			highalpha = highalpha - 2
 		end
-		if (mariohighalpha == 1) then
-			mariohighalpha = 0
+		if (highalpha == 1) then
+			highalpha = 0
 		end
 	end
 
 	--MARIO BLOODY GAS OVERLAY
 	djui_hud_set_resolution(RESOLUTION_N64)
-	djui_hud_set_color(255, 255, 255, mariobloodalpha)
+	djui_hud_set_color(255, 255, 255, bloodalpha)
 	djui_hud_render_texture(texBloodOverlay, 0, 0, .87, .5)
 
 	if (s.highdeathtimer) >= 1000 then --Mario is very high and dying, therefore bloody gas overlay comes up on the screen.
-		if mariobloodalpha <= 254 then
-			mariobloodalpha = mariobloodalpha + 1
+		if bloodalpha <= 254 then
+			bloodalpha = bloodalpha + 1
 		end
 	end
 	if (s.ishigh == 0) then --Mario is not high, therefore this will remove the gas effect on the hud.
-		if (mariobloodalpha >= 4) then
-			mariobloodalpha = mariobloodalpha - 4
+		if (bloodalpha >= 4) then
+			bloodalpha = bloodalpha - 4
 		end
-		if (mariobloodalpha <= 3) and (mariobloodalpha >= 1)  then --Sets blood overlay to invisible.
-			mariobloodalpha = 0
+		if (bloodalpha <= 3) and (bloodalpha >= 1)  then --Sets blood overlay to invisible.
+			bloodalpha = 0
 		end
 	end
 
@@ -1551,13 +1503,13 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 	--Punching Sounds and blood
 	if (attacker.action == ACT_PUNCHING) or (attacker.action == ACT_JUMP_KICK) or (attacker.action == ACT_MOVE_PUNCHING) then
 		local_play(sPunch, victim.pos, 1)
-		squishblood(victim.marioObj)  
+		squishblood(victim.marioObj)
 	end
 
 	--Tripping
 	if attacker.action == ACT_SLIDE_KICK then
 		--local_play(sBoneBreak, victim.pos, 1) --Doesn't play consistently and I don't know why. Sometimes none, sometimes doubles. Probably not even a good sound for this anyway.
-		set_mario_action(victim, ACT_GROUND_BONK, 0)  
+		set_mario_action(victim, ACT_GROUND_BONK, 0)
 	end
 
 	--Neck snapping
@@ -1579,22 +1531,6 @@ end
 
 function lava_loop(o)
     load_object_collision_model()
-end
-
-function gsshadow_init(o)
-    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-    o.collisionData = COL_GSSHADOW
-    o.header.gfx.skipInViewCheck = true
-end
-
-function gsshadow_loop(gss)
-	local o = obj_get_nearest_object_with_behavior_id(gss, id_bhvGrandStar)
-    load_object_collision_model()
-	if o ~= nil then
-		gss.oPosX = o.oPosX
-		gss.oPosY = 300
-		gss.oPosZ = o.oPosZ
-	end
 end
 
 function bhv_ferris_wheel(o)
@@ -1698,7 +1634,6 @@ hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loo
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
 
 id_bhvLava = hook_behavior(nil, OBJ_LIST_SURFACE, true, lava_init, lava_loop, "bhvLava")
-id_bhvGrandStarShadow = hook_behavior(nil, OBJ_LIST_SURFACE, true, gsshadow_init, gsshadow_loop, "bhvGrandStarShadow")
 
 -- test function to warp to level, disable if necessary
 hook_chat_command("bow", "ser", function ()

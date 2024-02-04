@@ -4,6 +4,7 @@ function testing(m)
     if (m.controller.buttonPressed & U_JPAD) ~= 0 then
         spawn_non_sync_object(id_bhvStarMinions, E_MODEL_STAR, m.pos.x, m.pos.y + 3500, m.pos.z, function (obj)
             obj.oAction = STAR_MINION_ACT_FALL
+            obj.parentObj = o
         end)
     end
 end
@@ -41,8 +42,6 @@ function custom_bowser(obj)
 end
 
 hook_behavior(id_bhvBowser, OBJ_LIST_GENACTOR, false, nil, custom_bowser)
-
-
 
 GRAND_STAR_ACT_INTRO = 0
 GRAND_STAR_ACT_GO_HOME = 1
@@ -90,12 +89,12 @@ end
 
 
 function grand_star_init(o)
-    local m = gMarioStates[0]
+    local offset = 307
 
     gLakituState.mode = CAMERA_MODE_BOSS_FIGHT
     obj_set_secondary_camera_focus()
-    gCutsceneFocus = o
-    gSecondCameraFocus = o
+    -- gCutsceneFocus = o
+    -- gSecondCameraFocus = o
 
 
 
@@ -104,10 +103,10 @@ function grand_star_init(o)
     spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, 0, 0, 0, nil)
     set_override_envfx(ENVFX_LAVA_BUBBLES)
     --spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, o.oPosX, 250, o.oPosY, nil) 
-    spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, m.pos.y - 9500, 0, nil)
-    spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, m.pos.y + 500, 0, nil)
+    spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, offset - 9500, 0, nil)
+    spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, offset + 500, 0, nil)
     spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, nil)
-    spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, m.pos.y - 300, 0, function(obj)
+    spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, offset - 300, 0, function(obj)
         obj_scale(obj, 0.6)
         obj.header.gfx.skipInViewCheck = true
     end)
@@ -147,7 +146,6 @@ function grand_star_init(o)
     o.oDamageOrCoinValue = 0
     cur_obj_scale(2.0)
     fadeout_level_music(1)
-
 end
 
 function act_intro(o) --Spawns GS, starts the fight.
@@ -250,6 +248,7 @@ function sub_act_summon_minions(o)
                 spawn_non_sync_object(id_bhvStarMinions, E_MODEL_STAR, x, o.oPosY, z, function (obj)
                     obj.oAction = STAR_MINION_ACT_SHOCKWAVE
                     obj.oBehParams2ndByte = i * 30
+                    obj.parentObj = o
                 end)
             end
         else
@@ -303,9 +302,8 @@ function act_shooting_attack (o) --Charges and fires a laser beam. Can be interr
     o.oFaceAngleYaw = star_angletomario
     o.oFaceAnglePitch = star_pitchtomario
 
-
     if o.oTimer <= 150 and o.oTimer > 50 then --GS starts spinning to "charge" his attack. 
-        o.oFaceAngleRoll = o.oFaceAngleRoll + 50 * o.oTimer
+        o.oFaceAngleRoll = o.oFaceAngleRoll + 50 * (o.oTimer-50)
     elseif o.oTimer > 150 then
         o.oFaceAngleRoll = o.oFaceAngleRoll + 8000
     end
@@ -316,12 +314,12 @@ function act_shooting_attack (o) --Charges and fires a laser beam. Can be interr
 
     if o.oTimer == 90 then
         gscharge = spawn_non_sync_object(id_bhvStaticObject, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, function(obj)
-            obj.oFaceAngleYaw = star_angletomario
-            obj.oFaceAnglePitch = star_pitchtomario
+            -- obj.oFaceAngleYaw = star_angletomario
+            -- obj.oFaceAnglePitch = star_pitchtomario
         end)
         gschargescale = 14
         gscharge.oOpacity = 0
-        obj_scale(gscharge, gschargescale)
+        -- obj_scale(gscharge, gschargescale)
     end
     if 91 <= o.oTimer and o.oTimer < 146 then
         if gscharge.oOpacity <= 250 then
@@ -332,8 +330,8 @@ function act_shooting_attack (o) --Charges and fires a laser beam. Can be interr
         gscharge.oPosX = o.oPosX
         gscharge.oPosY = o.oPosY
         gscharge.oPosZ = o.oPosZ
-        gscharge.oFaceAngleYaw = star_angletomario
-        gscharge.oFaceAnglePitch = star_pitchtomario
+        gscharge.oFaceAngleYaw = o.oFaceAngleYaw
+        gscharge.oFaceAnglePitch = o.oFaceAnglePitch
     end
 
     if o.oTimer == 130 then
@@ -417,10 +415,12 @@ function act_falling_minions(o, m)
             if i <= 1 and o.oJumpCounter <= 1 then
                 spawn_non_sync_object(id_bhvStarMinions, E_MODEL_STAR, x, o.oPosY + 3500, z, function (obj)
                     obj.oAction = STAR_MINION_ACT_FALL
+                    obj.parentObj = o
                 end)
             else
                 spawn_non_sync_object(id_bhvStarMinions, E_MODEL_STAR, x, o.oPosY + 3500, z, function (obj)
                     obj.oAction = STAR_MINION_ACT_FALL
+                    obj.parentObj = o
                 end)
                 spawn_mist_particles_variable(0, 0, 200.0)
             end
@@ -628,7 +628,7 @@ function minion_act_shockwave(o)
                 o.oVelY = 0
             else
                 obj_mark_for_deletion(o)
-                obj_change_action(obj_get_first_with_behavior_id(id_bhvGrandStar), GRAND_STAR_ACT_FALLING_MINIONS)
+                obj_change_action(o.parentObj, GRAND_STAR_ACT_FALLING_MINIONS)
             end
         end
     end
@@ -673,7 +673,7 @@ function minion_act_falling(o)
 
             --if o.oTimer >= 85 and o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then --This line seems weird to me. I'm going to remove the 2.5 part and see if that fixes the star jumping actions before the explosions finish.
             if o.oTimer >= 120 and o.oPosY <= o.oFloorHeight then --Was >= 145, dropped 3 bombs
-                obj_get_first_with_behavior_id(id_bhvGrandStar).oAction = GRAND_STAR_ACT_WAIT
+                obj_change_action(o.parentObj, GRAND_STAR_ACT_WAIT)
                 obj_mark_for_deletion(o)
                 o.oTimer = 0
             end
@@ -701,10 +701,8 @@ function small_explosion_init(o)
 end
 
 function small_explosion_loop(o)
-    local m = nearest_mario_state_to_object(o)
-    if (o.oTimer == 1) then
-        spawn_sync_object(id_bhvSmoke, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
-    end
+    -- local m = nearest_mario_state_to_object(o)
+    spawn_sync_object(id_bhvSmoke, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
     obj_mark_for_deletion(o)
 end
 
@@ -795,6 +793,24 @@ function gsbeam_loop (o)
     end
 end
 
+-----------------------------------------------------------------------------------
+
+function gsshadow_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.collisionData = COL_GSSHADOW
+    o.header.gfx.skipInViewCheck = true
+end
+
+function gsshadow_loop(gss)
+	local o = obj_get_nearest_object_with_behavior_id(gss, id_bhvGrandStar)
+    load_object_collision_model()
+	if o ~= nil then
+		gss.oPosX = o.oPosX
+		gss.oPosY = 300
+		gss.oPosZ = o.oPosZ
+	end
+end
+
 -- Hook behaviors for Grand Star and Star Minions
 hook_event(HOOK_MARIO_UPDATE, testing)
 id_bhvGrandStar = hook_behavior(id_bhvGrandStar, OBJ_LIST_LEVEL, true, grand_star_init, grand_star_loop, "bhvGoreGrandStar")
@@ -804,3 +820,4 @@ id_bhvSkybox1 = hook_behavior(nil, OBJ_LIST_LEVEL, true, skybox1_init, skybox1_l
 id_bhvSkybox2 = hook_behavior(nil, OBJ_LIST_LEVEL, true, skybox2_init, skybox2_loop, "bhvSkybox1")
 id_bhvLightning = hook_behavior(nil, OBJ_LIST_GENACTOR, false, lightning_init, lightning_loop, "bhvLightning")
 id_bhvGSBeam = hook_behavior(nil, OBJ_LIST_GENACTOR, false, gsbeam_init, gsbeam_loop, "bhvGSBeam")
+id_bhvGrandStarShadow = hook_behavior(nil, OBJ_LIST_SURFACE, true, gsshadow_init, gsshadow_loop, "bhvGrandStarShadow")
