@@ -583,7 +583,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
 	--IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
 	--This gets set to '0' when Mario IS splattered. After the splatter timer is up, it sets s.splatter back to 1 to re-enable splattering. 
-	if (s.splatter) == 1 and m.action & (ACT_FLAG_INVULNERABLE|ACT_FLAG_INTANGIBLE) == 0 then
+	if (s.splatter) == 1 and m.health > 0xff then
 		if m.peakHeight >= 750 and m.vel.y <= -55 then  --Checks if Mario takes fall damage
 			s.jumpland = 1 --If fall damage, then 1
 		else
@@ -755,12 +755,11 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--ENDING OF THE GAME CUTSCENE
-	peach = obj_get_nearest_object_with_behavior_id(o, id_bhvEndPeach)
+	peach = obj_get_first_with_behavior_id(id_bhvEndPeach)
 	if peach ~= nil then
 
 		if (peach.oTimer == 950) then
 			set_mario_action(m, ACT_THROWN_FORWARD, 0)
-			
 		end
 		if (peach.oTimer >= 952) then
 			mario_blow_off_cap(m, 23)
@@ -944,12 +943,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 ----------------------------------------------------------------------------------------------------------------------------------
 	--(Lethal Lava Land) LLL Objects
 
-	----The rotating hexagon plaform with flames on it, far back left corner.
-	o = obj_get_nearest_object_with_behavior_id(o, id_bhvLllRotatingHexagonalPlatform)
-	if (o) ~= nil then
-		o.oMoveAngleYaw = o.oMoveAngleYaw + 5000
-	end
-
 	----The Drawbridge by the eye across from spawn.
 	o = obj_get_nearest_object_with_behavior_id(o, id_bhvLllDrawbridge)
 	if (o) ~= nil then
@@ -982,10 +975,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		--mario_throw_held_object(m.heldObj)
 		obj_mark_for_deletion(m.heldObj)
 		set_mario_action(m, ACT_PUNCHING, 0)
-		s.penguintimer = s.penguintimer + 1	
+		s.penguintimer = s.penguintimer + 1
 	end
 	if (s.penguintimer) >= 281 then
-		s.penguintimer = s.penguintimer + 1	
+		s.penguintimer = s.penguintimer + 1
 	end
 	if (s.penguintimer) == 290 then
 		m.particleFlags = PARTICLE_MIST_CIRCLE
@@ -1261,6 +1254,9 @@ function before_mario_action(m, action)
 		end
 	end
 -------------------------------------------------------------------------------------------------------------------------------------------------
+	if m.action == ACT_GONE then
+		m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags | GRAPH_RENDER_ACTIVE
+	end
 end
 
 function action_start(m)
@@ -1421,17 +1417,15 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -----GREEN DEMONS (ONCE AND FOR ALL!!) This finally works so DON'T TOUCH IT!!
 local function before_phys_step(m,stepType) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
-    if m.playerIndex ~= 0 then
-        return
-    end
-	
-local obj = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhv1Up) 
+if m.playerIndex ~= 0 then return end
+
+	local obj = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhv1Up)
     if obj~= nil and (nearest_interacting_mario_state_to_object(obj)).playerIndex == 0 and is_within_100_units_of_mario(obj.oPosX, obj.oPosY, obj.oPosZ) == 1 then --if local mario is touching 1up then
 		obj_mark_for_deletion(obj)
         spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
     end
 
-local demon = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON
+	local demon = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON
     if demon ~= nil and (nearest_interacting_mario_state_to_object(demon)).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
         obj_mark_for_deletion(demon)
 		spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -1442,9 +1436,6 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-function lavascream(SOUND_MARIO_ON_FIRE)
-	return 0
-end
 
 ---------hooks--------
 hook_event(HOOK_MARIO_UPDATE, mario_update)
@@ -1573,6 +1564,12 @@ function bhv_custom_firebars(o)
 	o.oMoveAngleYaw = -2048
 end
 
+function bhv_custom_hex_platform(o)
+	o.oAngleVelYaw = 5000
+	o.oMoveAngleYaw = o.oMoveAngleYaw + 4744
+	load_object_collision_model()
+end
+
 function bhv_custom_crushtrap(o)
 	if mario_is_within_rectangle(o.oPosX -100, o.oPosX + 100, o.oPosX -100, o.oPosX + 100) then
 		if o.oAction == 1 then
@@ -1587,9 +1584,8 @@ function bhv_custom_crushtrap(o)
 		if o.oAction == 3 then
 			o.oAngleVelPitch = 2000
 			o.oFaceAnglePitch = o.oFaceAnglePitch + o.oAngleVelPitch
-
 		end
-		
+
 		if o.oTimer >= 4 then
 			o.oTimer = 0
 			o.oAction = 0
@@ -1612,6 +1608,7 @@ hook_behavior(id_bhvFerrisWheelPlatform, OBJ_LIST_SURFACE, false, nil, bhv_ferri
 hook_behavior(id_bhvHorizontalGrindel, OBJ_LIST_SURFACE, false, nil, bhv_custom_grindel)
 hook_behavior(id_bhvSpindel, OBJ_LIST_SURFACE, false, nil, bhv_custom_spindel)
 hook_behavior(id_bhvLllRotatingHexFlame, OBJ_LIST_SURFACE, false, nil, bhv_custom_firebars)
+hook_behavior(id_bhvLllRotatingHexagonalPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_hex_platform)
 hook_behavior(id_bhvLllVolcanoFallingTrap, OBJ_LIST_SURFACE, false, nil, bhv_custom_crushtrap)
 
 hook_behavior(id_bhvSmallBully, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bully)
