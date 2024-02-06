@@ -1,6 +1,7 @@
 highmusic = audio_stream_load("high.mp3")
 smwbonusmusic = audio_stream_load("smwbonusloop.mp3")
 boss = audio_stream_load("croppedcastle.mp3")
+musicHell = audio_stream_load("hell.mp3")
 
 gSamples = {
 	audio_sample_load("bonebreak.mp3"),

@@ -11,7 +11,7 @@
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
 --gLevelValues.entryLevel = LEVEL_BOWSER_3
-
+--gLevelValues.entryLevel = LEVEL_HELL
 
 --(BoB, THI, TTM) bowling balls faster
 --gBehaviorValues.BowlingBallBobSpeed = 30
@@ -19,6 +19,7 @@
 gBehaviorValues.BowlingBallTtmSpeed = 40
 gBehaviorValues.BowlingBallThiSmallSpeed = 45
 gBehaviorValues.BowlingBallThiSmallSpeed = 45
+gLevelValues.fixCollisionBugs = true
 
 --Koopa the quick is STUPID fast. Player has to finish race in 20.9 seconds.
 gBehaviorValues.KoopaBobAgility = 20
@@ -108,6 +109,8 @@ local texTrippyOverlay = get_texture_info('trippy')
 
 
 ------Variables n' stuff------
+LEVEL_HELL = level_register('level_hell_entry', COURSE_NONE, 'Hell', 'Hell', 28000, 0x28, 0x28, 0x28)
+
 E_MODEL_BLOOD_SPLATTER = smlua_model_util_get_id("blood_splatter_geo")
 E_MODEL_BLOOD_SPLATTER2 = smlua_model_util_get_id("blood_splatter2_geo")
 E_MODEL_BLOOD_SPLATTER_WALL = smlua_model_util_get_id("blood_splatter_wall_geo")
@@ -583,7 +586,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
 	--IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
 	--This gets set to '0' when Mario IS splattered. After the splatter timer is up, it sets s.splatter back to 1 to re-enable splattering. 
-	if (s.splatter) == 1 and m.action & (ACT_FLAG_INVULNERABLE|ACT_FLAG_INTANGIBLE) == 0 then
+	if (s.splatter) == 1 then
+	--if (s.splatter) == 1 and m.action & (ACT_FLAG_INVULNERABLE|ACT_FLAG_INTANGIBLE) == 0 then
+
 		if m.peakHeight >= 750 and m.vel.y <= -55 then  --Checks if Mario takes fall damage
 			s.jumpland = 1 --If fall damage, then 1
 		else
@@ -941,6 +946,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		end
 	end
 
+	
+
 ----------------------------------------------------------------------------------------------------------------------------------
 	--(Lethal Lava Land) LLL Objects
 
@@ -1297,11 +1304,19 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	s.isdead = false
 	s.disableuntilnextwarp = false
 
-	if n.currLevelNum == LEVEL_JRB then
+	if n.currLevelNum == LEVEL_HELL then
+		audio_stream_play(musicHell, true, 1)
+	end
+
+	if n.currLevelNum == LEVEL_JRB or n.currLevelNum == LEVEL_HELL then
 		set_override_envfx(ENVFX_LAVA_BUBBLES)
 	else
 		set_override_envfx(-1)
 	end	
+
+	if n.currLevelNum == LEVEL_TTC then
+		--set_ttc_speed_setting(99)	
+	end
 
 	--Resets the baby penguin timer on warp so it doesn't glitch out if mario leaves the level without fully killing the baby penguin.
 	s.penguinholding = 0
@@ -1671,6 +1686,10 @@ hook_chat_command("jrb", "jolly", function ()
 	return true
 end)
 
+hook_chat_command("hell", "hell", function ()
+	warp_to_level(LEVEL_HELL, 1, 0)
+	return true
+end)
 
 hook_chat_command("go", "to", function ()
 	vec3f_copy(gMarioStates[0].pos, {x=1992,y=-767,z=-1140})
@@ -1690,6 +1709,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	audio_stream_stop(highmusic)
 	audio_stream_stop(smwbonusmusic)
 	audio_stream_stop(boss)
+	audio_stream_stop(musicHell)
 end)
 
 --Blocky looky here
