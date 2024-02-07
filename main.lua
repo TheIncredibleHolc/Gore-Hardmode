@@ -529,7 +529,6 @@ function act_shocked(m)
 	if (m.actionTimer) == 140 then
 		m.particleFlags = PARTICLE_TRIANGLE
 		m.squishTimer = 50
-		m.health = 120
 	end
 end
 hook_mario_action(ACT_SHOCKED, act_shocked)
@@ -870,7 +869,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	pokey = obj_get_nearest_object_with_behavior_id(o, id_bhvPokey)
 	if (pokey ~= nil) then
 		pokey.oForwardVel = 40
-	end 
+	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Switches snow landing to snow drowning
 	if (m.action == ACT_HEAD_STUCK_IN_GROUND) or (m.action == ACT_BUTT_STUCK_IN_GROUND) or (m.action == ACT_FEET_STUCK_IN_GROUND) then
@@ -1034,12 +1033,6 @@ end
 
 function mariohitbyenemy(m) -- Default and generic 1-hit death commands.
 	local s = gStateExtras[m.playerIndex]
-
-
-	-- These 'disables' fix the death counter from double-counting in the event mario gets his neck snapped and then killed again by lava.
-	if (m.action == ACT_SOFT_FORWARD_GROUND_KB or m.action == ACT_SOFT_BACKWARD_GROUND_KB) and not s.disableuntilnextwarp then
-		s.disableuntilnextwarp = true
-	end
 
 	-- Air Insta-Kill Mario (jumping into enemy like Chain Chomp. Mario's fault, not a chain chomp attack)
 	if (m.hurtCounter > 0) and (m.action == ACT_FORWARD_AIR_KB or m.action == ACT_BACKWARD_AIR_KB) then
@@ -1278,14 +1271,14 @@ end
 
 function mariodeath(m) -- If mario is dead, this will pause the counter to prevent false positive 2nd deaths, like getting neck snapped (death 1) and then falling into lava. (death 2) 
 	--Will also reset other functions as well.
-	local s = gStateExtras[m.playerIndex]
+	local s = gStateExtras[0]
 	s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
-	
+
 	--set_override_envfx(ENVFX_MODE_NONE)
 	audio_stream_stop(highmusic) --Stops the Hazy Maze Cave custom music after death.
 	audio_stream_stop(smwbonusmusic) --Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then
-		if ia(m) then gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1 end
+		gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
 		s.isdead = true
 	end
 end
