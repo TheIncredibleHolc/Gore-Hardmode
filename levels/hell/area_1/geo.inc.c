@@ -3,11 +3,11 @@
 const GeoLayout hell_area_1_geo[] = {
 	GEO_NODE_START(),
 	GEO_OPEN_NODE(),
-		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_TRANSPARENT, -94, 678, -16148, 84, 89, 78, hell_dl_Death_plane_mesh_layer_5),
-		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 0, 24, 0, hell_dl_Landing_spot_mesh_layer_1),
+		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, -148, -10802, 1095, hell_dl_Death_Plane_mesh_layer_1),
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, hell_dl_Lava_mesh_layer_1),
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, hell_dl_Path_1_mesh_layer_1),
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, hell_dl_Path_2_mesh_layer_1),
+		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 0, 24, 0, hell_dl_Solid_Map_mesh_layer_1),
 	GEO_CLOSE_NODE(),
 	GEO_RETURN(),
 };
@@ -34,7 +34,6 @@ const GeoLayout hell_area_1[] = {
 			GEO_CLOSE_NODE(),
 		GEO_CLOSE_NODE(),
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, hell_dl_material_revert_render_settings),
-		GEO_DISPLAY_LIST(LAYER_TRANSPARENT, hell_dl_material_revert_render_settings),
 	GEO_CLOSE_NODE(),
 	GEO_END(),
 };
