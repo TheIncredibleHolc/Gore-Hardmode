@@ -51,11 +51,24 @@ fast! A human blur!\
 Here you go--you've won\
 it, fair and square!"))
 
-smlua_text_utils_dialog_replace(DIALOG_008,1,4,30,200, ("BEWARE OF CHAIN CHOMP\
-Extreme Danger!\
-He will INSTA-KILL you\
-so keep your distance!\
-Scary, huh?\
+smlua_text_utils_dialog_replace(DIALOG_008,1,4,30,200, ("Uh oh, it looks\
+like Mario died and\
+went straight to hell!\
+(gasp!)\
+Lucky for Mario, there\
+are a some paths\
+through Hell to get\
+back to the overworld.\
+\
+Some paths will be hard\
+but give REAL 1-ups!\
+Others are easier, but\
+will yeild you no help\
+\
+But you must be careful\
+not to die again, for\
+the ETERNAL DEATH is\
+has yet to be awakened!\
 "))
 
 smlua_text_utils_dialog_replace(DIALOG_009,1,5,30,200, ("Long time, no see! Wow,\

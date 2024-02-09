@@ -1286,6 +1286,7 @@ end
 function marioalive() -- Resumes the death counter to accept death counts. 
 	local s = gStateExtras[0]
 	local n = gNetworkPlayers[0]
+	local m = gMarioStates[0]
 	audio_sample_stop(gSamples[sAgonyMario])
 	s.mariodisintegrate = 0
 	s.isdead = false
@@ -1293,6 +1294,10 @@ function marioalive() -- Resumes the death counter to accept death counts.
 
 	if n.currLevelNum == LEVEL_HELL then
 		audio_stream_play(musicHell, true, 1)
+	end
+
+	if m.numLives <= 0 then
+		warp_to_level(LEVEL_HELL, 1, 0)
 	end
 
 	if n.currLevelNum == LEVEL_JRB or n.currLevelNum == LEVEL_HELL then
@@ -1423,10 +1428,11 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -----GREEN DEMONS (ONCE AND FOR ALL!!) This finally works so DON'T TOUCH IT!!
 local function before_phys_step(m,stepType) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
-if m.playerIndex ~= 0 then return end
+	local n = gNetworkPlayers[0]
+	if m.playerIndex ~= 0 then return end
 
 	local obj = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhv1Up)
-    if obj~= nil and (nearest_interacting_mario_state_to_object(obj)).playerIndex == 0 and is_within_100_units_of_mario(obj.oPosX, obj.oPosY, obj.oPosZ) == 1 then --if local mario is touching 1up then
+    if obj~= nil and n.currLevelNum ~= LEVEL_HELL and (nearest_interacting_mario_state_to_object(obj)).playerIndex == 0 and is_within_100_units_of_mario(obj.oPosX, obj.oPosY, obj.oPosZ) == 1 then --if local mario is touching 1up then
 		obj_mark_for_deletion(obj)
         spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
     end
@@ -1437,7 +1443,6 @@ if m.playerIndex ~= 0 then return end
 		spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
     end
 end
-
 
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
