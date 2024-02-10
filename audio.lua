@@ -2,6 +2,26 @@ highmusic = audio_stream_load("high.mp3")
 smwbonusmusic = audio_stream_load("smwbonusloop.mp3")
 boss = audio_stream_load("croppedcastle.mp3")
 musicHell = audio_stream_load("hell.mp3")
+currentlyPlaying = nil
+
+---@param a BassAudio
+function stream_play(a)
+	if currentlyPlaying then audio_stream_stop(currentlyPlaying) end
+	audio_stream_play(a, true, 1)
+	currentlyPlaying = a
+end
+function stream_stop_all()
+	audio_stream_stop(highmusic)
+	audio_stream_stop(smwbonusmusic)
+	audio_stream_stop(boss)
+	audio_stream_stop(musicHell)
+	currentlyPlaying = nil
+end
+hook_event(HOOK_UPDATE, function ()
+	if currentlyPlaying then
+		audio_stream_set_volume(currentlyPlaying, is_game_paused() and 0.2 or 1)
+	end
+end)
 
 gSamples = {
 	audio_sample_load("bonebreak.mp3"),
@@ -22,8 +42,6 @@ gSamples = {
 	audio_sample_load("thunder.mp3"),
 	audio_sample_load("gslaser.mp3"),
 	audio_sample_load("gsbeam.mp3")
-	
-
 }
 
 sBoneBreak = 1
