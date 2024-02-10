@@ -125,7 +125,7 @@ function grand_star_init(o)
 
 
     local_play(sThunder, gMarioStates[0].marioObj.header.gfx.cameraToObject, 1);
-    audio_stream_play(boss, true, 1)
+    stream_play(boss)
 
     o.hitboxRadius = 160
     o.hitboxHeight = 100

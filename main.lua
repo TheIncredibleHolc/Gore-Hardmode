@@ -465,7 +465,7 @@ function bhv_bowser_key_spawn_ukiki(obj) --Spawns Ukiki for an annoying minigame
 	end, 0)
 	cur_obj_disable_rendering_and_become_intangible(obj)
 	fadeout_music(0)
-	audio_stream_play(smwbonusmusic, true, 1)
+	stream_play(smwbonusmusic)
 end
 ---@param obj Object
 function bhv_bowser_key_ukiki_loop(obj)
@@ -647,7 +647,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 				obj_mark_for_deletion(butterfly)
 				butterfly = obj_get_next_with_same_behavior_id(butterfly)
 			end
-			audio_stream_stop(highmusic)
+			stream_stop_all()
 			set_background_music(0, get_current_background_music(), 0)
 		end
 	end
@@ -671,7 +671,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 	if (s.highdeathtimer) == 1 then --initiates the 'high' music
 		fadeout_level_music(30*30)
-		audio_stream_play(highmusic, true, 1)
+		stream_play(highmusic)
 		spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
 	end
 	if ia(m) then
@@ -909,7 +909,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 	if (ukikitimer) == 2 and m.playerIndex == ukikiheldby then
 		local_play(sAngryMario, m.pos, 1)
-		audio_stream_stop(smwbonusmusic)
+		stream_stop_all()
 		local_play(sSMWBonusEnd, m.pos, 1)
 	end
 	if (ukikitimer) == 40 then
@@ -1293,8 +1293,7 @@ function mariodeath(m) -- If mario is dead, this will pause the counter to preve
 	s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
 
 	--set_override_envfx(ENVFX_MODE_NONE)
-	audio_stream_stop(highmusic) --Stops the Hazy Maze Cave custom music after death.
-	audio_stream_stop(smwbonusmusic) --Stops the ukiki minigame music if Mario falls to death. 
+	stream_stop_all() --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then
 		gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
 		s.isdead = true
@@ -1311,7 +1310,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	s.disableuntilnextwarp = false
 
 	if n.currLevelNum == LEVEL_HELL then
-		audio_stream_play(musicHell, true, 1)
+		stream_play(musicHell)
 	end
 
 	if m.numLives <= 0 then
@@ -1715,10 +1714,7 @@ end, nil)
 
 -- stop music when exiting levels
 hook_event(HOOK_ON_LEVEL_INIT, function ()
-	audio_stream_stop(highmusic)
-	audio_stream_stop(smwbonusmusic)
-	audio_stream_stop(boss)
-	audio_stream_stop(musicHell)
+	stream_stop_all()
 end)
 
 --Blocky looky here
