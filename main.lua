@@ -556,8 +556,18 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 		s.splattimer = s.splattimer + 1
 	end
 
+	--[[
 	if (s.splattimer) == 14 then
 		spawn_sync_if_main(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER2, m.pos.x, m.pos.y + 1, m.pos.z, nil, m.playerIndex)
+	end
+	]]
+	if (s.splattimer) == 14 then
+		spawn_sync_if_main(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER2, m.pos.x, find_floor_height(m.pos.x, m.pos.y, m.pos.z) + 2, m.pos.z,
+		function (obj)
+			local z, normal = {x=0,y=0,z=0}, cur_obj_update_floor_height_and_get_floor().normal
+			obj.oFaceAnglePitch = 16383-calculate_pitch(z, normal)
+			--obj.oFaceAngleYaw = calculate_yaw(z, normal)
+		end, 0)
 	end
 
 	if (s.splattimer) == 20 then
@@ -580,6 +590,7 @@ end
 
 function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
+	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 ----------------------------------------------------------------------------------------------------------------------------------
 	--SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
@@ -724,12 +735,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mario Disintegrates when on fire
 	if (s.mariodisintegrate == 1) then
-		obj_scale(deathflame, 6)
-		deathflame.oGraphYOffset = 100
-		deathflame.oPosX = m.pos.x
-		deathflame.oPosY = m.pos.y
-		deathflame.oPosZ = m.pos.z
-		m.marioObj.oMarioBurnTimer = 1
+		if deathflame ~= nil then
+			obj_scale(deathflame, 6)
+			deathflame.oGraphYOffset = 100
+			deathflame.oPosX = m.pos.x
+			deathflame.oPosY = m.pos.y
+			deathflame.oPosZ = m.pos.z
+			m.marioObj.oMarioBurnTimer = 1
+		end
 	end
 
 	if (m.health <= 300) and (s.mariodisintegrate == 1) then
@@ -782,7 +795,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			smlua_anim_util_set_animation(m.marioObj, "MARIO_DYING_CUTSCENE")
 		end
 		if (peach.oTimer >= 970) then
-			m.forwardVel = -1
+			m.forwardVel = 0
 		end
 		if (peach.oTimer == 990) then
 			play_character_sound(m, CHAR_SOUND_DYING)
@@ -792,7 +805,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			level_trigger_warp(m, WARP_OP_CREDITS_END)
 		end
 	end
-
+----------------------------------------------------------------------------------------------------------------------------------
+	--Hell entrance cutscene
+	n = gNetworkPlayers[0]
+	if n.currLevelNum == LEVEL_HELL and m.marioObj.oTimer == 28 then
+		cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_008)
+	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mips is a pain to catch
@@ -1443,8 +1461,6 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
 		spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
     end
 end
-
-
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 

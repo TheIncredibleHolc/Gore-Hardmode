@@ -56,20 +56,17 @@ like Mario died and\
 went straight to hell!\
 (gasp!)\
 Lucky for Mario, there\
-are a some paths\
+are a few paths\
 through Hell to get\
 back to the overworld.\
-\
 Some paths will be hard\
-but give REAL 1-ups!\
-Others are easier, but\
-will yeild you no help\
-\
-But you must be careful\
+and give REAL 1-ups!\
+Others are easier but\
+will yeild you no help.\
+You must be careful\
 not to die again, for\
 the ETERNAL DEATH is\
-has yet to be awakened!\
-"))
+right around the corner!"))
 
 smlua_text_utils_dialog_replace(DIALOG_009,1,5,30,200, ("Long time, no see! Wow,\
 have you gotten fast!\

@@ -3,6 +3,7 @@
 const GeoLayout hell_area_1_geo[] = {
 	GEO_NODE_START(),
 	GEO_OPEN_NODE(),
+		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -839, 738, -7620, -4, 2, -1, hell_dl_Cave_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -143, 343, -7364, 0, -87, 0, hell_dl_Cylinder_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, 80, 462, -3652, 0, -30, 0, hell_dl_Cylinder_001_mesh_layer_1),
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 735, 437, -6787, hell_dl_Cylinder_002_mesh_layer_1),
@@ -12,6 +13,7 @@ const GeoLayout hell_area_1_geo[] = {
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, hell_dl_Path_1_mesh_layer_1),
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, hell_dl_Path_2_mesh_layer_1),
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 0, 24, 0, hell_dl_Solid_Map_mesh_layer_1),
+		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, 6556, 623, -10019, 0, 33, 0, hell_dl_Stalagmite_mesh_layer_1),
 	GEO_CLOSE_NODE(),
 	GEO_RETURN(),
 };
