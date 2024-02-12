@@ -1229,11 +1229,9 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
 	--Chain Chomp insta-deaths
 	if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 and (m.hurtCounter > 0) and (m.action == ACT_BACKWARD_GROUND_KB or m.action == ACT_FORWARD_GROUND_KB) then --Custom Chain Chomp Mario Kill backward
-		m.health = 0xff
-
+		m.squishTimer = 50
 		m.particleFlags = PARTICLE_MIST_CIRCLE
 		set_mario_action(m, ACT_GONE, 80)
-		m.squishTimer = 50
 	end
 
 	--Big bully kill mario
