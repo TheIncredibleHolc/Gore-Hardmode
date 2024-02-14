@@ -875,14 +875,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		spawn_sync_if_main(id_bhvBobomb, E_MODEL_BOBOMB_BUDDY, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
-	--If mario is in JRB he cannot go lower than the lava.
-	local n = gNetworkPlayers[0]
-	if n.currLevelNum == LEVEL_JRB and m.pos.y < 1050 then
-		set_mario_action(m, ACT_LAVA_BOOST, 0)
-		m.pos.y = 1051
-	end
-
-----------------------------------------------------------------------------------------------------------------------------------
 	--Pokey cactus do things
 	pokey = obj_get_nearest_object_with_behavior_id(o, id_bhvPokey)
 	if (pokey ~= nil) then
@@ -1723,6 +1715,8 @@ hook_event(HOOK_ON_WARP, function ()
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, 1050, m.pos.z, function (o)
 			--obj_scale(o, 4)
 		end)
+		local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
+		o.oPosY = o.oPosY + 21
 	end
 end
 )
