@@ -140,7 +140,6 @@ for i = 0, MAX_PLAYERS-1 do
 		jumpland = 0,
 		disappear = 0,
 		bigthrowenabled = 0, --w
-		bigthrowtimer = 0,
 		isdead = false,
 		stomped = false,
 
@@ -247,9 +246,31 @@ function bhv_custom_kingbobomb(obj) -- Funny boss battle
 		obj_scale(bobsplat, .4)
 		local_play(sSplatter, m.pos, 1)
 		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
-		obj.oAction = 8
-		obj.oHealth = 0
+		spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
+		obj.oTimer = 0
+		
+		cur_obj_disable_rendering_and_become_intangible(obj)
+		obj.oHealth = 8
 	end
+	if obj.oHealth == 8 then
+		cur_obj_disable_rendering_and_become_intangible(obj)
+	end
+	if obj.oTimer == 60 and obj.oHealth == 8 then
+		obj.oHealth = 0
+		--obj.oAction = 8
+		obj_mark_for_deletion(obj)
+		stop_background_music(SEQ_EVENT_BOSS)
+		spawn_default_star(m.pos.x, m.pos.y + 200, m.pos.z)
+	end
+	if obj.oHealth == 2 and obj.oMoveFlags == 128 then
+		obj.oForwardVel = obj.oForwardVel + 5
+		obj.oFaceAnglePitch = obj.oFaceAnglePitch + 4000
+	end
+	--[[
+	if obj.oHealth < 5 then
+		djui_chat_message_create(tostring(obj.oMoveFlags))
+	end
+	]]
 end
 
 
@@ -621,7 +642,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		s.splatterdeath = 0
 		s.enablesplattimer = 1
 		s.bigthrowenabled = 0
-		s.bigthrowtimer = 0
 	end
 	----------------------------------------------------------------------------------------------------------------------------------
 	--(Hazy Maze Cave) Mario get high when walking in gas. 
@@ -866,7 +886,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		s.bigthrowenabled = 1
 	end
 	if (s.bigthrowenabled) == 1 then
-		m.forwardVel = 150
+		m.forwardVel = 280 --Was 150
+	end
+	if (s.bigthrowenabled) == 1 and m.hurtCounter > 0 then --  m.flags & ACT_AIR_THROW_LAND ~= 0 and m.action == 132193  both didnt work!
+		m.squishTimer = 30
+		s.bigthrowenabled = 0
+	end
+	if m.action == ACT_THROWN_FORWARD then
+		s.bigthrowenabled = 0
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--When getting the 100 coin star, a bobomb nuke spawns on Mario.
@@ -1036,19 +1063,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 
 end
 
-function throwtimer (m) -- Temporarily increases Mario's velocity when getting thrown. Makes chuckya and king bobomb throws MUCH further.
-	local s = gStateExtras[m.playerIndex]
-
-	if (s.bigthrowenabled) == 1 then
-		s.bigthrowtimer = s.bigthrowtimer + 1
-	end
-	if (s.bigthrowtimer) >= 100 then
-		if m.floorHeight == m.pos.y then
-			m.squishTimer = 30
-		end
-	end
-end
-
 function mariohitbyenemy(m) -- Default and generic 1-hit death commands.
 	local s = gStateExtras[m.playerIndex]
 
@@ -1070,11 +1084,11 @@ function mariohitbyenemy(m) -- Default and generic 1-hit death commands.
 
 	-- BIG fall insta-kill (Falling from REALLY high)
 	if (m.hurtCounter > 0) and (m.action == ACT_HARD_BACKWARD_GROUND_KB) then
-		m.health = 0xff
+		--m.health = 0xff
 		m.squishTimer = 50
 	end
 	if (m.hurtCounter > 0) and (m.action == ACT_HARD_FORWARD_GROUND_KB) then
-		m.health = 0xff
+		--m.health = 0xff
 		m.squishTimer = 50
 	end
 
@@ -1468,7 +1482,6 @@ hook_event(HOOK_MARIO_UPDATE, killer_exclamation_boxes)
 hook_event(HOOK_MARIO_UPDATE, testing)
 hook_event(HOOK_MARIO_UPDATE, mariohitbyenemy)
 hook_event(HOOK_MARIO_UPDATE, splattertimer)
-hook_event(HOOK_MARIO_UPDATE, throwtimer)
 hook_event(HOOK_BEFORE_MARIO_UPDATE, function (m) -- mario high
 local s = gStateExtras[m.playerIndex]
 if (s.ishigh) == 1 then

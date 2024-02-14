@@ -37,7 +37,7 @@ const LevelScript level_hell_entry[] = {
 		WARP_NODE(0xF0, LEVEL_BOB, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		WARP_NODE(0xF1, LEVEL_BOB, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		OBJECT(E_MODEL_EXCLAMATION_BOX, 91, 587, -3653, 0, 0, 0, 0x00000000, id_bhvExclamationBox),
-		OBJECT(MODEL_NONE, 758, 465, -7344, 90, 0, 0, 0x00000000, id_bhvFlamethrower),
+		OBJECT(E_MODEL_AMP, 761, 507, -7921, 90, 0, 0, 0x00000000, id_bhvCirclingAmp),
 		OBJECT(MODEL_1UP, 743, 779, -7350, 90, 10, 0, 0x00000000, bhv1Up),
 		OBJECT(E_MODEL_NONE, -134, 550, -7362, -90, 0, 180, 0x00000000, id_bhvLllRotatingBlockWithFireBars),
 		OBJECT(E_MODEL_BULLY, 117, 346, -3734, 90, 0, 0, 0x00000000, id_bhvSmallBully),
