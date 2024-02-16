@@ -130,6 +130,8 @@ E_MODEL_RING = smlua_model_util_get_id("ring_geo")
 E_MODEL_GSCHARGE = smlua_model_util_get_id("gscharge_geo")
 E_MODEL_GSBEAM = smlua_model_util_get_id("gsbeam_geo")
 COL_GSBEAM = smlua_collision_util_get("gsbeamcol_collision")
+E_MODEL_HEADLESSMARIO = smlua_model_util_get_id("headlessmario_geo")
+E_MODEL_BOTTOMLESSMARIO = smlua_model_util_get_id("bottomlessmario_geo")
 
 gStateExtras = {}
 for i = 0, MAX_PLAYERS-1 do
@@ -142,12 +144,13 @@ for i = 0, MAX_PLAYERS-1 do
 		bigthrowenabled = 0, --w
 		isdead = false,
 		stomped = false,
-
+		headless = false,
+		bottomless = false,
 		disableuntilnextwarp = false,
 		penguinholding = 0,
 		penguintimer = 0,
 		objtimer = 0,
-
+	
 		ishigh = 0,
 		outsidegastimer = 60,
 		highdeathtimer = 0,
@@ -613,6 +616,18 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
+
+----------------------------------------------------------------------------------------------------------------------------------
+	--DISMEMBERMENT DEATHS!!
+
+	if m.character.type == CT_MARIO and s.headless == true then
+		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
+	end
+
+	if m.character.type == CT_MARIO and s.bottomless == true then
+		obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
+	end
+
 ----------------------------------------------------------------------------------------------------------------------------------
 	--SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
 	--IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
@@ -1190,11 +1205,21 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
 	end
 
+	if m.character.type == CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 then
+		s.headless = true
+		local_play(sSplatter, m.pos, 1)
+		local_play(sCrunch, m.pos, 1)
+		squishblood(m.marioObj)
+		m.health = 0xff
+		set_mario_action(m, ACT_STANDING_DEATH, 0)
+	end
+
+
 	if (m.hurtCounter > 0) and
 		obj_has_behavior_id(o, id_bhvExplosion) + -- Custom Bobomb explosion Mario death
 		obj_has_behavior_id(o, id_bhvPitBowlingBall) + -- (BoB) Custom pit bowling ball death 
 		obj_has_behavior_id(o, id_bhvGoomba) + -- Custom Goomba Mario Kill
-		obj_has_behavior_id(o, id_bhvPiranhaPlant) + -- Custom Piranha Plant death
+		--obj_has_behavior_id(o, id_bhvPiranhaPlant) + -- Custom Piranha Plant death
 		obj_has_behavior_id(o, id_bhvSpindrift) + -- twirling guys insta-death
 		obj_has_behavior_id(o, id_bhvMrBlizzard) + -- Mr.Blizzard insta-death
 		obj_has_behavior_id(o, id_bhvWaterBomb) ~= 0 -- cannon bubble insta-death
@@ -1235,9 +1260,19 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
 	--Chain Chomp insta-deaths
 	if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 and (m.hurtCounter > 0) and (m.action == ACT_BACKWARD_GROUND_KB or m.action == ACT_FORWARD_GROUND_KB) then --Custom Chain Chomp Mario Kill backward
-		m.squishTimer = 50
-		m.particleFlags = PARTICLE_MIST_CIRCLE
-		set_mario_action(m, ACT_GONE, 80)
+		if m.character.type == CT_MARIO then
+			s.bottomless = true
+			local_play(sSplatter, m.pos, 1)
+			local_play(sCrunch, m.pos, 1)
+			squishblood(m.marioObj)
+			m.health = 0xff
+			mario_blow_off_cap(m, 15)
+			set_mario_action(m, ACT_SUFFOCATION, 0)
+		else
+			m.squishTimer = 50
+			m.particleFlags = PARTICLE_MIST_CIRCLE
+			set_mario_action(m, ACT_GONE, 80)
+		end
 	end
 
 	--Big bully kill mario
@@ -1308,10 +1343,13 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	local s = gStateExtras[0]
 	local n = gNetworkPlayers[0]
 	local m = gMarioStates[0]
-	audio_sample_stop(gSamples[sAgonyMario])
-	s.mariodisintegrate = 0
-	s.isdead = false
-	s.disableuntilnextwarp = false
+	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
+
+	s.mariodisintegrate = 0 --Mario is no longer burning
+	s.isdead = false --Mario is alive
+	s.disableuntilnextwarp = false --Enables death counter
+	s.headless = false --Gives Mario his head back
+	s.bottomless = false --Gives Mario his whole upper body back
 
 	if n.currLevelNum == LEVEL_HELL then
 		stream_play(musicHell)
@@ -1737,5 +1775,13 @@ end
 
 --Disable mario's fire scream to make room for custom scream.
 hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
+	local s = gStateExtras[m.playerIndex]
 	if sound == CHAR_SOUND_ON_FIRE then return 0 end
+	if sound == CHAR_SOUND_DYING and s.headless == true then
+		return 0
+	end
+	if sound == CHAR_SOUND_DYING and s.bottomless == true then
+		return 0
+	end
+
 end)
