@@ -150,7 +150,7 @@ for i = 0, MAX_PLAYERS-1 do
 		penguinholding = 0,
 		penguintimer = 0,
 		objtimer = 0,
-	
+
 		ishigh = 0,
 		outsidegastimer = 60,
 		highdeathtimer = 0,
@@ -379,12 +379,12 @@ function bhv_custom_chain_chomp(obj)
 		end
 	end
 
-	--if obj.oChainChompHitGate == true then
+	--if obj.oChainChompHitGate then
 	--if obj.oChainChompReleaseStatus == CHAIN_CHOMP_RELEASED_JUMP_AWAY then
 		--if obj.oMoveFlags & OBJ_MOVE_HIT_WALL then
 		--obj_get_nearest_object_with_behavior_id(o, id_bhvChainChompGate)
 		--if obj_check_if_collided_with_object(obj, o) ~= 0 then
-		--if obj.oChainChompHitGate == true then
+		--if obj.oChainChompHitGate then
 
 
 end
@@ -620,11 +620,11 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 ----------------------------------------------------------------------------------------------------------------------------------
 	--DISMEMBERMENT DEATHS!!
 
-	if m.character.type == CT_MARIO and s.headless == true then
+	if m.character.type == CT_MARIO and s.headless then
 		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
 	end
 
-	if m.character.type == CT_MARIO and s.bottomless == true then
+	if m.character.type == CT_MARIO and s.bottomless then
 		obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
 	end
 
@@ -1181,7 +1181,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	if obj_has_behavior_id(o, id_bhvDorrie) ~= 0 and (m.action & ACT_GROUND_POUND) ~= 0 then
 		local_play(sSplatter, m.pos, 1)
 		squishblood(o)
-		obj_mark_for_deletion(o)	
+		obj_mark_for_deletion(o)
 	end
 
 	--Skeeter insta-kill
@@ -1309,6 +1309,7 @@ function before_mario_action(m, action)
 		end
 	end
 -------------------------------------------------------------------------------------------------------------------------------------------------
+	--Unhides Mario if his action is changed for any reason. 
 	if m.action == ACT_GONE then
 		m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags | GRAPH_RENDER_ACTIVE
 	end
@@ -1777,11 +1778,11 @@ end
 hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
 	local s = gStateExtras[m.playerIndex]
 	if sound == CHAR_SOUND_ON_FIRE then return 0 end
-	if sound == CHAR_SOUND_DYING and s.headless == true then
-		return 0
-	end
-	if sound == CHAR_SOUND_DYING and s.bottomless == true then
-		return 0
-	end
 
+	local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvPiranhaPlant)
+	if sound == CHAR_SOUND_ATTACKED and obj_check_hitbox_overlap(m.marioObj, o) then return 0 end
+
+	if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then
+		return 0
+	end
 end)

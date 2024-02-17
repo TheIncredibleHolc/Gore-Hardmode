@@ -62,7 +62,7 @@ back to the overworld.\
 Some paths will be hard\
 and give REAL 1-ups!\
 Others are easier but\
-will yeild you no help.\
+will yield you no help.\
 You must be careful\
 not to die again, for\
 the ETERNAL DEATH is\
