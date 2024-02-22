@@ -1805,6 +1805,17 @@ hook_event(HOOK_ON_WARP, function ()
 		local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
 		o.oPosY = o.oPosY + 21
 	end
+	if n.currLevelNum == LEVEL_HELL then
+		set_lighting_color(0,255)
+		set_lighting_color(1,127)
+		set_lighting_color(2,100)
+		set_lighting_dir(1,-128)
+	else
+		set_lighting_color(0, 255)
+		set_lighting_color(1, 255)
+		set_lighting_color(2, 255)
+		set_lighting_dir(1,0)
+	end
 end
 )
 
