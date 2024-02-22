@@ -1223,6 +1223,8 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		squishblood(m.marioObj)
 		m.health = 0xff
 		set_mario_action(m, ACT_STANDING_DEATH, 0)
+	elseif m.character.type ~= CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 then
+		m.squishTimer = 50
 	end
 
 
@@ -1316,7 +1318,9 @@ function before_mario_action(m, action)
 
 		if (m.marioObj.oMarioBurnTimer == 0) and (s.mariodisintegrate == 1) then
 			deathflame = spawn_sync_object(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil)
-			network_play(sAgonyMario, m.pos, 1, m.playerIndex)
+			if m.character.type == CT_MARIO then
+				network_play(sAgonyMario, m.pos, 1, m.playerIndex)
+			end
 		end
 	end
 -------------------------------------------------------------------------------------------------------------------------------------------------
