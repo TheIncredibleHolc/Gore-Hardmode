@@ -3,19 +3,15 @@
 
 
 -------TESTING NOTES AND KNOWN BUGS-------------
---Bowser minigame spawns multiple Ukiki's if multiple players are around.
---Penguin Race spawns the wrong star.
+--Lava bubbling will continue if gameover in hell.
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
 --gLevelValues.entryLevel = LEVEL_BOWSER_3
---gLevelValues.entryLevel = LEVEL_HELL
 
 --(BoB, THI, TTM) bowling balls faster
---gBehaviorValues.BowlingBallBobSpeed = 30
---gBehaviorValues.BowlingBallBob2Speed = 30
 gBehaviorValues.BowlingBallTtmSpeed = 40
 gBehaviorValues.BowlingBallThiSmallSpeed = 45
 gBehaviorValues.BowlingBallThiSmallSpeed = 45
@@ -50,11 +46,14 @@ function lerp(a, b, t) return a * (1 - t) + b * t end
 
 function testing(m)
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
+		m.numLives = 1
 		--spawn_sync_if_main(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x + 100, m.pos.y, m.pos.z, nil, m.playerIndex)
 		--spawn_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, m.waterLevel + 1, m.pos.z, function (o)
-        spawn_non_sync_object(id_bhvGrandStar, E_MODEL_STAR, m.pos.x, m.pos.y + 400, m.pos.z, function (o)
+       --[[
+		spawn_non_sync_object(id_bhvGrandStar, E_MODEL_STAR, m.pos.x, m.pos.y + 400, m.pos.z, function (o)
             o.oAction = 0
         end)
+		]]
 		--	end)
 		--spawn_sync_object(id_bhvBowserBomb, E_MODEL_BOWSER_BOMB,  m.pos.x + 100, m.pos.y, m.pos.z, nil)
 	end
@@ -62,7 +61,7 @@ function testing(m)
 		--warp_to_level(2, 1, 1)
 		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
 
-		spawn_non_sync_object(id_bhvGSBeam, E_MODEL_GSBEAM, m.pos.x, m.pos.y, m.pos.z, nil)
+		--spawn_non_sync_object(id_bhvGSBeam, E_MODEL_GSBEAM, m.pos.x, m.pos.y, m.pos.z, nil)
 
 		--spawn_non_sync_object(id_bhvSkybox1, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 0, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, m.pos.x, m.pos.y - 9500, m.pos.z, nil)
@@ -132,6 +131,9 @@ E_MODEL_GSBEAM = smlua_model_util_get_id("gsbeam_geo")
 COL_GSBEAM = smlua_collision_util_get("gsbeamcol_collision")
 E_MODEL_HEADLESSMARIO = smlua_model_util_get_id("headlessmario_geo")
 E_MODEL_BOTTOMLESSMARIO = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_HELLPLATFORM = smlua_model_util_get_id("hellplatform_geo")
+COL_HELLPLATFORM = smlua_collision_util_get("hellplatform_collision")
+
 
 gStateExtras = {}
 for i = 0, MAX_PLAYERS-1 do
@@ -143,6 +145,7 @@ for i = 0, MAX_PLAYERS-1 do
 		disappear = 0,
 		bigthrowenabled = 0, --w
 		isdead = false,
+		isinhell = false,
 		stomped = false,
 		headless = false,
 		bottomless = false,
@@ -618,6 +621,13 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local s = gStateExtras[m.playerIndex]
 
 ----------------------------------------------------------------------------------------------------------------------------------
+	--Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)
+	if s.isinhell and n.currLevelNum ~= LEVEL_HELL then
+		m.numLives = 0
+		warp_to_level(LEVEL_HELL, 1, 0)
+	end
+
+----------------------------------------------------------------------------------------------------------------------------------
 	--DISMEMBERMENT DEATHS!!
 
 	if m.character.type == CT_MARIO and s.headless then
@@ -844,6 +854,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--Hell entrance cutscene
 	n = gNetworkPlayers[0]
 	if n.currLevelNum == LEVEL_HELL and m.marioObj.oTimer == 28 then
+		if m.playerIndex ~= 0 then return end
 		cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_008)
 	end
 
@@ -1346,6 +1357,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	local m = gMarioStates[0]
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
 
+
 	s.mariodisintegrate = 0 --Mario is no longer burning
 	s.isdead = false --Mario is alive
 	s.disableuntilnextwarp = false --Enables death counter
@@ -1357,6 +1369,8 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	end
 
 	if m.numLives <= 0 then
+		if m.playerIndex ~= 0 then return end
+		s.isinhell = true
 		warp_to_level(LEVEL_HELL, 1, 0)
 	end
 
@@ -1498,7 +1512,7 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
     end
 
 	local demon = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON
-    if demon ~= nil and (nearest_interacting_mario_state_to_object(demon)).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
+    if n.currLevelNum ~= LEVEL_HELL and demon ~= nil and (nearest_interacting_mario_state_to_object(demon)).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
         obj_mark_for_deletion(demon)
 		spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
     end
@@ -1595,16 +1609,19 @@ end
 function bhv_ferris_wheel(o)
 	local m = nearest_mario_state_to_object(o)
 	local s = gStateExtras[m.playerIndex]
+	local n = gNetworkPlayers[0]
 	--if obj_check_if_collided_with_object(m.marioObj, o) ~= 0 then
-	if mario_is_within_rectangle(o.oPosX - 150, o.oPosX + 150, o.oPosZ - 150, o.oPosZ + 150) ~= 0 then
-		s.objtimer = s.objtimer + 1
-		o.oMoveAngleRoll = o.oMoveAngleRoll + 10
-	end
-	if (s.objtimer) == 30 then
-		obj_mark_for_deletion(o)
-		objtimeractivated = 0
-		s.objtimer = 0
-		local_play(sSlip, m.pos, 1)
+	if n.currLevelNum ~= LEVEL_BITS then
+		if mario_is_within_rectangle(o.oPosX - 150, o.oPosX + 150, o.oPosZ - 150, o.oPosZ + 150) ~= 0 then
+			s.objtimer = s.objtimer + 1
+			o.oMoveAngleRoll = o.oMoveAngleRoll + 10
+		end
+		if (s.objtimer) == 30 then
+			obj_mark_for_deletion(o)
+			objtimeractivated = 0
+			s.objtimer = 0
+			local_play(sSlip, m.pos, 1)
+		end
 	end
 end
 
@@ -1636,6 +1653,19 @@ function bhv_custom_hex_platform(o)
 	o.oAngleVelYaw = 5000
 	o.oMoveAngleYaw = o.oMoveAngleYaw + 4744
 	load_object_collision_model()
+end
+
+local function bhv_hellplatform_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oCollisionDistance = 7000
+    o.collisionData = COL_HELLPLATFORM
+    o.oAngleVelYaw = 750
+    obj_scale(o, 1)
+end
+
+local function bhv_hellplatform_loop(o)
+    load_object_collision_model()
+    o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
 end
 
 function bhv_custom_crushtrap(o)
@@ -1698,6 +1728,7 @@ hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
 
+id_bhvHellPlatform1 = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_hellplatform_init, bhv_hellplatform_loop)
 id_bhvLava = hook_behavior(nil, OBJ_LIST_SURFACE, true, lava_init, lava_loop, "bhvLava")
 
 -- test function to warp to level, disable if necessary

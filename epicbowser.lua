@@ -1,12 +1,14 @@
 ------------------------------------------------------------------------------
 --Helper:
 function testing(m)
+    --[[
     if (m.controller.buttonPressed & U_JPAD) ~= 0 then
         spawn_non_sync_object(id_bhvStarMinions, E_MODEL_STAR, m.pos.x, m.pos.y + 3500, m.pos.z, function (obj)
             obj.oAction = STAR_MINION_ACT_FALL
             obj.parentObj = o
         end)
     end
+    ]]
 end
 
 function obj_call_action_function(o, actionFunctions)
