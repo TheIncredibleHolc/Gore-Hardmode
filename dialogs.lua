@@ -1190,25 +1190,7 @@ after all. I won't gravel,\
 er, grovel. Here, you win.\
 Take this with you!"))
 
-smlua_text_utils_dialog_replace(DIALOG_116,1,5,95,200, ("Whaaa....Whaaat?\
-Can it be that a\
-pipsqueak like you has\
-defused the Bob-omb\
-king????\
-You might be fast enough\
-to ground me, but you'll\
-have to pick up the pace\
-if you want to take King\
-Bowser by the tail.\
-Methinks my troops could\
-learn a lesson from you!\
-Here is your Star, as I\
-promised, Mario.\
-\
-If you want to see me\
-again, select this Star\
-from the menu. For now,\
-farewell."))
+smlua_text_utils_dialog_replace(DIALOG_116,1,1,95,200, "I'm a chuckster!")
 
 smlua_text_utils_dialog_replace(DIALOG_117,1,1,95,200, ("Who...walk...here?\
 Who...break...seal?\

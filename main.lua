@@ -272,6 +272,9 @@ function bhv_custom_kingbobomb(obj) -- Funny boss battle
 		obj.oForwardVel = obj.oForwardVel + 5
 		obj.oFaceAnglePitch = obj.oFaceAnglePitch + 4000
 	end
+	if obj.oAction == 3 and obj.oSubAction == 2 then
+	    cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_116)
+	end
 	--[[
 	if obj.oHealth < 5 then
 		djui_chat_message_create(tostring(obj.oMoveFlags))
