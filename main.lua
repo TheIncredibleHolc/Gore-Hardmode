@@ -991,7 +991,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if (o) ~= nil then
 		if mario_is_within_rectangle(o.oPosX - 50, o.oPosX + 50, o.oPosZ - 50, o.oPosZ + 50) ~= 0 then
 			o.oPosY = o.oPosY - 100
-			obj_mark_for_deletion(o)		
+			obj_mark_for_deletion(o)
 		end
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -1006,8 +1006,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			obj_mark_for_deletion(o)
 		end
 	end
-
-	
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--(Lethal Lava Land) LLL Objects
@@ -1025,7 +1023,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if (o) ~= nil then
 		o.oMoveAngleYaw = o.oMoveAngleYaw + 500
 	end
-
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	-- (Cool Cool Mountain) Baby penguin gets thrown after 8 seconds of mario losing his patience.
@@ -1616,6 +1613,20 @@ function lava_loop(o)
     load_object_collision_model()
 end
 
+function bhv_checkerboard_platform(o)
+	if o.oBehParams2ndByte == 0 then
+		if o.oAction == 3 then o.oAction = 2 end
+	elseif o.oAction == 1 then
+		-- checkerboard_plat_act_rotate
+    	o.oVelY = 0
+    	o.oAngleVelPitch = 512
+    	if (o.oTimer + 1 == 0x8000 / math.abs(512)) then
+    	    o.oAction = 4
+		end
+    	o.oCheckerBoardPlatformUnkF8 = 4
+	end
+end
+
 function bhv_ferris_wheel(o)
 	local m = nearest_mario_state_to_object(o)
 	local s = gStateExtras[m.playerIndex]
@@ -1712,6 +1723,7 @@ hook_behavior(id_bhvBowserBomb, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bowser
 --hook_behavior(id_bhvYellowCoin, OBJ_LIST_LEVEL, false, nil, bhv_custom_coins)
 --hook_behavior(id_bhvOneCoin, OBJ_LIST_LEVEL, false, nil, bhv_custom_coins)
 --hook_behavior(id_bhvMovingYellowCoin, OBJ_LIST_LEVEL, false, nil, bhv_custom_coins)
+hook_behavior(id_bhvCheckerboardPlatformSub, OBJ_LIST_SURFACE, false, nil, bhv_checkerboard_platform)
 hook_behavior(id_bhvFerrisWheelPlatform, OBJ_LIST_SURFACE, false, nil, bhv_ferris_wheel)
 hook_behavior(id_bhvHorizontalGrindel, OBJ_LIST_SURFACE, false, nil, bhv_custom_grindel)
 hook_behavior(id_bhvSpindel, OBJ_LIST_SURFACE, false, nil, bhv_custom_spindel)
@@ -1788,15 +1800,13 @@ hook_chat_command("go", "to", function ()
 end)
 
 
-
-
 -- to make ukiki jump from the key
 hook_behavior(id_bhvUkiki, OBJ_LIST_GENACTOR, false, function (obj)
 	obj.oPosY = obj.oHomeY
 end, nil)
 
--- stop music when exiting levels
 hook_event(HOOK_ON_LEVEL_INIT, function ()
+	--Stop music when exiting levels
 	stream_stop_all()
 
 	----------------------------------------------------------------------------------------------------------------------------------
