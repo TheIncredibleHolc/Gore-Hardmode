@@ -272,9 +272,15 @@ function bhv_custom_kingbobomb(obj) -- Funny boss battle
 		obj.oForwardVel = obj.oForwardVel + 5
 		obj.oFaceAnglePitch = obj.oFaceAnglePitch + 4000
 	end
-	if obj.oAction == 3 and obj.oSubAction == 2 then
-	    cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_116)
+	if obj.oAction == 3 then
+		if obj.oTimer == 0 then
+			cutscene_object_with_dialog(CUTSCENE_DIALOG, obj, DIALOG_116)
+		elseif obj.oTimer == 40 then
+			obj.oSubAction = 3
+		end
+		cur_obj_rotate_yaw_toward(0, 0x400)
 	end
+	-- djui_chat_message_create(""..obj.oAction.."\n"..obj.oSubAction.."\n"..obj.oTimer)
 	--[[
 	if obj.oHealth < 5 then
 		djui_chat_message_create(tostring(obj.oMoveFlags))
@@ -622,13 +628,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
-
-----------------------------------------------------------------------------------------------------------------------------------
-	--Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)
-	if s.isinhell and n.currLevelNum ~= LEVEL_HELL then
-		m.numLives = 0
-		warp_to_level(LEVEL_HELL, 1, 0)
-	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--DISMEMBERMENT DEATHS!!
@@ -1534,6 +1533,7 @@ hook_event(HOOK_MARIO_UPDATE, killer_exclamation_boxes)
 hook_event(HOOK_MARIO_UPDATE, testing)
 hook_event(HOOK_MARIO_UPDATE, mariohitbyenemy)
 hook_event(HOOK_MARIO_UPDATE, splattertimer)
+---@param m MarioState
 hook_event(HOOK_BEFORE_MARIO_UPDATE, function (m) -- mario high
 local s = gStateExtras[m.playerIndex]
 if (s.ishigh) == 1 then
@@ -1553,6 +1553,9 @@ if (s.ishigh) == 1 then
 		m.controller.buttonPressed = Z_TRIG
 	end
 end
+	if obj_has_behavior_id(m.usedObj, id_bhvKingBobomb) ~= 0 then
+		m.controller.buttonDown = (m.usedObj.oTimer) == 40 and A_BUTTON or 0
+	end
 end)
 hook_event(HOOK_ON_WARP, marioalive)
 hook_event(HOOK_BEFORE_PHYS_STEP, mario_before_phys_step)
@@ -1795,6 +1798,13 @@ end, nil)
 -- stop music when exiting levels
 hook_event(HOOK_ON_LEVEL_INIT, function ()
 	stream_stop_all()
+
+	----------------------------------------------------------------------------------------------------------------------------------
+	--Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)
+	if gStateExtras[0].isinhell and gNetworkPlayers[0].currLevelNum ~= LEVEL_HELL then
+		gMarioStates[0].numLives = 0
+		warp_to_level(LEVEL_HELL, 1, 0)
+	end
 end)
 
 --Blocky looky here

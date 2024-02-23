@@ -1190,7 +1190,7 @@ after all. I won't gravel,\
 er, grovel. Here, you win.\
 Take this with you!"))
 
-smlua_text_utils_dialog_replace(DIALOG_116,1,1,95,200, "I'm a chuckster!")
+smlua_text_utils_dialog_replace(DIALOG_116,1,1,30,200, "I'm a chuckster!")
 
 smlua_text_utils_dialog_replace(DIALOG_117,1,1,95,200, ("Who...walk...here?\
 Who...break...seal?\
