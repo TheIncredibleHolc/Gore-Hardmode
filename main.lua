@@ -43,6 +43,7 @@ function ia(m)
 end
 function lerp(a, b, t) return a * (1 - t) + b * t end
 
+function vec3f() return {x=0,y=0,z=0} end
 
 function testing(m)
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
@@ -524,7 +525,7 @@ end
 function squishblood(o) -- Creates instant pool of impact-blood under mario.
 	spawn_sync_if_main(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ,
 	function (obj)
-		local z, normal = {x=0,y=0,z=0}, cur_obj_update_floor_height_and_get_floor().normal
+		local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
 		obj.oFaceAnglePitch = 16383-calculate_pitch(z, normal)
 		obj.oFaceAngleYaw = calculate_yaw(z, normal)
 	end, 0)
@@ -600,7 +601,7 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 	if (s.splattimer) == 14 then
 		spawn_sync_if_main(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER2, m.pos.x, find_floor_height(m.pos.x, m.pos.y, m.pos.z) + 2, m.pos.z,
 		function (obj)
-			local z, normal = {x=0,y=0,z=0}, cur_obj_update_floor_height_and_get_floor().normal
+			local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
 			obj.oFaceAnglePitch = 16383-calculate_pitch(z, normal)
 			--obj.oFaceAngleYaw = calculate_yaw(z, normal)
 		end, 0)
@@ -1627,23 +1628,41 @@ function bhv_checkerboard_platform(o)
 	end
 end
 
-function bhv_ferris_wheel(o)
-	local m = nearest_mario_state_to_object(o)
-	local s = gStateExtras[m.playerIndex]
-	local n = gNetworkPlayers[0]
-	--if obj_check_if_collided_with_object(m.marioObj, o) ~= 0 then
-	if n.currLevelNum ~= LEVEL_BITS then
-		if mario_is_within_rectangle(o.oPosX - 150, o.oPosX + 150, o.oPosZ - 150, o.oPosZ + 150) ~= 0 then
-			s.objtimer = s.objtimer + 1
-			o.oMoveAngleRoll = o.oMoveAngleRoll + 10
-		end
-		if (s.objtimer) == 30 then
-			obj_mark_for_deletion(o)
-			objtimeractivated = 0
-			s.objtimer = 0
-			local_play(sSlip, m.pos, 1)
+function bhv_ferris_wheel_axle(o)
+	o.oFaceAngleRoll = o.oFaceAngleRoll + 400
+end
+
+---@param o Object
+---@return Vec3f
+function get_pressure_point(o)
+	local avg = vec3f()
+	local obj = vec3f()
+	object_pos_to_vec3f(obj, o)
+	local count = 0
+	for i = 0, MAX_PLAYERS-1 do
+		local m = gMarioStates[i]
+		if is_player_active(m) ~= 0 and m.marioObj and m.marioObj.platform == o then
+			vec3f_add(avg, m.pos)
+			count = count + 1
 		end
 	end
+	if count < 1 then return false end
+	vec3f_mul(avg, 1/count)
+	vec3f_sub(avg, obj)
+	return avg
+end
+
+function bhv_ferris_wheel(o)
+	local pressure = get_pressure_point(o)
+	if cur_obj_is_any_player_on_platform() ~= 0 then
+		o.oAngleVelRoll = (o.oAngleVelRoll + (-pressure.x*30 - o.oFaceAngleRoll)*0.05)*0.95
+	else
+		o.oAngleVelRoll = (o.oAngleVelRoll - o.oFaceAngleRoll*0.1)*0.95
+	end
+	if cur_obj_is_mario_ground_pounding_platform() ~= 0 then
+		o.oAngleVelRoll = pressure.x*300
+	end
+	cur_obj_rotate_face_angle_using_vel()
 end
 
 function bhv_custom_grindel(o)
@@ -1724,6 +1743,7 @@ hook_behavior(id_bhvBowserBomb, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bowser
 --hook_behavior(id_bhvOneCoin, OBJ_LIST_LEVEL, false, nil, bhv_custom_coins)
 --hook_behavior(id_bhvMovingYellowCoin, OBJ_LIST_LEVEL, false, nil, bhv_custom_coins)
 hook_behavior(id_bhvCheckerboardPlatformSub, OBJ_LIST_SURFACE, false, nil, bhv_checkerboard_platform)
+hook_behavior(id_bhvFerrisWheelAxle, OBJ_LIST_SURFACE, false, nil, bhv_ferris_wheel_axle)
 hook_behavior(id_bhvFerrisWheelPlatform, OBJ_LIST_SURFACE, false, nil, bhv_ferris_wheel)
 hook_behavior(id_bhvHorizontalGrindel, OBJ_LIST_SURFACE, false, nil, bhv_custom_grindel)
 hook_behavior(id_bhvSpindel, OBJ_LIST_SURFACE, false, nil, bhv_custom_spindel)
