@@ -785,12 +785,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mario Disintegrates when on fire
 	if (s.mariodisintegrate == 1) then
-		if deathflame ~= nil then
-			obj_scale(deathflame, 6)
-			deathflame.oGraphYOffset = 100
-			deathflame.oPosX = m.pos.x
-			deathflame.oPosY = m.pos.y
-			deathflame.oPosZ = m.pos.z
+		if m.usedObj then
+			obj_scale(m.usedObj, 6)
+			obj_copy_pos(m.usedObj, m.marioObj)
+			m.usedObj.oGraphYOffset = 100
 			m.marioObj.oMarioBurnTimer = 1
 		end
 	end
@@ -798,7 +796,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if (m.health <= 300) and (s.mariodisintegrate == 1) then
 		m.squishTimer = 50
 		audio_sample_stop(gSamples[sAgonyMario])
-		obj_mark_for_deletion(deathflame)
+		obj_mark_for_deletion(m.usedObj)
 	end
 
 	if (s.mariodisintegrate) == 1 then
@@ -1319,7 +1317,9 @@ function before_mario_action(m, action)
 		s.mariodisintegrate = 1
 
 		if (m.marioObj.oMarioBurnTimer == 0) and (s.mariodisintegrate == 1) then
-			deathflame = spawn_sync_object(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil)
+			if (m.usedObj and obj_has_behavior_id(m.usedObj, id_bhvFlame) == 0) or not m.usedObj then
+				m.usedObj = spawn_sync_object(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil)
+			end
 			if m.character.type == CT_MARIO then
 				network_play(sAgonyMario, m.pos, 1, m.playerIndex)
 			end
