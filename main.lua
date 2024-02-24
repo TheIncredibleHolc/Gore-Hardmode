@@ -45,6 +45,8 @@ function lerp(a, b, t) return a * (1 - t) + b * t end
 
 function vec3f() return {x=0,y=0,z=0} end
 
+function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
+
 function testing(m)
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
 		m.numLives = 1
@@ -1621,7 +1623,7 @@ function bhv_checkerboard_platform(o)
 		-- checkerboard_plat_act_rotate
     	o.oVelY = 0
     	o.oAngleVelPitch = 512
-    	if (o.oTimer + 1 == 0x8000 / math.abs(512)) then
+    	if (o.oTimer + 1 == 0x8000 / absf_2(512)) then
     	    o.oAction = 4
 		end
     	o.oCheckerBoardPlatformUnkF8 = 4
@@ -1646,7 +1648,7 @@ function get_pressure_point(o)
 			count = count + 1
 		end
 	end
-	if count < 1 then return false end
+	if count < 1 then return vec3f() end
 	vec3f_mul(avg, 1/count)
 	vec3f_sub(avg, obj)
 	return avg
@@ -1654,13 +1656,13 @@ end
 
 function bhv_ferris_wheel(o)
 	local pressure = get_pressure_point(o)
-	if cur_obj_is_any_player_on_platform() ~= 0 then
-		o.oAngleVelRoll = (o.oAngleVelRoll + (-pressure.x*30 - o.oFaceAngleRoll)*0.05)*0.95
-	else
-		o.oAngleVelRoll = (o.oAngleVelRoll - o.oFaceAngleRoll*0.1)*0.95
-	end
+	o.oAngleVelRoll = (o.oAngleVelRoll + (-pressure.x*30 - o.oFaceAngleRoll)*0.1)*0.95
 	if cur_obj_is_mario_ground_pounding_platform() ~= 0 then
-		o.oAngleVelRoll = pressure.x*300
+		o.oAngleVelRoll = -pressure.x*300
+	end
+	if o.oFaceAngleRoll ~= limit_angle(o.oFaceAngleRoll) then
+		cur_obj_play_sound_1(SOUND_MOVING_AIM_CANNON)
+		o.oFaceAngleRoll = limit_angle(o.oFaceAngleRoll)
 	end
 	cur_obj_rotate_face_angle_using_vel()
 end
