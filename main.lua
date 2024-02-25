@@ -796,13 +796,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if (m.health <= 300) and (s.mariodisintegrate == 1) then
 		m.squishTimer = 50
 		audio_sample_stop(gSamples[sAgonyMario])
-<<<<<<< Updated upstream
-		obj_mark_for_deletion(m.usedObj)
-=======
 		audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
+		obj_mark_for_deletion(m.usedObj)
 
-		obj_mark_for_deletion(deathflame)
->>>>>>> Stashed changes
 	end
 
 	if (s.mariodisintegrate) == 1 then
