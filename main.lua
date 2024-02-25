@@ -796,7 +796,13 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if (m.health <= 300) and (s.mariodisintegrate == 1) then
 		m.squishTimer = 50
 		audio_sample_stop(gSamples[sAgonyMario])
+<<<<<<< Updated upstream
 		obj_mark_for_deletion(m.usedObj)
+=======
+		audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
+
+		obj_mark_for_deletion(deathflame)
+>>>>>>> Stashed changes
 	end
 
 	if (s.mariodisintegrate) == 1 then
@@ -809,6 +815,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
             spawn_mist_particles()
 			network_play(sCoolOff, m.pos, 1, m.playerIndex)
 			audio_sample_stop(gSamples[sAgonyMario])
+			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
             s.mariodisintegrate = 0
 			if (deathflame ~= nil) then
 				obj_mark_for_deletion(deathflame)
@@ -1322,6 +1329,8 @@ function before_mario_action(m, action)
 			end
 			if m.character.type == CT_MARIO then
 				network_play(sAgonyMario, m.pos, 1, m.playerIndex)
+			elseif m.character.type == CT_TOAD then
+				network_play(sToadburn, m.pos, 1, m.playerIndex)
 			end
 		end
 	end
@@ -1362,7 +1371,8 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	local n = gNetworkPlayers[0]
 	local m = gMarioStates[0]
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
-
+	audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
+	
 
 	s.mariodisintegrate = 0 --Mario is no longer burning
 	s.isdead = false --Mario is alive

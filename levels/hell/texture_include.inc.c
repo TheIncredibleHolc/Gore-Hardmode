@@ -53,6 +53,11 @@ u8 hell_dl__5ACCBD20_c_rgba16[] = {
 	#include "levels/hell/_5ACCBD20_c.rgba16.inc.c"
 };
 
+Gfx hell_dl__5ACCBD20_c_rgba16_copy_aligner[] = {gsSPEndDisplayList()};
+u8 hell_dl__5ACCBD20_c_rgba16_copy[] = {
+	#include "levels/hell/_5ACCBD20_c.rgba16.inc.c"
+};
+
 Gfx hell_dl__90F17C1_c_ci8_aligner[] = {gsSPEndDisplayList()};
 u8 hell_dl__90F17C1_c_ci8[] = {
 	#include "levels/hell/_90F17C1_c.ci8.inc.c"
@@ -88,8 +93,8 @@ u8 hell_dl_Obsidian32_pal_rgba16[] = {
 	#include "levels/hell/Obsidian32.rgba16.pal"
 };
 
-Gfx hell_dl__5ACCBD20_c_rgba16_copy_aligner[] = {gsSPEndDisplayList()};
-u8 hell_dl__5ACCBD20_c_rgba16_copy[] = {
+Gfx hell_dl__5ACCBD20_c_rgba16_copy_copy_aligner[] = {gsSPEndDisplayList()};
+u8 hell_dl__5ACCBD20_c_rgba16_copy_copy[] = {
 	#include "levels/hell/_5ACCBD20_c.rgba16.inc.c"
 };
 
@@ -101,11 +106,6 @@ u8 hell_dl__3621448_ci4_copy[] = {
 Gfx hell_dl__3621448_pal_rgba16_copy_aligner[] = {gsSPEndDisplayList()};
 u8 hell_dl__3621448_pal_rgba16_copy[] = {
 	#include "levels/hell/_3621448.rgba16.pal"
-};
-
-Gfx hell_dl__5ACCBD20_c_rgba16_copy_copy_aligner[] = {gsSPEndDisplayList()};
-u8 hell_dl__5ACCBD20_c_rgba16_copy_copy[] = {
-	#include "levels/hell/_5ACCBD20_c.rgba16.inc.c"
 };
 
 Gfx hell_dl_SUPER_MARIO_64_B5B2C148_0_2_all_ci8_aligner[] = {gsSPEndDisplayList()};
