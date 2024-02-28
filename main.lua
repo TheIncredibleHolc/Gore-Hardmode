@@ -162,8 +162,6 @@ for i = 0, MAX_PLAYERS-1 do
 		highdeathtimer = 0,
 
 		splatterdeath = 0, -- w
-
-		mariodisintegrate = 0,
 	}
 end
 toadguitimer = 0
@@ -370,6 +368,7 @@ end
 function bhv_custom_explosion(obj) -- replaces generic explosions with NUKES! (Bigger radius, bigger explosion, louder)
 	local m = nearest_mario_state_to_object(obj)
 	local_play(sBigExplosion, m.pos, 1)
+	cur_obj_shake_screen(SHAKE_POS_LARGE)
 	spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, obj.oPosX, obj.oPosY, obj.oPosZ, nil, 0)
 	if dist_between_objects(obj, m.marioObj) <= 850 then
 		m.squishTimer = 50
@@ -783,23 +782,20 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mario Disintegrates when on fire
-	if (s.mariodisintegrate == 1) then
+	if m.action == ACT_BURNING_JUMP or m.action == ACT_BURNING_GROUND or m.action == ACT_BURNING_FALL then
 		if m.usedObj then
 			obj_scale(m.usedObj, 6)
 			obj_copy_pos(m.usedObj, m.marioObj)
 			m.usedObj.oGraphYOffset = 100
 			m.marioObj.oMarioBurnTimer = 1
 		end
-	end
 
-	if (m.health <= 300) and (s.mariodisintegrate == 1) then
-		m.squishTimer = 50
-		audio_sample_stop(gSamples[sAgonyMario])
-		audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
-		obj_mark_for_deletion(m.usedObj)
-	end
+		if (m.health <= 300) then
+			m.squishTimer = 50
+			audio_sample_stop(gSamples[sAgonyMario])
+			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
+		end
 
-	if (s.mariodisintegrate) == 1 then
         local touchingwater = m.pos.y <= m.waterLevel
         if touchingwater then
             spawn_mist_particles()
@@ -810,12 +806,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			network_play(sCoolOff, m.pos, 1, m.playerIndex)
 			audio_sample_stop(gSamples[sAgonyMario])
 			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
-            s.mariodisintegrate = 0
 			if m.usedObj then
 				obj_mark_for_deletion(m.usedObj)
 			end
         end
-    end
+	end
+	if m.usedObj and obj_has_behavior_id(m.usedObj, id_bhvFlame) ~= 0 and m.health < 128 then
+		obj_mark_for_deletion(m.usedObj)
+	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--ENDING OF THE GAME CUTSCENE
@@ -1083,34 +1081,35 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 end
 
 function mariohitbyenemy(m) -- Default and generic 1-hit death commands.
+if (m.hurtCounter > 0) then
 	local s = gStateExtras[m.playerIndex]
 
 	-- Air Insta-Kill Mario (jumping into enemy like Chain Chomp. Mario's fault, not a chain chomp attack)
-	if (m.hurtCounter > 0) and (m.action == ACT_FORWARD_AIR_KB or m.action == ACT_BACKWARD_AIR_KB) then
+	if (m.action == ACT_FORWARD_AIR_KB or m.action == ACT_BACKWARD_AIR_KB) then
 		m.health = 0xff
 	end
 
 	-- Air Insta-Kill Mario (Generic hits, mario pvp air kicks, etc..)
-	if (m.hurtCounter > 0) and (m.action == ACT_HARD_FORWARD_AIR_KB) then
+	if (m.action == ACT_HARD_FORWARD_AIR_KB) then
 		m.forwardVel = 1150
 		m.health = 0xff
 	end
-	if (m.hurtCounter > 0) and (m.action == ACT_HARD_BACKWARD_AIR_KB) then
+	if (m.action == ACT_HARD_BACKWARD_AIR_KB) then
 		m.forwardVel = -1150
 		m.health = 0xff
 	end
 
 
 	-- BIG fall insta-kill (Falling from REALLY high)
-	if (m.hurtCounter > 0) and (m.action == ACT_HARD_BACKWARD_GROUND_KB) then
+	if (m.action == ACT_HARD_BACKWARD_GROUND_KB) then
 		--m.health = 0xff
 		m.squishTimer = 50
 	end
-	if (m.hurtCounter > 0) and (m.action == ACT_HARD_FORWARD_GROUND_KB) then
+	if (m.action == ACT_HARD_FORWARD_GROUND_KB) then
 		--m.health = 0xff
 		m.squishTimer = 50
 	end
-
+end
 end
 
 
@@ -1313,9 +1312,7 @@ function before_mario_action(m, action)
 	if (action == ACT_BURNING_JUMP) then --removed (action == ACT_BURNING_JUMP) or (action == ACT_BURNING_FALL) since it would reset each jump
 		network_play(sFlames, m.pos, 1, m.playerIndex)
 
-		s.mariodisintegrate = 1
-
-		if (m.marioObj.oMarioBurnTimer == 0) and (s.mariodisintegrate == 1) then
+		if (m.marioObj.oMarioBurnTimer == 0) then
 			if (m.usedObj and obj_has_behavior_id(m.usedObj, id_bhvFlame) == 0) or not m.usedObj then
 				m.usedObj = spawn_sync_object(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil)
 			end
@@ -1364,9 +1361,8 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	local m = gMarioStates[0]
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
-	
 
-	s.mariodisintegrate = 0 --Mario is no longer burning
+
 	s.isdead = false --Mario is alive
 	s.disableuntilnextwarp = false --Enables death counter
 	s.headless = false --Gives Mario his head back
