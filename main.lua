@@ -164,7 +164,6 @@ for i = 0, MAX_PLAYERS-1 do
 		splatterdeath = 0, -- w
 
 		mariodisintegrate = 0,
-		mariotouchingwater = 0,
 	}
 end
 toadguitimer = 0
@@ -276,7 +275,7 @@ function bhv_custom_kingbobomb(obj) -- Funny boss battle
 		obj.oFaceAnglePitch = obj.oFaceAnglePitch + 4000
 	end
 	if obj.oAction == 3 then
-		if obj.oTimer == 0 then
+		if obj.oTimer == 0 and gMarioStates[0].marioObj == obj.usingObj then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, obj, DIALOG_116)
 		elseif obj.oTimer == 40 then
 			obj.oSubAction = 3
@@ -781,7 +780,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		s.highdeathtimer = 0
 		s.isdead = true
 	end
-	
+
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mario Disintegrates when on fire
 	if (s.mariodisintegrate == 1) then
@@ -798,12 +797,11 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		audio_sample_stop(gSamples[sAgonyMario])
 		audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
 		obj_mark_for_deletion(m.usedObj)
-
 	end
 
 	if (s.mariodisintegrate) == 1 then
-        s.mariotouchingwater = m.pos.y <= m.waterLevel
-        if (s.mariotouchingwater) then
+        local touchingwater = m.pos.y <= m.waterLevel
+        if touchingwater then
             spawn_mist_particles()
             spawn_mist_particles()
             spawn_mist_particles()
@@ -813,8 +811,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			audio_sample_stop(gSamples[sAgonyMario])
 			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
             s.mariodisintegrate = 0
-			if (deathflame ~= nil) then
-				obj_mark_for_deletion(deathflame)
+			if m.usedObj then
+				obj_mark_for_deletion(m.usedObj)
 			end
         end
     end
@@ -1314,8 +1312,6 @@ function before_mario_action(m, action)
 	--Disables LAVA RUN and replaces with death.
 	if (action == ACT_BURNING_JUMP) then --removed (action == ACT_BURNING_JUMP) or (action == ACT_BURNING_FALL) since it would reset each jump
 		network_play(sFlames, m.pos, 1, m.playerIndex)
-		spawn_sync_object(id_bhvSmoke, E_MODEL_SMOKE, m.pos.x, m.pos.y, m.pos.z, nil)
-		spawn_sync_object(id_bhvBlackSmokeMario, E_MODEL_BURN_SMOKE, m.pos.x, m.pos.y, m.pos.z, nil)
 
 		s.mariodisintegrate = 1
 
@@ -1349,13 +1345,13 @@ function action_start(m)
 	end
 end
 
-function mariodeath(m) -- If mario is dead, this will pause the counter to prevent false positive 2nd deaths, like getting neck snapped (death 1) and then falling into lava. (death 2) 
+function mariodeath() -- If mario is dead, this will pause the counter to prevent false positive 2nd deaths, like getting neck snapped (death 1) and then falling into lava. (death 2) 
 	--Will also reset other functions as well.
 	local s = gStateExtras[0]
 	s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
 
 	--set_override_envfx(ENVFX_MODE_NONE)
-	stream_stop_all() --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
+	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then
 		gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
 		s.isdead = true
@@ -1548,7 +1544,7 @@ if (s.ishigh) == 1 then
         local t = m.marioObj.oTimer/50
         local angle = atan2s(m.controller.stickY, m.controller.stickX)
         local woowoo = math.sin(2 * t) + math.sin(math.pi * t)
-		
+
 		if (s.highdeathtimer) < 1100 then m.controller.stickMag = m.controller.stickMag*.25 end
         m.intendedYaw = m.intendedYaw + woowoo*range
         m.controller.stickX = m.controller.stickMag * sins(angle+woowoo*range)
@@ -1559,8 +1555,8 @@ if (s.ishigh) == 1 then
 		m.controller.buttonPressed = Z_TRIG
 	end
 end
-	if obj_has_behavior_id(m.usedObj, id_bhvKingBobomb) ~= 0 then
-		m.controller.buttonDown = (m.usedObj.oTimer) == 40 and A_BUTTON or 0
+	if m.usedObj and obj_has_behavior_id(m.usedObj, id_bhvKingBobomb) ~= 0 and m.usedObj.usingObj == m.marioObj then
+		m.controller.buttonDown = m.usedObj.oTimer == 40 and A_BUTTON or 0
 	end
 end)
 hook_event(HOOK_ON_WARP, marioalive)
@@ -1667,7 +1663,7 @@ function bhv_ferris_wheel(o)
 		o.oAngleVelRoll = -pressure.x*300
 	end
 	if o.oFaceAngleRoll ~= limit_angle(o.oFaceAngleRoll) then
-		cur_obj_play_sound_1(SOUND_MOVING_AIM_CANNON)
+		cur_obj_play_sound_1(SOUND_GENERAL_BIG_CLOCK)
 		o.oFaceAngleRoll = limit_angle(o.oFaceAngleRoll)
 	end
 	cur_obj_rotate_face_angle_using_vel()
