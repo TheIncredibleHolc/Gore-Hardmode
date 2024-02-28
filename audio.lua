@@ -11,6 +11,7 @@ function stream_play(a)
 	if currentlyPlaying then audio_stream_stop(currentlyPlaying) end
 	audio_stream_play(a, true, 1)
 	currentlyPlaying = a
+	fadeTimer = 0
 end
 function stream_fade(time)
 	fadePeak = time
