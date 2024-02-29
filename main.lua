@@ -116,6 +116,7 @@ LEVEL_HELL = level_register('level_hell_entry', COURSE_NONE, 'Hell', 'Hell', 280
 E_MODEL_BLOOD_SPLATTER = smlua_model_util_get_id("blood_splatter_geo")
 E_MODEL_BLOOD_SPLATTER2 = smlua_model_util_get_id("blood_splatter2_geo")
 E_MODEL_BLOOD_SPLATTER_WALL = smlua_model_util_get_id("blood_splatter_wall_geo")
+E_MODEL_GOLD_SPLAT = smlua_model_util_get_id("gold_splat_geo")
 E_MODEL_SMILER = smlua_model_util_get_id("smiler_geo")
 E_MODEL_SMILER2 = smlua_model_util_get_id("smiler2_geo")
 E_MODEL_SMILER3 = smlua_model_util_get_id("smiler3_geo")
@@ -427,8 +428,32 @@ end
 function bhv_custom_thwomp(obj)
 	local m = nearest_player_to_object(obj)
 	local n = gNetworkPlayers[0]
-	if lateral_dist_between_objects(m, obj) < 150 and n.currLevelNum ~= LEVEL_TTC then --TTC is excluded for flood as its nearly unbeatable. Giving the player mercy by turning it off in regular game mode too.
-		obj.oPosY = m.oPosY
+	if n.currLevelNum ~= LEVEL_TTC then --TTC is excluded for flood as its nearly unbeatable. Giving the player mercy by turning it off in regular game mode too.	
+		
+		obj.oThwompRandomTimer = 0 --Instant falling
+
+		if obj.oAction == 0 then --ARISE!!
+			obj.oPosY = obj.oPosY + 15
+			if obj.oTimer == math.random(5, 40) then
+				obj.oAction = 1
+			end
+		end
+		if obj.oAction == 3 then --EARTHQUAAAAKE
+			cur_obj_shake_screen(SHAKE_POS_MEDIUM)
+			spawn_mist_particles()
+		end
+		if obj.oAction == 4 then --No more waiting to rise!
+			obj.oAction = 0
+		end
+		if obj.oAction == 2 then --CRUSH THEM (randomly) FAST!!
+			obj.oVelY = obj.oVelY - 52
+			obj.oTimer = 0
+		end
+		
+		if obj.oAction == 3 and obj.oTimer > 1 and lateral_dist_between_objects(m, obj) < 150 then
+			obj.oAction = 4
+		end
+
 	end
 end
 

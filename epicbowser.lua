@@ -463,16 +463,30 @@ function act_vulnerable(o)
         if obj_check_hitbox_overlap(o, m.marioObj) then
             djui_chat_message_create(tostring(o.oTimer))
 
-            if m.action == ACT_GROUND_POUND then
+            if m.action == ACT_GROUND_POUND_LAND then
                 local m = nearest_mario_state_to_object(o)
-                spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, o.oPosX, m.floorHeight + 2, o.oPosZ, nil)
+                cur_obj_shake_screen(SHAKE_POS_LARGE)
+                spawn_sync_object(id_bhvStaticObject, E_MODEL_GOLD_SPLAT, o.oPosX, m.floorHeight + 2, o.oPosZ, function(splat)
+                    obj_scale (splat, 1.5)
+                end)
                 local_play(sSplatter, m.pos, 1)
                 cur_obj_disable_rendering_and_become_intangible(o)
                 spawn_mist_particles()
                 audio_stream_stop(boss)
                 set_mario_action(m, ACT_STAR_DANCE_NO_EXIT, 0)
+
                 o.oTimer = 0
                 o.oFaceAngleRoll = 1 --I'm using this to tell the next IF statement that this ground pound has taken place. I'd rather use a built in var than a custom one.
+            end
+            if o.oTimer == 2 then --Removes celebration star and sparkles.
+                local star = obj_get_nearest_object_with_behavior_id(o, id_bhvCelebrationStar)
+                local sparkles = obj_get_nearest_object_with_behavior_id(o, id_bhvCelebrationStarSparkle)
+                if star ~= nil then
+                    obj_mark_for_deletion(star)
+                end
+                if sparkles ~= nil then
+                    obj_mark_for_deletion(sparkles)
+                end
             end
             if o.oTimer == 70 and o.oFaceAngleRoll == 1 then --Again, star is invisible, so roll doesn't matter. This just checks to make sure the above commands have worked.
                 --set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
@@ -492,7 +506,7 @@ function act_attacked(o)
             local star_angletomario = obj_angle_to_object(o, m.marioObj)
             o.oMoveAngleYaw = star_angletomario + 32768
             cur_obj_play_sound_2(SOUND_OBJ2_KING_BOBOMB_DAMAGE)
-            cur_obj_play_sound_2(SOUND_ACTION_HIT_2)
+            cur_obj_play_sound_2(SOUND_OBJ_KING_BOBOMB_JUMP)
             cur_obj_play_sound_2(SOUND_ACTION_BONK)
             spawn_mist_particles_variable(0, 0, 20.0)
             --spawn_triangle_break_particles(20, 138, 3.0, 4)
@@ -500,7 +514,7 @@ function act_attacked(o)
         end
 
         if o.oPosY >= o.oFloorHeight + 96 and o.oPosY < o.oFloorHeight + 300 then
-            cur_obj_play_sound_2(SOUND_ACTION_HIT_2)
+            cur_obj_play_sound_2(SOUND_OBJ_POUNDING1)
             spawn_mist_particles_variable(0, 0, 20.0)
         end
 
