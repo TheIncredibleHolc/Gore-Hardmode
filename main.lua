@@ -64,7 +64,7 @@ function testing(m)
 		--warp_to_level(2, 1, 1)
 		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
 
-		--spawn_non_sync_object(id_bhvGSBeam, E_MODEL_GSBEAM, m.pos.x, m.pos.y, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvGSBeam, E_MODEL_GSBEAM, m.pos.x, m.pos.y, m.pos.z, nil)
 
 		--spawn_non_sync_object(id_bhvSkybox1, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 0, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, m.pos.x, m.pos.y - 9500, m.pos.z, nil)
@@ -654,6 +654,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
+
+----------------------------------------------------------------------------------------------------------------------------------
+
+
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--DISMEMBERMENT DEATHS!!

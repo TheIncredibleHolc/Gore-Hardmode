@@ -65,7 +65,7 @@ const Collision gsbeamcol_collision[] = {
 	COL_VERTEX(-20, 47, 0),
 	COL_VERTEX(-10, 50, 6765),
 	COL_VERTEX(-10, 50, 0),
-	COL_TRI_INIT(SURFACE_HARD, 124),
+	COL_TRI_INIT(SURFACE_DEFAULT, 124),
 	COL_TRI(0, 1, 2),
 	COL_TRI(0, 2, 3),
 	COL_TRI(3, 2, 4),

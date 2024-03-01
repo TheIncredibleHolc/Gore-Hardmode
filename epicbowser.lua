@@ -266,7 +266,7 @@ function act_wait(o)
     if o.oPosY > 630 then
         o.oPosY = o.oPosY - 10
     end
-    if o.oTimer == 150 then
+    if o.oTimer == 30 then --WAS 150. This should shorten the wait after the minion bombs
         obj_change_action(o, GRAND_STAR_ACT_SHOOTING)
         -- o.oAction = GRAND_STAR_ACT_SHOOTING
     end
@@ -279,6 +279,8 @@ function act_shooting_attack (o) --Charges and fires a laser beam. Can be interr
     if obj_check_hitbox_overlap(o, m.marioObj) then
         if m.action == ACT_JUMP_KICK or m.action == ACT_DIVE then
             --Delete the laser beam and star laser charging effect if interrupted during laser attack--
+            audio_sample_stop(gSamples[sGsbeam])
+            audio_sample_stop(gSamples[sGslaser])
             if GSBeam ~= nil then
                 obj_mark_for_deletion(GSBeam)
                 audio_sample_stop(gSamples[sGsbeam])
@@ -453,7 +455,7 @@ end
 
 function act_vulnerable(o)
     if o.oAction == GRAND_STAR_ACT_VULNERABLE then
-        
+        cur_obj_scale(lerp(1.9, 2, math.sin(o.oTimer/6)))
         o.oVelX = 0
         o.oVelY = 0
         o.oVelZ = 0
@@ -461,13 +463,13 @@ function act_vulnerable(o)
         --o.oFaceAngleRoll = o.oFaceAngleRoll + 1000
         
         if obj_check_hitbox_overlap(o, m.marioObj) then
-            djui_chat_message_create(tostring(o.oTimer))
+            --djui_chat_message_create(tostring(o.oTimer))
 
             if m.action == ACT_GROUND_POUND_LAND then
                 local m = nearest_mario_state_to_object(o)
                 cur_obj_shake_screen(SHAKE_POS_LARGE)
                 spawn_sync_object(id_bhvStaticObject, E_MODEL_GOLD_SPLAT, o.oPosX, m.floorHeight + 2, o.oPosZ, function(splat)
-                    obj_scale (splat, 1.5)
+                    obj_scale (splat, 2)
                 end)
                 local_play(sSplatter, m.pos, 1)
                 cur_obj_disable_rendering_and_become_intangible(o)
@@ -502,20 +504,29 @@ end
 function act_attacked(o)
     if o.oAction == GRAND_STAR_ACT_ATTACKED then
         --Actions to do after being attacked--
+        --djui_chat_message_create(tostring(o.oTimer))
         if o.oTimer == 1 then
             local star_angletomario = obj_angle_to_object(o, m.marioObj)
             o.oMoveAngleYaw = star_angletomario + 32768
-            cur_obj_play_sound_2(SOUND_OBJ2_KING_BOBOMB_DAMAGE)
-            cur_obj_play_sound_2(SOUND_OBJ_KING_BOBOMB_JUMP)
-            cur_obj_play_sound_2(SOUND_ACTION_BONK)
-            spawn_mist_particles_variable(0, 0, 20.0)
+            cur_obj_play_sound_2(SOUND_OBJ2_KING_BOBOMB_DAMAGE) --King bobomb yell, no impact sound
+            --cur_obj_play_sound_2(SOUND_OBJ_BOWSER_WALK)
+            cur_obj_play_sound_2(SOUND_ACTION_BONK) -- LOL this is the small wall-kick sound. Literally sounds like M kicking the star with his foot. Keeping it.
+            cur_obj_play_sound_2(SOUND_ACTION_BOUNCE_OFF_OBJECT)
+            cur_obj_play_sound_2(SOUND_ACTION_BOUNCE_OFF_OBJECT) --Doubling for volume
+            m.forwardVel = -55
+            --cur_obj_play_sound_2(SOUND_OBJ_STOMPED) --Think this is goomba flattening sound, might not be best.
+            --cur_obj_play_sound_2(SOUND_ACTION_BONK) --Think this is running into a wall bonk
+            
+            spawn_mist_particles_variable(0, 0, 10.0)
             --spawn_triangle_break_particles(20, 138, 3.0, 4)
             --o.oVelY = 30
         end
 
         if o.oPosY >= o.oFloorHeight + 96 and o.oPosY < o.oFloorHeight + 300 then
-            cur_obj_play_sound_2(SOUND_OBJ_POUNDING1)
+            cur_obj_play_sound_2(SOUND_OBJ_BOWSER_WALK)
             spawn_mist_particles_variable(0, 0, 20.0)
+            cur_obj_shake_screen(SHAKE_POS_MEDIUM)
+            
         end
 
         if o.oPosY <= o.oFloorHeight + 95 then --IF Star has hit the floor.
@@ -538,7 +549,7 @@ function act_attacked(o)
             elseif o.oFaceAngleRoll < 0 and o.oFaceAngleRoll > 1 then
                 o.oFaceAngleRoll = 0
             end
-            if o.oTimer >= 80 then
+            if o.oTimer >= 54 then --WAS 80, but that's a long wait of doing nothing I think. Shortening to 54.
                 o.oTimer = 0
                 o.oAction = GRAND_STAR_ACT_VULNERABLE
             end
@@ -661,7 +672,7 @@ end
 
 function minion_act_falling(o)
     if o.oAction == STAR_MINION_ACT_FALL then
-        djui_chat_message_create(tostring(o.oTimer))
+        --djui_chat_message_create(tostring(o.oTimer))
         o.oFaceAngleYaw = o.oFaceAngleYaw + 0x800
         if o.oPosY > o.oFloorHeight then
             obj_move(o)
@@ -798,15 +809,22 @@ function gsbeam_init (o)
 end
 
 function gsbeam_loop (o)
+    local m = nearest_mario_state_to_object(o)
     o.oFaceAngleRoll = o.oFaceAngleRoll + 14000
 
-    if obj_check_hitbox_overlap (o, m.marioObj) ~= 0 then
-        m.squishTimer = 50
+ --I think this will only kill closest Mario, then beam gets deleted before closest mario fully despawns.
+    --because of the mark_for_deletion, other M's won't get killed by the beam. 
+    --Need to test, but it's hard having two people survive to that part :(
+
+    if obj_check_hitbox_overlap (o, m.marioObj) then --This WORKS, but for HITBOXES, NOT COLLISION! GSBeam will need custom hitbox set...
+        
     end
+    
 
     if obj_check_if_collided_with_object(o, m.marioObj) ~= 0 then
         m.squishTimer = 50
     end
+
 end
 
 -----------------------------------------------------------------------------------
