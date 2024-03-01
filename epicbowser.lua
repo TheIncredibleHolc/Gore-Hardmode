@@ -811,20 +811,11 @@ end
 function gsbeam_loop (o)
     local m = nearest_mario_state_to_object(o)
     o.oFaceAngleRoll = o.oFaceAngleRoll + 14000
+    m.squishTimer = 50
 
- --I think this will only kill closest Mario, then beam gets deleted before closest mario fully despawns.
-    --because of the mark_for_deletion, other M's won't get killed by the beam. 
-    --Need to test, but it's hard having two people survive to that part :(
-
-    if obj_check_hitbox_overlap (o, m.marioObj) then --This WORKS, but for HITBOXES, NOT COLLISION! GSBeam will need custom hitbox set...
-        
-    end
-    
-
-    if obj_check_if_collided_with_object(o, m.marioObj) ~= 0 then
-        m.squishTimer = 50
-    end
-
+    --This beam will only kill the nearest Mario. Because it is only going to be spawned for a couple seconds, it shouldn't kill any other players.
+    --However, in theory if another player becomes the closest M while beam is active, the star will shift focus to him and the beam will point at him.
+    --At least, I think. It's hard to test. Collision is wonky with the beam, hitbox isn't programmed, just stick with this.
 end
 
 -----------------------------------------------------------------------------------

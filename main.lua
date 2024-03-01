@@ -1401,6 +1401,10 @@ function marioalive() -- Resumes the death counter to accept death counts.
 		stream_play(musicHell)
 	end
 
+	if n.currLevelNum == LEVEL_TTM then
+		m.pos.y = m.pos.y + 320
+	end
+
 	if m.numLives <= 0 then
 		if m.playerIndex ~= 0 then return end
 		s.isinhell = true
