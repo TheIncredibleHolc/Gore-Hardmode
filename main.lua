@@ -64,7 +64,9 @@ function testing(m)
 		--warp_to_level(2, 1, 1)
 		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
 
-		spawn_non_sync_object(id_bhvGSBeam, E_MODEL_GSBEAM, m.pos.x, m.pos.y, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
+			o.oFaceAnglePitch = o.oFaceAnglePitch - 17000
+		end)
 
 		--spawn_non_sync_object(id_bhvSkybox1, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 0, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, m.pos.x, m.pos.y - 9500, m.pos.z, nil)
@@ -656,9 +658,23 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local s = gStateExtras[m.playerIndex]
 
 ----------------------------------------------------------------------------------------------------------------------------------
+	if m.action == ACT_FLYING and n.currLevelNum == LEVEL_TOTWC then -- Makes flying gradually get FASTER!
+		m.forwardVel = m.forwardVel + 0.1
+	end
 
-
-
+	if m.action == ACT_BACKWARD_AIR_KB and n.currLevelNum == LEVEL_TOTWC then -- Enables Mario to wall-splat when air-bonking objects.
+		m.action = ACT_SOFT_BONK --Needed to stop the 'if' from running twice.
+		m.squishTimer = 50
+		spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
+			local z, normal = vec3f(), m.wall.normal
+			local x, xnormal = vec3f(), m.wall.normal
+			o.oFaceAnglePitch = 16383-calculate_pitch(x, xnormal)
+			o.oFaceAngleYaw = calculate_yaw(z, normal)
+			o.oFaceAngleRoll = obj_resolve_collisions_and_turn(o.oFaceAngleYaw, 0)
+			o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
+			o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
+		end)
+	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--DISMEMBERMENT DEATHS!!
 
@@ -901,15 +917,21 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if racepen ~= nil then 
 		if (racepen.oAction == 3) then
 			racepen.oRacingPenguinWeightedNewTargetSpeed = 240
-			racepen.oForwardVel = 240
+			if (racepen.oRacingPenguinMarioWon ~= 0) then
+				--racepen.oForwardVel = 60
+			else
+				racepen.oForwardVel = 180
+			end
+			
 		end
 
 		if (racepen.oRacingPenguinMarioWon ~= 0) then
-			if (racepen.oRacingPenguinReachedBottom ~= 0) and (racepen.oMoveFlags & OBJ_MOVE_HIT_WALL ~= 0) then
+			--if (racepen.oRacingPenguinReachedBottom ~= 0) and racepen.oPosZ == -7150 then --(racepen.oMoveFlags & OBJ_MOVE_HIT_WALL ~= 0) then
+			if racepen.oPosZ == -7150 then
 				squishblood(racepen)
 				local_play(sSplatter, m.pos, 1)
 				cur_obj_play_sound_2(SOUND_OBJ_POUNDING_LOUD)
-				set_camera_shake_from_point(SHAKE_POS_SMALL, racepen.oPosX, racepen.oPosY, racepen.oPosZ)
+				set_camera_shake_from_point(SHAKE_POS_LARGE, racepen.oPosX, racepen.oPosY, racepen.oPosZ)
 				obj_mark_for_deletion(racepen)
 				spawn_sync_object(id_bhvStar, E_MODEL_STAR, m.pos.x, m.pos.y + 200, m.pos.z, function(star)
 					star.oBehParams = 2 << 24
