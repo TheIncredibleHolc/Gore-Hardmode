@@ -64,10 +64,13 @@ function testing(m)
 		--warp_to_level(2, 1, 1)
 		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
 
+		spawn_sync_object(id_bhvWingCap, E_MODEL_LUIGIS_WING_CAP, m.pos.x, m.pos.y, m.pos.z + 50, nil)
+
+		--[[
 		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
 			o.oFaceAnglePitch = o.oFaceAnglePitch - 17000
 		end)
-
+		]]
 		--spawn_non_sync_object(id_bhvSkybox1, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 0, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, m.pos.x, m.pos.y - 9500, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, m.pos.x, m.pos.y + 500, m.pos.z, nil)
@@ -113,6 +116,9 @@ local texTrippyOverlay = get_texture_info('trippy')
 
 
 ------Variables n' stuff------
+
+smlua_audio_utils_replace_sequence(SEQ_EVENT_CUTSCENE_ENDING, 35, 76, "gorepeach") --Custom Audio for end cutscene
+
 LEVEL_HELL = level_register('level_hell_entry', COURSE_NONE, 'Hell', 'Hell', 28000, 0x28, 0x28, 0x28)
 
 E_MODEL_BLOOD_SPLATTER = smlua_model_util_get_id("blood_splatter_geo")
@@ -145,6 +151,7 @@ gStateExtras = {}
 for i = 0, MAX_PLAYERS-1 do
 	gStateExtras[i] = {
 		splatter = 1,
+		flyingVel = 0,
 		enablesplattimer = 0, --w
 		splattimer = 0,
 		jumpland = 0,
@@ -159,7 +166,7 @@ for i = 0, MAX_PLAYERS-1 do
 		penguinholding = 0,
 		penguintimer = 0,
 		objtimer = 0,
-
+		--isfalling = false,
 		ishigh = 0,
 		outsidegastimer = 60,
 		highdeathtimer = 0,
@@ -405,16 +412,6 @@ function bhv_custom_chain_chomp(obj)
 
 end
 
---[[
-function bhv_custom_chain_chomp(obj)
-	if obj.oChainChompReleaseStatus == CHAIN_CHOMP_RELEASED_LUNGE_AROUND then
-		obj.oChainChompReleaseStatus = CHAIN_CHOMP_NOT_RELEASED
-	end
-	obj.oMoveAngleYaw = obj.oMoveAngleYaw * 5
-	obj.oForwardVel = obj.oForwardVel * 3
-end
-]]
-
 function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable. Will lunge at Mario
 	local m = nearest_mario_state_to_object(obj)
 	if obj.oGoombaJumpCooldown >= 9 then
@@ -466,13 +463,12 @@ function bhv_custom_pitbowlball(obj)
 	end
 end
 
---WF Sliding platforms after the weird rock eye guys.
-function bhv_custom_whomp_slidingpltf(obj)
+
+function bhv_custom_whomp_slidingpltf(obj) --WF Sliding platforms after the weird rock eye guys.
 	obj.oWFSlidBrickPtfmMovVel = 100
 end
 
---Whomps jump FAR now!
-function bhv_custom_whomp(obj)
+function bhv_custom_whomp(obj) --Whomps jump FAR now!
 	cur_obj_scale(2)
 	--obj.oForwardVel = 9.0
 	obj.oTimer = 101
@@ -480,8 +476,7 @@ function bhv_custom_whomp(obj)
 	--obj.oForwardVel = 40
 end
 
---SeeSaw Objects spin like windmills
-function bhv_custom_seesaw(obj)
+function bhv_custom_seesaw(obj) --SeeSaw Objects spin like windmills
 	obj.oSeesawPlatformPitchVel = -400
 end
 
@@ -507,7 +502,6 @@ function bhv_custom_tree(obj) -- Trees fall down through the map when approached
 		obj.oPosY = obj.oPosY - 500
 	end
 end
-
 
 function bhv_custom_bowlball(bowlball) -- I've got big balls, oh I've got big balls. They're such BIG balls, fancy big balls! And he's got big balls, and she's got big balls!
 	obj_scale(bowlball, 1.8)
@@ -658,23 +652,56 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local s = gStateExtras[m.playerIndex]
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	if m.action == ACT_FLYING and n.currLevelNum == LEVEL_TOTWC then -- Makes flying gradually get FASTER!
-		m.forwardVel = m.forwardVel + 0.1
+	-- FLY FASTER!!
+	if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON then -- Makes flying gradually get FASTER!
+		--djui_chat_message_create(tostring(m.forwardVel))
+		m.forwardVel = m.forwardVel + 0.3
+		s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
+	end
+----------------------------------------------------------------------------------------------------------------------------------
+	-- BONKING DEATHS!!
+
+	--djui_chat_message_create(tostring(m.forwardVel))
+	if  m.action == ACT_BUTT_SLIDE and n.currLevelNum == LEVEL_PSS then
+		m.slideVelX = m.slideVelX + 20 * sins(m.faceAngle.y)
+		m.slideVelZ = m.slideVelZ + 20 * coss(m.faceAngle.y)
+
 	end
 
-	if m.action == ACT_BACKWARD_AIR_KB and n.currLevelNum == LEVEL_TOTWC then -- Enables Mario to wall-splat when air-bonking objects.
-		m.action = ACT_SOFT_BONK --Needed to stop the 'if' from running twice.
-		m.squishTimer = 50
-		spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
-			local z, normal = vec3f(), m.wall.normal
-			local x, xnormal = vec3f(), m.wall.normal
-			o.oFaceAnglePitch = 16383-calculate_pitch(x, xnormal)
-			o.oFaceAngleYaw = calculate_yaw(z, normal)
-			o.oFaceAngleRoll = obj_resolve_collisions_and_turn(o.oFaceAngleYaw, 0)
-			o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
-			o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
-		end)
+	if m.action == ACT_BACKWARD_AIR_KB and s.flyingVel > 60 then -- Enables Mario to wall-splat when air-bonking objects.
+		if m.prevAction == ACT_FLYING or m.prevAction == ACT_SHOT_FROM_CANNON then
+			m.forwardVel = m.forwardVel - 30
+			m.action = ACT_SOFT_BONK --Needed to stop the first 'if' from running twice.
+			set_mario_action(m, ACT_GONE, 78)
+			mario_blow_off_cap(m, 45)
+			m.health = 0xff
+			set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+			m.particleFlags = PARTICLE_MIST_CIRCLE
+			local_play(sSplatter, m.pos, 1)
+			spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
+				local z, normal = vec3f(), m.wall.normal
+				local x, xnormal = vec3f(), m.wall.normal
+				o.oFaceAnglePitch = 16384-calculate_pitch(x, xnormal)
+				o.oFaceAngleYaw = calculate_yaw(z, normal)
+				o.oFaceAngleRoll = obj_resolve_collisions_and_turn(o.oFaceAngleYaw, 0)
+				o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
+				o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
+			end)
+	    end
 	end
+
+	--[[
+	--djui_chat_message_create(tostring(m.floorHeight))
+	if s.isFalling then --Makes mario fall funny to his death if he bonks a wall.
+		if m.pos.y == m.floorHeight then
+			m.squishTimer = 50	
+			s.isFalling = false
+		else
+			m.faceAngle.z = m.faceAngle.z - 3000
+			obj_set_gfx_angle(m.marioObj, m.faceAngle.z, m.faceAngle.x, m.faceAngle.y)
+		end
+	end
+	]]
 ----------------------------------------------------------------------------------------------------------------------------------
 	--DISMEMBERMENT DEATHS!!
 
@@ -686,6 +713,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
 	end
 
+	
 ----------------------------------------------------------------------------------------------------------------------------------
 	--SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
 	--IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
@@ -1162,7 +1190,6 @@ if (m.hurtCounter > 0) then
 	end
 end
 end
-
 
 function on_interact(m, o, intType, interacted) --Best place to switch enemy behaviors to have mario insta-die.
 	local s = gStateExtras[m.playerIndex]
@@ -1866,6 +1893,11 @@ end)
 
 hook_chat_command("hell", "hell", function ()
 	warp_to_level(LEVEL_HELL, 1, 0)
+	return true
+end)
+
+hook_chat_command("end", "credits", function ()
+	warp_to_level(LEVEL_ENDING, 1, 0)
 	return true
 end)
 
