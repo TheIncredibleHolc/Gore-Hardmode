@@ -525,7 +525,7 @@ function bhv_bowser_key_spawn_ukiki(obj) --Spawns Ukiki for an annoying minigame
 	fadeout_music(0)
 	stream_play(smwbonusmusic)
 end
----@param obj Object
+
 function bhv_bowser_key_ukiki_loop(obj)
 	local o = obj_get_nearest_object_with_behavior_id(obj, id_bhvUkiki)
 	if o ~= nil then
@@ -540,9 +540,8 @@ function bhv_bowser_key_ukiki_loop(obj)
 	end
 end
 
--------functions------------
+-------ACT_FUNCTIONS------------
 
----@param o Object
 function squishblood(o) -- Creates instant pool of impact-blood under mario.
 	spawn_sync_if_main(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ,
 	function (obj)
@@ -554,8 +553,7 @@ end
 
 ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 
-
----@param m MarioState
+--Mario's neck snapping action.
 function act_necksnap(m)
     common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
 	smlua_anim_util_set_animation(m.marioObj, "MARIO_NECKSNAP")
@@ -563,7 +561,6 @@ end
 hook_mario_action(ACT_NECKSNAP, act_necksnap)
 
 --Electricutes the F out of Mario
----@param m MarioState
 function act_shocked(m)
 	m.actionTimer = m.actionTimer + 1
 	set_mario_animation(m, MARIO_ANIM_SHOCKED)
@@ -590,6 +587,28 @@ function act_shocked(m)
 	end
 end
 hook_mario_action(ACT_SHOCKED, act_shocked)
+
+--Mario is decapitated.
+ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+function act_decapitated(m)
+	obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
+    common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80);
+
+end
+hook_mario_action(ACT_DECAPITATED, act_decapitated)
+
+--Mario is bitten in half.
+ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+function act_bitten_in_half(m)
+	obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
+    common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
+
+end
+hook_mario_action(ACT_BITTEN_IN_HALF, act_bitten_in_half)
+
+
+
+
 
 function splattertimer(m) --This timer is needed to prevent mario from immediately splatting again right after respawning. Adds some fluff to his death too.
 	local s = gStateExtras[m.playerIndex]
@@ -646,6 +665,7 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 	end
 end
 
+
 function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
 	local n = gNetworkPlayers[0]
@@ -659,21 +679,21 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
-	-- BONKING DEATHS!!
+	--(PSS Only) Faster sliding when picking up coins.
 
-	--djui_chat_message_create(tostring(m.forwardVel))
 	if  m.action == ACT_BUTT_SLIDE and n.currLevelNum == LEVEL_PSS then
-		m.slideVelX = m.slideVelX + 20 * sins(m.faceAngle.y)
-		m.slideVelZ = m.slideVelZ + 20 * coss(m.faceAngle.y)
+		m.slideVelX = m.slideVelX + m.numCoins * sins(m.faceAngle.y)
+		m.slideVelZ = m.slideVelZ + m.numCoins * coss(m.faceAngle.y)
 
 	end
-
+----------------------------------------------------------------------------------------------------------------------------------
+	-- BONKING DEATHS!!
 	if m.action == ACT_BACKWARD_AIR_KB and s.flyingVel > 60 then -- Enables Mario to wall-splat when air-bonking objects.
 		if m.prevAction == ACT_FLYING or m.prevAction == ACT_SHOT_FROM_CANNON then
+			mario_blow_off_cap(m, 45)
 			m.forwardVel = m.forwardVel - 30
 			m.action = ACT_SOFT_BONK --Needed to stop the first 'if' from running twice.
 			set_mario_action(m, ACT_GONE, 78)
-			mario_blow_off_cap(m, 45)
 			m.health = 0xff
 			set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 			m.particleFlags = PARTICLE_MIST_CIRCLE
@@ -702,18 +722,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		end
 	end
 	]]
-----------------------------------------------------------------------------------------------------------------------------------
-	--DISMEMBERMENT DEATHS!!
 
-	if m.character.type == CT_MARIO and s.headless then
-		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
-	end
-
-	if m.character.type == CT_MARIO and s.bottomless then
-		obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
-	end
-
-	
 ----------------------------------------------------------------------------------------------------------------------------------
 	--SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
 	--IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
@@ -1203,7 +1212,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		play_sound_with_freq_scale(SOUND_MARIO_ATTACKED, m.marioObj.header.gfx.cameraToObject, 1.25)
 		squishblood(o)
 		obj_mark_for_deletion(o)
-		local_play(sSplatter, m.pos, 1)
+		network_play(sSplatter, m.pos, 1)
 		if m.action & ACT_FLAG_AIR == 0 then
 			set_mario_action(m, ACT_PUNCHING, 0)
 		end
@@ -1294,13 +1303,13 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
 	end
 
-	if m.character.type == CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 then
+	if m.character.type == CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 and not s.headless then
 		s.headless = true
-		local_play(sSplatter, m.pos, 1)
-		local_play(sCrunch, m.pos, 1)
+		network_play(sSplatter, m.pos, 1, m.playerIndex)
+		network_play(sCrunch, m.pos, 1, m.playerIndex)
 		squishblood(m.marioObj)
 		m.health = 0xff
-		set_mario_action(m, ACT_STANDING_DEATH, 0)
+		set_mario_action(m, ACT_DECAPITATED, 0)
 	elseif m.character.type ~= CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 then
 		m.squishTimer = 50
 	end
@@ -1350,15 +1359,15 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	end
 
 	--Chain Chomp insta-deaths
-	if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 and (m.hurtCounter > 0) and (m.action == ACT_BACKWARD_GROUND_KB or m.action == ACT_FORWARD_GROUND_KB) then --Custom Chain Chomp Mario Kill backward
+	if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 and not s.bottomless and (m.hurtCounter > 0) and (m.action == ACT_BACKWARD_GROUND_KB or m.action == ACT_FORWARD_GROUND_KB) then --Custom Chain Chomp Mario Kill backward
 		if m.character.type == CT_MARIO then
 			s.bottomless = true
-			local_play(sSplatter, m.pos, 1)
-			local_play(sCrunch, m.pos, 1)
+			network_play(sSplatter, m.pos, 1, m.playerIndex)
+			network_play(sCrunch, m.pos, 1, m.playerIndex)
 			squishblood(m.marioObj)
 			m.health = 0xff
 			mario_blow_off_cap(m, 15)
-			set_mario_action(m, ACT_SUFFOCATION, 0)
+			set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
 		else
 			m.squishTimer = 50
 			m.particleFlags = PARTICLE_MIST_CIRCLE
