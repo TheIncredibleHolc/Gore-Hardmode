@@ -56,7 +56,8 @@ gSamples = {
 	audio_sample_load("gslaser.mp3"),
 	audio_sample_load("gsbeam.mp3"),
 	audio_sample_load("crunch.mp3"),
-	audio_sample_load("agonytoad.mp3")
+	audio_sample_load("agonytoad.mp3"),
+	audio_sample_load("fart.mp3")
 }
 
 sBoneBreak = 1
@@ -79,6 +80,7 @@ sGslaser = 17
 sGsbeam = 18
 sCrunch = 19
 sToadburn = 20
+sFart = 21
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))

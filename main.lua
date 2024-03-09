@@ -973,21 +973,11 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 				spawn_sync_object(id_bhvStar, E_MODEL_STAR, m.pos.x, m.pos.y + 200, m.pos.z, function(star)
 					star.oBehParams = 2 << 24
 				end)				
-				if (racepen ~= nil) then
-				racelost = 1
-				end
-			else
-				racelost = 1
 			end
 		end
-		if (racepen.oPrevAction & racepen.oRacingPenguinFinalTextbox) ~= 0 and (racelost == 1) then
-			racepen.oTimer = 0
-			racelost = 0
+		if (racepen.oPrevAction == RACING_PENGUIN_ACT_SHOW_FINAL_TEXT ~= 0) and racepen.oRacingPenguinFinalTextbox == -1 then
+			m.health = 0xff
 		end
-		if (racepen.oTimer >= 40) and (racelost == 0) then
-			m.health = 120
-		end
-	
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
     --Goomba stomping sound effect.
@@ -1212,7 +1202,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		play_sound_with_freq_scale(SOUND_MARIO_ATTACKED, m.marioObj.header.gfx.cameraToObject, 1.25)
 		squishblood(o)
 		obj_mark_for_deletion(o)
-		network_play(sSplatter, m.pos, 1)
+		network_play(sSplatter, m.pos, 1, m.playerIndex)
 		if m.action & ACT_FLAG_AIR == 0 then
 			set_mario_action(m, ACT_PUNCHING, 0)
 		end
@@ -1384,15 +1374,21 @@ end
 
 function before_mario_action(m, action)
 	local s = gStateExtras[m.playerIndex]
-
+	local n = gNetworkPlayers[0]
 -------------------------------------------------------------------------------------------------------------------------------------------------
 	--Disables LAVA_BOOST and replaces with a splash and insta-death... KERPLUNK!!
-	if (action == ACT_LAVA_BOOST) then
+	if (action == ACT_LAVA_BOOST) and n.currLevelNum ~= LEVEL_SL then
 		set_mario_action(m, ACT_GONE, 1)
 		network_play(sSplash, m.pos, 1, m.playerIndex)
 		spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
 		m.health = 120
 		return 1
+	end
+
+	--If lava boosted from ice, insta-kill Mario
+	if (action == ACT_LAVA_BOOST) and n.currLevelNum == LEVEL_SL then
+		m.pos.y = m.pos.y + 100
+		m.health = 0xff
 	end
 -------------------------------------------------------------------------------------------------------------------------------------------------
 	--Disables LAVA RUN and replaces with death.
@@ -1457,6 +1453,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 
 	if n.currLevelNum == LEVEL_HELL then
 		stream_play(musicHell)
+		audio_stream_set_looping(musicHell, true)
 	end
 
 	if n.currLevelNum == LEVEL_TTM then
@@ -1476,7 +1473,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	end	
 
 	if n.currLevelNum == LEVEL_TTC then
-		--set_ttc_speed_setting(99)	
+		set_ttc_speed_setting(-5)
 	end
 
 	--Resets the baby penguin timer on warp so it doesn't glitch out if mario leaves the level without fully killing the baby penguin.
@@ -1595,23 +1592,29 @@ function mario_before_phys_step(m)
 	m.vel.z = m.vel.z * hScale
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 -----GREEN DEMONS (ONCE AND FOR ALL!!) This finally works so DON'T TOUCH IT!!
 local function before_phys_step(m,stepType) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
+
 	local n = gNetworkPlayers[0]
+	
+	
 	if m.playerIndex ~= 0 then return end
 
 	local obj = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhv1Up)
-    if obj~= nil and n.currLevelNum ~= LEVEL_HELL and (nearest_interacting_mario_state_to_object(obj)).playerIndex == 0 and is_within_100_units_of_mario(obj.oPosX, obj.oPosY, obj.oPosZ) == 1 then --if local mario is touching 1up then
+    if obj~= nil and n.currLevelNum ~= LEVEL_HELL and (nearest_interacting_mario_state_to_object(obj)).playerIndex == 0 and mario_is_within_rectangle(obj.oPosX - 200, obj.oPosX + 200, obj.oPosZ - 200, obj.oPosZ + 200) ~= 0 and m.pos.y > obj.oPosY - 200 and m.pos.y < obj.oPosY + 200 then --if local mario is touching 1up then
+		spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
 		obj_mark_for_deletion(obj)
-        spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
+		local_play(sFart, m.pos, 1)
     end
 
 	local demon = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON
     if n.currLevelNum ~= LEVEL_HELL and demon ~= nil and (nearest_interacting_mario_state_to_object(demon)).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
-        obj_mark_for_deletion(demon)
-		spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
+		obj_mark_for_deletion(demon)
+		local_play(sFart, m.pos, 1)
     end
 end
+
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -1822,7 +1825,54 @@ function bhv_custom_crushtrap(o)
 	end
 end
 
+--[[
+function bhv_custom_1up(o)
+	m = nearest_mario_state_to_object(o)
+	if is_within_100_units_of_mario(o.oPosX, o.oPosY, o.oPosZ) == 1 then
+		obj_mark_for_deletion(o)
+		spawn_mist_particles()
+		local_play(sFart, m.pos, 1)
+	end
+end
+]]
+
+function bhv_custom_swing(o) -- Mostly in RR, might be other maps too. Is fun!
+	if (o.oFaceAngleRoll < 0) then
+		o.oSwingPlatformSpeed = o.oSwingPlatformSpeed + 64.0
+	else 
+		o.oSwingPlatformSpeed = o.oSwingPlatformSpeed - 64.0
+	end
+end
+
+function bhv_custom_rotating_platform(o) --Spinning platform high up on RR. (Plus other maps??)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+	o.oAngleVelYaw = o.oAngleVelYaw + 1600
+	o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
+end
+
+function bhv_custom_heart(o) 
+	m = nearest_mario_state_to_object(o)
+	--if is_point_within_radius_of_any_player(200, 50, 200, 200) ~= 0 then
+	if mario_is_within_rectangle(o.oPosX - 200, o.oPosX + 200, o.oPosZ - 200, o.oPosZ + 200) ~= 0 then
+		obj_mark_for_deletion(o)
+		spawn_mist_particles()
+		local_play(sFart, m.pos, 1)
+	end
+end
+
+function bhv_custom_moving_plats(o)
+	if o.oAction == PLATFORM_ON_TRACK_ACT_MOVE_ALONG_TRACK then
+		obj_forward_vel_approach(50.0, 0.1)
+		o.oForwardVel = o.oForwardVel + 320
+	end
+end
+
+
 -------Behavior Hooks-------
+hook_behavior(id_bhvPlatformOnTrack, OBJ_LIST_SURFACE, false, nil, bhv_custom_moving_plats)
+hook_behavior(id_bhvRecoveryHeart, OBJ_LIST_GENACTOR, false, nil, bhv_custom_heart)
+hook_behavior(id_bhvRrRotatingBridgePlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_rotating_platform)
+hook_behavior(id_bhvSwingPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_swing)
 --hook_behavior(id_bhv1Up, OBJ_LIST_GENACTOR, false, nil, bhv_custom_1up)
 --hook_behavior(id_bhvHidden1upInPole, OBJ_LIST_GENACTOR, false, nil, bhv_custom_1up)
 hook_behavior(id_bhvFlyGuy, OBJ_LIST_GENACTOR, false, nil, bhv_custom_flyguy)
@@ -1897,6 +1947,16 @@ end)
 
 hook_chat_command("jrb", "jolly", function ()
 	warp_to_level(LEVEL_JRB, 1, 0)
+	return true
+end)
+
+hook_chat_command("ttc", "tick", function ()
+	warp_to_level(LEVEL_TTC, 1, 0)
+	return true
+end)
+
+hook_chat_command("rr", "rainbow", function ()
+	warp_to_level(LEVEL_RR, 1, 0)
 	return true
 end)
 
