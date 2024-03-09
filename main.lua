@@ -1212,7 +1212,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		play_sound_with_freq_scale(SOUND_MARIO_ATTACKED, m.marioObj.header.gfx.cameraToObject, 1.25)
 		squishblood(o)
 		obj_mark_for_deletion(o)
-		network_play(sSplatter, m.pos, 1)
+		network_play(sSplatter, m.pos, 1, m.playerIndex)
 		if m.action & ACT_FLAG_AIR == 0 then
 			set_mario_action(m, ACT_PUNCHING, 0)
 		end
