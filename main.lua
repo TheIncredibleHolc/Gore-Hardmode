@@ -1862,8 +1862,12 @@ end
 
 function bhv_custom_moving_plats(o)
 	if o.oAction == PLATFORM_ON_TRACK_ACT_MOVE_ALONG_TRACK then
-		obj_forward_vel_approach(50.0, 0.1)
-		o.oForwardVel = o.oForwardVel + 320
+		bhv_platform_on_track_update()
+		bhv_platform_on_track_update()
+		bhv_platform_on_track_update()
+		bhv_platform_on_track_update()
+		o.oVelX,   o.oVelY,   o.oVelZ,   o.oAngleVelYaw =
+		o.oVelX*5, o.oVelY*5, o.oVelZ*5, o.oAngleVelYaw*5
 	end
 end
 
