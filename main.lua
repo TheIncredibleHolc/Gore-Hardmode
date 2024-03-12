@@ -64,8 +64,9 @@ function testing(m)
 		--warp_to_level(2, 1, 1)
 		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
 
-		spawn_sync_object(id_bhvWingCap, E_MODEL_LUIGIS_WING_CAP, m.pos.x, m.pos.y, m.pos.z + 50, nil)
-
+		--spawn_sync_object(id_bhvWingCap, E_MODEL_LUIGIS_WING_CAP, m.pos.x, m.pos.y, m.pos.z + 50, nil)
+		spawn_sync_object(id_bhvToadMessage, E_MODEL_TOAD, m.pos.x, m.pos.y, m.pos.z + 50, nil)
+		
 		--[[
 		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
 			o.oFaceAnglePitch = o.oFaceAnglePitch - 17000
@@ -84,6 +85,10 @@ function testing(m)
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, m.pos.x, m.pos.y + 80, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvBubbleParticleSpawner, E_MODEL_BUBBLE, m.pos.x, m.pos.y + 80, m.pos.z, nil)
+		--spawn_non_sync_object(id_bhvKoopaShell, E_MODEL_KOOPA_SHELL, m.pos.x, m.pos.y + 80, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, m.pos.x +500, m.pos.y + 140, m.pos.z, nil)
+	end
+	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 
 	end
 end
@@ -125,9 +130,9 @@ E_MODEL_BLOOD_SPLATTER = smlua_model_util_get_id("blood_splatter_geo")
 E_MODEL_BLOOD_SPLATTER2 = smlua_model_util_get_id("blood_splatter2_geo")
 E_MODEL_BLOOD_SPLATTER_WALL = smlua_model_util_get_id("blood_splatter_wall_geo")
 E_MODEL_GOLD_SPLAT = smlua_model_util_get_id("gold_splat_geo")
-E_MODEL_SMILER = smlua_model_util_get_id("smiler_geo")
-E_MODEL_SMILER2 = smlua_model_util_get_id("smiler2_geo")
-E_MODEL_SMILER3 = smlua_model_util_get_id("smiler3_geo")
+E_MODEL_SMILER = smlua_model_util_get_id("smiler_geo") --My dumbass reused this function without changing the name. This is NOT the backroom smiler. 
+E_MODEL_SMILER2 = smlua_model_util_get_id("smiler2_geo") --This isn't it either.
+E_MODEL_SMILER3 = smlua_model_util_get_id("smiler3_geo") --Also not this one...
 E_MODEL_LAVA = smlua_model_util_get_id("lava_geo")
 COL_LAVA = smlua_collision_util_get("lava_collision")
 E_MODEL_SKYBOX = smlua_model_util_get_id("skybox_geo")
@@ -145,7 +150,13 @@ E_MODEL_HEADLESSMARIO = smlua_model_util_get_id("headlessmario_geo")
 E_MODEL_BOTTOMLESSMARIO = smlua_model_util_get_id("bottomlessmario_geo")
 E_MODEL_HELLPLATFORM = smlua_model_util_get_id("hellplatform_geo")
 COL_HELLPLATFORM = smlua_collision_util_get("hellplatform_collision")
-
+E_MODEL_HELLTHWOMPER = smlua_model_util_get_id("hellthwomper_geo")
+E_MODEL_BACKROOM = smlua_model_util_get_id("backroom_geo")
+COL_BACKROOM = smlua_collision_util_get("backroom_collision")
+E_MODEL_BLACKROOM = smlua_model_util_get_id("blackroom_geo")
+COL_BLACKROOM = smlua_collision_util_get("blackroom_collision")
+E_MODEL_BACKROOM_SMILER = smlua_model_util_get_id("backroom_smiler_geo")
+COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --The ACTUAL custom Smiler enemy in the backroom.
 
 gStateExtras = {}
 for i = 0, MAX_PLAYERS-1 do
@@ -672,6 +683,69 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local s = gStateExtras[m.playerIndex]
 
 ----------------------------------------------------------------------------------------------------------------------------------
+	--Backroom Teleport
+
+	--djui_chat_message_create(tostring(m.forwardVel))
+	if n.currLevelNum == LEVEL_CASTLE and m.action == ACT_LONG_JUMP and m.forwardVel < -150 then
+		m.forwardVel = 0
+		if obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom) == nil then
+			spawn_non_sync_object(id_bhvBackroom, E_MODEL_BACKROOM, 0, 10000, 0, function(o)
+				o.oFaceAngleYaw = 0
+			end)
+		end
+		m.pos.x = 0
+		m.pos.y = 10600
+		m.pos.z = 0
+		set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+		fadeout_music(0)
+		stream_play(backroomMusic)
+		audio_stream_set_looping(backroomMusic, true)
+		set_lighting_color(0,255)
+		set_lighting_color(1,255)
+		set_lighting_color(2,30)
+		set_lighting_dir(1,128)
+	end
+
+	local backroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom)
+	if backroom ~= nil then
+		if backroom.oTimer == 600 then
+			stream_stop_all()
+			local_play(sGlass, m.pos, 1)
+			spawn_non_sync_object(id_bhvBlackroom, E_MODEL_BLACKROOM, 0, 9998, 0, function(o)
+				o.oFaceAngleYaw = 0
+			end)
+			m.pos.x = 0
+			m.pos.y = 10600
+			m.pos.z = 0
+			set_lighting_color(0,2)
+			set_lighting_color(1,2)
+			set_lighting_color(2,2)
+			set_lighting_dir(1,128)
+			obj_mark_for_deletion(backroom)
+		end
+	end
+
+	local blackroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBlackroom)
+	if blackroom ~= nil then
+		if blackroom.oTimer == 150 then
+			local_play(sSmiler, m.pos, .30)
+		end
+		if blackroom.oTimer == 450 then
+			local_play(sSmiler, m.pos, .60)
+		end
+		if blackroom.oTimer == 700 then
+			spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, 0, 10600, 0, nil)
+		end
+	end
+----------------------------------------------------------------------------------------------------------------------------------
+	--Stupid shell riding
+
+	if m.action == ACT_RIDING_SHELL_GROUND or m.action == ACT_RIDING_SHELL_JUMP or m.action == ACT_RIDING_SHELL_FALL then
+		set_mario_anim_with_accel(m, MARIO_ANIM_FIRST_PERSON, 0) --Funny standing
+		--set_mario_anim_with_accel(m, MARIO_ANIM_HOLDING_BOWSER, 0) --Funny thicc dumper
+		--set_mario_anim_with_accel(m, MARIO_ANIM_TWIRL, 0) --Funny tpose
+	end
+----------------------------------------------------------------------------------------------------------------------------------
 	-- FLY FASTER!!
 	if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON then -- Makes flying gradually get FASTER!
 		--djui_chat_message_create(tostring(m.forwardVel))
@@ -684,7 +758,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if  m.action == ACT_BUTT_SLIDE and n.currLevelNum == LEVEL_PSS then
 		m.slideVelX = m.slideVelX + m.numCoins * sins(m.faceAngle.y)
 		m.slideVelZ = m.slideVelZ + m.numCoins * coss(m.faceAngle.y)
-
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	-- BONKING DEATHS!!
@@ -1104,6 +1177,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	-- (Cool Cool Mountain) Baby penguin gets thrown after 8 seconds of mario losing his patience.
+
 	if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj,id_bhvSmallPenguin) ~= 0) then
 		s.penguinholding = 1
 	end
@@ -1117,14 +1191,33 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 	if (s.penguintimer) == 280 then
 		--mario_throw_held_object(m.heldObj)
-		obj_mark_for_deletion(m.heldObj)
-		set_mario_action(m, ACT_PUNCHING, 0)
-		s.penguintimer = s.penguintimer + 1
+		if m.action == ACT_HOLD_JUMP then
+			local baby = obj_get_nearest_object_with_behavior_id(o, id_bhvSmallPenguin) 
+			--obj_mark_for_deletion(m.heldObj)
+			mario_drop_held_object(m)
+			--m.heldObj = nil
+			s.penguintimer = 288
+			set_mario_action(m, ACT_JUMP_KICK, 0)
+			m.particleFlags = PARTICLE_MIST_CIRCLE
+			--spawn_triangle_break_particles(30, 138, 1, 4)
+			baby.oForwardVel = baby.oForwardVel + 500
+			play_sound(SOUND_ACTION_HIT_2, m.marioObj.header.gfx.cameraToObject)
+			s.penguinholding = 0
+			s.penguintimer = 0
+		else
+			set_mario_action(m, ACT_PUNCHING, 0)
+			s.penguintimer = s.penguintimer + 1
+		end
+		
 	end
 	if (s.penguintimer) >= 281 then
 		s.penguintimer = s.penguintimer + 1
 	end
 	if (s.penguintimer) == 290 then
+		if m.heldObj ~= nil then
+			obj_mark_for_deletion(m.heldObj)
+			m.heldObj = nil
+		end
 		m.particleFlags = PARTICLE_MIST_CIRCLE
 		squishblood(m.marioObj)
 		local_play(sSplatter, m.pos, 1)
@@ -1802,6 +1895,72 @@ local function bhv_hellplatform_loop(o)
     o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
 end
 
+function bhv_backroom_init(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oCollisionDistance = 10000
+    o.collisionData = COL_BACKROOM
+    o.header.gfx.skipInViewCheck = true
+end
+
+function bhv_backroom_loop(o)
+	load_object_collision_model()
+end
+
+function bhv_blackroom_init(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oCollisionDistance = 10000
+    o.collisionData = COL_BLACKROOM
+    o.header.gfx.skipInViewCheck = true
+end
+
+function bhv_blackroom_loop(o)
+	load_object_collision_model()
+end
+
+function bhv_backroom_smiler_init(o)
+	m = gMarioStates[0]
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    --o.oCollisionDistance = 10000
+    --o.collisionData = COL_BACKROOM_SMILER
+    o.header.gfx.skipInViewCheck = true
+    o.hitboxRadius = 160
+    o.hitboxHeight = 100
+    o.oWallHitboxRadius = 30
+	local_play(sSmiler, m.pos, 1)
+end
+
+function bhv_backroom_smiler_loop(o)
+	local s = gStateExtras[0]
+	local player = nearest_player_to_object(o)
+	local angletomario = obj_angle_to_object(o, m.marioObj)
+    o.oFaceAngleYaw = angletomario - 17000
+	--load_object_collision_model()
+	obj_turn_toward_object(o, player, 16, 0x800)
+	o.oForwardVel = 20
+	object_step()
+	if o.oTimer > 280 then
+		local_play(sSmiler, m.pos, 1)
+		o.oTimer = 0
+	end
+	if obj_check_hitbox_overlap(o, m.marioObj) and not s.isdead then
+		if m.character.type == CT_MARIO then
+			s.bottomless = true
+			network_play(sSplatter, m.pos, 1, m.playerIndex)
+			network_play(sCrunch, m.pos, 1, m.playerIndex)
+			squishblood(m.marioObj)
+			m.health = 0xff
+			mario_blow_off_cap(m, 15)
+			set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
+			obj_mark_for_deletion(o)
+		else
+			m.squishTimer = 50
+			m.particleFlags = PARTICLE_MIST_CIRCLE
+			set_mario_action(m, ACT_GONE, 80)
+			obj_mark_for_deletion(o)
+		end
+	end
+end
+
 function bhv_custom_crushtrap(o)
 	if mario_is_within_rectangle(o.oPosX -100, o.oPosX + 100, o.oPosX -100, o.oPosX + 100) then
 		if o.oAction == 1 then
@@ -1915,8 +2074,13 @@ hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
 
+id_bhvBackroomSmiler = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_smiler_init, bhv_backroom_smiler_loop)
+id_bhvBackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_init, bhv_backroom_loop)
+id_bhvBlackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_blackroom_init, bhv_blackroom_loop)
 id_bhvHellPlatform1 = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_hellplatform_init, bhv_hellplatform_loop)
 id_bhvLava = hook_behavior(nil, OBJ_LIST_SURFACE, true, lava_init, lava_loop, "bhvLava")
+
+
 
 -- test function to warp to level, disable if necessary
 hook_chat_command("bow", "ser", function ()

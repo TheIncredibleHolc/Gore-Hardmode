@@ -1,6 +1,7 @@
 highmusic = audio_stream_load("high.mp3")
 smwbonusmusic = audio_stream_load("smwbonusloop.mp3")
 boss = audio_stream_load("croppedcastle.mp3")
+backroomMusic = audio_stream_load("backroom.mp3")
 musicHell = audio_stream_load("hell.mp3")
 currentlyPlaying = nil
 fadeTimer = 0
@@ -22,6 +23,7 @@ function stream_stop_all()
 	audio_stream_stop(smwbonusmusic)
 	audio_stream_stop(boss)
 	audio_stream_stop(musicHell)
+	audio_stream_stop(backroomMusic)
 	currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()
@@ -57,7 +59,9 @@ gSamples = {
 	audio_sample_load("gsbeam.mp3"),
 	audio_sample_load("crunch.mp3"),
 	audio_sample_load("agonytoad.mp3"),
-	audio_sample_load("fart.mp3")
+	audio_sample_load("fart.mp3"),
+	audio_sample_load("glass.mp3"),
+	audio_sample_load("smiler.mp3")
 }
 
 sBoneBreak = 1
@@ -81,6 +85,8 @@ sGsbeam = 18
 sCrunch = 19
 sToadburn = 20
 sFart = 21
+sGlass = 22
+sSmiler = 23
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))

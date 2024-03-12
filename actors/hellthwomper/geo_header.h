@@ -1,0 +1,17 @@
+extern const GeoLayout hellthwomper_geo[];
+extern u8 hellthwomper_retrothwompspikes_i8[];
+extern u8 hellthwomper_retrotwhompbody_i8[];
+extern u8 hellthwomper_faceer_i8[];
+extern Vtx hellthwomper_skinned_001_mesh_layer_1_vtx_0[442];
+extern Gfx hellthwomper_skinned_001_mesh_layer_1_tri_0[];
+extern Vtx hellthwomper_skinned_001_mesh_layer_1_vtx_1[46];
+extern Gfx hellthwomper_skinned_001_mesh_layer_1_tri_1[];
+extern Vtx hellthwomper_skinned_001_mesh_layer_1_vtx_2[6];
+extern Gfx hellthwomper_skinned_001_mesh_layer_1_tri_2[];
+extern Gfx mat_hellthwomper_f3dlite_material_001[];
+extern Gfx mat_revert_hellthwomper_f3dlite_material_001[];
+extern Gfx mat_hellthwomper_f3dlite_material_002[];
+extern Gfx mat_revert_hellthwomper_f3dlite_material_002[];
+extern Gfx mat_hellthwomper_f3dlite_material[];
+extern Gfx mat_revert_hellthwomper_f3dlite_material[];
+extern Gfx hellthwomper_skinned_001_mesh_layer_1[];
