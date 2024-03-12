@@ -557,7 +557,7 @@ function squishblood(o) -- Creates instant pool of impact-blood under mario.
 	spawn_sync_if_main(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ,
 	function (obj)
 		local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
-		obj.oFaceAnglePitch = 16383-calculate_pitch(z, normal)
+		obj.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
 		obj.oFaceAngleYaw = calculate_yaw(z, normal)
 	end, 0)
 end
@@ -653,7 +653,7 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 		spawn_sync_if_main(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER2, m.pos.x, find_floor_height(m.pos.x, m.pos.y, m.pos.z) + 2, m.pos.z,
 		function (obj)
 			local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
-			obj.oFaceAnglePitch = 16383-calculate_pitch(z, normal)
+			obj.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
 			--obj.oFaceAngleYaw = calculate_yaw(z, normal)
 		end, 0)
 	end
