@@ -686,7 +686,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--Backroom Teleport
 
 	--djui_chat_message_create(tostring(m.forwardVel))
-	if n.currLevelNum == LEVEL_CASTLE and m.action == ACT_LONG_JUMP and m.forwardVel < -150 then
+	if n.currLevelNum == LEVEL_CASTLE and m.forwardVel < -200 then
 		m.forwardVel = 0
 		if obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom) == nil then
 			spawn_non_sync_object(id_bhvBackroom, E_MODEL_BACKROOM, 0, 10000, 0, function(o)
@@ -734,7 +734,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			local_play(sSmiler, m.pos, .60)
 		end
 		if blackroom.oTimer == 700 then
-			spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, 0, 10600, 0, nil)
+			spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, 0, 10700, 0, nil)
 		end
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -1193,22 +1193,33 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		--mario_throw_held_object(m.heldObj)
 		if m.action == ACT_HOLD_JUMP then
 			local baby = obj_get_nearest_object_with_behavior_id(o, id_bhvSmallPenguin) 
-			--obj_mark_for_deletion(m.heldObj)
 			mario_drop_held_object(m)
-			--m.heldObj = nil
-			s.penguintimer = 288
 			set_mario_action(m, ACT_JUMP_KICK, 0)
 			m.particleFlags = PARTICLE_MIST_CIRCLE
 			--spawn_triangle_break_particles(30, 138, 1, 4)
-			baby.oForwardVel = baby.oForwardVel + 500
+			baby.oSmallPenguinUnk104 = 200
+			baby.oAction = 1
+			baby.oForwardVel = baby.oSmallPenguinUnk104 + 300
+			baby.oGravity = 80
+			baby.oMoveAnglePitch = baby.oMoveAnglePitch + 7500
+			--s.penguintimer = 300
+			object_step()
 			play_sound(SOUND_ACTION_HIT_2, m.marioObj.header.gfx.cameraToObject)
+			s.penguinholding = 0
+			s.penguintimer = 0
+			s.penguintimer = s.penguintimer + 1
+		elseif m.action == ACT_WALKING then
+			mario_drop_held_object(m)
+			set_mario_action(m, ACT_FORWARD_ROLLOUT, 0)
+			m.particleFlags = PARTICLE_MIST_CIRCLE
+			squishblood(m.marioObj)
+			local_play(sSplatter, m.pos, 1)
 			s.penguinholding = 0
 			s.penguintimer = 0
 		else
 			set_mario_action(m, ACT_PUNCHING, 0)
 			s.penguintimer = s.penguintimer + 1
 		end
-		
 	end
 	if (s.penguintimer) >= 281 then
 		s.penguintimer = s.penguintimer + 1
@@ -1217,6 +1228,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		if m.heldObj ~= nil then
 			obj_mark_for_deletion(m.heldObj)
 			m.heldObj = nil
+		else
+			local baby = obj_get_nearest_object_with_behavior_id(o, id_bhvSmallPenguin) 
+			obj_mark_for_deletion(baby)
 		end
 		m.particleFlags = PARTICLE_MIST_CIRCLE
 		squishblood(m.marioObj)
@@ -1536,7 +1550,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	local n = gNetworkPlayers[0]
 	local m = gMarioStates[0]
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
-	audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
+	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 
 
 	s.isdead = false --Mario is alive
@@ -1915,6 +1929,14 @@ end
 
 function bhv_blackroom_loop(o)
 	load_object_collision_model()
+	local nearest = nearest_mario_state_to_object(o)
+	if nearest.pos.y < 9500 then --CLEANUP FUNCTION
+		local backroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom)
+		if backroom ~= nil then
+			obj_mark_for_deletion(backroom)
+		end
+		obj_mark_for_deletion(o)
+	end
 end
 
 function bhv_backroom_smiler_init(o)
@@ -1933,6 +1955,20 @@ function bhv_backroom_smiler_loop(o)
 	local s = gStateExtras[0]
 	local player = nearest_player_to_object(o)
 	local angletomario = obj_angle_to_object(o, m.marioObj)
+	local nearest = nearest_mario_state_to_object(o)
+
+	if nearest.pos.y < 9500 then --CLEANUP FUNCTION
+		local backroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom)
+		if backroom ~= nil then
+			obj_mark_for_deletion(backroom)
+		end
+		local blackroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBlackroom)
+		if blackroom ~= nil then
+			obj_mark_for_deletion(blackroom)
+		end
+		obj_mark_for_deletion(o)
+	end
+
     o.oFaceAngleYaw = angletomario - 17000
 	--load_object_collision_model()
 	obj_turn_toward_object(o, player, 16, 0x800)
@@ -1947,6 +1983,7 @@ function bhv_backroom_smiler_loop(o)
 			s.bottomless = true
 			network_play(sSplatter, m.pos, 1, m.playerIndex)
 			network_play(sCrunch, m.pos, 1, m.playerIndex)
+			audio_sample_stop(gSamples[sSmiler])
 			squishblood(m.marioObj)
 			m.health = 0xff
 			mario_blow_off_cap(m, 15)
@@ -2030,8 +2067,12 @@ function bhv_custom_moving_plats(o)
 	end
 end
 
+function bhv_custom_tuxie(o)
+	o.oAction = 1
+end
 
 -------Behavior Hooks-------
+hook_behavior(id_bhvSmallPenguin, OBJ_LIST_GENACTOR, false, nil, bhv_custom_tuxie)
 hook_behavior(id_bhvPlatformOnTrack, OBJ_LIST_SURFACE, false, nil, bhv_custom_moving_plats)
 hook_behavior(id_bhvRecoveryHeart, OBJ_LIST_GENACTOR, false, nil, bhv_custom_heart)
 hook_behavior(id_bhvRrRotatingBridgePlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_rotating_platform)
@@ -2125,6 +2166,11 @@ end)
 
 hook_chat_command("rr", "rainbow", function ()
 	warp_to_level(LEVEL_RR, 1, 0)
+	return true
+end)
+
+hook_chat_command("ccm", "cool", function ()
+	warp_to_level(LEVEL_CCM, 1, 0)
 	return true
 end)
 
