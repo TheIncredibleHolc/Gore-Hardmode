@@ -49,7 +49,8 @@ function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 
 function testing(m)
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		m.numLives = 1
+		local_play(sBoneBreak, m.pos, 1)
+		set_mario_action(m, ACT_NECKSNAP, 0)
 		--spawn_sync_if_main(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x + 100, m.pos.y, m.pos.z, nil, m.playerIndex)
 		--spawn_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, m.waterLevel + 1, m.pos.z, function (o)
        --[[
@@ -1207,7 +1208,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			play_sound(SOUND_ACTION_HIT_2, m.marioObj.header.gfx.cameraToObject)
 			s.penguinholding = 0
 			s.penguintimer = 0
-			s.penguintimer = s.penguintimer + 1
 		elseif m.action == ACT_WALKING then
 			mario_drop_held_object(m)
 			set_mario_action(m, ACT_FORWARD_ROLLOUT, 0)
@@ -1339,7 +1339,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		s.objtimer = s.objtimer + 1
 		if (s.objtimer) == 30 then 
 			obj_mark_for_deletion(o)
-			local_play(sSlip, m.pos, 1)
 		end
 	end
 	]]

@@ -48,7 +48,7 @@ gSamples = {
 	audio_sample_load("flames.mp3"),
 	audio_sample_load("killyoshi.mp3"),
 	audio_sample_load("smwbonusend.mp3"),
-	audio_sample_load("slip.mp3"),
+	audio_sample_load("smiler.mp3"),
 	audio_sample_load("splash.mp3"),
 	audio_sample_load("punch.mp3"),
 	audio_sample_load("goomba.mp3"),
@@ -60,8 +60,8 @@ gSamples = {
 	audio_sample_load("crunch.mp3"),
 	audio_sample_load("agonytoad.mp3"),
 	audio_sample_load("fart.mp3"),
-	audio_sample_load("glass.mp3"),
-	audio_sample_load("smiler.mp3")
+	audio_sample_load("glass.mp3")
+
 }
 
 sBoneBreak = 1
@@ -73,7 +73,7 @@ sAngryMario = 6
 sFlames = 7
 sKillYoshi = 8
 sSMWBonusEnd = 9
-sSlip = 10
+sSmiler = 10
 sSplash = 11
 sPunch = 12
 sGoombaStomp = 13
@@ -86,7 +86,7 @@ sCrunch = 19
 sToadburn = 20
 sFart = 21
 sGlass = 22
-sSmiler = 23
+
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))
