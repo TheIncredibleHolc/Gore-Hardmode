@@ -687,7 +687,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--Backroom Teleport
 
 	--djui_chat_message_create(tostring(m.forwardVel))
-	if n.currLevelNum == LEVEL_CASTLE and m.forwardVel < -200 then
+	if n.currLevelNum == LEVEL_CASTLE and m.forwardVel < -200 and m.playerIndex == 0 then
 		m.forwardVel = 0
 		if obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom) == nil then
 			spawn_non_sync_object(id_bhvBackroom, E_MODEL_BACKROOM, 0, 10000, 0, function(o)
