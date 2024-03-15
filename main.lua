@@ -1534,7 +1534,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 		m.pos.y = m.pos.y + 320
 	end
 
-	if m.numLives <= 0 then
+	if m.numLives <= 0 and not s.isinhell then
 		if m.playerIndex ~= 0 then return end
 		s.isinhell = true
 		warp_to_level(LEVEL_HELL, 1, 0)
@@ -1663,15 +1663,12 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 			s.isinhell = false
 			warp_to_start_level()
 			s.isinhell = false
-			
+
 			set_override_envfx(-1)
 			set_lighting_color(0, 255)
 			set_lighting_color(1, 255)
 			set_lighting_color(2, 255)
 			set_lighting_dir(1,0)
-
-			play_sound(SOUND_GENERAL_COLLECT_1UP, m.pos)
-			m.numLives = m.numLives + 10
 
 			local i = 0
 			while i < 100000000 do
@@ -1680,7 +1677,10 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 			sound_banks_enable(0, SOUND_BANKS_ALL)
 			sound_banks_enable(1, SOUND_BANKS_ALL)
 			sound_banks_enable(2, SOUND_BANKS_ALL)
+
 			local_play(sPortalTravel, vec3f(), 10)
+			play_sound(SOUND_GENERAL_COLLECT_1UP, m.pos)
+			m.numLives = m.numLives + 10
 
 		end
 	end
