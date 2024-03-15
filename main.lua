@@ -50,6 +50,7 @@ function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 function testing(m)
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
 		local_play(sBoneBreak, m.pos, 1)
+		m.numLives = 1
 		set_mario_action(m, ACT_NECKSNAP, 0)
 		--spawn_sync_if_main(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x + 100, m.pos.y, m.pos.z, nil, m.playerIndex)
 		--spawn_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, m.waterLevel + 1, m.pos.z, function (o)
