@@ -160,6 +160,9 @@ COL_BLACKROOM = smlua_collision_util_get("blackroom_collision")
 E_MODEL_BACKROOM_SMILER = smlua_model_util_get_id("backroom_smiler_geo")
 COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --The ACTUAL custom Smiler enemy in the backroom.
 
+E_MODEL_NETHERPORTAL = smlua_model_util_get_id("netherportal_geo")
+COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
+
 gStateExtras = {}
 for i = 0, MAX_PLAYERS-1 do
 	gStateExtras[i] = {
@@ -688,7 +691,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--Backroom Teleport
 
 	--djui_chat_message_create(tostring(m.forwardVel))
-	if n.currLevelNum == LEVEL_CASTLE and m.forwardVel < -200 and m.playerIndex == 0 then
+	if n.currLevelNum == LEVEL_CASTLE and m.forwardVel < -120 and m.playerIndex == 0 then
 		m.forwardVel = 0
 		if obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom) == nil then
 			spawn_non_sync_object(id_bhvBackroom, E_MODEL_BACKROOM, 0, 10000, 0, function(o)
@@ -2071,6 +2074,23 @@ function bhv_custom_tuxie(o)
 	o.oAction = 1
 end
 
+function bhv_netherportal_init(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oCollisionDistance = 10000
+    o.collisionData = COL_NETHERPORTAL
+    o.header.gfx.skipInViewCheck = true
+end
+
+function bhv_netherportal_loop(o)
+	load_object_collision_model()
+	if o.oTimer == 300 then
+		local_play(sPortal, m.pos, .75)
+	end
+	if o.oTimer >= 450 then
+		o.oTimer = 0
+	end
+end
+
 -------Behavior Hooks-------
 hook_behavior(id_bhvSmallPenguin, OBJ_LIST_GENACTOR, false, nil, bhv_custom_tuxie)
 hook_behavior(id_bhvPlatformOnTrack, OBJ_LIST_SURFACE, false, nil, bhv_custom_moving_plats)
@@ -2114,7 +2134,7 @@ hook_behavior(id_bhvExplosion, OBJ_LIST_DESTRUCTIVE, false, bhv_custom_explosion
 hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
-
+id_bhvNetherPortal = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_netherportal_init, bhv_netherportal_loop)
 id_bhvBackroomSmiler = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_smiler_init, bhv_backroom_smiler_loop)
 id_bhvBackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_init, bhv_backroom_loop)
 id_bhvBlackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_blackroom_init, bhv_blackroom_loop)

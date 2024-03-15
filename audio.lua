@@ -60,7 +60,8 @@ gSamples = {
 	audio_sample_load("crunch.mp3"),
 	audio_sample_load("agonytoad.mp3"),
 	audio_sample_load("fart.mp3"),
-	audio_sample_load("glass.mp3")
+	audio_sample_load("glass.mp3"),
+	audio_sample_load("portal_ambient.mp3")
 
 }
 
@@ -86,7 +87,7 @@ sCrunch = 19
 sToadburn = 20
 sFart = 21
 sGlass = 22
-
+sPortal = 23
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))
