@@ -1183,11 +1183,11 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 ----------------------------------------------------------------------------------------------------------------------------------
 	-- (Cool Cool Mountain) Baby penguin gets thrown after 8 seconds of mario losing his patience.
 
-	if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj,id_bhvSmallPenguin) ~= 0) then
+	if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
 		s.penguinholding = 1
 	end
 	if (s.penguinholding) == 1 then
-		if ((m.heldObj) ~= nil) and (obj_has_behavior_id(m.heldObj,id_bhvSmallPenguin) ~= 0) then
+		if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
 			s.penguintimer = s.penguintimer + 1
 		end
 	end
@@ -1195,52 +1195,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		local_play(sAngryMario, m.pos, 1)
 	end
 	if (s.penguintimer) == 280 then
-		--mario_throw_held_object(m.heldObj)
-		if m.action == ACT_HOLD_JUMP then
-			local baby = obj_get_nearest_object_with_behavior_id(o, id_bhvSmallPenguin) 
+			m.heldObj.oAction = 6
 			mario_drop_held_object(m)
 			set_mario_action(m, ACT_JUMP_KICK, 0)
-			m.particleFlags = PARTICLE_MIST_CIRCLE
+			m.particleFlags = PARTICLE_MIST_CIRCLE|PARTICLE_TRIANGLE
 			--spawn_triangle_break_particles(30, 138, 1, 4)
-			baby.oSmallPenguinUnk104 = 200
-			baby.oAction = 1
-			baby.oForwardVel = baby.oSmallPenguinUnk104 + 300
-			baby.oGravity = 80
-			baby.oMoveAnglePitch = baby.oMoveAnglePitch + 7500
-			--s.penguintimer = 300
-			object_step()
-			play_sound(SOUND_ACTION_HIT_2, m.marioObj.header.gfx.cameraToObject)
+			play_sound(SOUND_ACTION_BONK, m.marioObj.header.gfx.cameraToObject)
 			s.penguinholding = 0
 			s.penguintimer = 0
-		elseif m.action == ACT_WALKING then
-			mario_drop_held_object(m)
-			set_mario_action(m, ACT_FORWARD_ROLLOUT, 0)
-			m.particleFlags = PARTICLE_MIST_CIRCLE
-			squishblood(m.marioObj)
-			local_play(sSplatter, m.pos, 1)
-			s.penguinholding = 0
-			s.penguintimer = 0
-		else
-			set_mario_action(m, ACT_PUNCHING, 0)
-			s.penguintimer = s.penguintimer + 1
-		end
-	end
-	if (s.penguintimer) >= 281 then
-		s.penguintimer = s.penguintimer + 1
-	end
-	if (s.penguintimer) == 290 then
-		if m.heldObj ~= nil then
-			obj_mark_for_deletion(m.heldObj)
-			m.heldObj = nil
-		else
-			local baby = obj_get_nearest_object_with_behavior_id(o, id_bhvSmallPenguin) 
-			obj_mark_for_deletion(baby)
-		end
-		m.particleFlags = PARTICLE_MIST_CIRCLE
-		squishblood(m.marioObj)
-		local_play(sSplatter, m.pos, 1)
-		s.penguinholding = 0
-		s.penguintimer = 0
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -2049,7 +2011,7 @@ function bhv_custom_rotating_platform(o) --Spinning platform high up on RR. (Plu
 	o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
 end
 
-function bhv_custom_heart(o) 
+function bhv_custom_heart(o)
 	m = nearest_mario_state_to_object(o)
 	--if is_point_within_radius_of_any_player(200, 50, 200, 200) ~= 0 then
 	if mario_is_within_rectangle(o.oPosX - 200, o.oPosX + 200, o.oPosZ - 200, o.oPosZ + 200) ~= 0 then
@@ -2070,8 +2032,26 @@ function bhv_custom_moving_plats(o)
 	end
 end
 
+---@param o Object
 function bhv_custom_tuxie(o)
-	o.oAction = 1
+	if o.oAction == 6 then
+		if o.oTimer == 0 then
+			o.oGravity = -2
+			o.oForwardVel = 100
+			o.oVelY = 100
+		end
+		o.oFaceAnglePitch = o.oFaceAnglePitch + 7500
+		cur_obj_move_standard(-78)
+		if o.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
+			if o.oFloor.type ~= SURFACE_DEATH_PLANE then
+				squishblood(o)
+				local p = vec3f()
+				object_pos_to_vec3f(p, o)
+				local_play(sSplatter, p, 1)
+			end
+			obj_mark_for_deletion(o)
+		end
+	end
 end
 
 function bhv_netherportal_init(o)
