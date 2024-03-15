@@ -28,11 +28,6 @@ u8 hell_dl_Bowser_Logo_Platform_rgba16[] = {
 	#include "levels/hell/Bowser_Logo_Platform.rgba16.inc.c"
 };
 
-Gfx hell_dl_CastlePortalTransparent_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 hell_dl_CastlePortalTransparent_rgba16[] = {
-	#include "levels/hell/CastlePortalTransparent.rgba16.inc.c"
-};
-
 Gfx hell_dl_MARIOKART64_C678990B_0_2_rgb_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 hell_dl_MARIOKART64_C678990B_0_2_rgb_rgba16[] = {
 	#include "levels/hell/MARIOKART64_C678990B_0_2_rgb.rgba16.inc.c"
@@ -81,16 +76,6 @@ u8 hell_dl__11ED1CF2_c_pal_rgba16[] = {
 Gfx hell_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_copy_aligner[] = {gsSPEndDisplayList()};
 u8 hell_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_copy[] = {
 	#include "levels/hell/SUPER_MARIO_64_184368CA_0_2_all.rgba16.inc.c"
-};
-
-Gfx hell_dl_Obsidian32_ci8_aligner[] = {gsSPEndDisplayList()};
-u8 hell_dl_Obsidian32_ci8[] = {
-	#include "levels/hell/Obsidian32.ci8.inc.c"
-};
-
-Gfx hell_dl_Obsidian32_pal_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 hell_dl_Obsidian32_pal_rgba16[] = {
-	#include "levels/hell/Obsidian32.rgba16.pal"
 };
 
 Gfx hell_dl__5ACCBD20_c_rgba16_copy_aligner[] = {gsSPEndDisplayList()};

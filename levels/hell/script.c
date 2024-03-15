@@ -51,6 +51,7 @@ const LevelScript level_hell_entry[] = {
 		OBJECT(MODEL_1UP, -4814, 1991, 4135, 90, 10, 0, 0x00000000, bhv1Up),
 		OBJECT(MODEL_1UP, -3847, 1429, 5232, 90, 10, 0, 0x00000000, bhv1Up),
 		OBJECT(MODEL_1UP, -4387, 1702, 4876, 90, 10, 0, 0x00000000, bhv1Up),
+		OBJECT(MODEL_NONE, 78, 275, 13706, 0, 90, 0, 0x00000000, id_bhvNetherPortal),
 		OBJECT(E_MODEL_HELLPLATFORM, 1538, 910, 2694, 0, 0, 0, 0x00000000, id_bhvHellPlatform1),
 		OBJECT(E_MODEL_HELLPLATFORM, -3172, 1033, 5241, 0, 0, 0, 0x00000000, id_bhvHellPlatform1),
 		OBJECT(E_MODEL_NONE, -134, 597, -7362, -90, 0, 180, 0x00000000, id_bhvLllRotatingBlockWithFireBars),

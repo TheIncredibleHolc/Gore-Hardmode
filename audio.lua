@@ -61,8 +61,9 @@ gSamples = {
 	audio_sample_load("agonytoad.mp3"),
 	audio_sample_load("fart.mp3"),
 	audio_sample_load("glass.mp3"),
-	audio_sample_load("portal_ambient.mp3")
-
+	audio_sample_load("portal_ambient.ogg"),
+	audio_sample_load("portal_enter.ogg"),
+	audio_sample_load("portal_travel.ogg")
 }
 
 sBoneBreak = 1
@@ -87,7 +88,9 @@ sCrunch = 19
 sToadburn = 20
 sFart = 21
 sGlass = 22
-sPortal = 23
+sPortalAmbient = 23
+sPortalEnter = 24
+sPortalTravel = 25
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))
@@ -95,6 +98,11 @@ end
 function network_play(id, pos, vol, i)
     local_play(id, pos, vol)
     network_send(true, {id = id, x = pos.x, y = pos.y, z = pos.z, vol = vol, i = network_global_index_from_local(i)})
+end
+function stop_all_samples()
+	for _, audio in pairs(gSamples) do
+		audio_sample_stop(audio)
+	end
 end
 
 hook_event(HOOK_ON_PACKET_RECEIVE, function (data)

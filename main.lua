@@ -117,10 +117,11 @@ gGlobalSyncTable.toaddeathcounter = 0
 
 
 -----------Locals-------------
-local texMarioLessHigh = get_texture_info('mariolesshigh')
-local texBloodOverlay = get_texture_info('bloodoverlay')
-local texTrippyOverlay = get_texture_info('trippy')
+local TEX_MARIO_LESS_HIGH = get_texture_info('mariolesshigh')
+local TEX_BLOOD_OVERLAY = get_texture_info('bloodoverlay')
+local TEX_TRIPPY_OVERLAY = get_texture_info('trippy')
 
+local TEX_DIRT = get_texture_info("grass_09004800")
 
 ------Variables n' stuff------
 
@@ -159,7 +160,6 @@ E_MODEL_BLACKROOM = smlua_model_util_get_id("blackroom_geo")
 COL_BLACKROOM = smlua_collision_util_get("blackroom_collision")
 E_MODEL_BACKROOM_SMILER = smlua_model_util_get_id("backroom_smiler_geo")
 COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --The ACTUAL custom Smiler enemy in the backroom.
-
 E_MODEL_NETHERPORTAL = smlua_model_util_get_id("netherportal_geo")
 COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
 
@@ -199,6 +199,8 @@ ukikitimer = 0
 highalpha = 0
 bloodalpha = 0
 mariohallucinate = 0
+
+loadingscreen = 0
 
 ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 
@@ -1050,7 +1052,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 				obj_mark_for_deletion(racepen)
 				spawn_sync_object(id_bhvStar, E_MODEL_STAR, m.pos.x, m.pos.y + 200, m.pos.z, function(star)
 					star.oBehParams = 2 << 24
-				end)				
+				end)
 			end
 		end
 		if (racepen.oPrevAction == RACING_PENGUIN_ACT_SHOW_FINAL_TEXT ~= 0) and racepen.oRacingPenguinFinalTextbox == -1 then
@@ -1569,7 +1571,7 @@ function toaddeath(o)
 	end
 end
 
-function deathcounthud() -- Displays the total amount of mario deaths a server has incurred since opening. 
+function hud_render() -- Displays the total amount of mario deaths a server has incurred since opening. 
 	screenHeight = djui_hud_get_screen_height()
 	screenWidth = djui_hud_get_screen_width()
 
@@ -1590,7 +1592,7 @@ function deathcounthud() -- Displays the total amount of mario deaths a server h
 	--MARIO HIGH IN GAS OVERLAY
 		djui_hud_set_resolution(RESOLUTION_N64)
 		djui_hud_set_color(255, 255, 255, highalpha)
-		djui_hud_render_texture(texMarioLessHigh, 0, 0, .87, .5)
+		djui_hud_render_texture(TEX_MARIO_LESS_HIGH, 0, 0, .87, .5)
 
 	if (s.highdeathtimer) >= 1 then --Mario is high, therefore a hazy green gas overlay comes up on the screen.
 		if highalpha <= 254 then
@@ -1609,7 +1611,7 @@ function deathcounthud() -- Displays the total amount of mario deaths a server h
 	--MARIO BLOODY GAS OVERLAY
 	djui_hud_set_resolution(RESOLUTION_N64)
 	djui_hud_set_color(255, 255, 255, bloodalpha)
-	djui_hud_render_texture(texBloodOverlay, 0, 0, .87, .5)
+	djui_hud_render_texture(TEX_BLOOD_OVERLAY, 0, 0, .87, .5)
 
 	if (s.highdeathtimer) >= 1000 then --Mario is very high and dying, therefore bloody gas overlay comes up on the screen.
 		if bloodalpha <= 254 then
@@ -1628,7 +1630,7 @@ function deathcounthud() -- Displays the total amount of mario deaths a server h
 	--MARIO TRIPPY OVERLAY
 	djui_hud_set_resolution(RESOLUTION_N64)
 	djui_hud_set_color(255, 255, 255, mariohallucinate)
-	djui_hud_render_texture(texTrippyOverlay, 0, 0, .85, .5)
+	djui_hud_render_texture(TEX_TRIPPY_OVERLAY, 0, 0, .85, .5)
 
 	if (s.highdeathtimer) >= 360 then --Mario is hallucinating.
 		if mariohallucinate <= 110 then
@@ -1641,6 +1643,33 @@ function deathcounthud() -- Displays the total amount of mario deaths a server h
 		end
 		if (mariohallucinate <= 3) and (mariohallucinate >= 1)  then --Sets trippy overlay to invisible.
 			mariohallucinate = 0
+		end
+	end
+
+	-- warp loading screen
+	if loadingscreen > 0 then
+		loadingscreen = loadingscreen - 1
+		sound_banks_disable(0, SOUND_BANKS_ALL)
+		sound_banks_disable(1, SOUND_BANKS_ALL)
+		sound_banks_disable(2, SOUND_BANKS_ALL)
+		djui_hud_set_color(255, 255, 255, 255)
+		for i=0, math.ceil(djui_hud_get_screen_width()/32) do
+			for j=0, 7 do
+				djui_hud_render_texture(TEX_DIRT, i*32, j*32, 1, 1)
+			end
+		end
+		if loadingscreen == 0 then
+			s.isinhell = false
+			warp_to_start_level()
+			s.isinhell = false
+			local i = 0
+			while i < 100000000 do
+				i = i + 1
+			end
+			sound_banks_enable(0, SOUND_BANKS_ALL)
+			sound_banks_enable(1, SOUND_BANKS_ALL)
+			sound_banks_enable(2, SOUND_BANKS_ALL)
+			local_play(sPortalTravel, vec3f(), 10)
 		end
 	end
 end
@@ -1728,7 +1757,7 @@ hook_event(HOOK_ON_SET_MARIO_ACTION, action_start)
 hook_event(HOOK_ON_DEATH, mariodeath)
 hook_event(HOOK_ON_OBJECT_UNLOAD, toaddeath)
 hook_event(HOOK_ON_INTERACT, on_interact)
-hook_event(HOOK_ON_HUD_RENDER, deathcounthud)
+hook_event(HOOK_ON_HUD_RENDER, hud_render)
 hook_event(HOOK_BEFORE_PHYS_STEP, before_phys_step) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
 
 
@@ -2045,9 +2074,7 @@ function bhv_custom_tuxie(o)
 		if o.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
 			if o.oFloor.type ~= SURFACE_DEATH_PLANE then
 				squishblood(o)
-				local p = vec3f()
-				object_pos_to_vec3f(p, o)
-				local_play(sSplatter, p, 1)
+				local_play(sSplatter, o.header.gfx.cameraToObject, 1)
 			end
 			obj_mark_for_deletion(o)
 		end
@@ -2056,18 +2083,32 @@ end
 
 function bhv_netherportal_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-    o.oCollisionDistance = 10000
-    o.collisionData = COL_NETHERPORTAL
-    o.header.gfx.skipInViewCheck = true
+	o.oCollisionDistance = 800
+	obj_set_model_extended(o, E_MODEL_NETHERPORTAL)
+	o.collisionData = COL_NETHERPORTAL
+	o.header.gfx.skipInViewCheck = true
 end
 
 function bhv_netherportal_loop(o)
 	load_object_collision_model()
-	if o.oTimer == 300 then
-		local_play(sPortal, m.pos, .75)
+	local m = gMarioStates[0]
+	o.oAnimState = o.oTimer % 32
+	if o.oTimer % 300 == 0 and dist_between_objects(o, m.marioObj) < 1000 then
+		local_play(sPortalAmbient, o.header.gfx.cameraToObject, 10)
 	end
-	if o.oTimer >= 450 then
-		o.oTimer = 0
+	if m.floor and m.floor.object and o == m.floor.object and
+	   m.ceil  and m.ceil.object  and o == m.ceil.object then
+		o.oSubAction = o.oSubAction + 1
+	else
+		o.oSubAction = 0
+	end
+	if o.oSubAction == 1 then
+		local_play(sPortalEnter, o.header.gfx.cameraToObject, 7)
+	end
+	if o.oSubAction == 130 then
+		loadingscreen = 30+math.random(30)
+		stream_stop_all()
+		stop_all_samples()
 	end
 end
 
@@ -2180,7 +2221,7 @@ hook_chat_command("hell", "hell", function ()
 end)
 
 hook_chat_command("end", "credits", function ()
-	warp_to_level(LEVEL_ENDING, 1, 0)
+	level_trigger_warp(gMarioStates[0], WARP_OP_CREDITS_START)
 	return true
 end)
 
@@ -2198,6 +2239,7 @@ end, nil)
 hook_event(HOOK_ON_LEVEL_INIT, function ()
 	--Stop music when exiting levels
 	stream_stop_all()
+	stop_all_samples()
 
 	----------------------------------------------------------------------------------------------------------------------------------
 	--Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)
@@ -2223,6 +2265,8 @@ hook_event(HOOK_ON_WARP, function ()
 		set_lighting_color(1,127)
 		set_lighting_color(2,100)
 		set_lighting_dir(1,-128)
+		area_get_warp_node(1).node.destLevel = LEVEL_HELL
+		area_get_warp_node(2).node.destLevel = LEVEL_HELL
 	else
 		set_lighting_color(0, 255)
 		set_lighting_color(1, 255)
