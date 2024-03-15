@@ -1653,6 +1653,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 		sound_banks_disable(1, SOUND_BANKS_ALL)
 		sound_banks_disable(2, SOUND_BANKS_ALL)
 		djui_hud_set_color(255, 255, 255, 255)
+
 		for i=0, math.ceil(djui_hud_get_screen_width()/32) do
 			for j=0, 7 do
 				djui_hud_render_texture(TEX_DIRT, i*32, j*32, 1, 1)
@@ -1662,6 +1663,16 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 			s.isinhell = false
 			warp_to_start_level()
 			s.isinhell = false
+			
+			set_override_envfx(-1)
+			set_lighting_color(0, 255)
+			set_lighting_color(1, 255)
+			set_lighting_color(2, 255)
+			set_lighting_dir(1,0)
+
+			play_sound(SOUND_GENERAL_COLLECT_1UP, m.pos)
+			m.numLives = m.numLives + 10
+
 			local i = 0
 			while i < 100000000 do
 				i = i + 1
@@ -1670,6 +1681,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 			sound_banks_enable(1, SOUND_BANKS_ALL)
 			sound_banks_enable(2, SOUND_BANKS_ALL)
 			local_play(sPortalTravel, vec3f(), 10)
+
 		end
 	end
 end
@@ -2092,6 +2104,7 @@ end
 function bhv_netherportal_loop(o)
 	load_object_collision_model()
 	local m = gMarioStates[0]
+
 	o.oAnimState = o.oTimer % 32
 	if o.oTimer % 300 == 0 and dist_between_objects(o, m.marioObj) < 1000 then
 		local_play(sPortalAmbient, o.header.gfx.cameraToObject, 10)
