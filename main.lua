@@ -846,7 +846,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	s.outsidegastimer = s.outsidegastimer + 1 -- This is constantly counting up. As long as Mario is in gas, this number will keep getting set back to zero. If Mario isnt in gas, the timer will count up to 60 and trigger some "not in gas" commands. 
 
 
-    if (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
+    if m.playerIndex == 0 and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
 		s.ishigh = 1
 		s.outsidegastimer = 0
 		m.health = m.health + 4
@@ -887,7 +887,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			end
 		end
 	end
-	if (s.highdeathtimer) == 1 then --initiates the 'high' music
+	if (s.highdeathtimer) == 1 and m.playerIndex == 0 then --initiates the 'high' music
 		fadeout_level_music(30*30)
 		stream_play(highmusic)
 		spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
