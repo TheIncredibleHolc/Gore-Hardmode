@@ -121,6 +121,8 @@ local TEX_MARIO_LESS_HIGH = get_texture_info('mariolesshigh')
 local TEX_BLOOD_OVERLAY = get_texture_info('bloodoverlay')
 local TEX_TRIPPY_OVERLAY = get_texture_info('trippy')
 
+local TEX_PORTAL = get_texture_info("portal")
+
 local TEX_DIRT = get_texture_info("grass_09004800")
 
 ------Variables n' stuff------
@@ -198,8 +200,9 @@ ukikitimer = 0
 
 highalpha = 0
 bloodalpha = 0
-mariohallucinate = 0
+hallucinate = 0
 
+portalalpha = 0
 loadingscreen = 0
 
 ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
@@ -1525,29 +1528,13 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	s.headless = false --Gives Mario his head back
 	s.bottomless = false --Gives Mario his whole upper body back
 
-	if n.currLevelNum == LEVEL_HELL then
-		stream_play(musicHell)
-		audio_stream_set_looping(musicHell, true)
-	end
-
 	if n.currLevelNum == LEVEL_TTM then
 		m.pos.y = m.pos.y + 320
 	end
 
 	if m.numLives <= 0 and not s.isinhell then
-		if m.playerIndex ~= 0 then return end
 		s.isinhell = true
 		warp_to_level(LEVEL_HELL, 1, 0)
-	end
-
-	if n.currLevelNum == LEVEL_JRB or n.currLevelNum == LEVEL_HELL then
-		set_override_envfx(ENVFX_LAVA_BUBBLES)
-	else
-		set_override_envfx(-1)
-	end	
-
-	if n.currLevelNum == LEVEL_TTC then
-		set_ttc_speed_setting(-5)
 	end
 
 	--Resets the baby penguin timer on warp so it doesn't glitch out if mario leaves the level without fully killing the baby penguin.
@@ -1558,20 +1545,20 @@ end
 function toaddeath(o)
 	local deaths = gGlobalSyncTable.toaddeathcounter
 	if obj_has_behavior_id(o, id_bhvToadMessage) ~= 0 then
-		if (deaths == 10) then
+		if deaths == 10 then
 			bhv_spawn_star_no_level_exit(o, 0, 1)
 		end
-		if (deaths == 20) then
+		if deaths == 20 then
 			bhv_spawn_star_no_level_exit(o, 1, 1)
 		end
-		if (deaths == 30) then
+		if deaths == 30 then
 			bhv_spawn_star_no_level_exit(o, 2, 1)
 		end
 		toadguitimer = 150
 	end
 end
 
-function hud_render() -- Displays the total amount of mario deaths a server has incurred since opening. 
+function hud_render() -- Displays the total amount of mario deaths a server has incurred since opening.
 	screenHeight = djui_hud_get_screen_height()
 	screenWidth = djui_hud_get_screen_width()
 
@@ -1589,61 +1576,59 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), screenHeight - 48, 1)
 	end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	djui_hud_set_resolution(RESOLUTION_N64)
+	local width = djui_hud_get_screen_width()/512
+	local height = 240/512
+
 	--MARIO HIGH IN GAS OVERLAY
-		djui_hud_set_resolution(RESOLUTION_N64)
-		djui_hud_set_color(255, 255, 255, highalpha)
-		djui_hud_render_texture(TEX_MARIO_LESS_HIGH, 0, 0, .87, .5)
+	djui_hud_set_color(255, 255, 255, highalpha)
+	djui_hud_render_texture(TEX_MARIO_LESS_HIGH, 0, 0, width, height)
 
 	if (s.highdeathtimer) >= 1 then --Mario is high, therefore a hazy green gas overlay comes up on the screen.
-		if highalpha <= 254 then
-			highalpha = highalpha + 1
-		end
+		highalpha = highalpha + 1
 	end
 	if (s.ishigh == 0) or (s.highdeathtimer >= 940) then --Mario is not high, therefore this will remove the gas effect on the hud.
-		if (highalpha >= 2) then
-			highalpha = highalpha - 2
-		end
-		if (highalpha == 1) then
-			highalpha = 0
-		end
+		highalpha = highalpha - 2
 	end
+	highalpha = clamp(highalpha, 0, 255)
 
 	--MARIO BLOODY GAS OVERLAY
-	djui_hud_set_resolution(RESOLUTION_N64)
 	djui_hud_set_color(255, 255, 255, bloodalpha)
-	djui_hud_render_texture(TEX_BLOOD_OVERLAY, 0, 0, .87, .5)
+	djui_hud_render_texture(TEX_BLOOD_OVERLAY, 0, 0, width, height)
 
 	if (s.highdeathtimer) >= 1000 then --Mario is very high and dying, therefore bloody gas overlay comes up on the screen.
-		if bloodalpha <= 254 then
-			bloodalpha = bloodalpha + 1
-		end
+		bloodalpha = bloodalpha + 1
 	end
 	if (s.ishigh == 0) then --Mario is not high, therefore this will remove the gas effect on the hud.
-		if (bloodalpha >= 4) then
-			bloodalpha = bloodalpha - 4
-		end
-		if (bloodalpha <= 3) and (bloodalpha >= 1)  then --Sets blood overlay to invisible.
-			bloodalpha = 0
-		end
+		bloodalpha = bloodalpha - 4
 	end
+	bloodalpha = clamp(bloodalpha, 0, 255)
 
 	--MARIO TRIPPY OVERLAY
-	djui_hud_set_resolution(RESOLUTION_N64)
-	djui_hud_set_color(255, 255, 255, mariohallucinate)
-	djui_hud_render_texture(TEX_TRIPPY_OVERLAY, 0, 0, .85, .5)
+	djui_hud_set_color(255, 255, 255, hallucinate)
+	djui_hud_render_texture(TEX_TRIPPY_OVERLAY, 0, 0, width, height)
 
 	if (s.highdeathtimer) >= 360 then --Mario is hallucinating.
-		if mariohallucinate <= 110 then
-			mariohallucinate = mariohallucinate + 1
-		end
+		hallucinate = hallucinate + 1
 	end
 	if (s.ishigh == 0) or (s.highdeathtimer >= 1090) then --Mario is not high or too high, therefore this will remove the gas effect on the hud.
-		if (mariohallucinate >= 4) then
-			mariohallucinate = mariohallucinate - 3
+		hallucinate = hallucinate - 3
+	end
+	hallucinate = clamp(hallucinate, 0, 111)
+
+	--PORTAL OVERLAY
+	if m.marioObj and loadingscreen < 1 then
+		djui_hud_set_color(255, 255, 255, portalalpha)
+		djui_hud_render_texture_tile(TEX_PORTAL, 0, 0, width*32, height*32, 0, (m.marioObj.oTimer % 32)*16, 16, 16)
+
+		local portal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+		if portal and portal.oSubAction > 0 then --Mario is in the portal.
+			portalalpha = portalalpha + 3
+		else
+			portalalpha = portalalpha - 6
 		end
-		if (mariohallucinate <= 3) and (mariohallucinate >= 1)  then --Sets trippy overlay to invisible.
-			mariohallucinate = 0
-		end
+
+		portalalpha = clamp(portalalpha, 0, 200)
 	end
 
 	-- warp loading screen
@@ -1659,33 +1644,24 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 				djui_hud_render_texture(TEX_DIRT, i*32, j*32, 1, 1)
 			end
 		end
-		if loadingscreen == 0 then
+		if loadingscreen == 2 then
 			s.isinhell = false
 			warp_to_start_level()
-			s.isinhell = false
-
-			set_override_envfx(-1)
-			set_lighting_color(0, 255)
-			set_lighting_color(1, 255)
-			set_lighting_color(2, 255)
-			set_lighting_dir(1,0)
-
-			local i = 0
-			while i < 100000000 do
-				i = i + 1
-			end
+			m.numLives = m.numLives + 10
+		elseif loadingscreen == 0 then
 			sound_banks_enable(0, SOUND_BANKS_ALL)
 			sound_banks_enable(1, SOUND_BANKS_ALL)
 			sound_banks_enable(2, SOUND_BANKS_ALL)
 
-			local_play(sPortalTravel, vec3f(), 10)
-			play_sound(SOUND_GENERAL_COLLECT_1UP, m.pos)
-			m.numLives = m.numLives + 10
-
+			local_play(sPortalTravel, vec3f(), 3)
+			play_sound(SOUND_GENERAL_COLLECT_1UP, vec3f())
 		end
 	end
 end
-
+-- prevent warp transition after loading finishes
+hook_event(HOOK_ON_SCREEN_TRANSITION, function ()
+	if loadingscreen > 0 then return false end
+end)
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 function mario_before_phys_step(m)
@@ -1714,15 +1690,15 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
 	
 	if m.playerIndex ~= 0 then return end
 
-	local obj = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhv1Up)
-    if obj~= nil and n.currLevelNum ~= LEVEL_HELL and (nearest_interacting_mario_state_to_object(obj)).playerIndex == 0 and mario_is_within_rectangle(obj.oPosX - 200, obj.oPosX + 200, obj.oPosZ - 200, obj.oPosZ + 200) ~= 0 and m.pos.y > obj.oPosY - 200 and m.pos.y < obj.oPosY + 200 then --if local mario is touching 1up then
+	local obj = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhv1Up)
+    if obj and n.currLevelNum ~= LEVEL_HELL and nearest_interacting_mario_state_to_object(obj).playerIndex == 0 and mario_is_within_rectangle(obj.oPosX - 200, obj.oPosX + 200, obj.oPosZ - 200, obj.oPosZ + 200) ~= 0 and m.pos.y > obj.oPosY - 200 and m.pos.y < obj.oPosY + 200 then --if local mario is touching 1up then
 		spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
 		obj_mark_for_deletion(obj)
 		local_play(sFart, m.pos, 1)
     end
 
 	local demon = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON
-    if n.currLevelNum ~= LEVEL_HELL and demon ~= nil and (nearest_interacting_mario_state_to_object(demon)).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
+    if n.currLevelNum ~= LEVEL_HELL and demon and nearest_interacting_mario_state_to_object(demon).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
 		obj_mark_for_deletion(demon)
 		local_play(sFart, m.pos, 1)
     end
@@ -2106,9 +2082,10 @@ function bhv_netherportal_loop(o)
 	local m = gMarioStates[0]
 
 	o.oAnimState = o.oTimer % 32
-	if o.oTimer % 300 == 0 and dist_between_objects(o, m.marioObj) < 1000 then
+	if o.oTimer % 300 == 0 and lateral_dist_between_objects(o, m.marioObj) < 1000 and loadingscreen == 0 then
 		local_play(sPortalAmbient, o.header.gfx.cameraToObject, 10)
 	end
+	stream_set_volume(clampf(lateral_dist_between_objects(o, m.marioObj)/800, 0.4, 1))
 	if m.floor and m.floor.object and o == m.floor.object and
 	   m.ceil  and m.ceil.object  and o == m.ceil.object then
 		o.oSubAction = o.oSubAction + 1
@@ -2253,12 +2230,38 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	--Stop music when exiting levels
 	stream_stop_all()
 	stop_all_samples()
+	local np = gNetworkPlayers[0]
 
 	----------------------------------------------------------------------------------------------------------------------------------
 	--Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)
-	if gStateExtras[0].isinhell and gNetworkPlayers[0].currLevelNum ~= LEVEL_HELL then
+	if gStateExtras[0].isinhell and np.currLevelNum ~= LEVEL_HELL then
 		gMarioStates[0].numLives = 0
 		warp_to_level(LEVEL_HELL, 1, 0)
+	end
+	if np.currLevelNum == LEVEL_HELL then
+		set_lighting_color(0,255)
+		set_lighting_color(1,127)
+		set_lighting_color(2,100)
+		set_lighting_dir(1,-128)
+		area_get_warp_node(1).node.destLevel = LEVEL_HELL
+		area_get_warp_node(2).node.destLevel = LEVEL_HELL
+		stream_play(musicHell)
+		audio_stream_set_looping(musicHell, true)
+	else
+		set_lighting_color(0, 255)
+		set_lighting_color(1, 255)
+		set_lighting_color(2, 255)
+		set_lighting_dir(1,0)
+	end
+
+	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
+		set_override_envfx(ENVFX_LAVA_BUBBLES)
+	else
+		set_override_envfx(-1)
+	end
+
+	if np.currLevelNum == LEVEL_TTC then
+		set_ttc_speed_setting(-5)
 	end
 end)
 
@@ -2272,19 +2275,6 @@ hook_event(HOOK_ON_WARP, function ()
 		end)
 		local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
 		o.oPosY = o.oPosY + 21
-	end
-	if n.currLevelNum == LEVEL_HELL then
-		set_lighting_color(0,255)
-		set_lighting_color(1,127)
-		set_lighting_color(2,100)
-		set_lighting_dir(1,-128)
-		area_get_warp_node(1).node.destLevel = LEVEL_HELL
-		area_get_warp_node(2).node.destLevel = LEVEL_HELL
-	else
-		set_lighting_color(0, 255)
-		set_lighting_color(1, 255)
-		set_lighting_color(2, 255)
-		set_lighting_dir(1,0)
 	end
 end
 )

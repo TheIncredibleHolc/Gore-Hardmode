@@ -3,9 +3,11 @@ smwbonusmusic = audio_stream_load("smwbonusloop.mp3")
 boss = audio_stream_load("croppedcastle.mp3")
 backroomMusic = audio_stream_load("backroom.mp3")
 musicHell = audio_stream_load("hell.mp3")
-currentlyPlaying = nil
-fadeTimer = 0
-fadePeak = 0
+
+local currentlyPlaying = nil
+local fadeTimer = 0
+local fadePeak = 0
+local volume = 1
 
 ---@param a BassAudio
 function stream_play(a)
@@ -17,6 +19,9 @@ end
 function stream_fade(time)
 	fadePeak = time
 	fadeTimer = time
+end
+function stream_set_volume(vol)
+	volume = vol
 end
 function stream_stop_all()
 	audio_stream_stop(highmusic)
@@ -34,7 +39,7 @@ hook_event(HOOK_UPDATE, function ()
 		end
 	end
 	if currentlyPlaying then
-		audio_stream_set_volume(currentlyPlaying, is_game_paused() and 0.2 or (fadeTimer ~= 0 and fadeTimer/fadePeak or 1))
+		audio_stream_set_volume(currentlyPlaying, (is_game_paused() and 0.2 or (fadeTimer ~= 0 and fadeTimer/fadePeak or 1)) * volume)
 	end
 end)
 
