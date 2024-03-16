@@ -1577,7 +1577,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	djui_hud_set_resolution(RESOLUTION_N64)
-	local width = djui_hud_get_screen_width()/512
+	local width = (djui_hud_get_screen_width()+1)/512
 	local height = 240/512
 
 	--MARIO HIGH IN GAS OVERLAY
@@ -1619,7 +1619,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	--PORTAL OVERLAY
 	if m.marioObj and loadingscreen < 1 then
 		djui_hud_set_color(255, 255, 255, portalalpha)
-		djui_hud_render_texture_tile(TEX_PORTAL, 0, 0, width*32, height*32, 0, (m.marioObj.oTimer % 32)*16, 16, 16)
+		djui_hud_render_texture_tile(TEX_PORTAL, 0, 0, width*32, 15, 0, (m.marioObj.oTimer % 32)*16, 16, 16)
 
 		local portal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
 		if portal and portal.oSubAction > 0 then --Mario is in the portal.
