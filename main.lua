@@ -578,6 +578,11 @@ ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|A
 function act_necksnap(m)
     common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
 	smlua_anim_util_set_animation(m.marioObj, "MARIO_NECKSNAP")
+	m.actionTimer = m.actionTimer + 1
+	if m.actionTimer == 1 then
+		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+	end
+	--djui_chat_message_create(tostring(m.actionTimer))
 end
 hook_mario_action(ACT_NECKSNAP, act_necksnap)
 
@@ -949,6 +954,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--Mario Disintegrates when on fire
 	if m.action == ACT_BURNING_JUMP or m.action == ACT_BURNING_GROUND or m.action == ACT_BURNING_FALL then
 		if m.usedObj then
+			cur_obj_shake_screen(SHAKE_POS_SMALL)
+			--set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 			obj_scale(m.usedObj, 6)
 			obj_copy_pos(m.usedObj, m.marioObj)
 			m.usedObj.oGraphYOffset = 100
