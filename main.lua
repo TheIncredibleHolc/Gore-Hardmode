@@ -1506,6 +1506,8 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	--Will also reset other functions as well.
 	local s = gStateExtras[0]
 	s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
+	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
+	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 
 	--set_override_envfx(ENVFX_MODE_NONE)
 	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
@@ -1522,6 +1524,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 
+	hud_show()
 
 	s.isdead = false --Mario is alive
 	s.disableuntilnextwarp = false --Enables death counter
@@ -1558,16 +1561,25 @@ function toaddeath(o)
 	end
 end
 
-function hud_render() -- Displays the total amount of mario deaths a server has incurred since opening.
+function hud_render() -- Displays the total amount of mario deaths a server has incurred since opening. 
+	local s = gStateExtras[0]
+	local m = gMarioStates[0]
+	local n = gNetworkPlayers[0]
+	if obj_get_first_with_behavior_id(id_bhvBackroom) and m.playerIndex ~= 0 then return end
+	
 	screenHeight = djui_hud_get_screen_height()
 	screenWidth = djui_hud_get_screen_width()
 
 	--TOAD DEATH COUNTER. Each time you kill toad, the count goes up. It compares the number with the PreviousToadDeath variable, which tells it to update and triggers commands.
 	--Toad gives 3 stars. I have set this to give these stars after every 100 toad kills.
 	local deathcount = "Total server death count: "..gGlobalSyncTable.deathcounter
-	djui_hud_print_text(deathcount, screenWidth - 30 - djui_hud_measure_text(deathcount), screenHeight - 78, 1)
-	local s = gStateExtras[0]
-	local m = gMarioStates[0]
+
+	if n.currLevelNum == LEVEL_CASTLE and m.pos.y > 7000 then
+		return
+	else
+		djui_hud_print_text(deathcount, screenWidth - 30 - djui_hud_measure_text(deathcount), screenHeight - 78, 1)
+	end
+
 	if (toadguitimer) ~= 0 then
 		toadguitimer = toadguitimer - 1
 		djui_hud_set_color(255, 255, 0, lerp(0, 255, (math.max(0, toadguitimer))/150))
@@ -1896,6 +1908,8 @@ function bhv_backroom_init(o)
     o.oCollisionDistance = 10000
     o.collisionData = COL_BACKROOM
     o.header.gfx.skipInViewCheck = true
+	hud_hide()
+	
 end
 
 function bhv_backroom_loop(o)
@@ -2292,3 +2306,9 @@ hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
 		return 0
 	end
 end)
+
+
+
+
+
+
