@@ -67,7 +67,7 @@ function testing(m)
 		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
 
 		--spawn_sync_object(id_bhvWingCap, E_MODEL_LUIGIS_WING_CAP, m.pos.x, m.pos.y, m.pos.z + 50, nil)
-		spawn_sync_object(id_bhvToadMessage, E_MODEL_TOAD, m.pos.x, m.pos.y, m.pos.z + 50, nil)
+		spawn_sync_object(id_bhvBlueCoinJumping, E_MODEL_BLUE_COIN, m.pos.x, m.pos.y, m.pos.z + 50, nil)
 		
 		--[[
 		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
@@ -703,56 +703,24 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--Backroom Teleport
 
 	--djui_chat_message_create(tostring(m.forwardVel))
-	if n.currLevelNum == LEVEL_CASTLE and m.forwardVel < -120 and m.playerIndex == 0 then
+	if n.currLevelNum == LEVEL_CASTLE and m.forwardVel < -120 and ia(m) then
 		m.forwardVel = 0
-		if obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom) == nil then
+		if not obj_get_first_with_behavior_id(id_bhvBackroom) then
 			spawn_non_sync_object(id_bhvBackroom, E_MODEL_BACKROOM, 0, 10000, 0, function(o)
 				o.oFaceAngleYaw = 0
+				fadeout_music(0)
+				stream_play(backroomMusic)
+				audio_stream_set_looping(backroomMusic, true)
+				set_lighting_color(0,255)
+				set_lighting_color(1,255)
+				set_lighting_color(2,30)
+				set_lighting_dir(1,128)
 			end)
 		end
 		m.pos.x = 0
 		m.pos.y = 10600
 		m.pos.z = 0
 		set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
-		fadeout_music(0)
-		stream_play(backroomMusic)
-		audio_stream_set_looping(backroomMusic, true)
-		set_lighting_color(0,255)
-		set_lighting_color(1,255)
-		set_lighting_color(2,30)
-		set_lighting_dir(1,128)
-	end
-
-	local backroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom)
-	if backroom ~= nil then
-		if backroom.oTimer == 600 then
-			stream_stop_all()
-			local_play(sGlass, m.pos, 1)
-			spawn_non_sync_object(id_bhvBlackroom, E_MODEL_BLACKROOM, 0, 9998, 0, function(o)
-				o.oFaceAngleYaw = 0
-			end)
-			m.pos.x = 0
-			m.pos.y = 10600
-			m.pos.z = 0
-			set_lighting_color(0,2)
-			set_lighting_color(1,2)
-			set_lighting_color(2,2)
-			set_lighting_dir(1,128)
-			obj_mark_for_deletion(backroom)
-		end
-	end
-
-	local blackroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBlackroom)
-	if blackroom ~= nil then
-		if blackroom.oTimer == 150 then
-			local_play(sSmiler, m.pos, .30)
-		end
-		if blackroom.oTimer == 450 then
-			local_play(sSmiler, m.pos, .60)
-		end
-		if blackroom.oTimer == 700 then
-			spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, 0, 10700, 0, nil)
-		end
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Stupid shell riding
@@ -848,7 +816,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	s.outsidegastimer = s.outsidegastimer + 1 -- This is constantly counting up. As long as Mario is in gas, this number will keep getting set back to zero. If Mario isnt in gas, the timer will count up to 60 and trigger some "not in gas" commands. 
 
 
-    if m.playerIndex == 0 and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
+    if ia(m) and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
 		s.ishigh = 1
 		s.outsidegastimer = 0
 		m.health = m.health + 4
@@ -889,7 +857,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			end
 		end
 	end
-	if (s.highdeathtimer) == 1 and m.playerIndex == 0 then --initiates the 'high' music
+	if (s.highdeathtimer) == 1 and ia(m) then --initiates the 'high' music
 		fadeout_level_music(30*30)
 		stream_play(highmusic)
 		spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -1007,7 +975,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		if (peach.oTimer == 957) then
 			spawn_mist_particles()
 			play_character_sound(m, CHAR_SOUND_ATTACKED)
-			local_play(sSplatter, gMarioStates[0].marioObj.header.gfx.cameraToObject, 1)
+			local_play(sSplatter, m.pos, 1)
 		end
 		if (peach.oTimer == 960) then
 			squishblood(m.marioObj)
@@ -1030,8 +998,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--Hell entrance cutscene
 	n = gNetworkPlayers[0]
 	if n.currLevelNum == LEVEL_HELL and m.marioObj.oTimer == 28 then
-		if m.playerIndex ~= 0 then return end
-		cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_008)
+		if ia(m) then
+			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_008)
+		end
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -1590,20 +1559,15 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	local s = gStateExtras[0]
 	local m = gMarioStates[0]
 	local n = gNetworkPlayers[0]
-	if obj_get_first_with_behavior_id(id_bhvBackroom) and m.playerIndex ~= 0 then return end
-	
+	if m.floor and m.floor.object and obj_has_behavior_id(m.floor.object, id_bhvBackroom) ~= 0 then return end
+
 	screenHeight = djui_hud_get_screen_height()
 	screenWidth = djui_hud_get_screen_width()
 
 	--TOAD DEATH COUNTER. Each time you kill toad, the count goes up. It compares the number with the PreviousToadDeath variable, which tells it to update and triggers commands.
 	--Toad gives 3 stars. I have set this to give these stars after every 100 toad kills.
 	local deathcount = "Total server death count: "..gGlobalSyncTable.deathcounter
-
-	if n.currLevelNum == LEVEL_CASTLE and m.pos.y > 7000 then
-		return
-	else
-		djui_hud_print_text(deathcount, screenWidth - 30 - djui_hud_measure_text(deathcount), screenHeight - 78, 1)
-	end
+	djui_hud_print_text(deathcount, screenWidth - 30 - djui_hud_measure_text(deathcount), screenHeight - 78, 1)
 
 	if (toadguitimer) ~= 0 then
 		toadguitimer = toadguitimer - 1
@@ -1691,7 +1655,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 			sound_banks_enable(1, SOUND_BANKS_ALL)
 			sound_banks_enable(2, SOUND_BANKS_ALL)
 
-			local_play(sPortalTravel, vec3f(), 3)
+			local_play(sPortalTravel, gLakituState.pos, 1)
 			play_sound(SOUND_GENERAL_COLLECT_1UP, vec3f())
 		end
 	end
@@ -1724,9 +1688,9 @@ end
 local function before_phys_step(m,stepType) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
 
 	local n = gNetworkPlayers[0]
-	
-	
-	if m.playerIndex ~= 0 then return end
+
+
+	if not ia(m) then return end
 
 	local obj = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhv1Up)
     if obj and n.currLevelNum ~= LEVEL_HELL and nearest_interacting_mario_state_to_object(obj).playerIndex == 0 and mario_is_within_rectangle(obj.oPosX - 200, obj.oPosX + 200, obj.oPosZ - 200, obj.oPosZ + 200) ~= 0 and m.pos.y > obj.oPosY - 200 and m.pos.y < obj.oPosY + 200 then --if local mario is touching 1up then
@@ -1935,28 +1899,33 @@ function bhv_backroom_init(o)
     o.collisionData = COL_BACKROOM
     o.header.gfx.skipInViewCheck = true
 	hud_hide()
-	
 end
 
 function bhv_backroom_loop(o)
 	load_object_collision_model()
-end
+	if o.oTimer == 600 then
+		stream_stop_all()
+		local_play(sGlass, gLakituState.pos, 1)
+		obj_set_model_extended(o, E_MODEL_BLACKROOM)
+		set_lighting_color(0,2)
+		set_lighting_color(1,2)
+		set_lighting_color(2,2)
+		set_lighting_dir(1,128)
+	end
 
-function bhv_blackroom_init(o)
-	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-    o.oCollisionDistance = 10000
-    o.collisionData = COL_BLACKROOM
-    o.header.gfx.skipInViewCheck = true
-end
-
-function bhv_blackroom_loop(o)
-	load_object_collision_model()
-	local nearest = nearest_mario_state_to_object(o)
-	if nearest.pos.y < 9500 then --CLEANUP FUNCTION
-		local backroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom)
-		if backroom ~= nil then
-			obj_mark_for_deletion(backroom)
-		end
+	if o.oTimer == 750 then
+		local_play(sSmiler, o.header.gfx.pos, .3)
+	end
+	if o.oTimer == 1050 then
+		local_play(sSmiler, o.header.gfx.pos, .6)
+	end
+	if o.oTimer == 1300 then
+		spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, 0, 10700, 0, nil)
+	end
+	if cur_obj_is_any_player_on_platform() ~= 0 then
+		o.oSubAction = 0
+	end
+	if o.oSubAction == 20 then
 		obj_mark_for_deletion(o)
 	end
 end
@@ -1964,41 +1933,24 @@ end
 function bhv_backroom_smiler_init(o)
 	m = gMarioStates[0]
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-    --o.oCollisionDistance = 10000
-    --o.collisionData = COL_BACKROOM_SMILER
     o.header.gfx.skipInViewCheck = true
     o.hitboxRadius = 160
     o.hitboxHeight = 100
     o.oWallHitboxRadius = 30
-	local_play(sSmiler, m.pos, 1)
 end
 
 function bhv_backroom_smiler_loop(o)
 	local s = gStateExtras[0]
 	local player = nearest_player_to_object(o)
 	local angletomario = obj_angle_to_object(o, m.marioObj)
-	local nearest = nearest_mario_state_to_object(o)
 
-	if nearest.pos.y < 9500 then --CLEANUP FUNCTION
-		local backroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBackroom)
-		if backroom ~= nil then
-			obj_mark_for_deletion(backroom)
-		end
-		local blackroom = obj_get_nearest_object_with_behavior_id(o, id_bhvBlackroom)
-		if blackroom ~= nil then
-			obj_mark_for_deletion(blackroom)
-		end
-		obj_mark_for_deletion(o)
-	end
-
-    o.oFaceAngleYaw = angletomario - 17000
+    o.oFaceAngleYaw = angletomario - 16384
 	--load_object_collision_model()
 	obj_turn_toward_object(o, player, 16, 0x800)
 	o.oForwardVel = 20
 	object_step()
-	if o.oTimer > 280 then
-		local_play(sSmiler, m.pos, 1)
-		o.oTimer = 0
+	if o.oTimer % 280 == 1 then
+		local_play(sSmiler, o.header.gfx.pos, 1)
 	end
 	if obj_check_hitbox_overlap(o, m.marioObj) and not s.isdead then
 		if m.character.type == CT_MARIO then
@@ -2049,7 +2001,7 @@ function bhv_custom_1up(o)
 	if is_within_100_units_of_mario(o.oPosX, o.oPosY, o.oPosZ) == 1 then
 		obj_mark_for_deletion(o)
 		spawn_mist_particles()
-		local_play(sFart, m.pos, 1)
+		local_play(sFart, o.header.gfx.pos, 1)
 	end
 end
 ]]
@@ -2074,7 +2026,7 @@ function bhv_custom_heart(o)
 	if mario_is_within_rectangle(o.oPosX - 200, o.oPosX + 200, o.oPosZ - 200, o.oPosZ + 200) ~= 0 then
 		obj_mark_for_deletion(o)
 		spawn_mist_particles()
-		local_play(sFart, m.pos, 1)
+		local_play(sFart, o.header.gfx.pos, 1)
 	end
 end
 
@@ -2102,7 +2054,7 @@ function bhv_custom_tuxie(o)
 		if o.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
 			if o.oFloor.type ~= SURFACE_DEATH_PLANE then
 				squishblood(o)
-				local_play(sSplatter, o.header.gfx.cameraToObject, 1)
+				local_play(sSplatter, o.header.gfx.pos, 1)
 			end
 			obj_mark_for_deletion(o)
 		end
@@ -2123,7 +2075,7 @@ function bhv_netherportal_loop(o)
 
 	o.oAnimState = o.oTimer % 32
 	if o.oTimer % 300 == 0 and lateral_dist_between_objects(o, m.marioObj) < 1000 and loadingscreen == 0 then
-		local_play(sPortalAmbient, o.header.gfx.cameraToObject, 10)
+		local_play(sPortalAmbient, o.header.gfx.pos, 2)
 	end
 	stream_set_volume(clampf(lateral_dist_between_objects(o, m.marioObj)/800, 0.4, 1))
 	if m.floor and m.floor.object and o == m.floor.object and
@@ -2133,10 +2085,11 @@ function bhv_netherportal_loop(o)
 		o.oSubAction = 0
 	end
 	if o.oSubAction == 1 then
-		local_play(sPortalEnter, o.header.gfx.cameraToObject, 7)
+		local_play(sPortalEnter, o.header.gfx.pos, 1)
 	end
 	if o.oSubAction == 130 then
-		loadingscreen = 30+math.random(30)
+		loadingscreen = 30 + math.random(30)
+		set_mario_action(m, ACT_GONE, 0)
 		stream_stop_all()
 		stop_all_samples()
 	end
@@ -2185,11 +2138,10 @@ hook_behavior(id_bhvExplosion, OBJ_LIST_DESTRUCTIVE, false, bhv_custom_explosion
 hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
-id_bhvNetherPortal = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_netherportal_init, bhv_netherportal_loop)
-id_bhvBackroomSmiler = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_smiler_init, bhv_backroom_smiler_loop)
-id_bhvBackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_init, bhv_backroom_loop)
-id_bhvBlackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_blackroom_init, bhv_blackroom_loop)
-id_bhvHellPlatform1 = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_hellplatform_init, bhv_hellplatform_loop)
+id_bhvNetherPortal = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_netherportal_init, bhv_netherportal_loop, "bhvNetherPortal")
+id_bhvBackroomSmiler = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_smiler_init, bhv_backroom_smiler_loop, "bhvBackroomSmiler")
+id_bhvBackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_init, bhv_backroom_loop, "bhvBackroom")
+id_bhvHellPlatform1 = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_hellplatform_init, bhv_hellplatform_loop, "bhvHellPlatform1")
 id_bhvLava = hook_behavior(nil, OBJ_LIST_SURFACE, true, lava_init, lava_loop, "bhvLava")
 
 
@@ -2279,6 +2231,7 @@ end, nil)
 hook_event(HOOK_ON_LEVEL_INIT, function ()
 	--Stop music when exiting levels
 	stream_stop_all()
+	stream_set_volume(1)
 	stop_all_samples()
 	local np = gNetworkPlayers[0]
 
@@ -2323,7 +2276,7 @@ end)
 hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local n = gNetworkPlayers[0]
-	if n.currLevelNum == LEVEL_JRB then
+	if n.currLevelNum == LEVEL_JRB and n.currAreaIndex == 1 then --Spawns lava over water, unless inside the pirate ship. 
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, 1050, m.pos.z, function (o)
 			--obj_scale(o, 4)
 		end)
