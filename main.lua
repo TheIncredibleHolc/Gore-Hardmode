@@ -67,7 +67,7 @@ function testing(m)
 		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
 
 		--spawn_sync_object(id_bhvWingCap, E_MODEL_LUIGIS_WING_CAP, m.pos.x, m.pos.y, m.pos.z + 50, nil)
-		spawn_sync_object(id_bhvToadMessage, E_MODEL_TOAD, m.pos.x, m.pos.y, m.pos.z + 50, nil)
+		spawn_sync_object(id_bhvBlueCoinJumping, E_MODEL_BLUE_COIN, m.pos.x, m.pos.y, m.pos.z + 50, nil)
 		
 		--[[
 		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
@@ -2243,7 +2243,7 @@ end)
 hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local n = gNetworkPlayers[0]
-	if n.currLevelNum == LEVEL_JRB then
+	if n.currLevelNum == LEVEL_JRB and n.currAreaIndex == 1 then --Spawns lava over water, unless inside the pirate ship. 
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, 1050, m.pos.z, function (o)
 			--obj_scale(o, 4)
 		end)
