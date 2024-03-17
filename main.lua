@@ -130,6 +130,8 @@ local TEX_DIRT = get_texture_info("grass_09004800")
 smlua_audio_utils_replace_sequence(SEQ_EVENT_CUTSCENE_ENDING, 35, 76, "gorepeach") --Custom Audio for end cutscene
 
 LEVEL_HELL = level_register('level_hell_entry', COURSE_NONE, 'Hell', 'Hell', 28000, 0x28, 0x28, 0x28)
+LEVEL_BIRD = level_register('level_birdslair_entry', COURSE_NONE, 'Bird\'s Lair', 'Bird\'s Lair', 28000, 0x28, 0x28, 0x28)
+LEVEL_SECRETHUB = level_register('level_secretroom_entry', COURSE_NONE, 'Secret Hub', 'Secret Hub', 28000, 0x28, 0x28, 0x28)
 
 E_MODEL_BLOOD_SPLATTER = smlua_model_util_get_id("blood_splatter_geo")
 E_MODEL_BLOOD_SPLATTER2 = smlua_model_util_get_id("blood_splatter2_geo")
@@ -1277,8 +1279,15 @@ end
 
 function on_interact(m, o, intType, interacted) --Best place to switch enemy behaviors to have mario insta-die.
 	local s = gStateExtras[m.playerIndex]
+	local nt = gNetworkPlayers[0]
 	print(get_behavior_name_from_id(get_id_from_behavior(o.behavior)))
 
+	-- its literally 3:48 AM.
+	if (obj_has_behavior_id(o,id_bhvWarpPipe)) ~= 0 and nt.currLevelNum == LEVEL_BIRD then
+		warp_to_level(LEVEL_SECRETHUB, 1, 0)
+	elseif (obj_has_behavior_id(o,id_bhvWarpPipe)) ~= 0 and nt.currLevelNum == LEVEL_SECRETHUB then
+		warp_to_level(LEVEL_BIRD, 1, 0)
+	end
 
 	--KILLABLE TOAD 
 	if (obj_has_behavior_id(o,id_bhvToadMessage)) ~= 0 and ((m.controller.buttonPressed & B_BUTTON) + (m.action & ACT_FLAG_ATTACKING) ~= 0) then
@@ -1533,6 +1542,13 @@ function marioalive() -- Resumes the death counter to accept death counts.
 
 	hud_show()
 
+	if n.currLevelNum == LEVEL_BIRD then
+		set_mario_action(m, ACT_EMERGE_FROM_PIPE, 0)
+		m.pos.x = -1217
+		m.pos.y = 860
+		m.pos.z = 0
+	end
+
 	s.isdead = false --Mario is alive
 	s.disableuntilnextwarp = false --Enables death counter
 	s.headless = false --Gives Mario his head back
@@ -1546,6 +1562,8 @@ function marioalive() -- Resumes the death counter to accept death counts.
 		s.isinhell = true
 		warp_to_level(LEVEL_HELL, 1, 0)
 	end
+
+	
 
 	--Resets the baby penguin timer on warp so it doesn't glitch out if mario leaves the level without fully killing the baby penguin.
 	s.penguinholding = 0
@@ -1663,6 +1681,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 				djui_hud_render_texture(TEX_DIRT, i*32, j*32, 1, 1)
 			end
 		end
+
 		if loadingscreen == 2 then
 			s.isinhell = false
 			warp_to_start_level()
@@ -2231,6 +2250,16 @@ hook_chat_command("hell", "hell", function ()
 	return true
 end)
 
+hook_chat_command("bird", "bird", function ()
+	warp_to_level(LEVEL_BIRD, 1, 0)
+	return true
+end)
+
+hook_chat_command("secret", "hub", function ()
+	warp_to_level(LEVEL_SECRETHUB, 1, 0)
+	return true
+end)
+
 hook_chat_command("end", "credits", function ()
 	level_trigger_warp(gMarioStates[0], WARP_OP_CREDITS_START)
 	return true
@@ -2268,6 +2297,10 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		area_get_warp_node(2).node.destLevel = LEVEL_HELL
 		stream_play(musicHell)
 		audio_stream_set_looping(musicHell, true)
+	elseif np.currLevelNum == LEVEL_BIRD then
+		area_get_warp_node(0x01).node.destLevel = LEVEL_TTM
+	elseif np.currLevelNum == LEVEL_SECRETHUB then
+		area_get_warp_node(0x01).node.destLevel = LEVEL_BIRD
 	else
 		set_lighting_color(0, 255)
 		set_lighting_color(1, 255)
