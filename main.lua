@@ -190,7 +190,7 @@ for i = 0, MAX_PLAYERS-1 do
 		ishigh = 0,
 		outsidegastimer = 60,
 		highdeathtimer = 0,
-
+		isgoingtoBBH = false,
 		splatterdeath = 0, -- w
 	}
 end
@@ -699,6 +699,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
+	if m.action == ACT_BBH_ENTER_SPIN or m.action == ACT_BBH_ENTER_JUMP then
+		s.isgoingtoBBH = true
+	else
+		s.isgoingtoBBH = false
+	end
+
 ----------------------------------------------------------------------------------------------------------------------------------
 	if n.currLevelNum == LEVEL_WDW then --Wet/Dry world is now just dry world... LOL...
 		set_environment_region(0, -10000)
@@ -809,7 +815,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			s.splatterdeath = 1
 			s.splatter = 0
 		end
-		if s.jumpland == 0 and m.squishTimer >= 1 then --Checks if Mario was squished from NON-FALL damage. Objects/enemies that squish Mario will smoosh his corpse to invisible. 
+		if s.jumpland == 0 and m.squishTimer >= 1 and not s.isgoingtoBBH then --Checks if Mario was squished from NON-FALL damage. Objects/enemies that squish Mario will smoosh his corpse to invisible. 
 			local_play(sSplatter, m.pos, 1)
 			s.splatterdeath = 1
 			s.splatter = 0
@@ -2092,7 +2098,17 @@ function bhv_netherportal_loop(o)
 	end
 end
 
+function bhv_custom_merry_go_round(o)
+	djui_chat_message_create(tostring(o.oMerryGoRoundStopped))
+	if o.oMerryGoRoundStopped == 0 then
+        o.oAngleVelYaw = o.oAngleVelYaw + 2048
+        o.oMoveAngleYaw = o.oMoveAngleYaw + o.oAngleVelYaw
+        o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
+	end
+end
+
 -------Behavior Hooks-------
+hook_behavior(id_bhvMerryGoRound, OBJ_LIST_SURFACE, false, nil, bhv_custom_merry_go_round)
 hook_behavior(id_bhvSmallPenguin, OBJ_LIST_GENACTOR, false, nil, bhv_custom_tuxie)
 hook_behavior(id_bhvPlatformOnTrack, OBJ_LIST_SURFACE, false, nil, bhv_custom_moving_plats)
 hook_behavior(id_bhvRecoveryHeart, OBJ_LIST_GENACTOR, false, nil, bhv_custom_heart)
@@ -2289,6 +2305,7 @@ hook_event(HOOK_ON_WARP, function ()
 		o.oPosY = o.oPosY + 21
 	end
 	if np.currLevelNum == LEVEL_HELL then
+		m.health = m.health + 2048
 		area_get_warp_node(0x01).node.destLevel = LEVEL_HELL
 		area_get_warp_node(0x02).node.destLevel = LEVEL_HELL
 	elseif np.currLevelNum == LEVEL_BIRD then

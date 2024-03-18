@@ -24,7 +24,6 @@
 const LevelScript level_secretroom_entry[] = {
 	INIT_LEVEL(),
 	LOAD_MIO0(0x7, _secretroom_segment_7SegmentRomStart, _secretroom_segment_7SegmentRomEnd), 
-	LOAD_MIO0(0xa, _bits_skybox_mio0SegmentRomStart, _bits_skybox_mio0SegmentRomEnd), 
 	ALLOC_LEVEL_POOL(),
 	MARIO(MODEL_MARIO, 0x00000001, bhvMario),
 
@@ -37,8 +36,8 @@ const LevelScript level_secretroom_entry[] = {
 		WARP_NODE(0x01, LEVEL_BOB, 0x01, 0x01, WARP_NO_CHECKPOINT),
 		OBJECT(E_MODEL_BITS_WARP_PIPE, -2109, 162, -3025, 0, 0, 0, (0x01 << 16), id_bhvWarpPipe),
 		MARIO_POS(0x01, 0, -1009, 26, -725),
-		OBJECT(MODEL_NONE, -974, 1063, -708, 0, 0, 0, 0x000A0000, bhvSpinAirborneWarp),
-		OBJECT(MODEL_NONE, -975, 1150, -699, 0, 0, 0, 0x000A0000, bhvDeathWarp),
+		OBJECT(MODEL_NONE, -975, 1063, -699, 0, 180, 0, 0x000A0000, bhvSpinAirborneWarp),
+		OBJECT(MODEL_NONE, -974, 1150, -708, 0, 180, 0, 0x000A0000, bhvDeathWarp),
 		TERRAIN(secretroom_area_1_collision),
 		MACRO_OBJECTS(secretroom_area_1_macro_objs),
 		STOP_MUSIC(0),
