@@ -15,7 +15,7 @@
 gBehaviorValues.BowlingBallTtmSpeed = 40
 gBehaviorValues.BowlingBallThiSmallSpeed = 45
 gBehaviorValues.BowlingBallThiSmallSpeed = 45
-gLevelValues.fixCollisionBugs = true
+
 
 --Koopa the quick is STUPID fast. Player has to finish race in 20.9 seconds.
 gBehaviorValues.KoopaBobAgility = 20
@@ -698,6 +698,18 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
+
+----------------------------------------------------------------------------------------------------------------------------------
+	if n.currLevelNum == LEVEL_WDW then --Wet/Dry world is now just dry world... LOL...
+		set_environment_region(0, -10000)
+		set_environment_region(1, -10000)
+		set_environment_region(2, -10000)
+		set_environment_region(3, -10000)
+		local watercontrol = obj_get_nearest_object_with_behavior_id(o, id_bhvWaterLevelDiamond)
+		if watercontrol ~= nil then
+			obj_mark_for_deletion(watercontrol)
+		end
+	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Backroom Teleport
@@ -1938,7 +1950,7 @@ function bhv_backroom_smiler_loop(o)
 		local_play(sSmiler, o.header.gfx.pos, 1)
 	end
 	if obj_check_hitbox_overlap(o, m.marioObj) and not s.isdead then
-		if m.character.type == CT_MARIO then
+		if m.character.type == CT_MARIO or m.character.type == CT_LUIGI then
 			s.bottomless = true
 			network_play(sSplatter, m.pos, 1, m.playerIndex)
 			network_play(sCrunch, m.pos, 1, m.playerIndex)
@@ -2031,8 +2043,8 @@ function bhv_custom_tuxie(o)
 	if o.oAction == 6 then
 		if o.oTimer == 0 then
 			o.oGravity = -2
-			o.oForwardVel = 100
-			o.oVelY = 100
+			o.oForwardVel = 25
+			o.oVelY = 75
 		end
 		o.oFaceAnglePitch = o.oFaceAnglePitch + 7500
 		cur_obj_move_standard(-78)
@@ -2182,6 +2194,11 @@ hook_chat_command("ccm", "cool", function ()
 	return true
 end)
 
+hook_chat_command("wdw", "wet", function ()
+	warp_to_level(LEVEL_WDW, 1, 0)
+	return true
+end)
+
 hook_chat_command("hell", "hell", function ()
 	warp_to_level(LEVEL_HELL, 1, 0)
 	return true
@@ -2240,10 +2257,19 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_dir(1,0)
 	end
 
+	if np.currLevelNum == LEVEL_SECRETHUB then
+		stream_play(secret)
+		audio_stream_set_looping(secret, true)
+	else
+		audio_stream_stop(secret)
+	end
+
 	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
 		set_override_envfx(ENVFX_LAVA_BUBBLES)
+		gLevelValues.fixCollisionBugs = true
 	else
 		set_override_envfx(-1)
+		gLevelValues.fixCollisionBugs = false
 	end
 
 	if np.currLevelNum == LEVEL_TTC then

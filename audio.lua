@@ -3,6 +3,7 @@ smwbonusmusic = audio_stream_load("smwbonusloop.mp3")
 boss = audio_stream_load("croppedcastle.mp3")
 backroomMusic = audio_stream_load("backroom.mp3")
 musicHell = audio_stream_load("hell.mp3")
+secret = audio_stream_load("secret.mp3")
 
 local currentlyPlaying = nil
 local fadeTimer = 0
