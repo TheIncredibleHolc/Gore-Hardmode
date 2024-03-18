@@ -1248,15 +1248,7 @@ end
 
 function on_interact(m, o, intType, interacted) --Best place to switch enemy behaviors to have mario insta-die.
 	local s = gStateExtras[m.playerIndex]
-	local nt = gNetworkPlayers[0]
 	print(get_behavior_name_from_id(get_id_from_behavior(o.behavior)))
-
-	-- its literally 3:48 AM.
-	if (obj_has_behavior_id(o,id_bhvWarpPipe)) ~= 0 and nt.currLevelNum == LEVEL_BIRD then
-		warp_to_level(LEVEL_SECRETHUB, 1, 0)
-	elseif (obj_has_behavior_id(o,id_bhvWarpPipe)) ~= 0 and nt.currLevelNum == LEVEL_SECRETHUB then
-		warp_to_level(LEVEL_BIRD, 1, 0)
-	end
 
 	--KILLABLE TOAD 
 	if (obj_has_behavior_id(o,id_bhvToadMessage)) ~= 0 and ((m.controller.buttonPressed & B_BUTTON) + (m.action & ACT_FLAG_ATTACKING) ~= 0) then
@@ -1510,13 +1502,6 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 
 	hud_show()
-
-	if n.currLevelNum == LEVEL_BIRD then
-		set_mario_action(m, ACT_EMERGE_FROM_PIPE, 0)
-		m.pos.x = -1217
-		m.pos.y = 860
-		m.pos.z = 0
-	end
 
 	s.isdead = false --Mario is alive
 	s.disableuntilnextwarp = false --Enables death counter
@@ -2246,14 +2231,8 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_color(1,127)
 		set_lighting_color(2,100)
 		set_lighting_dir(1,-128)
-		area_get_warp_node(1).node.destLevel = LEVEL_HELL
-		area_get_warp_node(2).node.destLevel = LEVEL_HELL
 		stream_play(musicHell)
 		audio_stream_set_looping(musicHell, true)
-	elseif np.currLevelNum == LEVEL_BIRD then
-		area_get_warp_node(0x01).node.destLevel = LEVEL_TTM
-	elseif np.currLevelNum == LEVEL_SECRETHUB then
-		area_get_warp_node(0x01).node.destLevel = LEVEL_BIRD
 	else
 		set_lighting_color(0, 255)
 		set_lighting_color(1, 255)
@@ -2275,13 +2254,21 @@ end)
 --Blocky looky here
 hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
-	local n = gNetworkPlayers[0]
-	if n.currLevelNum == LEVEL_JRB and n.currAreaIndex == 1 then --Spawns lava over water, unless inside the pirate ship. 
+	local np = gNetworkPlayers[0]
+	if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then --Spawns lava over water, unless inside the pirate ship. 
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, 1050, m.pos.z, function (o)
 			--obj_scale(o, 4)
 		end)
 		local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
 		o.oPosY = o.oPosY + 21
+	end
+	if np.currLevelNum == LEVEL_HELL then
+		area_get_warp_node(0x01).node.destLevel = LEVEL_HELL
+		area_get_warp_node(0x02).node.destLevel = LEVEL_HELL
+	elseif np.currLevelNum == LEVEL_BIRD then
+		area_get_warp_node(0x01).node.destLevel = LEVEL_SECRETHUB
+	elseif np.currLevelNum == LEVEL_SECRETHUB then
+		area_get_warp_node(0x01).node.destLevel = LEVEL_BIRD
 	end
 end
 )
@@ -2299,9 +2286,3 @@ hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
 		return 0
 	end
 end)
-
-
-
-
-
-
