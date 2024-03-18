@@ -130,9 +130,9 @@ local TEX_DIRT = get_texture_info("grass_09004800")
 smlua_audio_utils_replace_sequence(SEQ_EVENT_CUTSCENE_ENDING, 35, 76, "gorepeach") --Custom Audio for end cutscene
 
 LEVEL_HELL = level_register('level_hell_entry', COURSE_NONE, 'Hell', 'Hell', 28000, 0x28, 0x28, 0x28)
-LEVEL_BIRD = level_register('level_birdslair_entry', COURSE_NONE, 'Bird\'s Lair', 'Bird\'s Lair', 28000, 0x28, 0x28, 0x28)
 LEVEL_SECRETHUB = level_register('level_secretroom_entry', COURSE_NONE, 'Secret Hub', 'Secret Hub', 28000, 0x28, 0x28, 0x28)
 
+E_MODEL_HIDDENFLAG = smlua_model_util_get_id("hiddenflag_geo")
 E_MODEL_BLOOD_SPLATTER = smlua_model_util_get_id("blood_splatter_geo")
 E_MODEL_BLOOD_SPLATTER2 = smlua_model_util_get_id("blood_splatter2_geo")
 E_MODEL_BLOOD_SPLATTER_WALL = smlua_model_util_get_id("blood_splatter_wall_geo")
@@ -231,6 +231,24 @@ function killer_exclamation_boxes(m) -- Makes exclamation boxes drop on top of y
 		end
 	end
 end
+
+--- @param o Object
+local function bhv_red_flood_flag_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oInteractType = INTERACT_POLE
+    o.hitboxRadius = 80
+    o.hitboxHeight = 700
+    o.oIntangibleTimer = 0
+
+    cur_obj_init_animation(0)
+end
+
+--- @param o Object
+local function bhv_red_flood_flag_loop(o)
+    bhv_pole_base_loop()
+end
+
+id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
 
 function bhv_custom_kingwhomp(obj) -- makes king whomp give you quicksand
 	local m = nearest_mario_state_to_object(obj)
@@ -1266,7 +1284,20 @@ end
 
 function on_interact(m, o, intType, interacted) --Best place to switch enemy behaviors to have mario insta-die.
 	local s = gStateExtras[m.playerIndex]
+	np = gNetworkPlayers[0]
 	print(get_behavior_name_from_id(get_id_from_behavior(o.behavior)))
+
+	if np.currLevelNum == LEVEL_SECRETHUB and obj_has_behavior_id(o,id_bhvWarpPipe) ~= 0 then
+		if np.currAreaIndex == 2 then
+			audio_stream_stop(musicUnderground)
+			stream_play(secret)
+			audio_stream_set_looping(secret, true)
+		elseif np.currAreaIndex == 1 then
+			audio_stream_stop(secret)
+			stream_play(musicUnderground)
+			audio_stream_set_looping(musicUnderground, true)
+		end
+	end
 
 	--KILLABLE TOAD 
 	if (obj_has_behavior_id(o,id_bhvToadMessage)) ~= 0 and ((m.controller.buttonPressed & B_BUTTON) + (m.action & ACT_FLAG_ATTACKING) ~= 0) then
@@ -2220,11 +2251,6 @@ hook_chat_command("hell", "hell", function ()
 	return true
 end)
 
-hook_chat_command("bird", "bird", function ()
-	warp_to_level(LEVEL_BIRD, 1, 0)
-	return true
-end)
-
 hook_chat_command("secret", "hub", function ()
 	warp_to_level(LEVEL_SECRETHUB, 1, 0)
 	return true
@@ -2274,10 +2300,12 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	end
 
 	if np.currLevelNum == LEVEL_SECRETHUB then
+		audio_stream_stop(musicUnderground)
 		stream_play(secret)
 		audio_stream_set_looping(secret, true)
 	else
 		audio_stream_stop(secret)
+		audio_stream_stop(musicUnderground)
 	end
 
 	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
@@ -2308,10 +2336,6 @@ hook_event(HOOK_ON_WARP, function ()
 		m.health = m.health + 2048
 		area_get_warp_node(0x01).node.destLevel = LEVEL_HELL
 		area_get_warp_node(0x02).node.destLevel = LEVEL_HELL
-	elseif np.currLevelNum == LEVEL_BIRD then
-		area_get_warp_node(0x01).node.destLevel = LEVEL_SECRETHUB
-	elseif np.currLevelNum == LEVEL_SECRETHUB then
-		area_get_warp_node(0x01).node.destLevel = LEVEL_BIRD
 	end
 end
 )
