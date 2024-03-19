@@ -190,7 +190,6 @@ for i = 0, MAX_PLAYERS-1 do
 		ishigh = 0,
 		outsidegastimer = 60,
 		highdeathtimer = 0,
-		isgoingtoBBH = false,
 		splatterdeath = 0, -- w
 	}
 end
@@ -717,21 +716,16 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-	if m.action == ACT_BBH_ENTER_SPIN or m.action == ACT_BBH_ENTER_JUMP then
-		s.isgoingtoBBH = true
-	else
-		s.isgoingtoBBH = false
-	end
-
 ----------------------------------------------------------------------------------------------------------------------------------
 	if n.currLevelNum == LEVEL_WDW then --Wet/Dry world is now just dry world... LOL...
 		set_environment_region(0, -10000)
 		set_environment_region(1, -10000)
 		set_environment_region(2, -10000)
 		set_environment_region(3, -10000)
-		local watercontrol = obj_get_nearest_object_with_behavior_id(o, id_bhvWaterLevelDiamond)
-		if watercontrol ~= nil then
+		local watercontrol = obj_get_first_with_behavior_id(id_bhvWaterLevelDiamond)
+		while watercontrol do
 			obj_mark_for_deletion(watercontrol)
+			watercontrol = obj_get_next_with_same_behavior_id(watercontrol)
 		end
 	end
 
@@ -746,7 +740,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 				o.oFaceAngleYaw = 0
 				fadeout_music(0)
 				stream_play(backroomMusic)
-				audio_stream_set_looping(backroomMusic, true)
 				set_lighting_color(0,255)
 				set_lighting_color(1,255)
 				set_lighting_color(2,30)
@@ -821,7 +814,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
 	--IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
 	--This gets set to '0' when Mario IS splattered. After the splatter timer is up, it sets s.splatter back to 1 to re-enable splattering. 
-	if (s.splatter) == 1 and m.health > 0xff then
+	if (s.splatter) == 1 and m.health > 0xff and not (m.action == ACT_BBH_ENTER_SPIN or m.action == ACT_BBH_ENTER_JUMP) then
 		if m.peakHeight >= 750 and m.vel.y <= -55 then  --Checks if Mario takes fall damage
 			s.jumpland = 1 --If fall damage, then 1
 		else
@@ -833,7 +826,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			s.splatterdeath = 1
 			s.splatter = 0
 		end
-		if s.jumpland == 0 and m.squishTimer >= 1 and not s.isgoingtoBBH then --Checks if Mario was squished from NON-FALL damage. Objects/enemies that squish Mario will smoosh his corpse to invisible. 
+		if s.jumpland == 0 and m.squishTimer >= 1 then --Checks if Mario was squished from NON-FALL damage. Objects/enemies that squish Mario will smoosh his corpse to invisible. 
 			local_play(sSplatter, m.pos, 1)
 			s.splatterdeath = 1
 			s.splatter = 0
@@ -1286,18 +1279,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	local s = gStateExtras[m.playerIndex]
 	np = gNetworkPlayers[0]
 	print(get_behavior_name_from_id(get_id_from_behavior(o.behavior)))
-
-	if np.currLevelNum == LEVEL_SECRETHUB and obj_has_behavior_id(o,id_bhvWarpPipe) ~= 0 then
-		if np.currAreaIndex == 2 then
-			audio_stream_stop(musicUnderground)
-			stream_play(secret)
-			audio_stream_set_looping(secret, true)
-		elseif np.currAreaIndex == 1 then
-			audio_stream_stop(secret)
-			stream_play(musicUnderground)
-			audio_stream_set_looping(musicUnderground, true)
-		end
-	end
 
 	--KILLABLE TOAD 
 	if (obj_has_behavior_id(o,id_bhvToadMessage)) ~= 0 and ((m.controller.buttonPressed & B_BUTTON) + (m.action & ACT_FLAG_ATTACKING) ~= 0) then
@@ -2132,9 +2113,9 @@ end
 function bhv_custom_merry_go_round(o)
 	djui_chat_message_create(tostring(o.oMerryGoRoundStopped))
 	if o.oMerryGoRoundStopped == 0 then
-        o.oAngleVelYaw = o.oAngleVelYaw + 2048
-        o.oMoveAngleYaw = o.oMoveAngleYaw + o.oAngleVelYaw
-        o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
+		o.oAngleVelYaw = o.oAngleVelYaw + 2048
+		o.oMoveAngleYaw = o.oMoveAngleYaw + o.oAngleVelYaw
+		o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw - 128
 	end
 end
 
@@ -2291,21 +2272,11 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_color(2,100)
 		set_lighting_dir(1,-128)
 		stream_play(musicHell)
-		audio_stream_set_looping(musicHell, true)
 	else
 		set_lighting_color(0, 255)
 		set_lighting_color(1, 255)
 		set_lighting_color(2, 255)
 		set_lighting_dir(1,0)
-	end
-
-	if np.currLevelNum == LEVEL_SECRETHUB then
-		audio_stream_stop(musicUnderground)
-		stream_play(secret)
-		audio_stream_set_looping(secret, true)
-	else
-		audio_stream_stop(secret)
-		audio_stream_stop(musicUnderground)
 	end
 
 	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
@@ -2337,8 +2308,14 @@ hook_event(HOOK_ON_WARP, function ()
 		area_get_warp_node(0x01).node.destLevel = LEVEL_HELL
 		area_get_warp_node(0x02).node.destLevel = LEVEL_HELL
 	end
-end
-)
+	if np.currLevelNum == LEVEL_SECRETHUB then
+		if np.currAreaIndex == 1 then
+			stream_play(secret)
+		elseif np.currAreaIndex == 2 and currentlyPlaying ~= musicUnderground then
+			stream_play(musicUnderground)
+		end
+	end
+end)
 
 
 --Disable mario's fire scream to make room for custom scream.
@@ -2349,7 +2326,5 @@ hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
 	local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvPiranhaPlant)
 	if sound == CHAR_SOUND_ATTACKED and obj_check_hitbox_overlap(m.marioObj, o) then return 0 end
 
-	if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then
-		return 0
-	end
+	if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then return 0 end
 end)

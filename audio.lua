@@ -1,12 +1,12 @@
 highmusic = audio_stream_load("high.mp3")
 smwbonusmusic = audio_stream_load("smwbonusloop.mp3")
 boss = audio_stream_load("croppedcastle.mp3")
-backroomMusic = audio_stream_load("backroom.mp3")
-musicHell = audio_stream_load("hell.mp3")
-secret = audio_stream_load("secret.mp3")
-musicUnderground = audio_stream_load("underground.mp3")
+backroomMusic = audio_stream_load("backroom.mp3")		audio_stream_set_looping(backroomMusic, true)
+musicHell = audio_stream_load("hell.mp3") 				audio_stream_set_looping(musicHell, true)
+secret = audio_stream_load("secret.mp3") 				audio_stream_set_looping(secret, true)
+musicUnderground = audio_stream_load("underground.mp3")	audio_stream_set_looping(musicUnderground, true)
 
-local currentlyPlaying = nil
+currentlyPlaying = nil
 local fadeTimer = 0
 local fadePeak = 0
 local volume = 1
