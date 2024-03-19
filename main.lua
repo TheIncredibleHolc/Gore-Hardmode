@@ -167,6 +167,11 @@ COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --Th
 E_MODEL_NETHERPORTAL = smlua_model_util_get_id("netherportal_geo")
 COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
 
+smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry world')
+smlua_text_utils_course_name_replace(COURSE_JRB, 'Jolly Roger Hell')
+
+
+
 gStateExtras = {}
 for i = 0, MAX_PLAYERS-1 do
 	gStateExtras[i] = {
