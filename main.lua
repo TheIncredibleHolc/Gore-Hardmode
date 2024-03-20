@@ -88,8 +88,9 @@ function testing(m)
 		--spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, m.pos.x, m.pos.y + 80, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvBubbleParticleSpawner, E_MODEL_BUBBLE, m.pos.x, m.pos.y + 80, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvKoopaShell, E_MODEL_KOOPA_SHELL, m.pos.x, m.pos.y + 80, m.pos.z, nil)
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_BACKROOM_SMILER, m.pos.x +500, m.pos.y + 140, m.pos.z, function (smiler)
-			obj_scale(smiler, .2)
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x +500, m.pos.y + 140, m.pos.z, function (trophy)
+			obj_scale(trophy, .2)
+			trophy.oBehParams = 1 << 24 | 1
 		end)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
@@ -225,47 +226,45 @@ hook_mario_action(ACT_GONE, act_gone)
 -----------------------------------------------------------------------------------------------------------------------------
 -------------------------TROPHY SYSTEM-------------------------
 
+trophyinfo = {
+	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER },
+	{ name = "mario", model = E_MODEL_MARIO },
+	{ name = "luigi", model = E_MODEL_LUIGI }
+}
 
-function trophy_load(o) -- Hook to On_Warp. (Check to see if in Secret Room)
-	m = gMarioStates[0]
-	n = gNetworkPlayers[0]
-	
+---@param o Object
+function trophy_display_load(o) -- Hook to On_Warp. (Check to see if in Secret Room)
+	local m = gMarioStates[0]
+	local n = gNetworkPlayers[0]
+
+	local trophy = trophyinfo[o.oBehParams >> 24]
+
 	--Loads the status of each trophy on Secret Room entry.
-	local trophy_smiler = mod_storage_load('smiler')
-	
-	trophyModels = {
-		E_MODEL_BACKROOM_SMILER,
-		E_MODEL_MARIO,
-		E_MODEL_LUIGI
-	}
+	local trophyunlocked = mod_storage_load(trophy.name) == "1"
 
 	--Checks to see if trophy has been collected, displays it if so.
-	if n.currLevelNum == LEVEL_SECRETHUB then
-
-		if trophy_smiler == 1 then -- Backroom Smiler, earned by visiting the backrooms.
-			spawn_non_sync_object(id_bhvTrophy, E_MODEL_SMILER, 0, 0, 0, function (smiler)
-				obj_scale(smiler, .2)
-			end)
-		end
-
-
-
-
-
-
+	if trophyunlocked then
+		obj_set_model_extended(o, trophy.model)
+	else
+		obj_mark_for_deletion(o)
 	end
 end
 
 
 
 --Trophy display behavior. 
+---@param o Object
 function trophy_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
+
+	if o.oBehParams & 1 ~= 0 then -- lowest bit is set if this is a display
+		trophy_display_load(o)
+	end
 end
 
+---@param o Object
 function trophy_loop(o)
-	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
 	o.oAngleVelYaw = 500
 	o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
 end
@@ -2303,6 +2302,15 @@ hook_chat_command("go", "to", function ()
 	return true
 end)
 
+hook_chat_command("unlock", "trophy", function (msg)
+	mod_storage_save(msg, "1")
+	return true
+end)
+
+hook_chat_command("lock", "trophy", function (msg)
+	mod_storage_save(msg, "0")
+	return true
+end)
 
 -- to make ukiki jump from the key
 hook_behavior(id_bhvUkiki, OBJ_LIST_GENACTOR, false, function (obj)
