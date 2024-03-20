@@ -88,7 +88,9 @@ function testing(m)
 		--spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, m.pos.x, m.pos.y + 80, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvBubbleParticleSpawner, E_MODEL_BUBBLE, m.pos.x, m.pos.y + 80, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvKoopaShell, E_MODEL_KOOPA_SHELL, m.pos.x, m.pos.y + 80, m.pos.z, nil)
-		spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, m.pos.x +500, m.pos.y + 140, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_BACKROOM_SMILER, m.pos.x +500, m.pos.y + 140, m.pos.z, function (smiler)
+			obj_scale(smiler, .2)
+		end)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 
@@ -199,20 +201,16 @@ for i = 0, MAX_PLAYERS-1 do
 	}
 end
 toadguitimer = 0
-
 ukikiheldby = -1
 ukikiholding = 0
 ukikitimer = 0
-
 highalpha = 0
 bloodalpha = 0
 hallucinate = 0
-
 portalalpha = 0
 loadingscreen = 0
 
 ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
-
 function act_gone(m)
     m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
 	m.actionTimer = m.actionTimer + 1
@@ -224,6 +222,59 @@ function act_gone(m)
 end
 hook_mario_action(ACT_GONE, act_gone)
 
+-----------------------------------------------------------------------------------------------------------------------------
+-------------------------TROPHY SYSTEM-------------------------
+
+
+function trophy_load(o) -- Hook to On_Warp. (Check to see if in Secret Room)
+	m = gMarioStates[0]
+	n = gNetworkPlayers[0]
+	
+	--Loads the status of each trophy on Secret Room entry.
+	local trophy_smiler = mod_storage_load('smiler')
+	
+	trophyModels = {
+		E_MODEL_BACKROOM_SMILER,
+		E_MODEL_MARIO,
+		E_MODEL_LUIGI
+	}
+
+	--Checks to see if trophy has been collected, displays it if so.
+	if n.currLevelNum == LEVEL_SECRETHUB then
+
+		if trophy_smiler == 1 then -- Backroom Smiler, earned by visiting the backrooms.
+			spawn_non_sync_object(id_bhvTrophy, E_MODEL_SMILER, 0, 0, 0, function (smiler)
+				obj_scale(smiler, .2)
+			end)
+		end
+
+
+
+
+
+
+	end
+end
+
+
+
+--Trophy display behavior. 
+function trophy_init(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+end
+
+function trophy_loop(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+	o.oAngleVelYaw = 500
+	o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
+end
+
+id_bhvTrophy = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophy_init, trophy_loop, "bhvTrophy")
+
+
+-----------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------
 -----Custom Behaviors-----
 
 function killer_exclamation_boxes(m) -- Makes exclamation boxes drop on top of you! (squishes)
@@ -2321,7 +2372,6 @@ hook_event(HOOK_ON_WARP, function ()
 		end
 	end
 end)
-
 
 --Disable mario's fire scream to make room for custom scream.
 hook_event(HOOK_CHARACTER_SOUND, function (m, sound)

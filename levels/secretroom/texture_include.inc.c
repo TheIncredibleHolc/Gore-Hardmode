@@ -48,6 +48,11 @@ u8 secretroom_dl_WOFsmall_rgba32[] = {
 	#include "levels/secretroom/WOFsmall.rgba32.inc.c"
 };
 
+Gfx secretroom_dl_trophy_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_trophy_rgba16[] = {
+	#include "levels/secretroom/trophy.rgba16.inc.c"
+};
+
 Gfx secretroom_dl_skyboxsmaller_rgba32_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_skyboxsmaller_rgba32[] = {
 	#include "levels/secretroom/skyboxsmaller.rgba32.inc.c"
