@@ -273,7 +273,7 @@ function act_wait(o)
 end
 
 function act_shooting_attack (o) --Charges and fires a laser beam. Can be interrupted to hurt star.
-    m = nearest_mario_state_to_object(o)
+    local m = nearest_mario_state_to_object(o)
 
     -----------------------Star Attackable------------------------
     if obj_check_hitbox_overlap(o, m.marioObj) then
@@ -300,26 +300,23 @@ function act_shooting_attack (o) --Charges and fires a laser beam. Can be interr
 
     -----------------------Star Shoots Laser---------------------
     -- djui_popup_create(tostring(o.oTimer), 1)
-    local gsvec = {x=o.oPosX, y=o.oPosY, z=o.oPosZ}
-    local star_angletomario = obj_angle_to_object(o, m.marioObj)
-    local star_pitchtomario = obj_pitch_to_object(o, m.marioObj)
-    o.oFaceAngleYaw = star_angletomario
-    o.oFaceAnglePitch = star_pitchtomario
+    local savedroll = o.oFaceAngleRoll
+    obj_rotate_towards_point(o, m.pos, 0,0,0,0)
+    cur_obj_set_face_angle_to_move_angle()
 
     if o.oTimer <= 150 and o.oTimer > 50 then --GS starts spinning to "charge" his attack. 
-        o.oFaceAngleRoll = o.oFaceAngleRoll + 50 * (o.oTimer-50)
+        o.oFaceAngleRoll = savedroll + 50 * (o.oTimer-50)
     elseif o.oTimer > 150 then
-        o.oFaceAngleRoll = o.oFaceAngleRoll + 8000
+        o.oFaceAngleRoll = savedroll + 8000
     end
 
     if o.oTimer == 45 then
-        local_play(sGslaser, gsvec, 1)
+        local_play(sGslaser, o.header.gfx.pos, 1)
     end
 
     if o.oTimer == 90 then
         gscharge = spawn_non_sync_object(id_bhvStaticObject, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, function(obj)
-            -- obj.oFaceAngleYaw = star_angletomario
-            -- obj.oFaceAnglePitch = star_pitchtomario
+            -- obj_copy_pos_and_angle(obj, o)
         end)
         gschargescale = 14
         gscharge.oOpacity = 0
@@ -331,15 +328,11 @@ function act_shooting_attack (o) --Charges and fires a laser beam. Can be interr
         end
         gschargescale = gschargescale - 0.3
         obj_scale(gscharge, gschargescale)
-        gscharge.oPosX = o.oPosX
-        gscharge.oPosY = o.oPosY
-        gscharge.oPosZ = o.oPosZ
-        gscharge.oFaceAngleYaw = o.oFaceAngleYaw
-        gscharge.oFaceAnglePitch = o.oFaceAnglePitch
+        obj_copy_pos_and_angle(gscharge, o)
     end
 
     if o.oTimer == 130 then
-        local_play(sGsbeam, gsvec, 1)
+        local_play(sGsbeam, o.header.gfx.pos, 1)
     end
 
     if o.oTimer == 147 then
@@ -348,18 +341,13 @@ function act_shooting_attack (o) --Charges and fires a laser beam. Can be interr
 
     if o.oTimer == 151 then
         GSBeam = spawn_non_sync_object(id_bhvGSBeam, E_MODEL_GSBEAM, o.oPosX, o.oPosY, o.oPosZ, function (beam)
-            beam.oFaceAnglePitch = star_pitchtomario
-            beam.oFaceAngleYaw = star_angletomario
+            obj_copy_pos_and_angle(beam, o)
         end)
     end
 
     if o.oTimer >= 152 and o.oTimer < 225 then
         o.oForwardVel = -15
-        GSBeam.oPosX = o.oPosX
-        GSBeam.oPosY = o.oPosY
-        GSBeam.oPosZ = o.oPosZ
-        GSBeam.oFaceAngleYaw = star_angletomario
-        GSBeam.oFaceAnglePitch = star_pitchtomario
+        obj_copy_pos_and_angle(GSBeam, o)
     end
 
 
@@ -461,15 +449,15 @@ function act_vulnerable(o)
         o.oVelZ = 0
         o.oForwardVel = 0
         --o.oFaceAngleRoll = o.oFaceAngleRoll + 1000
+        local m = nearest_mario_state_to_object(o)
         
         if obj_check_hitbox_overlap(o, m.marioObj) then
             --djui_chat_message_create(tostring(o.oTimer))
 
             if m.action == ACT_GROUND_POUND_LAND then
-                local m = nearest_mario_state_to_object(o)
                 cur_obj_shake_screen(SHAKE_POS_LARGE)
                 spawn_sync_object(id_bhvStaticObject, E_MODEL_GOLD_SPLAT, o.oPosX, m.floorHeight + 2, o.oPosZ, function(splat)
-                    obj_scale (splat, 2)
+                    obj_scale(splat, 2)
                 end)
                 local_play(sSplatter, m.pos, 1)
                 cur_obj_disable_rendering_and_become_intangible(o)
