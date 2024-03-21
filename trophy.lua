@@ -1,9 +1,13 @@
 -------------------------TROPHY SYSTEM-------------------------
 
 trophyinfo = {
-	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER },
 	{ name = "mario", model = E_MODEL_MARIO },
-	{ name = "luigi", model = E_MODEL_LUIGI }
+	{ name = "luigi", model = E_MODEL_LUIGI },
+	{ name = "toad", model = E_MODEL_TOAD },
+	{ name = "wario", model = E_MODEL_WARIO },
+	{ name = "waluigi", model = E_MODEL_WALUIGI },
+	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER },
+	{ name = "portal", model = E_MODEL_NETHERPORTAL }
 }
 
 ---@param o Object
@@ -16,6 +20,7 @@ function trophy_load(o)
 	-- Checks to see if trophy should display. (show if unlocked and display or locked and collectible)
 	if trophyunlocked ~= (o.oBehParams & 1 == 0) then
 		obj_set_model_extended(o, trophy.model)
+		obj_scale(o, .2)
 	else
 		obj_mark_for_deletion(o)
 	end
@@ -40,6 +45,8 @@ function trophy_loop(o)
 		local player = nearest_player_to_object(o)
 		if obj_check_hitbox_overlap(o, player) then
 			-- collect (spin, fly up and shrink, leaving a trail of sparkles behind)
+			network_play(sTrophy, m.pos, 1, m.playerIndex) -- THIS is causing errors... Are we out of available bass tracks to load?
+			obj_mark_for_deletion(o)
 		end
 	end
 end
