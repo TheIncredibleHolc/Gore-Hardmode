@@ -3,7 +3,6 @@
 
 
 -------TESTING NOTES AND KNOWN BUGS-------------
---Lava bubbling will continue if gameover in hell.
 
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -653,7 +652,6 @@ ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNER
 function act_bitten_in_half(m)
 	obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
     common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
-
 end
 hook_mario_action(ACT_BITTEN_IN_HALF, act_bitten_in_half)
 
@@ -721,6 +719,13 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
+----------------------------------------------------------------------------------------------------------------------------------
+	if n.currLevelNum == LEVEL_BBH then
+		set_lighting_color(0,50)
+		set_lighting_color(1,50)
+		set_lighting_color(2,65)
+		set_lighting_dir(1,128)
+	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	if n.currLevelNum == LEVEL_WDW then --Wet/Dry world is now just dry world... LOL...
@@ -1060,7 +1065,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 
 		if (racepen.oRacingPenguinMarioWon ~= 0) then
 			--if (racepen.oRacingPenguinReachedBottom ~= 0) and racepen.oPosZ == -7150 then --(racepen.oMoveFlags & OBJ_MOVE_HIT_WALL ~= 0) then
-			if racepen.oPosZ == -7150 then
+			if racepen.oPosZ <= -7140 then
 				squishblood(racepen)
 				local_play(sSplatter, m.pos, 1)
 				cur_obj_play_sound_2(SOUND_OBJ_POUNDING_LOUD)
@@ -1333,11 +1338,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		obj_mark_for_deletion(o)
 	end
 
-	--BIG BOOS HAUNT ENTRANCE
-	if obj_has_behavior_id(o, id_bhvBooWithCage) ~= 0 and ia(m) then
-		--warp_to_level(4, 1, 1)
-	end
-
 	--Snowman's head insta-kill
 	if obj_has_behavior_id(o, id_bhvSnowmansBottom) ~= 0 then
 		m.squishTimer = 50
@@ -1372,12 +1372,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		m.squishTimer = 50
 	end
 
-	--Cannon Lid Breaking
-	if obj_has_behavior_id(o, id_bhvCannonClosed) ~= 0 and m.action == ACT_GROUND_POUND_LAND then
-		spawn_triangle_break_particles(20, 20, 1, 1)
-		obj_mark_for_deletion(o)
-	end
-
 	--Custom bullet bill boom
 	if obj_has_behavior_id(o, id_bhvBulletBill) ~= 0 and (m.hurtCounter > 0) then
 		spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
@@ -1402,6 +1396,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		--obj_has_behavior_id(o, id_bhvPiranhaPlant) + -- Custom Piranha Plant death
 		obj_has_behavior_id(o, id_bhvSpindrift) + -- twirling guys insta-death
 		obj_has_behavior_id(o, id_bhvMrBlizzard) + -- Mr.Blizzard insta-death
+		obj_has_behavior_id(o, id_bhvHauntedChair) + -- Evil chair insta-death
 		obj_has_behavior_id(o, id_bhvWaterBomb) ~= 0 -- cannon bubble insta-death
 	or (
 		obj_has_behavior_id(o, id_bhvBowserBodyAnchor) ~= 0
@@ -1411,6 +1406,21 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		m.squishTimer = 50
 	end
 
+	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvMadPiano) ~= 0 then
+		if m.character.type == CT_MARIO or m.character.type == CT_LUIGI then
+			s.bottomless = true
+			network_play(sSplatter, m.pos, 1, m.playerIndex)
+			network_play(sCrunch, m.pos, 1, m.playerIndex)
+			squishblood(m.marioObj)
+			m.health = 0xff
+			mario_blow_off_cap(m, 15)
+			set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
+			cur_obj_become_intangible()
+			m.hurtCounter = 0
+		else
+			m.squishTimer = 50
+		end
+	end
 	
 	-- Custom shocking amp Kill
 	if obj_has_behavior_id(o, id_bhvCirclingAmp) ~= 0 and (m.hurtCounter > 0) then
@@ -2116,8 +2126,10 @@ function bhv_netherportal_loop(o)
 	end
 end
 
+--------------------------------------------------------------------------------------------------------------------------------
+--Big Boo's Haunt
+
 function bhv_custom_merry_go_round(o)
-	djui_chat_message_create(tostring(o.oMerryGoRoundStopped))
 	if o.oMerryGoRoundStopped == 0 then
 		o.oAngleVelYaw = o.oAngleVelYaw + 2048
 		o.oMoveAngleYaw = o.oMoveAngleYaw + o.oAngleVelYaw
@@ -2125,7 +2137,30 @@ function bhv_custom_merry_go_round(o)
 	end
 end
 
+function bhv_custom_piano(o)
+	m = nearest_mario_state_to_object(o)
+	if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 then
+		local angleToPlayer = obj_angle_to_object(o, m.marioObj)
+		o.oHomeX = m.pos.x
+		o.oHomeZ = m.pos.z
+		o.oAction = MAD_PIANO_ACT_ATTACK
+		o.oForwardVel = 25
+		cur_obj_rotate_yaw_toward(angleToPlayer, 2400)
+
+	end
+end
+
+function bhv_custom_chairs(o)
+	if (o.oHauntedChairUnkF4 ~= 0) then
+		if (o.oHauntedChairUnkF4 == 0) then
+			obj_compute_vel_from_move_pitch(90.0)
+		end
+	end
+end
+
 -------Behavior Hooks-------
+hook_behavior(id_bhvHauntedChair, OBJ_LIST_GENACTOR, false, nil, bhv_custom_chairs)
+hook_behavior(id_bhvMadPiano, OBJ_LIST_GENACTOR, false, nil, bhv_custom_piano)
 hook_behavior(id_bhvMerryGoRound, OBJ_LIST_SURFACE, false, nil, bhv_custom_merry_go_round)
 hook_behavior(id_bhvSmallPenguin, OBJ_LIST_GENACTOR, false, nil, bhv_custom_tuxie)
 hook_behavior(id_bhvPlatformOnTrack, OBJ_LIST_SURFACE, false, nil, bhv_custom_moving_plats)
@@ -2233,6 +2268,11 @@ hook_chat_command("wdw", "wet", function ()
 	return true
 end)
 
+hook_chat_command("bbh", "boo", function ()
+	warp_to_level(LEVEL_BBH, 1, 0)
+	return true
+end)
+
 hook_chat_command("hell", "hell", function ()
 	warp_to_level(LEVEL_HELL, 1, 0)
 	return true
@@ -2281,6 +2321,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		gMarioStates[0].numLives = 0
 		warp_to_level(LEVEL_HELL, 1, 0)
 	end
+
 	if np.currLevelNum == LEVEL_HELL then
 		set_lighting_color(0,255)
 		set_lighting_color(1,127)
