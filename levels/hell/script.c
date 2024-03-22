@@ -42,7 +42,7 @@ const LevelScript level_hell_entry[] = {
 		OBJECT(MODEL_RED_FLAME, -21, 221, 4383, 90, 0, 0, (4 << 16), bhvFlamethrower),
 		OBJECT(MODEL_RED_FLAME, 409, 221, 4383, 90, 0, 0, (4 << 16), bhvFlamethrower),
 		OBJECT(E_MODEL_HELLTHWOMPER, -922, 2888, 3150, 0, -90, 0, (4 << 16), id_bhvThwomp),
-		OBJECT(E_MODEL_NETHERPORTAL, -4350, 1697, 4895, 0, -90, 0, (7 << 24), id_bhvTrophy),
+		OBJECT(E_MODEL_NETHERPORTAL, -4350, 1697, 4895, 0, -90, 0, (7 << 16), id_bhvTrophy),
 		OBJECT(E_MODEL_EXCLAMATION_BOX, 91, 587, -3653, 0, 0, 0, (6 << 16), id_bhvExclamationBox),
 		OBJECT(MODEL_1UP, 743, 779, -7350, 90, 10, 0, 0x00000000, bhv1Up),
 		OBJECT(MODEL_1UP, 1443, 979, 950, 90, 10, 0, 0x00000000, bhv1Up),
