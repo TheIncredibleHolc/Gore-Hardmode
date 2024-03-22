@@ -43,9 +43,9 @@ u8 secretroom_dl_chillyn_rgba16[] = {
 	#include "levels/secretroom/chillyn.rgba16.inc.c"
 };
 
-Gfx secretroom_dl_WOFsmall_rgba32_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_WOFsmall_rgba32[] = {
-	#include "levels/secretroom/WOFsmall.rgba32.inc.c"
+Gfx secretroom_dl_skyboxsmallerer_rgba32_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_skyboxsmallerer_rgba32[] = {
+	#include "levels/secretroom/skyboxsmallerer.rgba32.inc.c"
 };
 
 Gfx secretroom_dl_trophy_rgba16_aligner[] = {gsSPEndDisplayList()};
@@ -53,9 +53,14 @@ u8 secretroom_dl_trophy_rgba16[] = {
 	#include "levels/secretroom/trophy.rgba16.inc.c"
 };
 
-Gfx secretroom_dl_skyboxsmaller_rgba32_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_skyboxsmaller_rgba32[] = {
-	#include "levels/secretroom/skyboxsmaller.rgba32.inc.c"
+Gfx secretroom_dl_silver64_i8_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_silver64_i8[] = {
+	#include "levels/secretroom/silver64.i8.inc.c"
+};
+
+Gfx secretroom_dl_WOFsmall_rgba32_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_WOFsmall_rgba32[] = {
+	#include "levels/secretroom/WOFsmall.rgba32.inc.c"
 };
 
 Gfx secretroom_dl_darkblue_ci4_aligner[] = {gsSPEndDisplayList()};

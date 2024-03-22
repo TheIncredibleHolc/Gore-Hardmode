@@ -87,15 +87,15 @@ function testing(m)
 		--spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, m.pos.x, m.pos.y + 80, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvBubbleParticleSpawner, E_MODEL_BUBBLE, m.pos.x, m.pos.y + 80, m.pos.z, nil)
 		--spawn_non_sync_object(id_bhvKoopaShell, E_MODEL_KOOPA_SHELL, m.pos.x, m.pos.y + 80, m.pos.z, nil)
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NETHERPORTAL, -4363, 1670, 4866, function (trophy)
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_MARIO, m.pos.x + 300, m.pos.y + 50, m.pos.z, function (trophy)
 			obj_scale(trophy, .2)
-			trophy.oBehParams = 7 << 16
+			trophy.oBehParams = 1 << 16
 		end)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NETHERPORTAL, m.pos.x, m.pos.y + 150, m.pos.z, function (trophy)
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_LUIGI, m.pos.x, m.pos.y + 350, m.pos.z, function (trophy)
 			obj_scale(trophy, .2)
-			trophy.oBehParams = 7 << 16
+			trophy.oBehParams = 2 << 16
 		end)
 	end
 end
