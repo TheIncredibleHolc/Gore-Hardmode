@@ -31,6 +31,7 @@ function stream_stop_all()
 	audio_stream_stop(boss)
 	audio_stream_stop(musicHell)
 	audio_stream_stop(backroomMusic)
+	audio_stream_stop(secret)
 	currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()

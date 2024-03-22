@@ -3,9 +3,9 @@ u8 secretroom_dl_holcn_rgba16[] = {
 	#include "levels/secretroom/holcn.rgba16.inc.c"
 };
 
-Gfx secretroom_dl_sanikyn_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_sanikyn_rgba16[] = {
-	#include "levels/secretroom/sanikyn.rgba16.inc.c"
+Gfx secretroom_dl_tillyn_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_tillyn_rgba16[] = {
+	#include "levels/secretroom/tillyn.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_coolion_rgba16_aligner[] = {gsSPEndDisplayList()};
@@ -33,6 +33,11 @@ u8 secretroom_dl_birdekekn_rgba16[] = {
 	#include "levels/secretroom/birdekekn.rgba16.inc.c"
 };
 
+Gfx secretroom_dl_sanikyn_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_sanikyn_rgba16[] = {
+	#include "levels/secretroom/sanikyn.rgba16.inc.c"
+};
+
 Gfx secretroom_dl_tile_rgba32_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_tile_rgba32[] = {
 	#include "levels/secretroom/tile.rgba32.inc.c"
@@ -46,6 +51,11 @@ u8 secretroom_dl_chillyn_rgba16[] = {
 Gfx secretroom_dl_skyboxsmallerer_rgba32_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_skyboxsmallerer_rgba32[] = {
 	#include "levels/secretroom/skyboxsmallerer.rgba32.inc.c"
+};
+
+Gfx secretroom_dl_redcarpet_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_redcarpet_rgba16[] = {
+	#include "levels/secretroom/redcarpet.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_trophy_rgba16_aligner[] = {gsSPEndDisplayList()};

@@ -40,6 +40,66 @@ trophyinfo = {
 	--   loop = function (o)
 		
 	--   end
+	},
+	{ name = "trophy9", model = E_MODEL_NONE, scale = 0.2, --Trophy #9
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy10", model = E_MODEL_NONE, scale = 0.2, --Trophy #10
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy11", model = E_MODEL_NONE, scale = 0.2, --Trophy #11
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy12", model = E_MODEL_NONE, scale = 0.2, --Trophy #12
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy13", model = E_MODEL_NONE, scale = 0.2, --Trophy #13
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy14", model = E_MODEL_NONE, scale = 0.2, --Trophy #14
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy15", model = E_MODEL_NONE, scale = 0.2, --Trophy #15
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy16", model = E_MODEL_NONE, scale = 0.2, --Trophy #16
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy17", model = E_MODEL_NONE, scale = 0.2, --Trophy #17
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy18", model = E_MODEL_NONE, scale = 0.2, --Trophy #18
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy19", model = E_MODEL_NONE, scale = 0.2, --Trophy #19
+	--   loop = function (o)
+		
+	--   end
+	},
+	{ name = "trophy20", model = E_MODEL_NONE, scale = 0.2, --Trophy #20
+	--   loop = function (o)
+		
+	--   end
 	}
 }
 
@@ -65,6 +125,7 @@ function trophy_load(o)
 	elseif n.currLevelNum == LEVEL_SECRETHUB and trophyunlocked == (o.oBehParams & 1 == 0) then --if trophy already collected AND M in secret room.
 		obj_set_model_extended(o, trophy.model)
 		cur_obj_scale(trophy.scale)
+
 	elseif n.currLevelNum ~= LEVEL_SECRETHUB and trophyunlocked == (o.oBehParams & 1 == 0) then --if trophy already collected and M NOT in secret room. 
 		obj_mark_for_deletion(o)
 	end
@@ -75,9 +136,11 @@ end
 function trophy_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
 	o.header.gfx.skipInViewCheck = true
-
 	obj_set_hitbox_radius_and_height(o, 40, 100)
 	trophy_load(o)
+	spawn_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, o.oPosX, 407, o.oPosY, function(podium)
+		obj_scale(podium, .2)
+	end)
 end
 
 ---@param o Object

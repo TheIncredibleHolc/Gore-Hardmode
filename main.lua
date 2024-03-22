@@ -66,7 +66,9 @@ function testing(m)
 		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
 
 		--spawn_sync_object(id_bhvWingCap, E_MODEL_LUIGIS_WING_CAP, m.pos.x, m.pos.y, m.pos.z + 50, nil)
-		spawn_sync_object(id_bhvBlueCoinJumping, E_MODEL_BLUE_COIN, m.pos.x, m.pos.y, m.pos.z + 50, nil)
+		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, m.pos.x, m.floorHeight, m.pos.z, function(o)
+			obj_scale(o, 0.2)
+		end)
 		
 		--[[
 		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
@@ -171,6 +173,8 @@ E_MODEL_BACKROOM_SMILER = smlua_model_util_get_id("backroom_smiler_geo")
 COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --The ACTUAL custom Smiler enemy in the backroom.
 E_MODEL_NETHERPORTAL = smlua_model_util_get_id("netherportal_geo")
 COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
+E_MODEL_TROPHY_PODIUM = smlua_model_util_get_id("podium_geo")
+
 
 smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry world')
 smlua_text_utils_course_name_replace(COURSE_JRB, 'Jolly Roger Hell')
