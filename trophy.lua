@@ -11,7 +11,7 @@ trophyinfo = {
 		
 	--   end
 	},
-	{ name = "toad", model = E_MODEL_TOAD, scale = 0.5, --Trophy #3
+	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5, --Trophy #3
 	--   loop = function (o)
 		
 	--   end
@@ -109,38 +109,31 @@ goldplate  = smlua_model_util_get_id("goldplate_geo")  --This is the description
 
 ---@param o Object
 function trophy_load(o)
-	n = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 	local trophy = trophyinfo[o.oBehParams >> 16]
 
 	-- Loads the status of each trophy on Secret Room entry.
 	local trophyunlocked = mod_storage_load(trophy.name) == "1"
 
 	-- Checks to see if trophy should display. (show if unlocked and display or locked and collectible)
-	if trophyunlocked ~= (o.oBehParams & 1 == 0) then --If NOT collected
+	if trophyunlocked == (o.oBehParams & 1 == 0) then
 		obj_set_model_extended(o, trophy.model)
-		cur_obj_scale(trophy.scale)
-		if n.currLevelNum == LEVEL_SECRETHUB then
-			obj_mark_for_deletion(o)
-		end
-	elseif n.currLevelNum == LEVEL_SECRETHUB and trophyunlocked == (o.oBehParams & 1 == 0) then --if trophy already collected AND M in secret room.
-		obj_set_model_extended(o, trophy.model)
-		cur_obj_scale(trophy.scale)
-
-	elseif n.currLevelNum ~= LEVEL_SECRETHUB and trophyunlocked == (o.oBehParams & 1 == 0) then --if trophy already collected and M NOT in secret room. 
+		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, o.oPosX, o.oPosY - 100, o.oPosZ, function(podium)
+			obj_scale(podium, .2)
+			obj_copy_angle(podium, o)
+		end)
+	elseif np.currLevelNum ~= LEVEL_SECRETHUB then -- don't delete display if trophy isn't unlocked
 		obj_mark_for_deletion(o)
-	end
+	return end
+	cur_obj_scale(trophy.scale)
 end
 
--- Trophy display behavior. 
 ---@param o Object
 function trophy_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
 	o.header.gfx.skipInViewCheck = true
 	obj_set_hitbox_radius_and_height(o, 40, 100)
 	trophy_load(o)
-	spawn_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, o.oPosX, 407, o.oPosY, function(podium)
-		obj_scale(podium, .2)
-	end)
 end
 
 ---@param o Object

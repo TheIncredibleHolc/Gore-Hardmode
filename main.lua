@@ -475,6 +475,12 @@ function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable.
 	obj.oHomeX = m.pos.x
 	obj.oHomeY = m.pos.y
 	obj.oHomeZ = m.pos.z
+
+	if obj_has_model_extended(obj, E_MODEL_WOODEN_SIGNPOST) ~= 0 then
+		if ia(m) and obj.oAction > 2 and obj.oTimer < 2 then
+			cutscene_object_with_dialog(CUTSCENE_DIALOG, obj, obj.oBehParams)
+		end
+	end
 end
 
 function bhv_custom_thwomp(obj)
@@ -535,11 +541,15 @@ end
 
 function bhv_custom_sign(obj) --This is the single most evil addition to the game. Real proud of this one :')
 	local m = nearest_player_to_object(obj)
-	if lateral_dist_between_objects(m, obj) < 500 then
-		--evilsign = 
-		spawn_sync_if_main(id_bhvGoomba, E_MODEL_WOODEN_SIGNPOST, obj.oPosX, obj.oPosY, obj.oPosZ, nil, 0)
+	if dist_between_objects(m, obj) < 500 then
+		--evilsign =
+		--- @param o Object 
+		spawn_sync_if_main(id_bhvGoomba, E_MODEL_WOODEN_SIGNPOST, obj.oPosX, obj.oPosY, obj.oPosZ, function (o)
+			obj_copy_angle(o, obj)
+			o.oBehParams = obj.oBehParams2ndByte
+		end, 0)
 		obj_mark_for_deletion(obj)
-	end		
+	end
 end
 
 function bhv_custom_toxbox(obj) -- Yeah this isn't doing anything. These guys move in a stupid way that I can't understand.
