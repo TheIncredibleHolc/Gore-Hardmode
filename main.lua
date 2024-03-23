@@ -235,6 +235,7 @@ for i = 0, MAX_PLAYERS-1 do
 		outsidegastimer = 60,
 		highdeathtimer = 0,
 		splatterdeath = 0, -- w
+		ssldiethirst = 0
 	}
 end
 toadguitimer = 0
@@ -1037,6 +1038,26 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		s.isdead = true
 	end
 
+	if n.currLevelNum == LEVEL_SSL then
+		if (m.action & ACT_FLAG_WATER_OR_TEXT) == 0 then
+			s.ssldiethirst = s.ssldiethirst + 1
+		else
+			s.ssldiethirst = 0 -- stops timer
+		end
+	
+		if s.ssldiethirst >= 900 then
+			m.health = m.health - 1
+			if m.action == ACT_WALKING or m.action == ACT_JUMP or m.action == ACT_JUMP_KICK then
+				m.forwardVel = clampf(m.forwardVel, -100, m.health / 64)
+			end
+			if m.action == ACT_LONG_JUMP then
+				set_mario_action(m, ACT_JUMP, 0)
+			end
+		end
+		m.forwardVel = m.forwardVel + 0.3
+	else
+		s.ssldiethirst = 0
+	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mario Disintegrates when on fire
 	if m.action == ACT_BURNING_JUMP or m.action == ACT_BURNING_GROUND or m.action == ACT_BURNING_FALL then
