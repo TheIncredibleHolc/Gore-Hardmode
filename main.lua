@@ -1380,6 +1380,11 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		m.squishTimer = 50
 	end
 
+	--JRB falling pillar insta-kill
+	if obj_has_behavior_id(o, id_bhvFallingPillarHitbox) ~= 0 and (m.hurtCounter > 0) then
+		m.squishTimer = 50
+	end
+
 	--Custom bullet bill boom
 	if obj_has_behavior_id(o, id_bhvBulletBill) ~= 0 and (m.hurtCounter > 0) then
 		spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
