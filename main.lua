@@ -9,6 +9,7 @@
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
 --gLevelValues.entryLevel = LEVEL_BOWSER_3
+gServerSettings.bubbleDeath = false
 
 --(BoB, THI, TTM) bowling balls faster
 gBehaviorValues.BowlingBallTtmSpeed = 40

@@ -63,9 +63,9 @@ u8 secretroom_dl_redcarpet_rgba16[] = {
 	#include "levels/secretroom/redcarpet.rgba16.inc.c"
 };
 
-Gfx secretroom_dl_trophy_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_trophy_rgba16[] = {
-	#include "levels/secretroom/trophy.rgba16.inc.c"
+Gfx secretroom_dl_trophy_rgba32_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_trophy_rgba32[] = {
+	#include "levels/secretroom/trophy.rgba32.inc.c"
 };
 
 Gfx secretroom_dl_silver64_i8_aligner[] = {gsSPEndDisplayList()};
