@@ -826,8 +826,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	-- FLY FASTER!!
-	if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON then -- Makes flying gradually get FASTER!
-		--djui_chat_message_create(tostring(m.forwardVel))
+	if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON or m.action == ACT_THROWN_BACKWARD or m.action == ACT_THROWN_FORWARD then -- Makes flying gradually get FASTER!
 		m.forwardVel = m.forwardVel + 0.3
 		s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
 	end
@@ -840,7 +839,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	-- BONKING DEATHS!!
-	if m.action == ACT_BACKWARD_AIR_KB and s.flyingVel > 60 then -- Enables Mario to wall-splat when air-bonking objects.
+	if m.action == ACT_BACKWARD_AIR_KB or m.action == ACT_FORWARD_AIR_KB and s.flyingVel > 60 then -- Enables Mario to wall-splat when air-bonking objects.
 		if m.prevAction == ACT_FLYING or m.prevAction == ACT_SHOT_FROM_CANNON then
 			mario_blow_off_cap(m, 45)
 			m.forwardVel = m.forwardVel - 30
@@ -860,6 +859,30 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 				o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
 			end)
 	    end
+	end
+
+	-- BONK DEATH DETECTION FOR HEAVEHO THROWS SPECIFICALLY (Really just for WDW)
+	if (m.action == ACT_THROWN_BACKWARD) or (m.action == ACT_THROWN_FORWARD) and (s.flyingVel > 60) and n.currLevelNum == LEVEL_WDW then 
+		local heaveho = obj_get_nearest_object_with_behavior_id(o, id_bhvHeaveHoThrowMario)
+		if mario_is_within_rectangle(heaveho.oPosX - 100, heaveho.oPosX + 100, heaveho.oPosZ - 100, heaveho.oPosZ + 100) == 0 and m.wall ~= nil then
+			mario_blow_off_cap(m, 45)
+			m.forwardVel = m.forwardVel - 30
+			m.action = ACT_SOFT_BONK --Needed to stop the first 'if' from running twice.
+			set_mario_action(m, ACT_GONE, 78)
+			m.health = 0xff
+			set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+			m.particleFlags = PARTICLE_MIST_CIRCLE
+			local_play(sSplatter, m.pos, 1)
+			spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
+				local z, normal = vec3f(), m.wall.normal
+				local x, xnormal = vec3f(), m.wall.normal
+				o.oFaceAnglePitch = 16384-calculate_pitch(x, xnormal)
+				o.oFaceAngleYaw = calculate_yaw(z, normal)
+				o.oFaceAngleRoll = obj_resolve_collisions_and_turn(o.oFaceAngleYaw, 0)
+				o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
+				o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
+			end)
+		end
 	end
 
 	--[[
@@ -1319,11 +1342,9 @@ if (m.hurtCounter > 0) then
 
 	-- Air Insta-Kill Mario (Generic hits, mario pvp air kicks, etc..)
 	if (m.action == ACT_HARD_FORWARD_AIR_KB) then
-		m.forwardVel = 1150
 		m.health = 0xff
 	end
 	if (m.action == ACT_HARD_BACKWARD_AIR_KB) then
-		m.forwardVel = -1150
 		m.health = 0xff
 	end
 
@@ -1590,7 +1611,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
-
+	s.bigthrowenabled = 0
 	--set_override_envfx(ENVFX_MODE_NONE)
 	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then
@@ -2395,8 +2416,18 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 
 	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
 		set_override_envfx(ENVFX_LAVA_BUBBLES)
+		set_override_skybox(BACKGROUND_FLAMING_SKY)
 		gLevelValues.fixCollisionBugs = true
+		set_lighting_color(0,255)
+		set_lighting_color(1,127)
+		set_lighting_color(2,100)
+		set_lighting_dir(1,-128)
 	else
+		set_lighting_color(0, 255)
+		set_lighting_color(1, 255)
+		set_lighting_color(2, 255)
+		set_lighting_dir(1,0)
+		set_override_skybox(-1)
 		set_override_envfx(-1)
 		gLevelValues.fixCollisionBugs = false
 	end
