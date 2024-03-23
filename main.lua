@@ -501,12 +501,18 @@ function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable.
 		obj.oVelY = obj.oVelY + 10
 		obj.oForwardVel = 70
 	end
+
+	if obj.oAction == GOOMBA_ACT_JUMP and obj.oTimer < 6 then
+		cur_obj_rotate_yaw_toward(obj.oGoombaTargetYaw, 0x200)
+	end
+
 	obj.oHomeX = m.pos.x
 	obj.oHomeY = m.pos.y
 	obj.oHomeZ = m.pos.z
 
 	if obj_has_model_extended(obj, E_MODEL_WOODEN_SIGNPOST) ~= 0 then
-		if ia(m) and obj.oAction > 2 and obj.oTimer < 2 then
+		if ia(m) and obj.oAction > 2 and -- consider any action outside of the three goomba actions dead
+		   m.controller.buttonPressed & B_BUTTON ~= 0 then -- press b to trigger dialog
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, obj, obj.oBehParams)
 		end
 	end
