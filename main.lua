@@ -4,11 +4,40 @@
 
 -------TESTING NOTES AND KNOWN BUGS-------------
 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--TTC Speed Increase
+local realbhv = {
+    [id_bhvTTC2DRotator] = bhv_ttc_2d_rotator_update,
+    [id_bhvTTCCog]       = bhv_ttc_cog_update,
+    [id_bhvTTCElevator]  = bhv_ttc_elevator_update,
+    [id_bhvTTCMovingBar] = bhv_ttc_moving_bar_update,
+    [id_bhvTTCPendulum]  = bhv_ttc_pendulum_update,
+    [id_bhvTTCPitBlock]  = bhv_ttc_pit_block_update,
+    [id_bhvTTCRotatingSolid] = bhv_ttc_rotating_solid_update,
+    [id_bhvTTCSpinner]   = bhv_ttc_spinner_update,
+    [id_bhvTTCTreadmill] = bhv_ttc_treadmill_update,
+}
+
+local fastbhv = {}
+
+function speed_objs(o)
+    if true then
+        fastbhv[get_id_from_behavior(o.behavior)]()
+    end
+end
+
+for bhv, func in pairs(realbhv) do
+    fastbhv[hook_behavior(bhv, get_object_list_from_behavior(get_behavior_from_id(bhv)), false, nil, speed_objs, get_behavior_name_from_id(bhv))] = func
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
---gLevelValues.entryLevel = LEVEL_BOWSER_3
+--Turns off bubble death.
 gServerSettings.bubbleDeath = false
 
 --(BoB, THI, TTM) bowling balls faster
@@ -1761,7 +1790,6 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
     end
 end
 
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 ---------hooks--------
@@ -2368,7 +2396,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	end
 
 	if np.currLevelNum == LEVEL_TTC then
-		set_ttc_speed_setting(-5)
+		--set_ttc_speed_setting(-5)
 	end
 end)
 

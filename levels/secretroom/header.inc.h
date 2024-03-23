@@ -48,7 +48,7 @@ extern u8 secretroom_dl_holcn_rgba16[];
 extern u8 secretroom_dl_redcarpet_rgba16[];
 extern u8 secretroom_dl_trophy_rgba32[];
 extern u8 secretroom_dl_silver64_i8[];
-extern u8 secretroom_dl_WOFsmall_rgba32_rgba32[];
+extern u8 secretroom_dl_WOFsmall_rgba32[];
 extern u8 secretroom_dl_darkblue_ci4[];
 extern u8 secretroom_dl_darkblue_pal_rgba16[];
 extern u8 secretroom_dl_tile_rgba32[];

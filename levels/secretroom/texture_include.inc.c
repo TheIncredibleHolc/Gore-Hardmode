@@ -73,8 +73,8 @@ u8 secretroom_dl_silver64_i8[] = {
 	#include "levels/secretroom/silver64.i8.inc.c"
 };
 
-Gfx secretroom_dl_WOFsmall_rgba32_rgba32_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_WOFsmall_rgba32_rgba32[] = {
+Gfx secretroom_dl_WOFsmall_rgba32_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_WOFsmall_rgba32[] = {
 	#include "levels/secretroom/WOFsmall.rgba32.inc.c"
 };
 

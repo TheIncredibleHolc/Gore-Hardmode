@@ -2922,10 +2922,10 @@ Gfx secretroom_dl_TrophyPlate9_mesh_layer_1_tri_0[] = {
 };
 
 Vtx secretroom_dl_WallOfFameText_mesh_layer_4_vtx_0[4] = {
-	{{ {-545, 9, 100}, 0, {0, 4096}, {0, 127, 0, 255} }},
-	{{ {540, 9, 100}, 0, {16384, 4096}, {0, 127, 0, 255} }},
-	{{ {540, 9, -100}, 0, {16384, 0}, {0, 127, 0, 255} }},
-	{{ {-545, 9, -100}, 0, {0, 0}, {0, 127, 0, 255} }},
+	{{ {-545, 9, 120}, 0, {0, 4096}, {0, 127, 0, 255} }},
+	{{ {540, 9, 120}, 0, {16384, 4096}, {0, 127, 0, 255} }},
+	{{ {540, 9, -120}, 0, {16384, 0}, {0, 127, 0, 255} }},
+	{{ {-545, 9, -120}, 0, {0, 0}, {0, 127, 0, 255} }},
 };
 
 Gfx secretroom_dl_WallOfFameText_mesh_layer_4_tri_0[] = {
@@ -7959,7 +7959,7 @@ Gfx mat_secretroom_dl_f3dlite_material_021[] = {
 	gsDPSetTextureFilter(G_TF_POINT),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsSPSetLights1(secretroom_dl_f3dlite_material_021_lights),
-	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_32b_LOAD_BLOCK, 1, secretroom_dl_WOFsmall_rgba32_rgba32),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_32b_LOAD_BLOCK, 1, secretroom_dl_WOFsmall_rgba32),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_32b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadBlock(7, 0, 0, 65535, 8),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_32b, 128, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 9, 0),
