@@ -1,6 +1,31 @@
-Gfx secretroom_dl_holcn_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_holcn_rgba16[] = {
-	#include "levels/secretroom/holcn.rgba16.inc.c"
+Gfx secretroom_dl_birdekekn_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_birdekekn_rgba16[] = {
+	#include "levels/secretroom/birdekekn.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16[] = {
+	#include "levels/secretroom/SUPER_MARIO_64_184368CA_0_2_all.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_Intro_rgba32_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_Intro_rgba32[] = {
+	#include "levels/secretroom/Intro.rgba32.inc.c"
+};
+
+Gfx secretroom_dl_blockyn_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_blockyn_rgba16[] = {
+	#include "levels/secretroom/blockyn.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_brysonn_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_brysonn_rgba16[] = {
+	#include "levels/secretroom/brysonn.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_chillyn_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_chillyn_rgba16[] = {
+	#include "levels/secretroom/chillyn.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_tillyn_rgba16_aligner[] = {gsSPEndDisplayList()};
@@ -18,39 +43,19 @@ u8 secretroom_dl_imyourcatn_rgba16[] = {
 	#include "levels/secretroom/imyourcatn.rgba16.inc.c"
 };
 
-Gfx secretroom_dl_brysonn_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_brysonn_rgba16[] = {
-	#include "levels/secretroom/brysonn.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_blockyn_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_blockyn_rgba16[] = {
-	#include "levels/secretroom/blockyn.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_birdekekn_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_birdekekn_rgba16[] = {
-	#include "levels/secretroom/birdekekn.rgba16.inc.c"
-};
-
 Gfx secretroom_dl_sanikyn_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_sanikyn_rgba16[] = {
 	#include "levels/secretroom/sanikyn.rgba16.inc.c"
 };
 
-Gfx secretroom_dl_tile_rgba32_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_tile_rgba32[] = {
-	#include "levels/secretroom/tile.rgba32.inc.c"
-};
-
-Gfx secretroom_dl_chillyn_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_chillyn_rgba16[] = {
-	#include "levels/secretroom/chillyn.rgba16.inc.c"
-};
-
 Gfx secretroom_dl_skyboxsmallerer_rgba32_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_skyboxsmallerer_rgba32[] = {
 	#include "levels/secretroom/skyboxsmallerer.rgba32.inc.c"
+};
+
+Gfx secretroom_dl_holcn_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_holcn_rgba16[] = {
+	#include "levels/secretroom/holcn.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_redcarpet_rgba16_aligner[] = {gsSPEndDisplayList()};
@@ -68,8 +73,8 @@ u8 secretroom_dl_silver64_i8[] = {
 	#include "levels/secretroom/silver64.i8.inc.c"
 };
 
-Gfx secretroom_dl_WOFsmall_rgba32_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_WOFsmall_rgba32[] = {
+Gfx secretroom_dl_WOFsmall_rgba32_rgba32_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_WOFsmall_rgba32_rgba32[] = {
 	#include "levels/secretroom/WOFsmall.rgba32.inc.c"
 };
 
@@ -83,14 +88,9 @@ u8 secretroom_dl_darkblue_pal_rgba16[] = {
 	#include "levels/secretroom/darkblue.rgba16.pal"
 };
 
-Gfx secretroom_dl_Intro_rgba32_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_Intro_rgba32[] = {
-	#include "levels/secretroom/Intro.rgba32.inc.c"
-};
-
-Gfx secretroom_dl_Intro_rgba32_copy_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_Intro_rgba32_copy[] = {
-	#include "levels/secretroom/Intro.rgba32.inc.c"
+Gfx secretroom_dl_tile_rgba32_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_tile_rgba32[] = {
+	#include "levels/secretroom/tile.rgba32.inc.c"
 };
 
 Gfx secretroom_dl_retrotwhompbody_i8_aligner[] = {gsSPEndDisplayList()};
@@ -188,8 +188,8 @@ u8 secretroom_dl_roof_pal_rgba16[] = {
 	#include "levels/secretroom/roof.rgba16.pal"
 };
 
-Gfx secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16[] = {
+Gfx secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_copy_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_copy[] = {
 	#include "levels/secretroom/SUPER_MARIO_64_184368CA_0_2_all.rgba16.inc.c"
 };
 

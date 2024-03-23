@@ -35,7 +35,7 @@ const LevelScript level_secretroom_entry[] = {
 		WARP_NODE(0xF0, 51, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		WARP_NODE(0xF1, 0x1A, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		WARP_NODE(0x01, 51, 0x02, 0x03, WARP_NO_CHECKPOINT),
-		OBJECT(E_MODEL_BITS_WARP_PIPE, -2109, 194, -3025, 0, 0, 0, (0x01 << 16), id_bhvWarpPipe),
+		OBJECT(E_MODEL_BITS_WARP_PIPE, -2387, 198, -2628, 0, 0, 0, (0x01 << 16), id_bhvWarpPipe),
 		MARIO_POS(0x01, 0, -1009, 26, -725),
 		OBJECT(E_MODEL_NONE, 1020, 448, -1956, 0, -149, 0, (10 << 16), id_bhvTrophy),
 		OBJECT(E_MODEL_NONE, 1082, 448, -1851, 0, -149, 0, (11 << 16), id_bhvTrophy),
