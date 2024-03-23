@@ -118,9 +118,11 @@ function trophy_load(o)
 	-- Checks to see if trophy should display. (show if unlocked and display or locked and collectible)
 	if trophyunlocked == (o.oBehParams & 1 == 0) then
 		obj_set_model_extended(o, trophy.model)
-		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, o.oPosX, o.oPosY - 100, o.oPosZ, function(podium)
+		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, o.oPosX, o.oPosY - 102, o.oPosZ, function(podium)
 			obj_scale(podium, .2)
 			obj_copy_angle(podium, o)
+			podium.oFaceAngleYaw = podium.oFaceAngleYaw + 16384			
+			podium.oMoveAngleYaw = podium.oFaceAngleYaw
 		end)
 	elseif np.currLevelNum ~= LEVEL_SECRETHUB then -- don't delete display if trophy isn't unlocked
 		obj_mark_for_deletion(o)
