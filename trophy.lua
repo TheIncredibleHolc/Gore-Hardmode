@@ -1,47 +1,44 @@
 -------------------------TROPHY SYSTEM-------------------------
 
 trophyinfo = {
-	{ name = "mario", model = E_MODEL_MARIO, scale = 0.5, --Trophy #1
+	{ name = "mario", model = E_MODEL_MARIO, scale = 0.5, --Trophy #1 Beat the game as Mario.
 	   loop = function (o)
 		obj_init_animation(o, MARIO_ANIM_BREAKDANCE)
 	   end
 	},
-	{ name = "luigi", model = E_MODEL_LUIGI, scale = 0.5, --Trophy #2
+	{ name = "luigi", model = E_MODEL_LUIGI, scale = 0.5, --Trophy #2 Beat the game as Luigi.
+	},
+	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5, --Trophy #3 Beat the game as Toad.
 	--   loop = function (o)
 		
 	--   end
 	},
-	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5, --Trophy #3
+	{ name = "wario", model = E_MODEL_WARIO, scale = 0.5, --Trophy #4 Beat the game as Wario.
 	--   loop = function (o)
 		
 	--   end
 	},
-	{ name = "wario", model = E_MODEL_WARIO, scale = 0.5, --Trophy #4
+	{ name = "waluigi", model = E_MODEL_WALUIGI, scale = 0.5, --Trophy #5 Beat the game as Waluigi.
 	--   loop = function (o)
 		
 	--   end
 	},
-	{ name = "waluigi", model = E_MODEL_WALUIGI, scale = 0.5, --Trophy #5
+	{ name = "star", model = E_MODEL_STAR, scale = 0.6, --Trophy #6 Beat the game with all 5 characters. (Or get 120 stars?).
 	--   loop = function (o)
 		
 	--   end
 	},
-	{ name = "star", model = E_MODEL_STAR, scale = 0.6, --Trophy #6
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "portal", model = E_MODEL_NETHERPORTAL, scale = 0.2, --Trophy #7
+	{ name = "portal", model = E_MODEL_NETHERPORTAL, scale = 0.2, --Trophy #7 Find the NetherPortal.
 	  loop = function (o)
 		o.oAnimState = o.oTimer % 32
 	  end
 	},
-	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER, scale = 0.2, --Trophy #8
+	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER, scale = 0.2, --Trophy #8 Visit the Backrooms.
 	--   loop = function (o)
 		
 	--   end
 	},
-	{ name = "fieldgoal", model = E_MODEL_GOALPOST, scale = 0.1, --Trophy #9
+	{ name = "fieldgoal", model = E_MODEL_GOALPOST, scale = 0.1, --Trophy #9 Kick a field goal in CCM.
 	--   loop = function (o)
 		
 	--   end

@@ -452,31 +452,12 @@ That's it for now. Press\
 [A] to let go. Okay,\
 bye byyyyyyeeee!"))
 
-smlua_text_utils_dialog_replace(DIALOG_046,1,5,30,200, ("You have to master three\
-important jumping\
-techniques.\
-First try the Triple Jump.\
+smlua_text_utils_dialog_replace(DIALOG_046,1,3,30,200, ("\
+Wowza, it's hot as balls!\
 \
-Run fast, then jump three\
-times, one, two, three.\
-If you time the jumps\
-right, you'll hop, skip,\
-then jump really high.\
-Next, go for distance\
-with the Long Jump. Run,\
-press [Z] to crouch then [A]\
-to jump really far.\
-\
-To do the Wall Kick, press\
-[A] to jump at a wall, then\
-jump again when you hit\
-the wall.\
-\
-Got that? Triple Jump,\
-Long Jump, Wall Kick.\
-Practice, practice,\
-practice. You don't stand\
-a chance without them."))
+You better find water\
+quick or you'll get a heat-\
+stroke in this weather!"))
 
 smlua_text_utils_dialog_replace(DIALOG_047,1,2,95,200, ("Hi! I'll prepare the\
 cannon for you!"))

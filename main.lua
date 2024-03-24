@@ -1009,14 +1009,17 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		s.isdead = true
 	end
 
-	if n.currLevelNum == LEVEL_SSL then
+	if n.currLevelNum == LEVEL_SSL and n.currAreaIndex == 1 then
+		if m.marioObj.oTimer == 30 then
+			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
+		end
 		if (m.action & ACT_FLAG_WATER_OR_TEXT) == 0 then
 			s.ssldiethirst = s.ssldiethirst + 1
 		else
 			s.ssldiethirst = 0 -- stops timer
 		end
-	
-		if s.ssldiethirst >= 900 then
+
+		if s.ssldiethirst >= 300 then
 			m.health = m.health - 1
 			if m.action == ACT_WALKING or m.action == ACT_JUMP or m.action == ACT_JUMP_KICK then
 				m.forwardVel = clampf(m.forwardVel, -100, m.health / 64)
