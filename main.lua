@@ -81,54 +81,28 @@ function testing(m)
 		local_play(sBoneBreak, m.pos, 1)
 		m.numLives = 1
 		set_mario_action(m, ACT_NECKSNAP, 0)
-		--spawn_sync_if_main(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x + 100, m.pos.y, m.pos.z, nil, m.playerIndex)
-		--spawn_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, m.waterLevel + 1, m.pos.z, function (o)
-       --[[
-		spawn_non_sync_object(id_bhvGrandStar, E_MODEL_STAR, m.pos.x, m.pos.y + 400, m.pos.z, function (o)
-            o.oAction = 0
-        end)
-		]]
-		--	end)
-		--spawn_sync_object(id_bhvBowserBomb, E_MODEL_BOWSER_BOMB,  m.pos.x + 100, m.pos.y, m.pos.z, nil)
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		--warp_to_level(2, 1, 1)
-		--spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, m.pos.x, m.pos.y + 350, m.pos.z, nil)
-
-		--spawn_sync_object(id_bhvWingCap, E_MODEL_LUIGIS_WING_CAP, m.pos.x, m.pos.y, m.pos.z + 50, nil)
-		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, m.pos.x, m.floorHeight, m.pos.z, function(o)
-			obj_scale(o, 0.2)
-		end)
+		spawn_non_sync_object(id_bhvSmallPenguin, E_MODEL_PENGUIN, m.pos.x, m.pos.y, m.pos.z, nil)
 		
-		--[[
-		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
-			o.oFaceAnglePitch = o.oFaceAnglePitch - 17000
-		end)
-		]]
-		--spawn_non_sync_object(id_bhvSkybox1, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 0, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, m.pos.x, m.pos.y - 9500, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, m.pos.x, m.pos.y + 500, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvSkybox1, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 1000, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 1500, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvSkybox1, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 2000, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 2500, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvSkybox1, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 2800, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX, m.pos.x, m.pos.y + 3400, m.pos.z, nil)
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		--spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, m.pos.x, m.pos.y + 80, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvBubbleParticleSpawner, E_MODEL_BUBBLE, m.pos.x, m.pos.y + 80, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvKoopaShell, E_MODEL_KOOPA_SHELL, m.pos.x, m.pos.y + 80, m.pos.z, nil)
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_MARIO, m.pos.x + 300, m.pos.y + 50, m.pos.z, function (trophy)
-			obj_scale(trophy, .2)
-			trophy.oBehParams = 1 << 16
-		end)
+		m.pos.x = 5254 
+		m.pos.y = -4607 
+		m.pos.z = 1047
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
+		--[[
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_LUIGI, m.pos.x, m.pos.y + 350, m.pos.z, function (trophy)
 			obj_scale(trophy, .2)
 			trophy.oBehParams = 2 << 16
 		end)
+]]
+		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, m.pos.x, m.pos.y + 350, m.pos.z, function(t)
+			obj_scale(t, .1)
+			t.oBehParams = 9 << 16
+		end)
+
 	end
 end
 
@@ -204,6 +178,9 @@ COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --Th
 E_MODEL_NETHERPORTAL = smlua_model_util_get_id("netherportal_geo")
 COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
 E_MODEL_TROPHY_PODIUM = smlua_model_util_get_id("podium_geo")
+E_MODEL_GOALPOST = smlua_model_util_get_id("goalpost_geo")
+COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
+E_MODEL_GOALPOST_HITBOX = smlua_model_util_get_id("goalposthitbox_geo")
 
 
 smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry world')
@@ -234,10 +211,11 @@ for i = 0, MAX_PLAYERS-1 do
 		ishigh = 0,
 		outsidegastimer = 60,
 		highdeathtimer = 0,
-		splatterdeath = 0, -- w
-		ssldiethirst = 0
+		ssldiethirst = 0,
+		splatterdeath = 0,
 	}
 end
+
 toadguitimer = 0
 ukikiheldby = -1
 ukikiholding = 0
@@ -247,6 +225,7 @@ bloodalpha = 0
 hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
+gameisbeat = true --This variable will determine if secret room and trophies are spawnable in main world.
 
 ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_gone(m)
@@ -774,6 +753,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
+
+
+
 ----------------------------------------------------------------------------------------------------------------------------------
 	if n.currLevelNum == LEVEL_BBH then
 		set_lighting_color(0,50)
@@ -885,19 +867,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			end)
 		end
 	end
-
-	--[[
-	--djui_chat_message_create(tostring(m.floorHeight))
-	if s.isFalling then --Makes mario fall funny to his death if he bonks a wall.
-		if m.pos.y == m.floorHeight then
-			m.squishTimer = 50	
-			s.isFalling = false
-		else
-			m.faceAngle.z = m.faceAngle.z - 3000
-			obj_set_gfx_angle(m.marioObj, m.faceAngle.z, m.faceAngle.x, m.faceAngle.y)
-		end
-	end
-	]]
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
@@ -2175,6 +2144,9 @@ end
 ---@param o Object
 function bhv_custom_tuxie(o)
 	if o.oAction == 6 then
+		set_override_fov(100)
+		gSecondCameraFocus = o
+		obj_set_secondary_camera_focus()
 		if o.oTimer == 0 then
 			o.oGravity = -2
 			o.oForwardVel = 25
@@ -2182,11 +2154,21 @@ function bhv_custom_tuxie(o)
 		end
 		o.oFaceAnglePitch = o.oFaceAnglePitch + 7500
 		cur_obj_move_standard(-78)
+
+		local goalpost = obj_get_nearest_object_with_behavior_id(o, id_bhvGoalpost)
+		if obj_check_hitbox_overlap(o, goalpost) ~= 0 then
+			--GOOOAAALLL
+		end
+
 		if o.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
 			if o.oFloor.type ~= SURFACE_DEATH_PLANE then
 				squishblood(o)
 				local_play(sSplatter, o.header.gfx.pos, 1)
 			end
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+			cur_obj_shake_screen(SHAKE_POS_SMALL)
+			gLakituState.mode = CAMERA_MODE_RADIAL
+			set_override_fov(0)
 			obj_mark_for_deletion(o)
 		end
 	end
@@ -2258,6 +2240,53 @@ function bhv_custom_chairs(o)
 	end
 end
 
+--------------------------------------------------------------------------------------------------------------
+
+function bhv_goalpost_init(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+	o.oCollisionDistance = 800
+	o.collisionData = COL_GOALPOST
+	o.header.gfx.skipInViewCheck = true
+end
+
+function bhv_goalpost_loop(o)
+	load_object_collision_model()
+end
+
+--- @param o Object
+function bhv_goalposthitbox_init(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+	o.oCollisionDistance = 800
+	o.header.gfx.skipInViewCheck = true
+	o.hitboxHeight = 2900
+	o.hitboxRadius = 1170
+	--o.hitboxHeight = 70
+	--o.hitboxRadius = 1070
+	o.hitboxDownOffset = 200
+end
+
+function bhv_goalposthitbox_loop(o)
+	--o.header.gfx.scale.z = o.hitboxRadius / 100
+	--o.header.gfx.scale.y = o.hitboxHeight / 100
+	local m = nearest_player_to_object(o)
+	local tuxie = obj_get_nearest_object_with_behavior_id(m, id_bhvSmallPenguin)
+	djui_chat_message_create(tostring(tuxie))
+	if tuxie ~= nil and obj_check_hitbox_overlap(o, tuxie) then
+		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5254, -4607, 1047, function(t)
+			obj_scale(t, .1)
+			t.oBehParams = 9 << 16
+		end)
+		obj_mark_for_deletion(o)
+	end
+end
+
+
+
+
+
+
+
+
 -------Behavior Hooks-------
 hook_behavior(id_bhvHauntedChair, OBJ_LIST_GENACTOR, false, nil, bhv_custom_chairs)
 hook_behavior(id_bhvMadPiano, OBJ_LIST_GENACTOR, false, nil, bhv_custom_piano)
@@ -2304,6 +2333,8 @@ hook_behavior(id_bhvExplosion, OBJ_LIST_DESTRUCTIVE, false, bhv_custom_explosion
 hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
+id_bhvGoalpost = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_goalpost_init, bhv_goalpost_loop, "bhvGoalpost")
+id_bhvGoalpost_hitbox = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_goalposthitbox_init, bhv_goalposthitbox_loop, "bhvGoalpost_hitbox")
 id_bhvNetherPortal = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_netherportal_init, bhv_netherportal_loop, "bhvNetherPortal")
 id_bhvBackroomSmiler = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_smiler_init, bhv_backroom_smiler_loop, "bhvBackroomSmiler")
 id_bhvBackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_init, bhv_backroom_loop, "bhvBackroom")
@@ -2481,6 +2512,20 @@ hook_event(HOOK_ON_WARP, function ()
 			stream_play(musicUnderground)
 		end
 	end
+	if np.currLevelNum == LEVEL_CCM and (gameisbeat) then
+		spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
+			obj_scale(goalpost, 0.7)
+			goalpost.oFaceAngleYaw = goalpost.oFaceAngleYaw + 4000
+			goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
+		end)
+		spawn_non_sync_object(id_bhvGoalpost_hitbox, E_MODEL_GOALPOST_HITBOX, 5185, -3100, 1312, function(goalposthitbox)
+			obj_scale(goalposthitbox, 0.7)
+			goalposthitbox.oFaceAngleYaw = goalposthitbox.oFaceAngleYaw + 4000
+			goalposthitbox.oMoveAngleYaw = goalposthitbox.oFaceAngleYaw
+		end)
+	end
+
+
 end)
 
 --Disable mario's fire scream to make room for custom scream.
@@ -2492,4 +2537,7 @@ hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
 	if sound == CHAR_SOUND_ATTACKED and obj_check_hitbox_overlap(m.marioObj, o) then return 0 end
 
 	if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then return 0 end
+
+	if sound == CHAR_SOUND_WAAAOOOW and m.action == ACT_THROWN_FORWARD or m.action == ACT_THROWN_BACKWARD then return 0 end --and (s.flyingVel > 60)
+
 end)

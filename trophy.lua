@@ -41,7 +41,7 @@ trophyinfo = {
 		
 	--   end
 	},
-	{ name = "trophy9", model = E_MODEL_NONE, scale = 0.2, --Trophy #9
+	{ name = "fieldgoal", model = E_MODEL_GOALPOST, scale = 0.1, --Trophy #9
 	--   loop = function (o)
 		
 	--   end
@@ -125,6 +125,7 @@ function trophy_load(o)
 			podium.oMoveAngleYaw = podium.oFaceAngleYaw
 		end)
 	elseif np.currLevelNum ~= LEVEL_SECRETHUB then -- don't delete display if trophy isn't unlocked
+		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 		obj_mark_for_deletion(o)
 	return end
 	cur_obj_scale(trophy.scale)
