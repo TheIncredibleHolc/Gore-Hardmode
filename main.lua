@@ -78,9 +78,11 @@ function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 
 function testing(m)
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
+		--[[
 		local_play(sBoneBreak, m.pos, 1)
 		m.numLives = 1
 		set_mario_action(m, ACT_NECKSNAP, 0)
+		]]
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 		spawn_non_sync_object(id_bhvSmallPenguin, E_MODEL_PENGUIN, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -2149,7 +2151,8 @@ function bhv_custom_tuxie(o)
 		obj_set_secondary_camera_focus()
 		if o.oTimer == 0 then
 			o.oGravity = -2
-			o.oForwardVel = 25
+			--o.oForwardVel = 25
+			o.oForwardVel = 45
 			o.oVelY = 75
 		end
 		o.oFaceAnglePitch = o.oFaceAnglePitch + 7500
@@ -2256,27 +2259,37 @@ end
 --- @param o Object
 function bhv_goalposthitbox_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-	o.oCollisionDistance = 800
+	o.oCollisionDistance = 8000
 	o.header.gfx.skipInViewCheck = true
-	o.hitboxHeight = 2900
-	o.hitboxRadius = 1170
+	o.hitboxHeight = 1900
+	o.hitboxRadius = 470
 	--o.hitboxHeight = 70
 	--o.hitboxRadius = 1070
-	o.hitboxDownOffset = 200
+	o.hitboxDownOffset = 100
 end
 
 function bhv_goalposthitbox_loop(o)
 	--o.header.gfx.scale.z = o.hitboxRadius / 100
 	--o.header.gfx.scale.y = o.hitboxHeight / 100
+	cur_obj_disable_rendering()
 	local m = nearest_player_to_object(o)
 	local tuxie = obj_get_nearest_object_with_behavior_id(m, id_bhvSmallPenguin)
-	djui_chat_message_create(tostring(tuxie))
-	if tuxie ~= nil and obj_check_hitbox_overlap(o, tuxie) then
-		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5254, -4607, 1047, function(t)
-			obj_scale(t, .1)
+	if tuxie ~= nil and o.oTimer > 60 and obj_check_hitbox_overlap(o, tuxie) then --GRANT TROPHY #9
+		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, nil)
+		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
+			obj_scale(t, .05)
 			t.oBehParams = 9 << 16
+			if t.oBehParams & 1 == 0 then
+				djui_chat_message_create("Field goal successful! Trophy awarded.")
+				o.oTimer = 0
+			else
+				djui_chat_message_create("Field goal successful!")
+				o.oTimer = 0
+			end
 		end)
-		obj_mark_for_deletion(o)
+		
+		--play_secondary_music(SEQ_EVENT_SOLVE_PUZZLE, 1, 1, 1)
+		play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
 	end
 end
 
@@ -2514,12 +2527,10 @@ hook_event(HOOK_ON_WARP, function ()
 	end
 	if np.currLevelNum == LEVEL_CCM and (gameisbeat) then
 		spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
-			obj_scale(goalpost, 0.7)
 			goalpost.oFaceAngleYaw = goalpost.oFaceAngleYaw + 4000
 			goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
 		end)
-		spawn_non_sync_object(id_bhvGoalpost_hitbox, E_MODEL_GOALPOST_HITBOX, 5185, -3100, 1312, function(goalposthitbox)
-			obj_scale(goalposthitbox, 0.7)
+		spawn_non_sync_object(id_bhvGoalpost_hitbox, E_MODEL_GOALPOST_HITBOX, 5185, -4100, 1312, function(goalposthitbox)
 			goalposthitbox.oFaceAngleYaw = goalposthitbox.oFaceAngleYaw + 4000
 			goalposthitbox.oMoveAngleYaw = goalposthitbox.oFaceAngleYaw
 		end)
