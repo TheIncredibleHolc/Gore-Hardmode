@@ -2,11 +2,14 @@
 
 trophyinfo = {
 	{ name = "mario", model = E_MODEL_MARIO, scale = 0.5, --Trophy #1 Beat the game as Mario.
-	   loop = function (o)
-		obj_init_animation(o, MARIO_ANIM_BREAKDANCE)
-	   end
+	--	loop = function (o)
+
+	--	end
 	},
 	{ name = "luigi", model = E_MODEL_LUIGI, scale = 0.5, --Trophy #2 Beat the game as Luigi.
+	--   loop = function (o)
+		
+	--   end
 	},
 	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5, --Trophy #3 Beat the game as Toad.
 	--   loop = function (o)
@@ -152,7 +155,8 @@ function trophy_loop(o)
 		local player = nearest_player_to_object(o)
 		if obj_check_hitbox_overlap(o, player) then
 			-- collect (spin, fly up and shrink, leaving a trail of sparkles behind)
-			network_play(sTrophy, o.header.gfx.pos, 1, 0)
+			play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
+			--network_play(sTrophy, o.header.gfx.pos, 1, 0)
 			djui_chat_message_create("Trophy collected!")
 			mod_storage_save(trophy.name, "1")
 			obj_mark_for_deletion(o)
@@ -175,6 +179,36 @@ function trophyplate_loop(o)
 
 	end
 end
+
+
+------------------------------------------------------------------------------------------------------------
+-------- Trying to do a check for the first 5 trophies to grant the 6th trophy (beat game with all characters). No luck so far. 
+t1 = mod_storage_load("mario")
+t2 = mod_storage_load("luigi")
+t3 = mod_storage_load("toad")
+t4 = mod_storage_load("wario")
+t5 = mod_storage_load("waluigi")
+
+function trophy_check(o)
+	--[[
+	djui_chat_message_create(tostring(t1))
+	if t1 == "1" and t2 == "1" and t3 == "1" and t4 == "1" and t5 == "1" then --Grant Trophy #6
+
+	end
+	]]
+
+	--[[
+	if mod_storage_load("mario") == "1" and mod_storage_load("luigi") == "1" and mod_storage_load("toad") == "1" and mod_storage_load("wario") == "1" and mod_storage_load("waluigi") == "1" then
+		spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
+			obj_scale(t, .05)
+			t.oBehParams = 6 << 16 | 1
+		end)
+	end
+	]]
+end
+
+--hook_event(HOOK_ON_WARP, trophy_check)
+------------------------------------------------------------------------------------------------------------
 
 id_bhvTrophy = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophy_init, trophy_loop, "bhvTrophy")
 id_bhvTrophyPlate = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophyplate_init, trophyplate_loop, "bhvTrophyPlate")

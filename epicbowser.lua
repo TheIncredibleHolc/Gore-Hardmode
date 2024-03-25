@@ -463,6 +463,34 @@ function act_vulnerable(o)
                 cur_obj_disable_rendering_and_become_intangible(o)
                 spawn_mist_particles()
                 audio_stream_stop(boss)
+
+                if m.character.type == CT_MARIO then --GRANT TROPHIES #1-#5
+                    spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
+                        obj_scale(t, .05)
+                        t.oBehParams = 1 << 16 | 1
+                    end)
+                elseif m.character.type == CT_LUIGI then
+                    spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
+                        obj_scale(t, .05)
+                        t.oBehParams = 2 << 16 | 1
+                    end)
+                elseif m.character.type == CT_TOAD then
+                    spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
+                        obj_scale(t, .05)
+                        t.oBehParams = 3 << 16 | 1
+                    end)
+                elseif m.character.type == CT_WARIO then
+                    spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
+                        obj_scale(t, .05)
+                        t.oBehParams = 4 << 16 | 1
+                    end)
+                elseif m.character.type == CT_WALUIGI then
+                    spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
+                        obj_scale(t, .05)
+                        t.oBehParams = 5 << 16 | 1
+                    end)
+                end 
+
                 set_mario_action(m, ACT_STAR_DANCE_NO_EXIT, 0)
 
                 o.oTimer = 0

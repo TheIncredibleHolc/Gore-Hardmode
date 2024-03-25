@@ -726,36 +726,10 @@ worlds. If you hit a wall\
 while flying, you'll bounce\
 back."))
 
-smlua_text_utils_dialog_replace(DIALOG_070,1,5,30,200, ("You can return to the\
-castle's main hall at any\
-time from the painting\
-worlds where the enemies\
-live.\
-Just stop, stand still,\
-press Start to pause the\
-game, then select\
-『Exit Course.』\
+smlua_text_utils_dialog_replace(DIALOG_070,1,2,30,200, ("Wowza! It's cold as balls!\
 \
-You don't have to collect\
-all Power Stars in one\
-course before going on to\
-the next.\
-\
-Return later, when you're\
-more experienced, to pick\
-up difficult ones.\
-\
-\
-Whenever you find a Star,\
-a hint for finding the\
-next one will appear on\
-the course's start screen.\
-\
-You can, however, collect\
-any of the remaining\
-Stars next. You don't\
-have to recover the one\
-described by the hint."))
+You had go better find\
+a warm igloo quick!"))
 
 smlua_text_utils_dialog_replace(DIALOG_071,1,3,30,200, ("Danger Ahead!\
 Beware of the strange\

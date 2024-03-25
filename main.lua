@@ -760,7 +760,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 
 
 
-
+	local wallsigns = obj_get_nearest_object_with_behavior_id(o, id_bhvSignOnWall)
+	if wallsigns ~= nil then
+		obj_mark_for_deletion(wallsigns)
+	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	if n.currLevelNum == LEVEL_BBH then
 		set_lighting_color(0,50)
@@ -1034,6 +1037,13 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		m.forwardVel = m.forwardVel + 0.3
 	else
 		s.ssldiethirst = 0
+	end
+
+	if n.currLevelNum == LEVEL_SL and n.currAreaIndex == 1 then
+		if m.marioObj.oTimer == 30 then
+			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
+		end
+		m.health = m.health - 1
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mario Disintegrates when on fire
@@ -1548,6 +1558,9 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		m.squishTimer = 50
 	end
 
+	if obj_has_behavior_id(o, id_bhvBigChillBully) ~= 0 and (m.action == ACT_SOFT_FORWARD_GROUND_KB or m.action == ACT_SOFT_BACKWARD_GROUND_KB) then
+		m.squishTimer = 50
+	end
 end
 
 function before_mario_action(m, action)
@@ -2070,6 +2083,14 @@ function bhv_backroom_smiler_loop(o)
 			m.health = 0xff
 			mario_blow_off_cap(m, 15)
 			set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
+			if mod_storage_load("smiler") == "1" then
+				--nothing
+			else
+				spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, m.pos.x, m.pos.y, m.pos.z, function(t)
+					obj_scale(t, .05)
+					t.oBehParams = 8 << 16 | 1
+				end)
+			end
 			obj_mark_for_deletion(o)
 		else
 			m.squishTimer = 50
@@ -2490,6 +2511,8 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	stop_all_samples()
 	local np = gNetworkPlayers[0]
 
+
+
 	----------------------------------------------------------------------------------------------------------------------------------
 	--Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)
 	if gStateExtras[0].isinhell and np.currLevelNum ~= LEVEL_HELL then
@@ -2537,6 +2560,7 @@ end)
 hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
+
 	if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then --Spawns lava over water, unless inside the pirate ship. 
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, 1050, m.pos.z, function (o)
 			--obj_scale(o, 4)
