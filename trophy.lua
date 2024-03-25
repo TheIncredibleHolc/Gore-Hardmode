@@ -106,31 +106,30 @@ goldplate  = smlua_model_util_get_id("goldplate_geo")  --This is the description
 
 ---@param o Object
 function trophy_load(o)
-	local n = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 	local trophy = trophyinfo[o.oBehParams >> 16]
 
 	-- Loads the status of each trophy on Secret Room entry.
 	local trophyunlocked = mod_storage_load(trophy.name) == "1"
 
+	print("trophy: "..trophy.name)
+	print("trophy "..(trophyunlocked and "unlocked" or "locked"))
+	print("type: "..(o.oBehParams & 1 ~= 0 and "collectible" or "display"))
+
 	-- Checks to see if trophy should display. (show if unlocked and display or locked and collectible)
-	if trophyunlocked ~= (o.oBehParams & 1 == 0) then --If NOT collected and player is not in the secret room.
+	if trophyunlocked == (o.oBehParams & 1 == 0) then
 		obj_set_model_extended(o, trophy.model)
-		cur_obj_scale(trophy.scale)
-		if n.currLevelNum == LEVEL_SECRETHUB then
-			obj_mark_for_deletion(o)
-		end
-	elseif n.currLevelNum == LEVEL_SECRETHUB and trophyunlocked == (o.oBehParams & 1 == 0) then --if trophy already collected and player is in the secret room.
-		obj_set_model_extended(o, trophy.model)
-		cur_obj_scale(trophy.scale)
-		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, o.oPosX, o.oPosY - 100, o.oPosZ, function(podium)
+		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, o.oPosX, o.oPosY - 102, o.oPosZ, function(podium)
 			obj_scale(podium, .2)
 			obj_copy_angle(podium, o)
 			podium.oFaceAngleYaw = podium.oFaceAngleYaw + 16384
 			podium.oMoveAngleYaw = podium.oFaceAngleYaw
 		end)
-	elseif n.currLevelNum ~= LEVEL_SECRETHUB and trophyunlocked == (o.oBehParams & 1 == 0) then --if trophy collected but player is NOT in secret room.
+	elseif np.currLevelNum ~= LEVEL_SECRETHUB then -- don't delete display if trophy isn't unlocked
+		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 		obj_mark_for_deletion(o)
-	end
+	return end
+	cur_obj_scale(trophy.scale)
 end
 
 ---@param o Object
@@ -149,9 +148,9 @@ function trophy_loop(o)
 	o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
 
 	if trophy.loop then trophy.loop(o) end
-	if o.oBehParams & 1 == 0 then -- is a collectible
+	if o.oBehParams & 1 ~= 0 then -- is a collectible
 		local player = nearest_player_to_object(o)
-		if obj_check_hitbox_overlap(o, player) and n.currLevelNum ~= LEVEL_SECRETHUB then
+		if obj_check_hitbox_overlap(o, player) then
 			-- collect (spin, fly up and shrink, leaving a trail of sparkles behind)
 			network_play(sTrophy, o.header.gfx.pos, 1, 0)
 			djui_chat_message_create("Trophy collected!")

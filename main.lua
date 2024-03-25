@@ -2308,7 +2308,7 @@ function bhv_goalposthitbox_loop(o)
 			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, nil)
 			spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
 				obj_scale(t, .05)
-				t.oBehParams = 9 << 16
+				t.oBehParams = 9 << 16 | 1
 				if mod_storage_load("fieldgoal") == "1" then
 					djui_chat_message_create("Field goal successful!")
 					o.oTimer = 0
