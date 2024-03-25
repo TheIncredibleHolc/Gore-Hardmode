@@ -215,6 +215,9 @@ for i = 0, MAX_PLAYERS-1 do
 		highdeathtimer = 0,
 		ssldiethirst = 0,
 		splatterdeath = 0,
+		mx = 0,
+		my = 0,
+		mz = 0
 	}
 end
 
@@ -2173,7 +2176,6 @@ function bhv_custom_tuxie(o)
 			end
 			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 			cur_obj_shake_screen(SHAKE_POS_SMALL)
-			gLakituState.mode = CAMERA_MODE_RADIAL
 			set_override_fov(0)
 			obj_mark_for_deletion(o)
 		end
@@ -2268,32 +2270,58 @@ function bhv_goalposthitbox_init(o)
 	o.hitboxRadius = 470
 	--o.hitboxHeight = 70
 	--o.hitboxRadius = 1070
-	o.hitboxDownOffset = 100
+	o.hitboxDownOffset = -100
 end
 
 function bhv_goalposthitbox_loop(o)
 	--o.header.gfx.scale.z = o.hitboxRadius / 100
 	--o.header.gfx.scale.y = o.hitboxHeight / 100
 	cur_obj_disable_rendering()
-	local m = nearest_player_to_object(o)
-	local tuxie = obj_get_nearest_object_with_behavior_id(m, id_bhvSmallPenguin)
-	if tuxie ~= nil and o.oTimer > 60 and obj_check_hitbox_overlap(o, tuxie) then --GRANT TROPHY #9
-		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, nil)
-		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
-			obj_scale(t, .05)
-			t.oBehParams = 9 << 16
-			if t.oBehParams & 1 == 0 then
-				djui_chat_message_create("Field goal successful! Trophy awarded.")
-				o.oTimer = 0
-			else
-				djui_chat_message_create("Field goal successful!")
-				o.oTimer = 0
-			end
-		end)
-		
-		--play_secondary_music(SEQ_EVENT_SOLVE_PUZZLE, 1, 1, 1)
-		play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
+	local m = nearest_mario_state_to_object(o)
+	local mp = nearest_player_to_object(o)
+	local s = gStateExtras[0]
+	local tuxie = obj_get_nearest_object_with_behavior_id(mp, id_bhvSmallPenguin)
+	local distance = dist_between_objects(tuxie, o)
+	
+	if tuxie.oAction == 6 and m.action == ACT_JUMP_KICK and m.pos.y <= -4200 and mario_is_within_rectangle(o.oPosX - 3800, o.oPosX + 3800, o.oPosZ - 3800, o.oPosZ + 3800) == 1 then
+		s.mx = m.pos.x
+		s.my = m.pos.y
+		s.mz = m.pos.z
+		set_mario_action(m, ACT_TRIPLE_JUMP_LAND, 0) --Forces the action to change so this all only runs once.
+		m.pos.x = 5585
+		m.pos.y = -4607
+		m.pos.z = 994
+		--set_mario_action(m, ACT_GONE, 0)
+		m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
+		gLakituState = CAMERA_MODE_BOSS_FIGHT
 	end
+	if m.prevAction == ACT_TRIPLE_JUMP_LAND and distance > 3500 and m.pos.y <= -4200 and mario_is_within_rectangle(o.oPosX - 3800, o.oPosX + 3800, o.oPosZ - 3800, o.oPosZ + 3800) == 1 then
+		m.pos.x = s.mx
+		m.pos.y = s.my
+		m.pos.z = s.mz
+		m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags | GRAPH_RENDER_ACTIVE
+		gLakituState = CAMERA_MODE_RADIAL
+		m.flags = m.flags | ACT_FLAG_IDLE
+	end
+
+		if tuxie ~= nil and o.oTimer > 60 and obj_check_hitbox_overlap(o, tuxie) then --GRANT TROPHY #9
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, nil)
+			spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
+				obj_scale(t, .05)
+				t.oBehParams = 9 << 16
+				if mod_storage_load("fieldgoal") == "1" then
+					djui_chat_message_create("Field goal successful!")
+					o.oTimer = 0
+				else
+					djui_chat_message_create("Field goal successful! Trophy awarded.")
+					o.oTimer = 0
+				end
+			end)
+			
+			--play_secondary_music(SEQ_EVENT_SOLVE_PUZZLE, 1, 1, 1)
+			play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
+		end
+	
 end
 
 
