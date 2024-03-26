@@ -78,11 +78,7 @@ function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 
 function testing(m)
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		--[[
-		local_play(sBoneBreak, m.pos, 1)
-		m.numLives = 1
-		set_mario_action(m, ACT_NECKSNAP, 0)
-		]]
+		gGlobalSyncTable.toaddeathcounter = gGlobalSyncTable.toaddeathcounter + 1
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 		spawn_non_sync_object(id_bhvSmallPenguin, E_MODEL_PENGUIN, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -94,15 +90,9 @@ function testing(m)
 		m.pos.z = 1047
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-		--[[
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_LUIGI, m.pos.x, m.pos.y + 350, m.pos.z, function (trophy)
-			obj_scale(trophy, .2)
-			trophy.oBehParams = 2 << 16
-		end)
-]]
-		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, m.pos.x, m.pos.y + 350, m.pos.z, function(t)
-			obj_scale(t, .1)
-			t.oBehParams = 9 << 16
+		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5222, 1508, 1897, function(t)
+			obj_scale(t, .05)
+			t.oBehParams = 12 << 16 | 1
 		end)
 
 	end
@@ -183,6 +173,7 @@ E_MODEL_TROPHY_PODIUM = smlua_model_util_get_id("podium_geo")
 E_MODEL_GOALPOST = smlua_model_util_get_id("goalpost_geo")
 COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
 E_MODEL_GOALPOST_HITBOX = smlua_model_util_get_id("goalposthitbox_geo")
+E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
 
 
 smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry world')
@@ -758,8 +749,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-
-
+----------------------------------------------------------------------------------------------------------------------------------
+	--Disables signs on the wall, which gives us extra dialog_ID's to use for custom readouts while having regular (enemy) signs readable.
 	local wallsigns = obj_get_nearest_object_with_behavior_id(o, id_bhvSignOnWall)
 	if wallsigns ~= nil then
 		obj_mark_for_deletion(wallsigns)
@@ -1672,6 +1663,12 @@ function toaddeath(o)
 		end
 		if deaths == 30 then
 			bhv_spawn_star_no_level_exit(o, 2, 1)
+		end
+		if deaths == 50 then
+			spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
+				obj_scale(t, .05)
+				t.oBehParams = 19 << 16 | 1
+			end)
 		end
 		toadguitimer = 150
 	end
@@ -2588,6 +2585,13 @@ hook_event(HOOK_ON_WARP, function ()
 		spawn_non_sync_object(id_bhvGoalpost_hitbox, E_MODEL_GOALPOST_HITBOX, 5185, -4100, 1312, function(goalposthitbox)
 			goalposthitbox.oFaceAngleYaw = goalposthitbox.oFaceAngleYaw + 4000
 			goalposthitbox.oMoveAngleYaw = goalposthitbox.oFaceAngleYaw
+		end)
+	end
+	if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 2 and gameisbeat then --GRANT TROPHY #12
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5222, 1508, 1897, function(t)
+			obj_scale(t, .05)
+			t.oBehParams = 12 << 16 | 1
+
 		end)
 	end
 

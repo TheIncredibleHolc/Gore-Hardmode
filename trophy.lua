@@ -56,7 +56,7 @@ trophyinfo = {
 		
 	--   end
 	},
-	{ name = "trophy12", model = E_MODEL_NONE, scale = 0.2, --Trophy #12
+	{ name = "lakitu", model = E_MODEL_LAKITU, scale = 0.2, --Trophy #12 -- "Take a good look at yourself." (Mirror room)
 	--   loop = function (o)
 		
 	--   end
@@ -91,7 +91,7 @@ trophyinfo = {
 		
 	--   end
 	},
-	{ name = "trophy19", model = E_MODEL_NONE, scale = 0.2, --Trophy #19
+	{ name = "deadtoad", model = E_MODEL_TOAD_HEAD, scale = 0.2, --Trophy #19 - Kill Toad 50x
 	--   loop = function (o)
 		
 	--   end
@@ -101,6 +101,7 @@ trophyinfo = {
 		
 	--   end
 	}
+
 }
 
 silverplate = smlua_model_util_get_id("silverplate_geo") --This is the description panel under the display trophy. (Silver has not been collected)
@@ -190,24 +191,18 @@ t4 = mod_storage_load("wario")
 t5 = mod_storage_load("waluigi")
 
 function trophy_check(o)
-	--[[
-	djui_chat_message_create(tostring(t1))
-	if t1 == "1" and t2 == "1" and t3 == "1" and t4 == "1" and t5 == "1" then --Grant Trophy #6
+	m = gMarioStates[0]
 
-	end
-	]]
-
-	--[[
-	if mod_storage_load("mario") == "1" and mod_storage_load("luigi") == "1" and mod_storage_load("toad") == "1" and mod_storage_load("wario") == "1" and mod_storage_load("waluigi") == "1" then
-		spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
+	if mod_storage_load("mario") == "1" and mod_storage_load("luigi") == "1" and mod_storage_load("toad") == "1" and mod_storage_load("wario") == "1" and mod_storage_load("waluigi") == "1" and mod_storage_load("star") ~= "1" then
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
 			obj_scale(t, .05)
 			t.oBehParams = 6 << 16 | 1
 		end)
 	end
-	]]
+
 end
 
---hook_event(HOOK_ON_WARP, trophy_check)
+hook_event(HOOK_ON_WARP, trophy_check)
 ------------------------------------------------------------------------------------------------------------
 
 id_bhvTrophy = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophy_init, trophy_loop, "bhvTrophy")

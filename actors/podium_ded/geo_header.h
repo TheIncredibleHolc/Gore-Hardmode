@@ -1,0 +1,14 @@
+extern const GeoLayout podium_ded_geo[];
+extern Lights1 podium_ded_Skeletonface_lights;
+extern u8 podium_ded_mario_blodred_rgba16[];
+extern u8 podium_ded__552557A0_cout_rgba16[];
+extern Vtx podium_ded_skinned_004_mesh_layer_1_vtx_0[140];
+extern Gfx podium_ded_skinned_004_mesh_layer_1_tri_0[];
+extern Vtx podium_ded_skinned_004_mesh_layer_5_vtx_0[39];
+extern Gfx podium_ded_skinned_004_mesh_layer_5_tri_0[];
+extern Gfx mat_podium_ded_BloodCrystal[];
+extern Gfx mat_revert_podium_ded_BloodCrystal[];
+extern Gfx mat_podium_ded_Skeletonface[];
+extern Gfx mat_revert_podium_ded_Skeletonface[];
+extern Gfx podium_ded_skinned_004_mesh_layer_1[];
+extern Gfx podium_ded_skinned_004_mesh_layer_5[];

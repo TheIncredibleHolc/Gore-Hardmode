@@ -1,0 +1,15 @@
+extern const GeoLayout podium_platinum_geo[];
+extern Lights1 podium_platinum_stareyeplatinum_lights;
+extern u8 podium_platinum_mario_platinum_ci8[];
+extern u8 podium_platinum_mario_platinum_pal_rgba16[];
+extern u8 podium_platinum_eyeplatinum_rgba16[];
+extern Vtx podium_platinum_skinned_001_mesh_layer_1_vtx_0[169];
+extern Gfx podium_platinum_skinned_001_mesh_layer_1_tri_0[];
+extern Vtx podium_platinum_skinned_001_mesh_layer_5_vtx_0[40];
+extern Gfx podium_platinum_skinned_001_mesh_layer_5_tri_0[];
+extern Gfx mat_podium_platinum_Platinum[];
+extern Gfx mat_revert_podium_platinum_Platinum[];
+extern Gfx mat_podium_platinum_stareyeplatinum[];
+extern Gfx mat_revert_podium_platinum_stareyeplatinum[];
+extern Gfx podium_platinum_skinned_001_mesh_layer_1[];
+extern Gfx podium_platinum_skinned_001_mesh_layer_5[];
