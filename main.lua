@@ -1005,6 +1005,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		s.isdead = true
 	end
 
+
+
 	if n.currLevelNum == LEVEL_SSL and n.currAreaIndex == 1 then
 		if m.marioObj.oTimer == 30 then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
@@ -2171,7 +2173,7 @@ function bhv_custom_tuxie(o)
 	if o.oAction == 6 then
 		if o.oTimer == 0 then
 			o.oGravity = -2
-			o.oBounciness = 0
+			--o.oBounciness = 0
 			o.oForwardVel = 45
 			o.oVelY = 75
 		end
@@ -2179,7 +2181,7 @@ function bhv_custom_tuxie(o)
 		cur_obj_move_standard(-78)
 
 		local goalpost = obj_get_nearest_object_with_behavior_id(o, id_bhvGoalpost)
-		if dist_between_objects(o, goalpost) < 2000 then
+		if dist_between_objects(o, goalpost) < 3000 then
 			approach_vec3f_asymptotic(gLakituState.focus, o.header.gfx.pos, 3,3,3)
 			approach_vec3f_asymptotic(gLakituState.curFocus, o.header.gfx.pos, 3,3,3)
 		end
@@ -2289,7 +2291,7 @@ function bhv_goalpost_loop(o)
 		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
 			t.oBehParams = 9 << 16 | 1
 			if mod_storage_load("fieldgoal") == "1" then
-				djui_chat_message_create("Field goal successful!")
+				djui_chat_message_create("IT'S GOOD!!!")
 			else
 				djui_chat_message_create("Field goal successful! Trophy awarded.")
 			end
@@ -2488,6 +2490,11 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_color(1, 255)
 		set_lighting_color(2, 255)
 		set_lighting_dir(1,0)
+	end
+
+	if np.currLevelNum == LEVEL_SSL and n.currAreaIndex == 2 then
+		if m.playerIndex ~= 0 then return end
+		spawn_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 686, -1534, -2157, nil)
 	end
 
 	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
