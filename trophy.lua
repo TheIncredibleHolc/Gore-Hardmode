@@ -1,112 +1,41 @@
 -------------------------TROPHY SYSTEM-------------------------
 
 trophyinfo = {
-	{ name = "mario", model = E_MODEL_MARIO, scale = 0.5, --Trophy #1 Beat the game as Mario.
-	--	loop = function (o)
-
-	--	end
-	},
-	{ name = "luigi", model = E_MODEL_LUIGI, scale = 0.5, --Trophy #2 Beat the game as Luigi.
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5, --Trophy #3 Beat the game as Toad.
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "wario", model = E_MODEL_WARIO, scale = 0.5, --Trophy #4 Beat the game as Wario.
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "waluigi", model = E_MODEL_WALUIGI, scale = 0.5, --Trophy #5 Beat the game as Waluigi.
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "star", model = E_MODEL_STAR, scale = 0.6, --Trophy #6 Beat the game with all 5 characters. (Or get 120 stars?).
-	--   loop = function (o)
-		
-	--   end
-	},
+	{ name = "mario", model = E_MODEL_MARIO, scale = 0.5 }, --Trophy #1 Beat the game as Mario.
+	{ name = "luigi", model = E_MODEL_LUIGI, scale = 0.5 }, --Trophy #2 Beat the game as Luigi.
+	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5 }, --Trophy #3 Beat the game as Toad.
+	{ name = "wario", model = E_MODEL_WARIO, scale = 0.5 }, --Trophy #4 Beat the game as Wario.
+	{ name = "waluigi", model = E_MODEL_WALUIGI, scale = 0.5 }, --Trophy #5 Beat the game as Waluigi.
+	{ name = "star", model = E_MODEL_STAR, scale = 0.6 }, --Trophy #6 Beat the game with all 5 characters. (Or get 120 stars?).
 	{ name = "portal", model = E_MODEL_NETHERPORTAL, scale = 0.2, --Trophy #7 Find the NetherPortal.
 	  loop = function (o)
 		o.oAnimState = o.oTimer % 32
 	  end
 	},
-	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER, scale = 0.2, --Trophy #8 Visit the Backrooms.
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "fieldgoal", model = E_MODEL_GOALPOST, scale = 0.1, --Trophy #9 Kick a field goal in CCM.
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "trophy10", model = E_MODEL_NONE, scale = 0.2, --Trophy #10
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "trophy11", model = E_MODEL_NONE, scale = 0.2, --Trophy #11
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "lakitu", model = E_MODEL_LAKITU, scale = 0.2, --Trophy #12 -- "Take a good look at yourself." (Mirror room)
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "trophy13", model = E_MODEL_NONE, scale = 0.2, --Trophy #13
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "trophy14", model = E_MODEL_NONE, scale = 0.2, --Trophy #14
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "trophy15", model = E_MODEL_NONE, scale = 0.2, --Trophy #15
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "trophy16", model = E_MODEL_NONE, scale = 0.2, --Trophy #16
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "trophy17", model = E_MODEL_NONE, scale = 0.2, --Trophy #17
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "trophy18", model = E_MODEL_NONE, scale = 0.2, --Trophy #18
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "deadtoad", model = E_MODEL_TOAD_HEAD, scale = 0.2, --Trophy #19 - Kill Toad 50x
-	--   loop = function (o)
-		
-	--   end
-	},
-	{ name = "trophy20", model = E_MODEL_NONE, scale = 0.2, --Trophy #20
-	--   loop = function (o)
-		
-	--   end
-	}
-
+	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER, scale = 0.2 }, --Trophy #8 Visit the Backrooms.
+	{ name = "fieldgoal", model = E_MODEL_GOALPOST, scale = 0.1 }, --Trophy #9 Kick a field goal in CCM.
+	{ name = "trophy10", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #10
+	{ name = "trophy11", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #11
+	{ name = "lakitu", model = E_MODEL_LAKITU, scale = 0.2 }, --Trophy #12 -- "Take a good look at yourself." (Mirror room)
+	{ name = "trophy13", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #13
+	{ name = "trophy14", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #14
+	{ name = "trophy15", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #15
+	{ name = "trophy16", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #16
+	{ name = "trophy17", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #17
+	{ name = "trophy18", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #18
+	{ name = "deadtoad", model = E_MODEL_TOAD_HEAD, scale = 0.2 }, --Trophy #19 - Kill Toad 50x
+	{ name = "trophy20", model = E_MODEL_NONE, scale = 0.2 } --Trophy #20
 }
 
 silverplate = smlua_model_util_get_id("silverplate_geo") --This is the description panel under the display trophy. (Silver has not been collected)
 goldplate  = smlua_model_util_get_id("goldplate_geo")  --This is the description panel under the display trophy. (Gold is already collected)
 
+function unlock_trophy(id)
+	local trophy = trophyinfo[id]
+	if trophy then
+		mod_storage_save(trophy.name, "1")
+	end
+end
 
 ---@param o Object
 function trophy_load(o)

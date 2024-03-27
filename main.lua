@@ -173,7 +173,6 @@ E_MODEL_TROPHY_PODIUM = smlua_model_util_get_id("podium_geo")
 E_MODEL_GOALPOST = smlua_model_util_get_id("goalpost_geo")
 COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
 E_MODEL_GOALPOST_HITBOX = smlua_model_util_get_id("goalposthitbox_geo")
-E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
 
 
 smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry world')
@@ -2170,12 +2169,9 @@ end
 ---@param o Object
 function bhv_custom_tuxie(o)
 	if o.oAction == 6 then
-		set_override_fov(100)
-		gSecondCameraFocus = o
-		obj_set_secondary_camera_focus()
 		if o.oTimer == 0 then
 			o.oGravity = -2
-			--o.oForwardVel = 25
+			o.oBounciness = 0
 			o.oForwardVel = 45
 			o.oVelY = 75
 		end
@@ -2183,6 +2179,10 @@ function bhv_custom_tuxie(o)
 		cur_obj_move_standard(-78)
 
 		local goalpost = obj_get_nearest_object_with_behavior_id(o, id_bhvGoalpost)
+		if dist_between_objects(o, goalpost) < 2000 then
+			approach_vec3f_asymptotic(gLakituState.focus, o.header.gfx.pos, 3,3,3)
+			approach_vec3f_asymptotic(gLakituState.curFocus, o.header.gfx.pos, 3,3,3)
+		end
 		if obj_check_hitbox_overlap(o, goalpost) ~= 0 then
 			--GOOOAAALLL
 		end
@@ -2194,7 +2194,6 @@ function bhv_custom_tuxie(o)
 			end
 			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 			cur_obj_shake_screen(SHAKE_POS_SMALL)
-			set_override_fov(0)
 			obj_mark_for_deletion(o)
 		end
 	end
@@ -2270,76 +2269,38 @@ end
 
 function bhv_goalpost_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-	o.oCollisionDistance = 800
 	o.collisionData = COL_GOALPOST
-	o.header.gfx.skipInViewCheck = true
-end
-
-function bhv_goalpost_loop(o)
-	load_object_collision_model()
-end
-
---- @param o Object
-function bhv_goalposthitbox_init(o)
-	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-	o.oCollisionDistance = 8000
-	o.header.gfx.skipInViewCheck = true
+	-- o.oCollisionDistance = 8000
 	o.hitboxHeight = 1900
 	o.hitboxRadius = 470
 	--o.hitboxHeight = 70
 	--o.hitboxRadius = 1070
-	o.hitboxDownOffset = -100
+	o.hitboxDownOffset = -507
 end
 
-function bhv_goalposthitbox_loop(o)
+function bhv_goalpost_loop(o)
 	--o.header.gfx.scale.z = o.hitboxRadius / 100
 	--o.header.gfx.scale.y = o.hitboxHeight / 100
-	cur_obj_disable_rendering()
-	local m = nearest_mario_state_to_object(o)
 	local mp = nearest_player_to_object(o)
-	local s = gStateExtras[0]
 	local tuxie = obj_get_nearest_object_with_behavior_id(mp, id_bhvSmallPenguin)
-	local distance = dist_between_objects(tuxie, o)
 	
-	if tuxie.oAction == 6 and m.action == ACT_JUMP_KICK and m.pos.y <= -4200 and mario_is_within_rectangle(o.oPosX - 3800, o.oPosX + 3800, o.oPosZ - 3800, o.oPosZ + 3800) == 1 then
-		s.mx = m.pos.x
-		s.my = m.pos.y
-		s.mz = m.pos.z
-		set_mario_action(m, ACT_TRIPLE_JUMP_LAND, 0) --Forces the action to change so this all only runs once.
-		m.pos.x = 5585
-		m.pos.y = -4607
-		m.pos.z = 994
-		--set_mario_action(m, ACT_GONE, 0)
-		m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
-		gLakituState = CAMERA_MODE_BOSS_FIGHT
-	end
-	if m.prevAction == ACT_TRIPLE_JUMP_LAND and distance > 3500 and m.pos.y <= -4200 and mario_is_within_rectangle(o.oPosX - 3800, o.oPosX + 3800, o.oPosZ - 3800, o.oPosZ + 3800) == 1 then
-		m.pos.x = s.mx
-		m.pos.y = s.my
-		m.pos.z = s.mz
-		m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags | GRAPH_RENDER_ACTIVE
-		gLakituState = CAMERA_MODE_RADIAL
-		m.flags = m.flags | ACT_FLAG_IDLE
+	if tuxie and o.oTimer > 60 and obj_check_hitbox_overlap(o, tuxie) then --GRANT TROPHY #9
+		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, nil)
+		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
+			t.oBehParams = 9 << 16 | 1
+			if mod_storage_load("fieldgoal") == "1" then
+				djui_chat_message_create("Field goal successful!")
+			else
+				djui_chat_message_create("Field goal successful! Trophy awarded.")
+			end
+			o.oTimer = 0
+		end)
+
+		--play_secondary_music(SEQ_EVENT_SOLVE_PUZZLE, 1, 1, 1)
+		play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
 	end
 
-		if tuxie ~= nil and o.oTimer > 60 and obj_check_hitbox_overlap(o, tuxie) then --GRANT TROPHY #9
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, nil)
-			spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
-				obj_scale(t, .05)
-				t.oBehParams = 9 << 16 | 1
-				if mod_storage_load("fieldgoal") == "1" then
-					djui_chat_message_create("Field goal successful!")
-					o.oTimer = 0
-				else
-					djui_chat_message_create("Field goal successful! Trophy awarded.")
-					o.oTimer = 0
-				end
-			end)
-			
-			--play_secondary_music(SEQ_EVENT_SOLVE_PUZZLE, 1, 1, 1)
-			play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
-		end
-	
+	load_object_collision_model()
 end
 
 
@@ -2396,7 +2357,6 @@ hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
 id_bhvGoalpost = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_goalpost_init, bhv_goalpost_loop, "bhvGoalpost")
-id_bhvGoalpost_hitbox = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_goalposthitbox_init, bhv_goalposthitbox_loop, "bhvGoalpost_hitbox")
 id_bhvNetherPortal = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_netherportal_init, bhv_netherportal_loop, "bhvNetherPortal")
 id_bhvBackroomSmiler = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_smiler_init, bhv_backroom_smiler_loop, "bhvBackroomSmiler")
 id_bhvBackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_init, bhv_backroom_loop, "bhvBackroom")
@@ -2581,10 +2541,6 @@ hook_event(HOOK_ON_WARP, function ()
 		spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
 			goalpost.oFaceAngleYaw = goalpost.oFaceAngleYaw + 4000
 			goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
-		end)
-		spawn_non_sync_object(id_bhvGoalpost_hitbox, E_MODEL_GOALPOST_HITBOX, 5185, -4100, 1312, function(goalposthitbox)
-			goalposthitbox.oFaceAngleYaw = goalposthitbox.oFaceAngleYaw + 4000
-			goalposthitbox.oMoveAngleYaw = goalposthitbox.oFaceAngleYaw
 		end)
 	end
 	if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 2 and gameisbeat then --GRANT TROPHY #12
