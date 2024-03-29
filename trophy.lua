@@ -1,34 +1,46 @@
 -------------------------TROPHY SYSTEM-------------------------
 
+silverplate = smlua_model_util_get_id("silverplate_geo") --This is the description panel under the display trophy.
+goldplate  = smlua_model_util_get_id("goldplate_geo")  --This is the description panel under the display trophy.
+
+E_MODEL_GOLD_TROPHY_PODIUM = smlua_model_util_get_id("podium_geo")
+E_MODEL_PLAT_TROPHY_PODIUM = smlua_model_util_get_id("podium_platinum_geo")
+E_MODEL_GORE_TROPHY_PODIUM = smlua_model_util_get_id("podium_ded_geo")
+E_MODEL_FIND_TROPHY_PODIUM = smlua_model_util_get_id("podium_mystery_geo")
+
+E_MODEL_TROPHY_MARIO = smlua_model_util_get_id("trophy_mario_win_geo")
+E_MODEL_TROPHY_LUIGI = smlua_model_util_get_id("trophy_luigi_win_geo")
+E_MODEL_TROPHY_WARIO = smlua_model_util_get_id("trophy_wario_win_geo")
+E_MODEL_GOALPOST = smlua_model_util_get_id("goalpost_geo")
+COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
+E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
+
 trophyinfo = {
-	{ name = "mario", model = E_MODEL_MARIO, scale = 0.5 }, --Trophy #1 Beat the game as Mario.
-	{ name = "luigi", model = E_MODEL_LUIGI, scale = 0.5 }, --Trophy #2 Beat the game as Luigi.
-	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5 }, --Trophy #3 Beat the game as Toad.
-	{ name = "wario", model = E_MODEL_WARIO, scale = 0.5 }, --Trophy #4 Beat the game as Wario.
-	{ name = "waluigi", model = E_MODEL_WALUIGI, scale = 0.5 }, --Trophy #5 Beat the game as Waluigi.
-	{ name = "star", model = E_MODEL_STAR, scale = 0.6 }, --Trophy #6 Beat the game with all 5 characters. (Or get 120 stars?).
-	{ name = "portal", model = E_MODEL_NETHERPORTAL, scale = 0.2, --Trophy #7 Find the NetherPortal.
+	{ name = "mario", model = E_MODEL_TROPHY_MARIO, scale = 0.1, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #1 Beat the game as Mario.
+	{ name = "luigi", model = E_MODEL_TROPHY_LUIGI, scale = 0.1, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #2 Beat the game as Luigi.
+	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #3 Beat the game as Toad.
+	{ name = "wario", model = E_MODEL_TROPHY_WARIO, scale = 0.1, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #4 Beat the game as Wario.
+	{ name = "waluigi", model = E_MODEL_WALUIGI, scale = 0.5, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #5 Beat the game as Waluigi.
+	{ name = "star", model = E_MODEL_STAR, scale = 0.6, podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #6 Beat the game with all 5 characters. (Or get 120 stars?).
+	{ name = "portal", model = E_MODEL_NETHERPORTAL, scale = 0.2, podium = E_MODEL_FIND_TROPHY_PODIUM,  --Trophy #7 Find the NetherPortal.
 	  loop = function (o)
 		o.oAnimState = o.oTimer % 32
 	  end
 	},
-	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER, scale = 0.2 }, --Trophy #8 Visit the Backrooms.
-	{ name = "fieldgoal", model = E_MODEL_GOALPOST, scale = 0.1 }, --Trophy #9 Kick a field goal in CCM.
-	{ name = "trophy10", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #10
-	{ name = "trophy11", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #11
-	{ name = "lakitu", model = E_MODEL_LAKITU, scale = 0.2 }, --Trophy #12 -- "Take a good look at yourself." (Mirror room)
-	{ name = "trophy13", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #13
-	{ name = "trophy14", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #14
-	{ name = "trophy15", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #15
-	{ name = "trophy16", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #16
-	{ name = "trophy17", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #17
-	{ name = "trophy18", model = E_MODEL_NONE, scale = 0.2 }, --Trophy #18
-	{ name = "deadtoad", model = E_MODEL_TOAD_HEAD, scale = 0.2 }, --Trophy #19 - Kill Toad 50x
-	{ name = "trophy20", model = E_MODEL_NONE, scale = 0.2 } --Trophy #20
+	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8 Visit the Backrooms.
+	{ name = "fieldgoal", model = E_MODEL_GOALPOST, scale = 0.1, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9 Kick a field goal in CCM.
+	{ name = "trophy10", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10
+	{ name = "trophy11", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11
+	{ name = "lakitu", model = E_MODEL_LAKITU, scale = 0.2, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 -- "Take a good look at yourself." (Mirror room)
+	{ name = "trophy13", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #13
+	{ name = "trophy14", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #14
+	{ name = "trophy15", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #15
+	{ name = "trophy16", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #16
+	{ name = "trophy17", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #17
+	{ name = "trophy18", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #18
+	{ name = "deadtoad", model = E_MODEL_TOAD_HEAD, scale = 0.2, podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
+	{ name = "trophy20", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM } --Trophy #20
 }
-
-silverplate = smlua_model_util_get_id("silverplate_geo") --This is the description panel under the display trophy. (Silver has not been collected)
-goldplate  = smlua_model_util_get_id("goldplate_geo")  --This is the description panel under the display trophy. (Gold is already collected)
 
 function unlock_trophy(id)
 	local trophy = trophyinfo[id]
@@ -52,7 +64,7 @@ function trophy_load(o)
 	-- Checks to see if trophy should display. (show if unlocked and display or locked and collectible)
 	if trophyunlocked == (o.oBehParams & 1 == 0) then
 		obj_set_model_extended(o, trophy.model)
-		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_TROPHY_PODIUM, o.oPosX, o.oPosY - 102, o.oPosZ, function(podium)
+		spawn_non_sync_object(id_bhvStaticObject, trophy.podium, o.oPosX, o.oPosY - 102, o.oPosZ, function(podium)
 			obj_scale(podium, .2)
 			obj_copy_angle(podium, o)
 			podium.oFaceAngleYaw = podium.oFaceAngleYaw + 16384

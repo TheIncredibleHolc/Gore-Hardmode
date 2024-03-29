@@ -169,11 +169,6 @@ E_MODEL_BACKROOM_SMILER = smlua_model_util_get_id("backroom_smiler_geo")
 COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --The ACTUAL custom Smiler enemy in the backroom.
 E_MODEL_NETHERPORTAL = smlua_model_util_get_id("netherportal_geo")
 COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
-E_MODEL_TROPHY_PODIUM = smlua_model_util_get_id("podium_geo")
-E_MODEL_GOALPOST = smlua_model_util_get_id("goalpost_geo")
-COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
-E_MODEL_GOALPOST_HITBOX = smlua_model_util_get_id("goalposthitbox_geo")
-
 
 smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry world')
 smlua_text_utils_course_name_replace(COURSE_JRB, 'Jolly Roger Hell')

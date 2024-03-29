@@ -1,0 +1,13 @@
+extern const GeoLayout podium_mystery_geo[];
+extern u8 podium_mystery_mario_mystery_metal_rgba16[];
+extern u8 podium_mystery_mario_platinum_ci8[];
+extern u8 podium_mystery_mario_platinum_pal_rgba16[];
+extern Vtx podium_mystery_skinned_005_mesh_layer_1_vtx_0[93];
+extern Gfx podium_mystery_skinned_005_mesh_layer_1_tri_0[];
+extern Vtx podium_mystery_skinned_005_mesh_layer_1_vtx_1[193];
+extern Gfx podium_mystery_skinned_005_mesh_layer_1_tri_1[];
+extern Gfx mat_podium_mystery_mystery_metal[];
+extern Gfx mat_revert_podium_mystery_mystery_metal[];
+extern Gfx mat_podium_mystery_Platinum[];
+extern Gfx mat_revert_podium_mystery_Platinum[];
+extern Gfx podium_mystery_skinned_005_mesh_layer_1[];
