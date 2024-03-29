@@ -16,30 +16,30 @@ COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
 E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
 
 trophyinfo = {
-	{ name = "mario", model = E_MODEL_TROPHY_MARIO, scale = 0.1, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #1 Beat the game as Mario.
-	{ name = "luigi", model = E_MODEL_TROPHY_LUIGI, scale = 0.1, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #2 Beat the game as Luigi.
-	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #3 Beat the game as Toad.
-	{ name = "wario", model = E_MODEL_TROPHY_WARIO, scale = 0.1, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #4 Beat the game as Wario.
-	{ name = "waluigi", model = E_MODEL_WALUIGI, scale = 0.5, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #5 Beat the game as Waluigi.
-	{ name = "star", model = E_MODEL_STAR, scale = 0.6, podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #6 Beat the game with all 5 characters. (Or get 120 stars?).
-	{ name = "portal", model = E_MODEL_NETHERPORTAL, scale = 0.2, podium = E_MODEL_FIND_TROPHY_PODIUM,  --Trophy #7 Find the NetherPortal.
+	{ name = "mario", model = E_MODEL_TROPHY_MARIO, scale = 0.1, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #1 Beat the game as Mario.
+	{ name = "luigi", model = E_MODEL_TROPHY_LUIGI, scale = 0.1, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #2 Beat the game as Luigi.
+	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #3 Beat the game as Toad.
+	{ name = "wario", model = E_MODEL_TROPHY_WARIO, scale = 0.1, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #4 Beat the game as Wario.
+	{ name = "waluigi", model = E_MODEL_WALUIGI, scale = 0.5, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #5 Beat the game as Waluigi.
+	{ name = "star", model = E_MODEL_STAR, scale = 0.6, y_offset = 15, podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #6 Beat the game with all 5 characters. (Or get 120 stars?).
+	{ name = "portal", model = E_MODEL_NETHERPORTAL, scale = 0.2, y_offset = -10, podium = E_MODEL_FIND_TROPHY_PODIUM,  --Trophy #7 Find the NetherPortal.
 	  loop = function (o)
 		o.oAnimState = o.oTimer % 32
 	  end
 	},
-	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8 Visit the Backrooms.
-	{ name = "fieldgoal", model = E_MODEL_GOALPOST, scale = 0.1, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9 Kick a field goal in CCM.
-	{ name = "trophy10", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10
-	{ name = "trophy11", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11
-	{ name = "lakitu", model = E_MODEL_LAKITU, scale = 0.2, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 -- "Take a good look at yourself." (Mirror room)
-	{ name = "trophy13", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #13
-	{ name = "trophy14", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #14
-	{ name = "trophy15", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #15
-	{ name = "trophy16", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #16
-	{ name = "trophy17", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #17
-	{ name = "trophy18", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #18
-	{ name = "deadtoad", model = E_MODEL_TOAD_HEAD, scale = 0.2, podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
-	{ name = "trophy20", model = E_MODEL_NONE, scale = 0.2, podium = E_MODEL_GOLD_TROPHY_PODIUM } --Trophy #20
+	{ name = "smiler", model = E_MODEL_BACKROOM_SMILER, scale = 0.2, y_offset = 20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8 Visit the Backrooms.
+	{ name = "fieldgoal", model = E_MODEL_GOALPOST, scale = 0.1, y_offset = -10, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9 Kick a field goal in CCM.
+	{ name = "trophy10", model = E_MODEL_NONE, scale = 0.2, y_offset = 0, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10
+	{ name = "trophy11", model = E_MODEL_NONE, scale = 0.2, y_offset = 0, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11
+	{ name = "lakitu", model = E_MODEL_LAKITU, scale = 0.2, y_offset = 0, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 -- "Take a good look at yourself." (Mirror room)
+	{ name = "trophy13", model = E_MODEL_NONE, scale = 0.2, y_offset = 0, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #13
+	{ name = "trophy14", model = E_MODEL_NONE, scale = 0.2, y_offset = 0, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #14
+	{ name = "trophy15", model = E_MODEL_NONE, scale = 0.2, y_offset = 0, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #15
+	{ name = "trophy16", model = E_MODEL_NONE, scale = 0.2, y_offset = 0, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #16
+	{ name = "trophy17", model = E_MODEL_NONE, scale = 0.2, y_offset = 0, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #17
+	{ name = "trophy18", model = E_MODEL_NONE, scale = 0.2, y_offset = 0, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #18
+	{ name = "deadtoad", model = E_MODEL_TOAD_HEAD, scale = 0.2, y_offset = 0, podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
+	{ name = "trophy20", model = E_MODEL_NONE, scale = 0.2, y_offset = 0, podium = E_MODEL_GOLD_TROPHY_PODIUM } --Trophy #20
 }
 
 function unlock_trophy(id)
@@ -79,10 +79,12 @@ end
 
 ---@param o Object
 function trophy_init(o)
+	local trophy = trophyinfo[o.oBehParams >> 16]
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
 	o.header.gfx.skipInViewCheck = true
 	obj_set_hitbox_radius_and_height(o, 40, 100)
 	trophy_load(o)
+	o.oPosY = o.oPosY + trophy.y_offset
 end
 
 ---@param o Object
