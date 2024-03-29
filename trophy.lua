@@ -10,7 +10,9 @@ E_MODEL_FIND_TROPHY_PODIUM = smlua_model_util_get_id("podium_mystery_geo")
 
 E_MODEL_TROPHY_MARIO = smlua_model_util_get_id("trophy_mario_win_geo")
 E_MODEL_TROPHY_LUIGI = smlua_model_util_get_id("trophy_luigi_win_geo")
+E_MODEL_TROPHY_TOAD = smlua_model_util_get_id("trophy_toad_win_geo")
 E_MODEL_TROPHY_WARIO = smlua_model_util_get_id("trophy_wario_win_geo")
+E_MODEL_TROPHY_WALUIGI = smlua_model_util_get_id("trophy_waluigi_win_geo")
 E_MODEL_GOALPOST = smlua_model_util_get_id("goalpost_geo")
 COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
 E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
@@ -18,9 +20,9 @@ E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
 trophyinfo = {
 	{ name = "mario", model = E_MODEL_TROPHY_MARIO, scale = 0.1, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #1 Beat the game as Mario.
 	{ name = "luigi", model = E_MODEL_TROPHY_LUIGI, scale = 0.1, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #2 Beat the game as Luigi.
-	{ name = "toad", model = E_MODEL_TOAD_PLAYER, scale = 0.5, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #3 Beat the game as Toad.
+	{ name = "toad", model = E_MODEL_TROPHY_TOAD, scale = 0.1, y_offset = -26, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #3 Beat the game as Toad.
 	{ name = "wario", model = E_MODEL_TROPHY_WARIO, scale = 0.1, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #4 Beat the game as Wario.
-	{ name = "waluigi", model = E_MODEL_WALUIGI, scale = 0.5, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #5 Beat the game as Waluigi.
+	{ name = "waluigi", model = E_MODEL_TROPHY_WALUIGI, scale = 0.1, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #5 Beat the game as Waluigi.
 	{ name = "star", model = E_MODEL_STAR, scale = 0.6, y_offset = 15, podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #6 Beat the game with all 5 characters. (Or get 120 stars?).
 	{ name = "portal", model = E_MODEL_NETHERPORTAL, scale = 0.2, y_offset = -10, podium = E_MODEL_FIND_TROPHY_PODIUM,  --Trophy #7 Find the NetherPortal.
 	  loop = function (o)

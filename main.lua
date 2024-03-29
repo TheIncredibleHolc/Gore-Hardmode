@@ -1079,6 +1079,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		if (m.health <= 300) then
 			m.squishTimer = 50
 			audio_sample_stop(gSamples[sAgonyMario])
+			audio_sample_stop(gSamples[sAgonyLuigi])
 			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
 		end
 
@@ -1092,6 +1093,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			network_play(sCoolOff, m.pos, 1, m.playerIndex)
 			audio_sample_stop(gSamples[sAgonyMario])
 			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
+			audio_sample_stop(gSamples[sAgonyLuigi])
 			if m.usedObj then
 				obj_mark_for_deletion(m.usedObj)
 			end
@@ -1611,6 +1613,8 @@ function before_mario_action(m, action)
 			end
 			if m.character.type == CT_MARIO then
 				network_play(sAgonyMario, m.pos, 1, m.playerIndex)
+			elseif m.character.type == CT_LUIGI then
+				network_play(sAgonyLuigi, m.pos, 1, m.playerIndex)
 			elseif m.character.type == CT_TOAD then
 				network_play(sToadburn, m.pos, 1, m.playerIndex)
 			end
@@ -1640,6 +1644,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	local s = gStateExtras[0]
 	s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
+	audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 	s.bigthrowenabled = 0
 	s.isgold = false

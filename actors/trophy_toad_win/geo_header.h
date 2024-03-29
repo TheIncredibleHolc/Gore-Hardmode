@@ -1,0 +1,15 @@
+extern const GeoLayout trophy_toad_win_geo[];
+extern Lights1 trophy_toad_win_eyes_center_001_lights;
+extern u8 trophy_toad_win_mario_gold_ci8[];
+extern u8 trophy_toad_win_mario_gold_pal_rgba16[];
+extern u8 trophy_toad_win_custom_toad_face_neutralgold_rgba32[];
+extern Vtx trophy_toad_win_toad_player_geo_model_mesh_layer_1_vtx_0[503];
+extern Gfx trophy_toad_win_toad_player_geo_model_mesh_layer_1_tri_0[];
+extern Vtx trophy_toad_win_toad_player_geo_model_mesh_layer_5_vtx_0[14];
+extern Gfx trophy_toad_win_toad_player_geo_model_mesh_layer_5_tri_0[];
+extern Gfx mat_trophy_toad_win_gold_003[];
+extern Gfx mat_revert_trophy_toad_win_gold_003[];
+extern Gfx mat_trophy_toad_win_eyes_center_001[];
+extern Gfx mat_revert_trophy_toad_win_eyes_center_001[];
+extern Gfx trophy_toad_win_toad_player_geo_model_mesh_layer_1[];
+extern Gfx trophy_toad_win_toad_player_geo_model_mesh_layer_5[];

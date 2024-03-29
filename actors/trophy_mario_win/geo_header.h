@@ -14,7 +14,7 @@ extern u8 trophy_mario_win_mario_goldmustache_pal_rgba16[];
 extern u8 trophy_mario_win_mario_overalls_buttongold_rgba16[];
 extern u8 trophy_mario_win_mario_logogold_ci8[];
 extern u8 trophy_mario_win_mario_logogold_pal_rgba16[];
-extern Vtx trophy_mario_win_skinned_021_mesh_layer_1_vtx_0[781];
+extern Vtx trophy_mario_win_skinned_021_mesh_layer_1_vtx_0[769];
 extern Gfx trophy_mario_win_skinned_021_mesh_layer_1_tri_0[];
 extern Vtx trophy_mario_win_skinned_021_mesh_layer_5_vtx_0[12];
 extern Gfx trophy_mario_win_skinned_021_mesh_layer_5_tri_0[];
