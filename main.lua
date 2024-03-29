@@ -77,8 +77,10 @@ function vec3f() return {x=0,y=0,z=0} end
 function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 
 function testing(m)
+	local s = gStateExtras[m.playerIndex]
+
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		gGlobalSyncTable.toaddeathcounter = gGlobalSyncTable.toaddeathcounter + 1
+		s.isgold = true
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 		spawn_non_sync_object(id_bhvSmallPenguin, E_MODEL_PENGUIN, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -170,6 +172,12 @@ COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --Th
 E_MODEL_NETHERPORTAL = smlua_model_util_get_id("netherportal_geo")
 COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
 
+E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
+E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")
+E_MODEL_GOLD_TOAD = smlua_model_util_get_id("golden_toad_player_geo")
+E_MODEL_GOLD_WARIO = smlua_model_util_get_id("golden_wario_geo")
+E_MODEL_GOLD_WALUIGI = smlua_model_util_get_id("golden_waluigi_geo")
+
 smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry world')
 smlua_text_utils_course_name_replace(COURSE_JRB, 'Jolly Roger Hell')
 
@@ -196,6 +204,7 @@ for i = 0, MAX_PLAYERS-1 do
 		objtimer = 0,
 		--isfalling = false,
 		ishigh = 0,
+		isgold = false,
 		outsidegastimer = 60,
 		highdeathtimer = 0,
 		ssldiethirst = 0,
@@ -219,6 +228,8 @@ gameisbeat = true --This variable will determine if secret room and trophies are
 
 ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_gone(m)
+	local s = gStateExtras[m.playerIndex]
+	s.isgold = false
     m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
 	m.actionTimer = m.actionTimer + 1
 	if m.actionTimer == m.actionArg then
@@ -635,6 +646,8 @@ hook_mario_action(ACT_NECKSNAP, act_necksnap)
 
 --Electricutes the F out of Mario
 function act_shocked(m)
+	local s = gStateExtras[m.playerIndex]
+	s.isgold = false
 	m.actionTimer = m.actionTimer + 1
 	set_mario_animation(m, MARIO_ANIM_SHOCKED)
 	if m.actionTimer % 2 == 0 then
@@ -673,6 +686,8 @@ hook_mario_action(ACT_DECAPITATED, act_decapitated)
 --Mario is bitten in half.
 ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 function act_bitten_in_half(m)
+	local s = gStateExtras[m.playerIndex]
+	s.isgold = false
 	obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
     common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
 end
@@ -742,6 +757,23 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
+
+	if s.isgold then
+		if m.playerIndex ~= 0 then return end
+		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+		m.marioObj.hookRender = 1
+		if m.character.type == CT_MARIO then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_MARIO)
+		elseif m.character.type == CT_LUIGI then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_LUIGI)
+		elseif m.character.type == CT_TOAD then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_TOAD)
+		elseif m.character.type == CT_WARIO then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WARIO)
+		elseif m.character.type == CT_WALUIGI then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
+		end
+	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Disables signs on the wall, which gives us extra dialog_ID's to use for custom readouts while having regular (enemy) signs readable.
@@ -1610,6 +1642,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 	s.bigthrowenabled = 0
+	s.isgold = false
 	--set_override_envfx(ENVFX_MODE_NONE)
 	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then
@@ -2520,6 +2553,7 @@ hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 
+	
 	if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then --Spawns lava over water, unless inside the pirate ship. 
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, 1050, m.pos.z, function (o)
 			--obj_scale(o, 4)
