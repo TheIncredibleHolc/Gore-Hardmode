@@ -33,7 +33,7 @@ trophyinfo = {
 	{ name = "fieldgoal", model = E_MODEL_GOALPOST,        scale = 0.1, y_offset = 10,  podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
 	{ name = "trophy10",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10
 	{ name = "trophy11",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11
-	{ name = "lakitu",    model = E_MODEL_LAKITU,          scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - "Take a good look at yourself." (Mirror room)
+	{ name = "snowman",    model = E_MODEL_CCM_SNOWMAN_HEAD,scale = 0.2, y_offset = -40,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - "Take a good look at yourself." (Mirror room)
 	{ name = "trophy13",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #13
 	{ name = "trophy14",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #14
 	{ name = "trophy15",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #15

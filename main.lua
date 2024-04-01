@@ -2316,9 +2316,9 @@ function bhv_goalpost_loop(o)
 		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
 			t.oBehParams = 9 << 16 | 1
 			if mod_storage_load("fieldgoal") == "1" then
-				djui_chat_message_create("IT'S GOOD!!!")
-			else
 				djui_chat_message_create("Field goal successful! Trophy awarded.")
+			else
+				djui_chat_message_create("IT'S GOOD!!!")
 			end
 			o.oTimer = 0
 		end)
@@ -2330,7 +2330,20 @@ function bhv_goalpost_loop(o)
 	load_object_collision_model()
 end
 
+function warp_init(o)
+	o.hitboxHeight = 100
+	o.hitboxRadius = 100
+end
 
+function warp_loop(o)
+	local m = gMarioStates[0]
+	if obj_check_hitbox_overlap(o, m.marioObj) and m.action == ACT_IDLE then
+		play_sound(SOUND_GENERAL_VANISH_SFX, m.marioObj.header.gfx.cameraToObject)
+		m.pos.x = 5514
+		m.pos.y = 1613
+		m.pos.z = 3159
+	end
+end
 
 
 
@@ -2389,7 +2402,7 @@ id_bhvBackroomSmiler = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_s
 id_bhvBackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_init, bhv_backroom_loop, "bhvBackroom")
 id_bhvHellPlatform1 = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_hellplatform_init, bhv_hellplatform_loop, "bhvHellPlatform1")
 id_bhvLava = hook_behavior(nil, OBJ_LIST_SURFACE, true, lava_init, lava_loop, "bhvLava")
-
+id_bhvQuickWarp = hook_behavior(nil, OBJ_LIST_SURFACE, true, warp_init, warp_loop, "bhvWarp")
 
 
 -- test function to warp to level, disable if necessary
@@ -2560,7 +2573,20 @@ hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 
-	
+	if np.currLevelNum == LEVEL_HMC then
+		local dorrie = obj_get_nearest_object_with_behavior_id(o, id_bhvDorrie)
+		if dorrie ~= nil then
+			obj_mark_for_deletion(dorrie)
+		end
+		set_environment_region(0, -10000)
+		set_environment_region(1, -10000)
+		set_environment_region(3, -10000)
+		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, -5200, m.pos.z, nil)
+
+		--set_override_envfx(ENVFX_LAVA_BUBBLES)
+
+	end
+
 	if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then --Spawns lava over water, unless inside the pirate ship. 
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, 1050, m.pos.z, function (o)
 			--obj_scale(o, 4)
@@ -2586,10 +2612,11 @@ hook_event(HOOK_ON_WARP, function ()
 			goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
 		end)
 	end
-	if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 2 and gameisbeat then --GRANT TROPHY #12
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5222, 1508, 1897, function(t)
+	if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 2 and gameisbeat then --GRANT TROPHY #12 (Mirror room)
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5514, 1613, 3159, function(t)
 			t.oBehParams = 12 << 16 | 1
 		end)
+		spawn_non_sync_object(id_bhvQuickWarp, E_MODEL_NONE, 3158, 1613, 3172, nil)
 	end
 end)
 
