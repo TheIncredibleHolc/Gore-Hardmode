@@ -15,6 +15,8 @@ const GeoLayout secretroom_area_1_geo[] = {
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -3293, 483, -1549, 0, 60, 0, secretroom_dl_chilly_s_lost_relative_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -3304, 782, -1552, 0, 60, 0, secretroom_dl_cooliokid_mesh_layer_1),
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_TRANSPARENT, -1083, -5239, -178, secretroom_dl_Death_Plane_mesh_layer_5),
+		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, -1045, 823, -3159, secretroom_dl_frame_mesh_layer_1),
+		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, -1045, 823, -3077, secretroom_dl_framedimage_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -3119, 484, -1861, 0, 60, 0, secretroom_dl_imyourcat_mesh_layer_1),
 		GEO_TRANSLATE_NODE(LAYER_OPAQUE, 0, 500, 0),
 		GEO_OPEN_NODE(),

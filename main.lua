@@ -84,19 +84,16 @@ function testing(m)
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 		spawn_non_sync_object(id_bhvSmallPenguin, E_MODEL_PENGUIN, m.pos.x, m.pos.y, m.pos.z, nil)
-		
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		m.pos.x = 5254 
-		m.pos.y = -4607 
+		m.pos.x = 5254
+		m.pos.y = -4607
 		m.pos.z = 1047
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5222, 1508, 1897, function(t)
-			obj_scale(t, .05)
 			t.oBehParams = 12 << 16 | 1
 		end)
-
 	end
 end
 
@@ -178,7 +175,7 @@ E_MODEL_GOLD_TOAD = smlua_model_util_get_id("golden_toad_player_geo")
 E_MODEL_GOLD_WARIO = smlua_model_util_get_id("golden_wario_geo")
 E_MODEL_GOLD_WALUIGI = smlua_model_util_get_id("golden_waluigi_geo")
 
-smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry world')
+smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry World')
 smlua_text_utils_course_name_replace(COURSE_JRB, 'Jolly Roger Hell')
 
 
@@ -208,10 +205,7 @@ for i = 0, MAX_PLAYERS-1 do
 		outsidegastimer = 60,
 		highdeathtimer = 0,
 		ssldiethirst = 0,
-		splatterdeath = 0,
-		mx = 0,
-		my = 0,
-		mz = 0
+		splatterdeath = 0
 	}
 end
 
@@ -1700,7 +1694,6 @@ function toaddeath(o)
 		end
 		if deaths == 50 then
 			spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
-				obj_scale(t, .05)
 				t.oBehParams = 19 << 16 | 1
 			end)
 		end
@@ -2118,7 +2111,6 @@ function bhv_backroom_smiler_loop(o)
 				--nothing
 			else
 				spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, m.pos.x, m.pos.y, m.pos.z, function(t)
-					obj_scale(t, .05)
 					t.oBehParams = 8 << 16 | 1
 				end)
 			end
@@ -2482,13 +2474,23 @@ hook_chat_command("go", "to", function ()
 end)
 
 hook_chat_command("unlock", "trophy", function (msg)
-	mod_storage_save(msg, "1")
-	return true
+	mod_storage_save("file"..get_current_save_file_num()..msg, "1")
+	for id, trophy in pairs(trophyinfo) do
+		if trophy.name == msg then
+			gGlobalSyncTable.trophystatus[id] = true
+			return true
+		end
+	end
 end)
 
 hook_chat_command("lock", "trophy", function (msg)
-	mod_storage_save(msg, "0")
-	return true
+	mod_storage_save("file"..get_current_save_file_num()..msg, "0")
+	for id, trophy in pairs(trophyinfo) do
+		if trophy.name == msg then
+			gGlobalSyncTable.trophystatus[id] = false
+			return true
+		end
+	end
 end)
 
 -- to make ukiki jump from the key
@@ -2525,7 +2527,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_dir(1,0)
 	end
 
-	if np.currLevelNum == LEVEL_SSL and n.currAreaIndex == 2 then
+	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 2 then
 		if m.playerIndex ~= 0 then return end
 		spawn_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 686, -1534, -2157, nil)
 	end
@@ -2533,11 +2535,11 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
 		set_override_envfx(ENVFX_LAVA_BUBBLES)
 		set_override_skybox(BACKGROUND_FLAMING_SKY)
-		gLevelValues.fixCollisionBugs = true
 		set_lighting_color(0,255)
 		set_lighting_color(1,127)
 		set_lighting_color(2,100)
 		set_lighting_dir(1,-128)
+		gLevelValues.fixCollisionBugs = true
 	else
 		set_lighting_color(0, 255)
 		set_lighting_color(1, 255)
@@ -2586,13 +2588,9 @@ hook_event(HOOK_ON_WARP, function ()
 	end
 	if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 2 and gameisbeat then --GRANT TROPHY #12
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5222, 1508, 1897, function(t)
-			obj_scale(t, .05)
 			t.oBehParams = 12 << 16 | 1
-
 		end)
 	end
-
-
 end)
 
 --Disable mario's fire scream to make room for custom scream.
