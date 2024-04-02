@@ -29,19 +29,19 @@ trophyinfo = {
 		o.oAnimState = o.oTimer % 32
 	  end
 	},
-	{ name = "smiler",    model = E_MODEL_BACKROOM_SMILER, scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
-	{ name = "fieldgoal", model = E_MODEL_GOALPOST,        scale = 0.1, y_offset = 10,  podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
-	{ name = "trophy10",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10
-	{ name = "trophy11",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11
-	{ name = "snowman",    model = E_MODEL_CCM_SNOWMAN_HEAD,scale = 0.2, y_offset = -40,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - "Take a good look at yourself." (Mirror room)
-	{ name = "trophy13",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #13
-	{ name = "trophy14",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #14
-	{ name = "trophy15",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #15
-	{ name = "trophy16",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #16
-	{ name = "trophy17",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #17
-	{ name = "trophy18",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #18
-	{ name = "deadtoad",  model = E_MODEL_TOAD_HEAD,       scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
-	{ name = "trophy20",  model = E_MODEL_NONE,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }  --Trophy #20
+	{ name = "smiler",    model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
+	{ name = "fieldgoal", model = E_MODEL_GOALPOST,         scale = 0.1, y_offset = 10,  podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
+	{ name = "trophy10",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10
+	{ name = "trophy11",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11
+	{ name = "snowman",   model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = -40, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - "Take a good look at yourself." (Mirror room)
+	{ name = "trophy13",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #13
+	{ name = "trophy14",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #14
+	{ name = "trophy15",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #15
+	{ name = "trophy16",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #16
+	{ name = "trophy17",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #17
+	{ name = "trophy18",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #18
+	{ name = "deadtoad",  model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
+	{ name = "trophy20",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }  --Trophy #20
 }
 
 PACKET_UNLOCK = 0
@@ -109,6 +109,7 @@ function trophy_init(o)
 	o.oFlags = OBJ_FLAG_SET_THROW_MATRIX_FROM_TRANSFORM | OBJ_FLAG_0020 | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
 	o.header.gfx.skipInViewCheck = true
 	obj_set_hitbox_radius_and_height(o, 40, 100)
+	cur_obj_set_home_once()
 	trophy_load(o)
 end
 
@@ -124,19 +125,60 @@ function trophy_loop(o)
 	obj_scale(display, trophy.scale*5)
 
 	if trophy.loop then trophy.loop(o) end
-	if o.oBehParams & 1 ~= 0 then -- is a collectible
-		if obj_check_hitbox_overlap(o, player) then
+
+	if o.oAction == 1 then
+		if o.oBehParams & 1 ~= 0 then -- collectible
+			o.oPosX = o.oHomeX + sins(o.oTimer*2048) * math.sqrt(o.oTimer*3)*10
+			o.oPosZ = o.oHomeZ + coss(o.oTimer*2048) * math.sqrt(o.oTimer*3)*10
+			o.oVelY = minf(o.oVelY + 2, 34)
+			o.oPosY = o.oPosY + o.oVelY
+
+			o.oFaceAngleYaw = o.oFaceAngleYaw + minf(math.sqrt(o.oTimer)*1024, 3072)
+			o.oFaceAngleRoll = sins(o.oTimer*512)*1024
+			o.oFaceAnglePitch = coss(o.oTimer*512)*1024
+
+			spawn_non_sync_object(id_bhvSparkleParticleSpawner, E_MODEL_SPARKLES, o.oPosX, o.oPosY, o.oPosZ, nil)
+
+			if o.oTimer > 90 then
+				cur_obj_scale((o.oFloorHeight - (1 - o.oFloorHeight)*.6)*.2)
+				o.oFloorHeight = o.oFloorHeight - (1 - o.oFloorHeight)*.6
+				if o.header.gfx.scale.x <= 0 then
+					spawn_mist_particles()
+					obj_mark_for_deletion(o)
+					obj_mark_for_deletion(display)
+				end
+			end
+		else -- display
+			o.oVelY = (o.oVelY - 13)*.95
+			o.oPosY = o.oPosY + o.oVelY
+			if o.oPosY < o.oHomeY then
+				o.oVelY = -o.oVelY
+				o.oPosY = o.oHomeY
+				o.oSubAction = o.oSubAction + 1
+			end
+			if o.oSubAction == 4 then
+				o.oPosY = o.oHomeY
+				o.oAction = 0
+			end
+		end
+	end
+
+	if obj_check_hitbox_overlap(o, player) and o.oAction == 0 then
+		if o.oBehParams & 1 ~= 0 then -- collectible
 			-- collect (spin, fly up and shrink, leaving a trail of sparkles behind)
 			play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
 			--network_play(sTrophy, o.header.gfx.pos, 1, 0)
 			djui_chat_message_create("Trophy collected!")
 			unlock_trophy(o.oBehParams >> 16)
-			obj_mark_for_deletion(o)
+
+			o.oVelY = -15
+			o.oAction = 1
+			o.oFloorHeight = 0.999
+		else -- display, do a little bounce
+			o.oVelY = 70
+			o.oAction = 1
+			cur_obj_push_mario_away(80)
 		end
-	elseif obj_check_hitbox_overlap(o, player) then
-		-- do a little bounce
-		-- o.oPosY = o.oPosY + 10
-		-- o.oFaceAngleRoll = o.oFaceAngleRoll + 1024
 	end
 end
 
