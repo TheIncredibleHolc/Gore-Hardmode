@@ -48,8 +48,8 @@ gBehaviorValues.BowlingBallThiSmallSpeed = 45
 
 --Koopa the quick is STUPID fast. Player has to finish race in 20.9 seconds.
 gBehaviorValues.KoopaBobAgility = 20
-gBehaviorValues.KoopaThiAgility = 25
-gBehaviorValues.KoopaCatchupAgility = 60
+gBehaviorValues.KoopaThiAgility = 14
+
 
 -- King bobomb health
 gBehaviorValues.KingBobombHealth = 6
@@ -83,7 +83,7 @@ function testing(m)
 		s.isgold = true
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvSmallPenguin, E_MODEL_PENGUIN, m.pos.x, m.pos.y, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvBlueCoinJumping, E_MODEL_BLUE_COIN, m.pos.x + 100, m.pos.y + 100, m.pos.z, nil)
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
 		m.pos.x = 5254
@@ -205,7 +205,8 @@ for i = 0, MAX_PLAYERS-1 do
 		outsidegastimer = 60,
 		highdeathtimer = 0,
 		ssldiethirst = 0,
-		splatterdeath = 0
+		splatterdeath = 0,
+		isdeathfalling = false
 	}
 end
 
@@ -672,8 +673,9 @@ hook_mario_action(ACT_SHOCKED, act_shocked)
 ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 function act_decapitated(m)
 	obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
-    common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80);
-
+    --common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80);
+	common_death_handler(m, MARIO_ANIM_ELECTROCUTION, 50);
+	
 end
 hook_mario_action(ACT_DECAPITATED, act_decapitated)
 
@@ -747,11 +749,25 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 end
 
 
+
 function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
+----------------------------------------------------------------------------------------------------------------------------------
+	if s.isdeathfalling then -- Mario death while jumping in air. (enemy hits mario, he flies backwards and splats on land.)
+		if m.playerIndex ~= 0 then return end
+		--set_mario_action(m, ACT_SHOT_FROM_CANNON, 0)
+		--set_mario_animation(m, MARIO_ANIM_FLY_FROM_CANNON)
+		m.marioObj.oMoveAnglePitch = m.marioObj.oMoveAnglePitch - 1500
+		if m.pos.y == m.floorHeight then
+			squishblood(m.marioObj)
+			set_mario_action(m, ACT_GONE, 0)
+			s.isdeathfalling = false
+		end
+	end
+----------------------------------------------------------------------------------------------------------------------------------
 	if s.isgold then
 		if m.playerIndex ~= 0 then return end
 		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
@@ -768,6 +784,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
 		end
 	end
+----------------------------------------------------------------------------------------------------------------------------------
+	if n.currLevelNum == LEVEL_BOB then
+		gBehaviorValues.KoopaCatchupAgility = 60
+	else
+		gBehaviorValues.KoopaCatchupAgility = 8
+	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Disables signs on the wall, which gives us extra dialog_ID's to use for custom readouts while having regular (enemy) signs readable.
@@ -781,6 +803,17 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		set_lighting_color(1,50)
 		set_lighting_color(2,65)
 		set_lighting_dir(1,128)
+	end
+----------------------------------------------------------------------------------------------------------------------------------
+	if n.currLevelNum == LEVEL_BITFS then
+		local minvertedpyramid = obj_get_first_with_behavior_id(id_bhvBitfsTiltingInvertedPyramid)
+		while minvertedpyramid do
+			obj_mark_for_deletion(minvertedpyramid)
+			minvertedpyramid = obj_get_next_with_same_behavior_id(minvertedpyramid)
+		end
+
+
+
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -866,7 +899,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	-- BONK DEATH DETECTION FOR HEAVEHO THROWS SPECIFICALLY (Really just for WDW)
 	if (m.action == ACT_THROWN_BACKWARD) or (m.action == ACT_THROWN_FORWARD) and (s.flyingVel > 60) and n.currLevelNum == LEVEL_WDW then 
 		local heaveho = obj_get_nearest_object_with_behavior_id(o, id_bhvHeaveHoThrowMario)
-		if mario_is_within_rectangle(heaveho.oPosX - 100, heaveho.oPosX + 100, heaveho.oPosZ - 100, heaveho.oPosZ + 100) == 0 and m.wall ~= nil then
+		if heaveho ~= nil and mario_is_within_rectangle(heaveho.oPosX - 100, heaveho.oPosX + 100, heaveho.oPosZ - 100, heaveho.oPosZ + 100) == 0 and m.wall ~= nil then
 			mario_blow_off_cap(m, 45)
 			m.forwardVel = m.forwardVel - 30
 			m.action = ACT_SOFT_BONK --Needed to stop the first 'if' from running twice.
@@ -1223,7 +1256,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
  	end
 ----------------------------------------------------------------------------------------------------------------------------------
 
-	if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj, id_bhvUkiki) ~= 0) then
+	if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj, id_bhvUkiki) ~= 0) and n.currLevelNum == LEVEL_BOWSER_1 then
 		ukikiholding = 1
 		ukikiheldby = m.playerIndex
 
@@ -1341,14 +1374,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		end
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
-	--Bowser 3 battle (epic battle) EnvFX Fix.
-	--[[
-	if n.currLevelNum == LEVEL_BOWSER_3 or n.currLevelNum == LEVEL_JRB then
-		set_override_envfx(ENVFX_LAVA_BUBBLES)
-	else
-		set_override_envfx(-1)
-	end	
-]]
 
 
 
@@ -1359,8 +1384,11 @@ if (m.hurtCounter > 0) then
 	local s = gStateExtras[m.playerIndex]
 
 	-- Air Insta-Kill Mario (jumping into enemy like Chain Chomp. Mario's fault, not a chain chomp attack)
+	---@params
 	if (m.action == ACT_FORWARD_AIR_KB or m.action == ACT_BACKWARD_AIR_KB) then
-		m.health = 0xff
+		m.forwardVel = -500
+		m.vel.y = 15
+		s.isdeathfalling = true
 	end
 
 	-- Air Insta-Kill Mario (Generic hits, mario pvp air kicks, etc..)
@@ -1406,12 +1434,21 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		
 	--KILLABLE YOSHI 
 	if (obj_has_behavior_id(o,id_bhvYoshi)) ~= 0 and (m.controller.buttonPressed & B_BUTTON) ~= 0 then
+		set_mario_action(m, ACT_JUMP_KICK, 0)
 		spawn_sync_if_main(id_bhvWhitePuffExplosion, E_MODEL_WHITE_PUFF, o.oPosX, m.floorHeight + 50, o.oPosZ, nil, m.playerIndex)
 		spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, m.floorHeight + 50, o.oPosZ, nil, m.playerIndex)
 		squishblood(o)
-		obj_mark_for_deletion(o)
+		--obj_scale_xyz(o, 1, 0.1, 1)
+		--obj_mark_for_deletion(o)
+		o.oAction = 6
+		play_sound(SOUND_ACTION_BONK, m.pos)
 		local_play(sSplatter, m.pos, 1)
 		local_play(sKillYoshi, m.pos, 1)
+
+		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+		spawn_sync_object(id_bhvTrophy, E_MODEL_YOSHI, o.oPosX, o.oPosY, o.oPosZ, function(t)
+			t.oBehParams = 18 << 16 | 1
+		end)
 	end
 
 	--Custom Bully necksnap
@@ -1475,6 +1512,15 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		m.squishTimer = 50
 	end
 
+    --Snowballs
+    if obj_has_behavior_id(o, id_bhvMrBlizzardSnowball) ~= 0 and (m.hurtCounter > 0) then
+        m.faceAngle.y = o.oMoveAngleYaw - 32768
+        m.pos.y = m.pos.y + 5
+        set_mario_action(m, ACT_THROWN_BACKWARD, 0)
+        m.vel.y = m.vel.y + 30
+        m.forwardVel = -150
+    end
+
 	--Custom bullet bill boom
 	if obj_has_behavior_id(o, id_bhvBulletBill) ~= 0 and (m.hurtCounter > 0) then
 		spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
@@ -1486,16 +1532,44 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
 		squishblood(m.marioObj)
 		m.health = 0xff
+		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+		m.particleFlags = PARTICLE_MIST_CIRCLE
 		set_mario_action(m, ACT_DECAPITATED, 0)
 	elseif m.character.type ~= CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 then
 		m.squishTimer = 50
 	end
 
+	if m.character.type == CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvFlyingBookend) ~= 0 and not s.headless then
+		s.headless = true
+		network_play(sSplatter, m.pos, 1, m.playerIndex)
+		network_play(sCrunch, m.pos, 1, m.playerIndex)
+		squishblood(m.marioObj)
+		m.health = 0xff
+		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+		m.particleFlags = PARTICLE_MIST_CIRCLE
+		set_mario_action(m, ACT_DECAPITATED, 0)
+	elseif m.character.type ~= CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvFlyingBookend) ~= 0 then
+		m.squishTimer = 50
+	end
+
+	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and not s.headless then
+		if m.character.type == CT_MARIO and o.oAction == GOOMBA_ACT_JUMP then
+			s.headless = true
+			network_play(sSplatter, m.pos, 1, m.playerIndex)
+			squishblood(m.marioObj)
+			m.health = 0xff
+			set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+			m.particleFlags = PARTICLE_MIST_CIRCLE
+			set_mario_action(m, ACT_DECAPITATED, 0)
+		else
+			m.squishTimer = 50
+		end
+	end
 
 	if (m.hurtCounter > 0) and
 		obj_has_behavior_id(o, id_bhvExplosion) + -- Custom Bobomb explosion Mario death
 		obj_has_behavior_id(o, id_bhvPitBowlingBall) + -- (BoB) Custom pit bowling ball death 
-		obj_has_behavior_id(o, id_bhvGoomba) + -- Custom Goomba Mario Kill
+		--obj_has_behavior_id(o, id_bhvGoomba) + -- Custom Goomba Mario Kill
 		--obj_has_behavior_id(o, id_bhvPiranhaPlant) + -- Custom Piranha Plant death
 		obj_has_behavior_id(o, id_bhvSpindrift) + -- twirling guys insta-death
 		obj_has_behavior_id(o, id_bhvMrBlizzard) + -- Mr.Blizzard insta-death
@@ -1546,11 +1620,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		end
 	end
 
-	-- Snowman Snowball insta-death
-	if obj_has_behavior_id(o, id_bhvSnowBall) ~= 0 and (m.hurtCounter > 0) then 
-		spawn_sync_if_main(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
-	end
-
 	--Chain Chomp insta-deaths
 	if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 and not s.bottomless and (m.hurtCounter > 0) and (m.action == ACT_BACKWARD_GROUND_KB or m.action == ACT_FORWARD_GROUND_KB) then --Custom Chain Chomp Mario Kill backward
 		if m.character.type == CT_MARIO then
@@ -1560,6 +1629,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 			squishblood(m.marioObj)
 			m.health = 0xff
 			mario_blow_off_cap(m, 15)
+			cur_obj_shake_screen(SHAKE_POS_LARGE)
 			set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
 		else
 			m.squishTimer = 50
@@ -1692,7 +1762,7 @@ function toaddeath(o)
 		if deaths == 30 then
 			bhv_spawn_star_no_level_exit(o, 2, 1)
 		end
-		if deaths == 50 then
+		if deaths == 50 then --GRANT TROPHY #19
 			spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
 				t.oBehParams = 19 << 16 | 1
 			end)
@@ -2305,6 +2375,8 @@ function bhv_goalpost_init(o)
 	o.hitboxDownOffset = -507
 end
 
+
+
 function bhv_goalpost_loop(o)
 	--o.header.gfx.scale.z = o.hitboxRadius / 100
 	--o.header.gfx.scale.y = o.hitboxHeight / 100
@@ -2345,12 +2417,91 @@ function warp_loop(o)
 	end
 end
 
+function bhv_custom_spindrift(o)
+	if mario_is_within_rectangle(o.oPosX - 500, o.oPosX + 500, o.oPosZ - 500, o.oPosZ + 500) ~= 0 then
+		o.oForwardVel = 30
+	end
+end
 
+function bhv_custom_slidingplatform2(o)
+	local np = gNetworkPlayers[0]
+	if np.currLevelNum == LEVEL_BITDW or np.currLevelNum == LEVEL_BITFS then
+		obj_mark_for_deletion(o)
+	end
+end
 
+function bhv_custom_circlingamp(o)
+	--local random = math.random(1,2)
+	if o.oTimer < 30 then
+		o.oPosX = o.oHomeX + sins(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 1
+		o.oPosZ = o.oHomeZ + coss(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 1
+	end
+	if o.oTimer >= 40 then
+		o.oPosX = o.oHomeX + sins(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 2
+		o.oPosZ = o.oHomeZ + coss(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 2
+	end
+	
+	if o.oTimer >= 62 then
+		local random = math.random(1, 10)
+		o.oTimer = random
+	end
+end
 
+function bhv_custom_squarishPathMoving(o)
+	n = gNetworkPlayers[0]
 
+	if n.currLevelNum == LEVEL_BITFS then
+		obj_mark_for_deletion(o)
+	end
+
+end
+
+function bhv_custom_ActivatedBackAndForthPlatform(o)
+	m = nearest_mario_state_to_object(o)
+	n = gNetworkPlayers[0]
+
+	if n.currLevelNum == LEVEL_BITFS and m.pos.y >= o.oPosY -10 and mario_is_within_rectangle(o.oPosX - 500, o.oPosX + 500, o.oPosZ - 500, o.oPosZ + 500) ~= 0 then
+		spawn_triangle_break_particles(30, 138, 1, 4)
+		play_sound(SOUND_GENERAL_WALL_EXPLOSION, m.marioObj.header.gfx.cameraToObject)
+		play_sound(SOUND_GENERAL_EXPLOSION6, m.pos)
+		obj_mark_for_deletion(o)
+	end
+end
+
+function bhv_custom_yoshi(o)
+	m = gMarioStates[0]
+	if o.oAction == 6 then
+		if o.oTimer == 0 then
+			o.oGravity = -2
+			o.oForwardVel = 125
+			o.oVelY = 55
+		end
+		local yaw = obj_angle_to_object(o, m.marioObj)
+
+		o.oFaceAngleYaw = yaw + 32768
+		o.oMoveAngleYaw = o.oFaceAngleYaw
+		o.oFaceAnglePitch = o.oFaceAnglePitch + 7500
+		cur_obj_move_standard(-78)
+
+		if o.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
+			if o.oFloor.type ~= SURFACE_DEATH_PLANE then
+				squishblood(o)
+				local_play(sSplatter, o.header.gfx.pos, 1)
+			end
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+			cur_obj_shake_screen(SHAKE_POS_SMALL)
+			obj_mark_for_deletion(o)
+		end
+	end
+end
 
 -------Behavior Hooks-------
+hook_behavior(id_bhvYoshi, OBJ_LIST_GENACTOR, false, nil, bhv_custom_yoshi)
+hook_behavior(id_bhvActivatedBackAndForthPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_ActivatedBackAndForthPlatform)
+hook_behavior(id_bhvCirclingAmp, OBJ_LIST_GENACTOR, false, nil, bhv_custom_circlingamp)
+hook_behavior(id_bhvSquarishPathMoving, OBJ_LIST_SURFACE, false, nil, bhv_custom_squarishPathMoving)
+hook_behavior(id_bhvSlidingPlatform2, OBJ_LIST_SURFACE, false, nil, bhv_custom_slidingplatform2)
+hook_behavior(id_bhvSpindrift, OBJ_LIST_GENACTOR, false, nil, bhv_custom_spindrift)
 hook_behavior(id_bhvHauntedChair, OBJ_LIST_GENACTOR, false, nil, bhv_custom_chairs)
 hook_behavior(id_bhvMadPiano, OBJ_LIST_GENACTOR, false, nil, bhv_custom_piano)
 hook_behavior(id_bhvMerryGoRound, OBJ_LIST_SURFACE, false, nil, bhv_custom_merry_go_round)
@@ -2458,6 +2609,11 @@ end)
 
 hook_chat_command("wdw", "wet", function ()
 	warp_to_level(LEVEL_WDW, 1, 0)
+	return true
+end)
+
+hook_chat_command("bitfs", "bows2", function ()
+	warp_to_level(LEVEL_BITFS, 1, 0)
 	return true
 end)
 
@@ -2600,6 +2756,16 @@ hook_event(HOOK_ON_WARP, function ()
 		area_get_warp_node(0x02).node.destLevel = LEVEL_HELL
 	end
 	if np.currLevelNum == LEVEL_SECRETHUB then
+		if trophy_unlocked(1) and
+		trophy_unlocked(2) and
+		trophy_unlocked(3) and
+		trophy_unlocked(4) and
+		trophy_unlocked(5) and not trophy_unlocked(6) then
+			play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
+			djui_chat_message_create("Game beat with all playable characters!")
+			djui_chat_message_create("Trophy earned!")
+			unlock_trophy(6)
+	 end
 		if np.currAreaIndex == 1 then
 			stream_play(secret)
 		elseif np.currAreaIndex == 2 and currentlyPlaying ~= musicUnderground then
@@ -2619,6 +2785,7 @@ hook_event(HOOK_ON_WARP, function ()
 		spawn_non_sync_object(id_bhvQuickWarp, E_MODEL_NONE, 3158, 1613, 3172, nil)
 	end
 end)
+
 
 --Disable mario's fire scream to make room for custom scream.
 hook_event(HOOK_CHARACTER_SOUND, function (m, sound)

@@ -466,13 +466,7 @@ function act_vulnerable(o)
 
                 unlock_trophy(m.character.type+1)
 
-                if trophy_unlocked(1) and
-                   trophy_unlocked(2) and
-                   trophy_unlocked(3) and
-                   trophy_unlocked(4) and
-                   trophy_unlocked(5) then
-                    unlock_trophy(6)
-                end
+
                 -- spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
                 --     t.oBehParams = (m.character.type+1) << 16 | 1
                 -- end)

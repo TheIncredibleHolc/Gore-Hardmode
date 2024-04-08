@@ -39,7 +39,7 @@ trophyinfo = {
 	{ name = "trophy15",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #15
 	{ name = "trophy16",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #16
 	{ name = "trophy17",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #17
-	{ name = "trophy18",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #18
+	{ name = "trophy18",  model = E_MODEL_YOSHI,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #18 - Kill Yoshi
 	{ name = "deadtoad",  model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
 	{ name = "trophy20",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }  --Trophy #20
 }
