@@ -83,7 +83,7 @@ function testing(m)
 		s.isgold = true
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvBlueCoinJumping, E_MODEL_BLUE_COIN, m.pos.x + 100, m.pos.y + 100, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvBouncy1up, E_MODEL_1UP, m.pos.x + 250, m.pos.y + 250, m.pos.z + 150, nil)
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
 		m.pos.x = 5254
@@ -168,6 +168,7 @@ E_MODEL_BACKROOM_SMILER = smlua_model_util_get_id("backroom_smiler_geo")
 COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --The ACTUAL custom Smiler enemy in the backroom.
 E_MODEL_NETHERPORTAL = smlua_model_util_get_id("netherportal_geo")
 COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
+E_MODEL_GOLD_RING = smlua_model_util_get_id("gold_ring_geo")
 
 E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
 E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")
@@ -1441,10 +1442,13 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		--obj_scale_xyz(o, 1, 0.1, 1)
 		--obj_mark_for_deletion(o)
 		o.oAction = 6
+		o.oTimer = 0
 		play_sound(SOUND_ACTION_BONK, m.pos)
 		local_play(sSplatter, m.pos, 1)
 		local_play(sKillYoshi, m.pos, 1)
-
+		for i = 0, 100 do
+			spawn_sync_object(id_bhvBouncy1up, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, nil)
+		end
 		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 		spawn_sync_object(id_bhvTrophy, E_MODEL_YOSHI, o.oPosX, o.oPosY, o.oPosZ, function(t)
 			t.oBehParams = 18 << 16 | 1
@@ -1762,7 +1766,7 @@ function toaddeath(o)
 		if deaths == 30 then
 			bhv_spawn_star_no_level_exit(o, 2, 1)
 		end
-		if deaths == 50 then --GRANT TROPHY #19
+		if deaths >= 50 and gameisbeat then --GRANT TROPHY #19
 			spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
 				t.oBehParams = 19 << 16 | 1
 			end)
@@ -2471,6 +2475,15 @@ end
 function bhv_custom_yoshi(o)
 	m = gMarioStates[0]
 	if o.oAction == 6 then
+
+
+		--[[
+		local count = obj_count_objects_with_behavior_id(id_bhv1upRunningAway)
+		if count <= 99 then
+			spawn_sync_object(id_bhvBouncy1up, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, nil)
+		end
+		]]
+
 		if o.oTimer == 0 then
 			o.oGravity = -2
 			o.oForwardVel = 125
@@ -2494,6 +2507,108 @@ function bhv_custom_yoshi(o)
 		end
 	end
 end
+
+function bhv_secretwarp_init(o)
+	o.hitboxHeight = 125
+	o.hitboxRadius = 125
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+end
+
+function bhv_secretwarp_loop(o)
+	m = gMarioStates[0]
+	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 then
+		set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
+		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+		m.pos.y = m.pos.y + 120
+		o.oTimer = 0
+		
+	end
+	if o.oTimer <= 200 and m.action == ACT_UNLOCKING_STAR_DOOR then
+		--djui_chat_message_create(tostring(o.oTimer))
+		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+		local scalezx = 1
+		local scaley = 1
+		if o.oTimer == 140 and m.action == ACT_UNLOCKING_STAR_DOOR then
+			play_sound(SOUND_GENERAL_VANISH_SFX, gMarioStates[0].pos)
+			play_transition(WARP_TRANSITION_FADE_INTO_STAR, 19, 0, 0, 0)
+		end
+		if o.oTimer >= 126 then
+			m.pos.y = m.pos.y + 20
+			--obj_scale_xyz(m.marioObj, scalezx - 0.1, scaley + 0.1, scalezx - 0.1)
+		end
+		if o.oTimer == 159 and m.action == ACT_UNLOCKING_STAR_DOOR then
+			warp_to_level(LEVEL_SECRETHUB, 1, 0)
+		end
+	end
+end
+
+--[[
+function bhv_secretwarp_loop(o)
+	m = gMarioStates[0]
+	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 then
+		set_mario_action(m, ACT_BBH_ENTER_SPIN, 0)
+		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+		m.pos.y = m.pos.y + 120
+		o.oTimer = 0
+		play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
+	end
+	if o.oTimer <= 90 and m.action == ACT_BBH_ENTER_SPIN then
+		m.pos.y = m.pos.y + 5
+		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+		if o.oTimer == 75 and m.action == ACT_BBH_ENTER_SPIN then
+			warp_to_level(LEVEL_SECRETHUB, 1, 0)
+		end
+	end
+end]]
+
+function flatstar_init(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+	o.oFaceAnglePitch = o.oFaceAnglePitch - 16384
+end
+
+function flatstar_loop(o)
+	m = gMarioStates[0]
+	o.oFaceAngleRoll = o.oFaceAngleRoll + 1000
+	obj_scale_xyz(o, 1, 1, 0.1)
+	cur_obj_become_intangible()
+	
+end
+
+function bouncy_init(o)
+	o.oAction = 9
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+	local randomfvel = math.random(1,30)
+	local random = math.random(10,70)
+	local randomyaw = math.random(1,65536)
+	o.oBounciness = 5
+	o.oGravity = -4
+	o.oVelY = random
+	o.oForwardVel = randomfvel
+	o.oFaceAngleYaw = randomyaw
+	o.oMoveAngleYaw = o.oFaceAngleYaw
+end
+
+function bouncy_loop(o)
+	load_object_collision_model()
+	obj_set_billboard(o)
+	m = gMarioStates[0]
+	cur_obj_move_using_fvel_and_gravity()
+	cur_obj_move_using_vel()
+	if o.oPosY == o.oFloorHeight then
+		o.oAction = 1
+	end
+
+	if is_within_100_units_of_mario(o.oPosX, o.oPosY, o.oPosZ) ~= 0 then
+		m.numLives = m.numLives + 1
+		play_sound(SOUND_GENERAL_COLLECT_1UP, vec3f())
+		obj_mark_for_deletion(o)
+	end
+
+end
+
 
 -------Behavior Hooks-------
 hook_behavior(id_bhvYoshi, OBJ_LIST_GENACTOR, false, nil, bhv_custom_yoshi)
@@ -2547,6 +2662,7 @@ hook_behavior(id_bhvExplosion, OBJ_LIST_DESTRUCTIVE, false, bhv_custom_explosion
 hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
+id_bhvSecretWarp = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_secretwarp_init, bhv_secretwarp_loop, "bhvSecretWarp")
 id_bhvGoalpost = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_goalpost_init, bhv_goalpost_loop, "bhvGoalpost")
 id_bhvNetherPortal = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_netherportal_init, bhv_netherportal_loop, "bhvNetherPortal")
 id_bhvBackroomSmiler = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_smiler_init, bhv_backroom_smiler_loop, "bhvBackroomSmiler")
@@ -2554,7 +2670,8 @@ id_bhvBackroom = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_backroom_init, b
 id_bhvHellPlatform1 = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_hellplatform_init, bhv_hellplatform_loop, "bhvHellPlatform1")
 id_bhvLava = hook_behavior(nil, OBJ_LIST_SURFACE, true, lava_init, lava_loop, "bhvLava")
 id_bhvQuickWarp = hook_behavior(nil, OBJ_LIST_SURFACE, true, warp_init, warp_loop, "bhvWarp")
-
+id_bhvFlatStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, flatstar_init, flatstar_loop, "bhvFlatStar")
+id_bhvBouncy1up = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bouncy_init, bouncy_loop, "bhvBouncy1up")
 
 -- test function to warp to level, disable if necessary
 hook_chat_command("bow", "ser", function ()
@@ -2683,6 +2800,11 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		warp_to_level(LEVEL_HELL, 1, 0)
 	end
 
+	if np.currLevelNum == LEVEL_CASTLE_GROUNDS and gameisbeat then
+		spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -37, 808, 545, nil)
+		spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -37, 811, 545, nil)
+	end
+
 	if np.currLevelNum == LEVEL_HELL then
 		set_lighting_color(0,255)
 		set_lighting_color(1,127)
@@ -2755,6 +2877,7 @@ hook_event(HOOK_ON_WARP, function ()
 		area_get_warp_node(0x01).node.destLevel = LEVEL_HELL
 		area_get_warp_node(0x02).node.destLevel = LEVEL_HELL
 	end
+
 	if np.currLevelNum == LEVEL_SECRETHUB then
 		if trophy_unlocked(1) and
 		trophy_unlocked(2) and

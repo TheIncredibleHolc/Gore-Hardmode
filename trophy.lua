@@ -31,14 +31,14 @@ trophyinfo = {
 	},
 	{ name = "smiler",    model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
 	{ name = "fieldgoal", model = E_MODEL_GOALPOST,         scale = 0.1, y_offset = 10,  podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
-	{ name = "trophy10",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10
-	{ name = "trophy11",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11
-	{ name = "snowman",   model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = -40, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - "Take a good look at yourself." (Mirror room)
-	{ name = "trophy13",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #13
-	{ name = "trophy14",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #14
-	{ name = "trophy15",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #15
-	{ name = "trophy16",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #16
-	{ name = "trophy17",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #17
+	{ name = "trophy10",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - 
+	{ name = "trophy11",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11 - (Found in MWOTR)
+	{ name = "snowman",   model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = -40, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - (Found in Mirror room) "Take a good look at yourself." 
+	{ name = "trophy13",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #13 - (Found in SSL/Klepto Carrying)"Looks in the basement levels."
+	{ name = "trophy14",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #14
+	{ name = "trophy15",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #15
+	{ name = "trophy16",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #16
+	{ name = "trophy17",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #17
 	{ name = "trophy18",  model = E_MODEL_YOSHI,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #18 - Kill Yoshi
 	{ name = "deadtoad",  model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
 	{ name = "trophy20",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }  --Trophy #20
