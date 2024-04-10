@@ -55,7 +55,7 @@ gBehaviorValues.KoopaThiAgility = 14
 gBehaviorValues.KingBobombHealth = 6
 
 --Slide and Metal cap timers
-gLevelValues.pssSlideStarTime = 570 -- 19 Seconds
+gLevelValues.pssSlideStarTime = 315 -- 10.5 Seconds
 gLevelValues.metalCapDuration = 90 -- 3 seconds, LOL.
 
 -- Unlock JRB cannon
@@ -749,12 +749,29 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 	end
 end
 
-
+function convert_s16(num)
+	local min = -32768
+	local max = 32767
+	while (num < min) do
+		num = max + (num - min)
+	end
+	while (num > max) do
+		num = min + (num - max)
+	end
+	return num
+end
 
 function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
+
+----------------------------------------------------------------------------------------------------------------------------------
+	if n.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or n.currLevelNum == LEVEL_TTM and n.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE then
+		local turnSpeed = (0x100)*(m.forwardVel*0.2)
+		m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, turnSpeed, turnSpeed)
+	end
+
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	if s.isdeathfalling then -- Mario death while jumping in air. (enemy hits mario, he flies backwards and splats on land.)
@@ -869,9 +886,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 ----------------------------------------------------------------------------------------------------------------------------------
 	--(PSS Only) Faster sliding when picking up coins.
 
-	if  m.action == ACT_BUTT_SLIDE and n.currLevelNum == LEVEL_PSS then
-		m.slideVelX = m.slideVelX + m.numCoins * sins(m.faceAngle.y)
-		m.slideVelZ = m.slideVelZ + m.numCoins * coss(m.faceAngle.y)
+	if n.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or n.currLevelNum == LEVEL_PSS and m.action == ACT_DIVE_SLIDE then
+		m.slideVelX = m.slideVelX + 100 * sins(m.faceAngle.y)
+		m.slideVelZ = m.slideVelZ + 100 * coss(m.faceAngle.y)
+	end
+
+	if n.currLevelNum == LEVEL_TTM and n.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE or n.currLevelNum == LEVEL_TTM and n.currAreaIndex >= 2 and m.action == ACT_DIVE_SLIDE then
+		m.slideVelX = m.slideVelX + 40 * sins(m.faceAngle.y)
+		m.slideVelZ = m.slideVelZ + 40 * coss(m.faceAngle.y)
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	-- BONKING DEATHS!!
@@ -2818,10 +2840,13 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_dir(1,0)
 	end
 
-	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 2 then
-		if m.playerIndex ~= 0 then return end
-		spawn_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 686, -1534, -2157, nil)
+	if np.currLevelNum == LEVEL_HELL and gameisbeat then --GRANT TROPHY #14
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -4367, 1680, 4883, function(t)
+			t.oBehParams = 14 << 16 | 1
+		end)
 	end
+
+
 
 	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
 		set_override_envfx(ENVFX_LAVA_BUBBLES)
@@ -2863,6 +2888,11 @@ hook_event(HOOK_ON_WARP, function ()
 
 		--set_override_envfx(ENVFX_LAVA_BUBBLES)
 
+	end
+
+	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 2 then
+		if m.playerIndex ~= 0 then return end
+		spawn_non_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 686, -1530, -2157, nil)
 	end
 
 	if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then --Spawns lava over water, unless inside the pirate ship. 
