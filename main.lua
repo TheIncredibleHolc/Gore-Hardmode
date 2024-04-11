@@ -449,6 +449,37 @@ function bhv_custom_chain_chomp(obj)
 		obj.oMoveAngleYaw = obj.oMoveAngleYaw * 5
 		obj.oForwardVel = obj.oForwardVel * 3
 		obj.oTimer = 0
+		
+		local kingbob = obj_get_nearest_object_with_behavior_id(obj, id_bhvKingBobomb)
+		local goomba = obj_get_nearest_object_with_behavior_id(obj, id_bhvGoomba)
+		local bobomb = obj_get_nearest_object_with_behavior_id(obj, id_bhvBobomb)
+		if kingbob ~= nil then
+			if obj_check_hitbox_overlap(obj, kingbob) then
+				obj_mark_for_deletion(kingbob)
+				network_play(sCrunch, m.pos, 1, m.playerIndex)
+				network_play(sSplatter, m.pos, 1, m.playerIndex)
+				djui_chat_message_create("Wait... what...?? How did you do that?! -IncredibleHolc")
+				play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
+			end
+		end 
+		if goomba ~= nil then
+			if obj_check_hitbox_overlap(obj, goomba) then
+				squishblood(goomba)
+				obj_mark_for_deletion(goomba)
+				network_play(sCrunch, m.pos, 1, m.playerIndex)
+				network_play(sSplatter, m.pos, 1, m.playerIndex)
+
+			end
+		end 
+		if bobomb ~= nil then
+			if obj_check_hitbox_overlap(obj, bobomb) then
+				squishblood(bobomb)
+				obj_mark_for_deletion(bobomb)
+				network_play(sCrunch, m.pos, 1, m.playerIndex)
+				network_play(sSplatter, m.pos, 1, m.playerIndex)
+
+			end
+		end 
 	else
 		if obj.oTimer >= 117 then
 			local m = nearest_mario_state_to_object(obj)
@@ -775,19 +806,23 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	if s.isdeathfalling then -- Mario death while jumping in air. (enemy hits mario, he flies backwards and splats on land.)
-		if m.playerIndex ~= 0 then return end
+		--if m.playerIndex ~= 0 then return end
 		--set_mario_action(m, ACT_SHOT_FROM_CANNON, 0)
 		--set_mario_animation(m, MARIO_ANIM_FLY_FROM_CANNON)
-		m.marioObj.oMoveAnglePitch = m.marioObj.oMoveAnglePitch - 1500
+		--
+		m.marioObj.oFaceAnglePitch = m.marioObj.oFaceAnglePitch - 1500
+		m.marioObj.oMoveAnglePitch = m.marioObj.oFaceAnglePitch
 		if m.pos.y == m.floorHeight then
 			squishblood(m.marioObj)
-			set_mario_action(m, ACT_GONE, 0)
+			network_play(sSplatter, m.pos, 1, m.playerIndex)
+			m.health = 0XFF
+			--set_mario_action(m, ACT_GONE, 0)
 			s.isdeathfalling = false
 		end
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	if s.isgold then
-		if m.playerIndex ~= 0 then return end
+		--if m.playerIndex ~= 0 then return end
 		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
 		m.marioObj.hookRender = 1
 		if m.character.type == CT_MARIO then
