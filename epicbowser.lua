@@ -466,6 +466,7 @@ function act_vulnerable(o)
 
                 unlock_trophy(m.character.type+1)
                 gameisbeat = true
+                mod_storage_save("gameisbeat", "true")
 
                 set_mario_action(m, ACT_STAR_DANCE_NO_EXIT, 0)
 

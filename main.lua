@@ -220,7 +220,9 @@ bloodalpha = 0
 hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
-gameisbeat = true --This variable will determine if secret room and trophies are spawnable in main world.
+
+gameisbeat = mod_storage_load("gameisbeat")
+--gameisbeat = true --This variable will determine if secret room and trophies are spawnable in main world.
 
 ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_gone(m)
@@ -1714,7 +1716,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
 	--Chain Chomp insta-deaths
 	if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 and not s.bottomless and (m.hurtCounter > 0) and (m.action == ACT_BACKWARD_GROUND_KB or m.action == ACT_FORWARD_GROUND_KB) then --Custom Chain Chomp Mario Kill backward
-		if m.character.type == CT_MARIO then
+		if m.character.type == CT_MARIO or m.character.type == CT_LUIGI then
 			s.bottomless = true
 			network_play(sSplatter, m.pos, 1, m.playerIndex)
 			network_play(sCrunch, m.pos, 1, m.playerIndex)

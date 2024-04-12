@@ -1,5 +1,5 @@
 highmusic = audio_stream_load("high.mp3")
-smwbonusmusic = audio_stream_load("smwbonusloop.mp3")
+smwbonusmusic = audio_stream_load("smwbonusloop.mp3")   audio_stream_set_looping(smwbonusmusic, true)
 boss = audio_stream_load("croppedcastle.mp3")
 backroomMusic = audio_stream_load("backroom.mp3")		audio_stream_set_looping(backroomMusic, true)
 musicHell = audio_stream_load("hell.mp3") 				audio_stream_set_looping(musicHell, true)
