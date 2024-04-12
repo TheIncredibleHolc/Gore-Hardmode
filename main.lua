@@ -537,7 +537,7 @@ function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable.
 	end
 
 	if n.currLevelNum == LEVEL_BOWSER_2 and obj.oPosY == obj.oFloorHeight then
-		obj.oForwardVel = 17
+		obj.oForwardVel = 20
 	end
 
 	if obj.oAction == GOOMBA_ACT_JUMP and obj.oTimer < 6 then
@@ -696,48 +696,48 @@ function bhv_bowser_key_ukiki_loop(obj)
 		if obj.oTimer <= 60 and obj.oAction == 1 then
 			cur_obj_disable_rendering_and_become_intangible(obj)
 		end
-		if obj.oTimer == 59 and obj.oAction == 1 then
+		if obj.oTimer == 42 and obj.oAction == 1 then
 			stream_play(musicbows2)
 		end
 
-		if obj.oTimer == 60 and obj.oAction == 1 then
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, -698, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1688, 1230, -698, nil)
+		if obj.oTimer == 40 and obj.oAction == 1 then
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, -698, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1688, 1230, -698, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, 690, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1713, 1230, 690, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, 690, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1713, 1230, 690, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 695, 1230, 1697, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 695, 1230, 1697, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -721, 1230, 1697, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -721, 1230, 1697, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1716, 1230, 680, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1716, 1230, 680, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -1716, 1230, 680, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1716, 1230, 680, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1670, 1230, -680, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1670, 1230, -680, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -1670, 1230, -680, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1670, 1230, -680, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -696, 1230, -1708, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -696, 1230, -1708, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -696, 1230, -1708, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -696, 1230, -1708, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -743, 1230, -1708, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -743, 1230, -1708, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -743, 1230, -1708, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -743, 1230, -1708, nil)
 		end
 
-		if  obj.oTimer == 160 and obj.oAction == 1 then
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 2650, 1230, -128, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 2650, 1230, -128, nil)
+		if  obj.oTimer == 100 and obj.oAction == 1 then
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 2650, 1230, -128, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 2650, 1230, -128, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 58, 1230, 2402, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 58, 1230, 2402, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 58, 1230, 2402, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 58, 1230, 2402, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -2357, 1230, 98, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -2357, 1230, 98, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -2357, 1230, 98, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -2357, 1230, 98, nil)
 
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 32, 1230, -2404, nil)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 32, 1230, -2404, nil)
+			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 32, 1230, -2404, nil)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 32, 1230, -2404, nil)
 		end
 
 		local o = obj_get_nearest_object_with_behavior_id(obj, id_bhvGoomba)
