@@ -460,6 +460,11 @@ function bhv_custom_chain_chomp(obj)
 				network_play(sSplatter, m.pos, 1, m.playerIndex)
 				djui_chat_message_create("Wait... what...?? How did you do that?! -IncredibleHolc")
 				play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
+				if feedchomp == nil then
+					feedchomp = 1
+				else 
+					feedchomp = feedchomp + 1
+				end
 			end
 		end 
 		if goomba ~= nil then
@@ -468,7 +473,11 @@ function bhv_custom_chain_chomp(obj)
 				obj_mark_for_deletion(goomba)
 				network_play(sCrunch, m.pos, 1, m.playerIndex)
 				network_play(sSplatter, m.pos, 1, m.playerIndex)
-
+				if feedchomp == nil then
+					feedchomp = 1
+				else 
+					feedchomp = feedchomp + 1
+				end
 			end
 		end 
 		if bobomb ~= nil then
@@ -477,9 +486,24 @@ function bhv_custom_chain_chomp(obj)
 				obj_mark_for_deletion(bobomb)
 				network_play(sCrunch, m.pos, 1, m.playerIndex)
 				network_play(sSplatter, m.pos, 1, m.playerIndex)
-
+				if feedchomp == nil then
+					feedchomp = 1
+				else 
+					feedchomp = feedchomp + 1
+				end
 			end
 		end 
+		if feedchomp == 5 and gameisbeat then --GRANT TROPHY #19
+			network_play(sBurp, m.pos, 1, m.playerIndex)
+			play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
+			spawn_non_sync_object(id_bhvMistParticleSpawner, E_MODEL_MIST, 272, 975, 1914, nil)
+			spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 272, 975, 1914, function(t)
+				t.oBehParams = 7 << 16 | 1
+			end)
+			feedchomp = 6
+		end
+
+
 	else
 		if obj.oTimer >= 117 then
 			local m = nearest_mario_state_to_object(obj)
@@ -661,12 +685,14 @@ ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|A
 
 --Mario's neck snapping action.
 function act_necksnap(m)
+	local s = gStateExtras[m.playerIndex]
     common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
 	smlua_anim_util_set_animation(m.marioObj, "MARIO_NECKSNAP")
 	m.actionTimer = m.actionTimer + 1
 	if m.actionTimer == 1 then
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 	end
+	s.isgold = false
 	--djui_chat_message_create(tostring(m.actionTimer))
 end
 hook_mario_action(ACT_NECKSNAP, act_necksnap)
@@ -797,6 +823,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
+
 ----------------------------------------------------------------------------------------------------------------------------------
 	if n.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or n.currLevelNum == LEVEL_TTM and n.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE then
 		local turnSpeed = (0x100)*(m.forwardVel*0.2)
@@ -836,6 +863,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		elseif m.character.type == CT_WALUIGI then
 			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
 		end
+	end
+
+	if m.health <= 120 and s.isgold then
+		s.isgold = false
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	if n.currLevelNum == LEVEL_BOB then
@@ -1772,7 +1803,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 	s.bigthrowenabled = 0
-	s.isgold = false
+	
 	--set_override_envfx(ENVFX_MODE_NONE)
 	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then

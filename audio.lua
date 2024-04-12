@@ -74,7 +74,8 @@ gSamples = {
 	audio_sample_load("portal_enter.ogg"),
 	audio_sample_load("portal_travel.ogg"),
 	audio_sample_load("trophy.mp3"),
-	audio_sample_load("agonyluigi.mp3")
+	audio_sample_load("agonyluigi.mp3"),
+	audio_sample_load("burp.mp3")
 }
 
 sBoneBreak = 1
@@ -104,6 +105,7 @@ sPortalEnter = 24
 sPortalTravel = 25
 sTrophy = 26
 sAgonyLuigi = 27
+sBurp = 28
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))

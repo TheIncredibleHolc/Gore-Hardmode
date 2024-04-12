@@ -24,7 +24,7 @@ trophyinfo = {
 	{ name = "waluigi",   model = E_MODEL_TROPHY_WALUIGI,   scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #4  - Beat the game as Waluigi.
 	{ name = "wario",     model = E_MODEL_TROPHY_WARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #5  - Beat the game as Wario.
 	{ name = "star",      model = E_MODEL_STAR,             scale = 0.6, y_offset = -15, podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #6  - Beat the game with all 5 characters. (Or get 120 stars?).
-	{ name = "trophy7",   model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #7  -
+	{ name = "chainchomp",model = E_MODEL_CHAIN_CHOMP,      scale = 0.2, y_offset = -15,  podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #7  - Feed Chain Chomp 5 enemies.
 	{ name = "smiler",    model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
 	{ name = "fieldgoal", model = E_MODEL_GOALPOST,         scale = 0.1, y_offset = 10,  podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
 	{ name = "trophy10",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - 
@@ -39,9 +39,9 @@ trophyinfo = {
 	{ name = "trophy15",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #15
 	{ name = "trophy16",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #16
 	{ name = "trophy17",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #17
-	{ name = "trophy18",  model = E_MODEL_YOSHI,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #18 - Kill Yoshi
+	{ name = "killyoshi",  model = E_MODEL_YOSHI,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #18 - Kill Yoshi
 	{ name = "deadtoad",  model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
-	{ name = "trophy20",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }  --Trophy #20
+	{ name = "trophy20",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }  --Trophy #20 - 
 }
 
 PACKET_UNLOCK = 0
