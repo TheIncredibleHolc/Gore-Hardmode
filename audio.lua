@@ -5,6 +5,7 @@ backroomMusic = audio_stream_load("backroom.mp3")		audio_stream_set_looping(back
 musicHell = audio_stream_load("hell.mp3") 				audio_stream_set_looping(musicHell, true)
 secret = audio_stream_load("secret.mp3") 				audio_stream_set_looping(secret, true)
 musicUnderground = audio_stream_load("underground.mp3")	audio_stream_set_looping(musicUnderground, true)
+musicbows2 = audio_stream_load("bows2loop.mp3")         audio_stream_set_looping(musicbows2, true)
 
 currentlyPlaying = nil
 local fadeTimer = 0
@@ -33,6 +34,7 @@ function stream_stop_all()
 	audio_stream_stop(backroomMusic)
 	audio_stream_stop(secret)
 	audio_stream_stop(musicUnderground)
+	audio_stream_stop(musicbows2)
 	currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()
@@ -75,7 +77,8 @@ gSamples = {
 	audio_sample_load("portal_travel.ogg"),
 	audio_sample_load("trophy.mp3"),
 	audio_sample_load("agonyluigi.mp3"),
-	audio_sample_load("burp.mp3")
+	audio_sample_load("burp.mp3"),
+	audio_sample_load("bows2intro.mp3")
 }
 
 sBoneBreak = 1
@@ -106,6 +109,7 @@ sPortalTravel = 25
 sTrophy = 26
 sAgonyLuigi = 27
 sBurp = 28
+sBows2intro = 29
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))

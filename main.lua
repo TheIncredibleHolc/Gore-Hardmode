@@ -530,10 +530,15 @@ end
 
 function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable. Will lunge at Mario
 	local m = nearest_mario_state_to_object(obj)
+	local n = gNetworkPlayers[0]
 	if obj.oGoombaJumpCooldown >= 9 then
 		obj.oGoombaJumpCooldown = 8
 		obj.oVelY = obj.oVelY + 10
 		obj.oForwardVel = 70
+	end
+
+	if n.currLevelNum == LEVEL_BOWSER_2 and obj.oPosY == obj.oFloorHeight then
+		obj.oForwardVel = 17
 	end
 
 	if obj.oAction == GOOMBA_ACT_JUMP and obj.oTimer < 6 then
@@ -650,26 +655,111 @@ function bhv_custom_bowlballspawner(obj) -- Idk if this actually does anything, 
 end
 
 function bhv_bowser_key_spawn_ukiki(obj) --Spawns Ukiki for an annoying minigame. 
-	spawn_sync_if_main(id_bhvUkiki, E_MODEL_UKIKI, obj.oPosX, obj.oPosY + 50, obj.oPosZ, function (o)
-		o.oAction = 3
-	end, 0)
-	cur_obj_disable_rendering_and_become_intangible(obj)
-	fadeout_music(0)
-	stream_play(smwbonusmusic)
+	n = gNetworkPlayers[0]
+	if n.currLevelNum == LEVEL_BOWSER_1 then
+		spawn_sync_if_main(id_bhvUkiki, E_MODEL_UKIKI, obj.oPosX, obj.oPosY + 50, obj.oPosZ, function (o)
+			o.oAction = 3
+		end, 0)
+		cur_obj_disable_rendering_and_become_intangible(obj)
+		fadeout_music(0)
+		stream_play(smwbonusmusic)
+	end
+	if n.currLevelNum == LEVEL_BOWSER_2 then
+
+		cur_obj_disable_rendering_and_become_intangible(obj)
+		fadeout_music(0)
+		local_play(sBows2intro, m.pos, 1)
+	end
 end
 
 function bhv_bowser_key_ukiki_loop(obj)
-	local o = obj_get_nearest_object_with_behavior_id(obj, id_bhvUkiki)
-	if o ~= nil then
-		cur_obj_disable_rendering_and_become_intangible(obj)
-		obj_copy_pos(obj, o)
-		obj.oBehParams = 1
-	elseif obj.oBehParams == 1 then
-		cur_obj_enable_rendering_and_become_tangible(obj)
-		obj.oAction = 0
-		obj.oPosY = obj.oPosY + 200
-		obj.oBehParams = 0
+	--djui_chat_message_create(tostring(obj.oTimer))
+	--djui_chat_message_create(tostring(obj.oAction))
+	n = gNetworkPlayers[0]
+
+	if n.currLevelNum == LEVEL_BOWSER_1 then
+		local o = obj_get_nearest_object_with_behavior_id(obj, id_bhvUkiki)
+		if o ~= nil then
+			cur_obj_disable_rendering_and_become_intangible(obj)
+			obj_copy_pos(obj, o)
+			obj.oBehParams = 1
+		elseif obj.oBehParams == 1 then
+			cur_obj_enable_rendering_and_become_tangible(obj)
+			obj.oAction = 0
+			obj.oPosY = obj.oPosY + 200
+			obj.oBehParams = 0
+		end
 	end
+
+
+	if n.currLevelNum == LEVEL_BOWSER_2 then
+
+		if obj.oTimer <= 60 and obj.oAction == 1 then
+			cur_obj_disable_rendering_and_become_intangible(obj)
+		end
+		if obj.oTimer == 59 and obj.oAction == 1 then
+			stream_play(musicbows2)
+		end
+
+		if obj.oTimer == 60 and obj.oAction == 1 then
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, -698, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1688, 1230, -698, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, 690, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1713, 1230, 690, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 695, 1230, 1697, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -721, 1230, 1697, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -1716, 1230, 680, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1716, 1230, 680, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -1670, 1230, -680, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1670, 1230, -680, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -696, 1230, -1708, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -696, 1230, -1708, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -743, 1230, -1708, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -743, 1230, -1708, nil)
+		end
+
+		if  obj.oTimer == 160 and obj.oAction == 1 then
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 2650, 1230, -128, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 2650, 1230, -128, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 58, 1230, 2402, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 58, 1230, 2402, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -2357, 1230, 98, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -2357, 1230, 98, nil)
+
+			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 32, 1230, -2404, nil)
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 32, 1230, -2404, nil)
+		end
+
+		local o = obj_get_nearest_object_with_behavior_id(obj, id_bhvGoomba)
+		if o ~= nil then
+			cur_obj_disable_rendering_and_become_intangible(obj)
+			obj_copy_pos(obj, o)
+			obj.oBehParams = 1
+		elseif obj.oBehParams == 1 then
+			
+			cur_obj_enable_rendering_and_become_tangible(obj)
+			--obj.oAction = 0
+			if obj.oPosY ~= obj.oFloorHeight then
+				obj.oPosY = obj.oFloorHeight
+				spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, obj.oPosX, obj.oPosY, obj.oPosX, nil)
+			else
+				obj.oBehParams = 0
+				stream_fade(50)
+			end
+		end
+	end
+
 end
 
 -------ACT_FUNCTIONS------------
@@ -834,6 +924,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
+	--[[
 	if s.isdeathfalling then -- Mario death while jumping in air. (enemy hits mario, he flies backwards and splats on land.)
 		--if m.playerIndex ~= 0 then return end
 		--set_mario_action(m, ACT_SHOT_FROM_CANNON, 0)
@@ -849,6 +940,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			s.isdeathfalling = false
 		end
 	end
+	]]
 ----------------------------------------------------------------------------------------------------------------------------------
 	if s.isgold then
 		--if m.playerIndex ~= 0 then return end
