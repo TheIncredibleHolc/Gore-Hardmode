@@ -206,8 +206,7 @@ for i = 0, MAX_PLAYERS-1 do
 		outsidegastimer = 60,
 		highdeathtimer = 0,
 		ssldiethirst = 0,
-		splatterdeath = 0,
-		isdeathfalling = false
+		splatterdeath = 0
 	}
 end
 
@@ -702,43 +701,43 @@ function bhv_bowser_key_ukiki_loop(obj)
 		end
 
 		if obj.oTimer == 60 and obj.oAction == 1 then
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, -698, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1688, 1230, -698, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, -698, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1688, 1230, -698, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, 690, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1713, 1230, 690, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, 690, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1713, 1230, 690, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 695, 1230, 1697, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 695, 1230, 1697, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -721, 1230, 1697, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -721, 1230, 1697, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -1716, 1230, 680, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1716, 1230, 680, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1716, 1230, 680, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1716, 1230, 680, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -1670, 1230, -680, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1670, 1230, -680, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1670, 1230, -680, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1670, 1230, -680, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -696, 1230, -1708, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -696, 1230, -1708, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -696, 1230, -1708, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -696, 1230, -1708, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -743, 1230, -1708, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -743, 1230, -1708, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -743, 1230, -1708, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -743, 1230, -1708, nil)
 		end
 
 		if  obj.oTimer == 160 and obj.oAction == 1 then
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 2650, 1230, -128, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 2650, 1230, -128, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 2650, 1230, -128, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 2650, 1230, -128, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 58, 1230, 2402, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 58, 1230, 2402, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 58, 1230, 2402, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 58, 1230, 2402, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -2357, 1230, 98, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -2357, 1230, 98, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -2357, 1230, 98, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -2357, 1230, 98, nil)
 
-			spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 32, 1230, -2404, nil)
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 32, 1230, -2404, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 32, 1230, -2404, nil)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 32, 1230, -2404, nil)
 		end
 
 		local o = obj_get_nearest_object_with_behavior_id(obj, id_bhvGoomba)
@@ -922,25 +921,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, turnSpeed, turnSpeed)
 	end
 
-
-----------------------------------------------------------------------------------------------------------------------------------
-	--[[
-	if s.isdeathfalling then -- Mario death while jumping in air. (enemy hits mario, he flies backwards and splats on land.)
-		--if m.playerIndex ~= 0 then return end
-		--set_mario_action(m, ACT_SHOT_FROM_CANNON, 0)
-		--set_mario_animation(m, MARIO_ANIM_FLY_FROM_CANNON)
-		--
-		m.marioObj.oFaceAnglePitch = m.marioObj.oFaceAnglePitch - 1500
-		m.marioObj.oMoveAnglePitch = m.marioObj.oFaceAnglePitch
-		if m.pos.y == m.floorHeight then
-			squishblood(m.marioObj)
-			network_play(sSplatter, m.pos, 1, m.playerIndex)
-			m.health = 0XFF
-			--set_mario_action(m, ACT_GONE, 0)
-			s.isdeathfalling = false
-		end
-	end
-	]]
 ----------------------------------------------------------------------------------------------------------------------------------
 	if s.isgold then
 		--if m.playerIndex ~= 0 then return end
@@ -1571,7 +1551,6 @@ if (m.hurtCounter > 0) then
 	if (m.action == ACT_FORWARD_AIR_KB or m.action == ACT_BACKWARD_AIR_KB) then
 		m.forwardVel = -500
 		m.vel.y = 15
-		s.isdeathfalling = true
 	end
 
 	-- Air Insta-Kill Mario (Generic hits, mario pvp air kicks, etc..)
@@ -2911,8 +2890,13 @@ hook_chat_command("wdw", "wet", function ()
 	return true
 end)
 
-hook_chat_command("bitfs", "bows2", function ()
+hook_chat_command("bitfs", "firesea", function ()
 	warp_to_level(LEVEL_BITFS, 1, 0)
+	return true
+end)
+
+hook_chat_command("bow2", "bows2", function ()
+	warp_to_level(LEVEL_BOWSER_2, 1, 0)
 	return true
 end)
 
