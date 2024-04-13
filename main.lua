@@ -653,7 +653,7 @@ function bhv_custom_bowlballspawner(obj) -- Idk if this actually does anything, 
 
 end
 
-function bhv_bowser_key_spawn_ukiki(obj) --Spawns Ukiki for an annoying minigame. 
+function bhv_bowser_key_spawn_ukiki(obj) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
 	n = gNetworkPlayers[0]
 	if n.currLevelNum == LEVEL_BOWSER_1 then
 		spawn_sync_if_main(id_bhvUkiki, E_MODEL_UKIKI, obj.oPosX, obj.oPosY + 50, obj.oPosZ, function (o)
@@ -664,14 +664,15 @@ function bhv_bowser_key_spawn_ukiki(obj) --Spawns Ukiki for an annoying minigame
 		stream_play(smwbonusmusic)
 	end
 	if n.currLevelNum == LEVEL_BOWSER_2 then
-
+		local m = gMarioStates[0]
 		cur_obj_disable_rendering_and_become_intangible(obj)
 		fadeout_music(0)
+		if m.playerIndex ~= 0 then return end
 		local_play(sBows2intro, m.pos, 1)
 	end
 end
 
-function bhv_bowser_key_ukiki_loop(obj)
+function bhv_bowser_key_ukiki_loop(obj) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
 	--djui_chat_message_create(tostring(obj.oTimer))
 	--djui_chat_message_create(tostring(obj.oAction))
 	n = gNetworkPlayers[0]
@@ -701,43 +702,43 @@ function bhv_bowser_key_ukiki_loop(obj)
 		end
 
 		if obj.oTimer == 40 and obj.oAction == 1 then
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, -698, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1688, 1230, -698, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, -698, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1688, 1230, -698, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, 690, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1713, 1230, 690, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, 690, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1713, 1230, 690, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 695, 1230, 1697, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 695, 1230, 1697, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -721, 1230, 1697, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -721, 1230, 1697, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -1716, 1230, 680, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1716, 1230, 680, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1716, 1230, 680, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1716, 1230, 680, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -1670, 1230, -680, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1670, 1230, -680, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1670, 1230, -680, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1670, 1230, -680, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -696, 1230, -1708, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -696, 1230, -1708, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -696, 1230, -1708, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -696, 1230, -1708, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -743, 1230, -1708, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -743, 1230, -1708, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -743, 1230, -1708, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -743, 1230, -1708, nil, 0)
 		end
 
 		if  obj.oTimer == 100 and obj.oAction == 1 then
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 2650, 1230, -128, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 2650, 1230, -128, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 2650, 1230, -128, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 2650, 1230, -128, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 58, 1230, 2402, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 58, 1230, 2402, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 58, 1230, 2402, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 58, 1230, 2402, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, -2357, 1230, 98, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -2357, 1230, 98, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -2357, 1230, 98, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -2357, 1230, 98, nil, 0)
 
-			spawn_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, 32, 1230, -2404, nil)
-			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 32, 1230, -2404, nil)
+			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 32, 1230, -2404, nil, 0)
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 32, 1230, -2404, nil, 0)
 		end
 
 		local o = obj_get_nearest_object_with_behavior_id(obj, id_bhvGoomba)
@@ -821,6 +822,8 @@ hook_mario_action(ACT_SHOCKED, act_shocked)
 --Mario is decapitated.
 ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 function act_decapitated(m)
+	local s = gStateExtras[m.playerIndex]
+	s.isgold = false
 	obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
     --common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80);
 	common_death_handler(m, MARIO_ANIM_ELECTROCUTION, 50);
@@ -1858,9 +1861,13 @@ end
 
 function action_start(m)
 	if m.action == ACT_NECKSNAP then
+		local s = gStateExtras[m.playerIndex]
+		s.isgold = false
 		squishblood(m.marioObj)
 
 	elseif m.action == ACT_SHOCKED then -- play shock sounds
+		local s = gStateExtras[m.playerIndex]
+		s.isgold = false
 		print("playing shock for "..gNetworkPlayers[m.playerIndex].name)
 		network_play(sElectricScream, m.pos, 1, m.playerIndex)
 		network_play(sShock, m.pos, 1, m.playerIndex)
