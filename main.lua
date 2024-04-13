@@ -171,6 +171,7 @@ COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
 E_MODEL_GOLD_RING = smlua_model_util_get_id("gold_ring_geo")
 E_MODEL_SWING_BLADE = smlua_model_util_get_id("SwingBlade_geo")
 COL_MODEL_SWING_BLADE = smlua_collision_util_get("SwingBlade_collision")
+E_MODEL_GRINDER = smlua_model_util_get_id("Grinder_geo")
 
 E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
 E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")

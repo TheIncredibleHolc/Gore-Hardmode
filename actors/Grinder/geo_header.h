@@ -1,0 +1,14 @@
+extern const GeoLayout Grinder_geo[];
+extern Lights1 Grinder_Grinder_Center_lights;
+extern u8 Grinder_rgba16_anonmoose_DarkMetal1_i8[];
+extern u8 Grinder_ttc_textures_04000_rgba16_ci8[];
+extern u8 Grinder_ttc_textures_04000_rgba16_pal_rgba16[];
+extern Vtx Grinder_Grinder_mesh_layer_1_vtx_0[275];
+extern Gfx Grinder_Grinder_mesh_layer_1_tri_0[];
+extern Vtx Grinder_Grinder_mesh_layer_1_vtx_1[188];
+extern Gfx Grinder_Grinder_mesh_layer_1_tri_1[];
+extern Gfx mat_Grinder_Grinder_Metal[];
+extern Gfx mat_revert_Grinder_Grinder_Metal[];
+extern Gfx mat_Grinder_Grinder_Center[];
+extern Gfx mat_revert_Grinder_Grinder_Center[];
+extern Gfx Grinder_Grinder_mesh_layer_1[];
