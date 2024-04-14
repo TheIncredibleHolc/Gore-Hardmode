@@ -172,6 +172,7 @@ E_MODEL_GOLD_RING = smlua_model_util_get_id("gold_ring_geo")
 E_MODEL_SWING_BLADE = smlua_model_util_get_id("SwingBlade_geo")
 COL_MODEL_SWING_BLADE = smlua_collision_util_get("SwingBlade_collision")
 E_MODEL_GRINDER = smlua_model_util_get_id("Grinder_geo")
+E_MODEL_CHOMP = smlua_model_util_get_id("chomp_geo")
 
 E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
 E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")
@@ -920,6 +921,19 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
+
+----------------------------------------------------------------------------------------------------------------------------------
+	if not trophy_unlocked(13) and n.currLevelNum == LEVEL_TTM and n.currAreaIndex == 3 then --GRANT TROPHY #13
+		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
+		if trophy then
+			--djui_chat_message_create("trophy exists")
+		else
+			--djui_chat_message_create("spawning trophy")
+			spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 1356, -1055, -4816, function(t)
+				t.oBehParams = 13 << 16 | 1
+			end)
+		end
+	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	if n.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or n.currLevelNum == LEVEL_TTM and n.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE then
@@ -1909,8 +1923,8 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	s.headless = false --Gives Mario his head back
 	s.bottomless = false --Gives Mario his whole upper body back
 
-	if n.currLevelNum == LEVEL_TTM then
-		m.pos.y = m.pos.y + 320
+	if n.currLevelNum == LEVEL_TTM and n.currAreaIndex < 2 then
+		m.pos.y = m.pos.y + 920
 	end
 
 	if m.numLives <= 0 and not s.isinhell then
@@ -2714,25 +2728,6 @@ function bhv_secretwarp_loop(o)
 	end
 end
 
---[[
-function bhv_secretwarp_loop(o)
-	m = gMarioStates[0]
-	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 then
-		set_mario_action(m, ACT_BBH_ENTER_SPIN, 0)
-		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-		m.pos.y = m.pos.y + 120
-		o.oTimer = 0
-		play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
-	end
-	if o.oTimer <= 90 and m.action == ACT_BBH_ENTER_SPIN then
-		m.pos.y = m.pos.y + 5
-		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-		if o.oTimer == 75 and m.action == ACT_BBH_ENTER_SPIN then
-			warp_to_level(LEVEL_SECRETHUB, 1, 0)
-		end
-	end
-end]]
-
 function flatstar_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
@@ -2994,6 +2989,12 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_dir(1,0)
 	end
 
+	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 then
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 1356, -1055, -4816, function(t)
+			t.oBehParams = 13 << 16 | 1
+		end)
+	end
+
 	if np.currLevelNum == LEVEL_HELL and gameisbeat then --GRANT TROPHY #14
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -4367, 1680, 4883, function(t)
 			t.oBehParams = 14 << 16 | 1
@@ -3025,7 +3026,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	end
 end)
 
---Blocky looky here
+
 hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
@@ -3039,9 +3040,6 @@ hook_event(HOOK_ON_WARP, function ()
 		set_environment_region(1, -10000)
 		set_environment_region(3, -10000)
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, -5200, m.pos.z, nil)
-
-		--set_override_envfx(ENVFX_LAVA_BUBBLES)
-
 	end
 
 	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 2 then

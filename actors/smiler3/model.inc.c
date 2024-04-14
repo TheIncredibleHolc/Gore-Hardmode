@@ -27,7 +27,7 @@ const Gfx smiler3_seg3_dl_0302A628[] = {
 const Gfx smiler3_seg3_dl_0302A660[] = {
     gsDPPipeSync(),
     gsDPSetCombineMode(G_CC_DECALRGBA, G_CC_DECALRGBA),
-    gsSPClearGeometryMode(G_LIGHTING),
+    gsSPClearGeometryMode(G_CULL_BACK),
     gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 0, 0, G_TX_LOADTILE, 0, G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD, G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD),
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_ON),
     gsDPTileSync(),
@@ -37,6 +37,6 @@ const Gfx smiler3_seg3_dl_0302A660[] = {
     gsSPTexture(0xFFFF, 0xFFFF, 0, G_TX_RENDERTILE, G_OFF),
     gsDPPipeSync(),
     gsDPSetCombineMode(G_CC_SHADE, G_CC_SHADE),
-    gsSPSetGeometryMode(G_LIGHTING),
+    gsSPSetGeometryMode(G_CULL_BACK),
     gsSPEndDisplayList(),
 };
