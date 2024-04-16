@@ -24,22 +24,22 @@ trophyinfo = {
 	{ name = "waluigi",   model = E_MODEL_TROPHY_WALUIGI,   scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #4  - Beat the game as Waluigi.
 	{ name = "wario",     model = E_MODEL_TROPHY_WARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #5  - Beat the game as Wario.
 	{ name = "star",      model = E_MODEL_STAR,             scale = 0.6, y_offset = -15, podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #6  - Beat the game with all 5 characters. (Or get 120 stars?).
-	{ name = "chainchomp",model = E_MODEL_CHOMP,            scale = 0.2, y_offset = -15,  podium = E_MODEL_GOLD_TROPHY_PODIUM },--Trophy #7  - Feed Chain Chomp 5 enemies.
+	{ name = "chainchomp",model = E_MODEL_CHOMP,            scale = 0.2, y_offset = -15, podium = E_MODEL_GOLD_TROPHY_PODIUM },--Trophy #7  - Feed Chain Chomp 5 enemies.
 	{ name = "smiler",    model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
 	{ name = "fieldgoal", model = E_MODEL_GOALPOST,         scale = 0.1, y_offset = 10,  podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
 	{ name = "trophy10",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - 
 	{ name = "trophy11",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11 - (Found in MWOTR)
 	{ name = "snowman",   model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = -40, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - (Found in Mirror room) "Take a good look at yourself." 
-	{ name = "smileymoon",model = E_MODEL_SMILER3,          scale = 1.0, y_offset = -26,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #13 - (Found in TTM) "Find this right next to the skull."
+	{ name = "smileymoon",model = E_MODEL_SMILER3,          scale = 1.0, y_offset = -26, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #13 - (Found in TTM) "Find this right next to the skull."
 	{ name = "portal",    model = E_MODEL_NETHERPORTAL,     scale = 0.2, y_offset = 10,  podium = E_MODEL_FIND_TROPHY_PODIUM,
 	  loop = function (o)
 		o.oAnimState = o.oTimer % 32
 	  end
 	}, --Trophy #14 - Find the NetherPortal.
-	{ name = "trophy15",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #15
-	{ name = "trophy16",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #16
+	{ name = "bully",     model = E_MODEL_BULLY,            scale = 0.5, y_offset = -20, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #15 - (Found in LLL Volcano) "Highest point of the hottest area."
+	{ name = "snufit",    model = E_MODEL_SNUFIT,           scale = 0.6, y_offset = -20, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #16 - (Found in HMC) "Surely you've found a way around those boulders..."
 	{ name = "trophy17",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #17
-	{ name = "killyoshi",  model = E_MODEL_YOSHI,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM },--Trophy #18 - Kill Yoshi
+	{ name = "killyoshi", model = E_MODEL_YOSHI,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #18 - Kill Yoshi
 	{ name = "deadtoad",  model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
 	{ name = "trophy20",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }  --Trophy #20 - 
 }

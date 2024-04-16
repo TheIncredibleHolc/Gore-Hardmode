@@ -2639,6 +2639,10 @@ end
 function bhv_custom_squarishPathMoving(o)
 	n = gNetworkPlayers[0]
 
+	if n.currLevelNum == LEVEL_BITDW and o.oPosY <= -2959 then
+		obj_mark_for_deletion(o)
+	end
+
 	if n.currLevelNum == LEVEL_BITFS then
 		obj_mark_for_deletion(o)
 	end
@@ -2775,8 +2779,13 @@ function bouncy_loop(o)
 
 end
 
+function bhv_squishable_platform_loop(o)
+    o.oPlatformTimer = o.oPlatformTimer + 768
+end
 
 -------Behavior Hooks-------
+hook_behavior(id_bhvSquishablePlatform, OBJ_LIST_SURFACE, false, nil, bhv_squishable_platform_loop)
+
 hook_behavior(id_bhvYoshi, OBJ_LIST_GENACTOR, false, nil, bhv_custom_yoshi)
 hook_behavior(id_bhvActivatedBackAndForthPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_ActivatedBackAndForthPlatform)
 hook_behavior(id_bhvCirclingAmp, OBJ_LIST_GENACTOR, false, nil, bhv_custom_circlingamp)
@@ -3030,6 +3039,20 @@ end)
 hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
+
+	if np.currLevelNum == LEVEL_HMC then --GRANT TROPHY #16
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -5298, 2810, -7961, function(t)
+			t.oBehParams = 16 << 16 | 1
+		end)
+	end
+
+	if np.currLevelNum == LEVEL_LLL and np.currAreaIndex == 2 then --GRANT TROPHY #15
+		spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 1331, 4032, 1281, nil)
+		spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 493, 4532, 652, nil)
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 493, 4640, 652, function(t)
+			t.oBehParams = 15 << 16 | 1
+		end)
+	end
 
 	if np.currLevelNum == LEVEL_HMC then
 		local dorrie = obj_get_nearest_object_with_behavior_id(o, id_bhvDorrie)
