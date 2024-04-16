@@ -751,7 +751,6 @@ function bhv_bowser_key_ukiki_loop(obj) --Bow1 spawns Ukiki minigame, Bow2 spawn
 			obj_copy_pos(obj, o)
 			obj.oBehParams = 1
 		elseif obj.oBehParams == 1 then
-			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, obj.oPosX, obj.oPosY, obj.oPosX, nil)
 			cur_obj_enable_rendering_and_become_tangible(obj)
 			--obj.oAction = 0
 			if obj.oPosY >= obj.oFloorHeight then
@@ -921,9 +920,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-
 ----------------------------------------------------------------------------------------------------------------------------------
-	if not trophy_unlocked(13) and n.currLevelNum == LEVEL_TTM and n.currAreaIndex == 3 then --GRANT TROPHY #13
+	if not trophy_unlocked(13) and n.currLevelNum == LEVEL_TTM and n.currAreaIndex == 3 and gameisbeat then --GRANT TROPHY #13
 		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
 		if trophy then
 			--djui_chat_message_create("trophy exists")
@@ -2998,11 +2996,20 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_dir(1,0)
 	end
 
-	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 then
+	if np.currLevelNum == LEVEL_WF and np.currActNum >= 2 and gameisbeat then --GRANT TROPHY #17
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -404, 3584, -4, function(t)
+			t.oFaceAngleYaw = -16303
+			t.oBehParams = 17 << 16 | 1
+		end)
+	end
+
+	--[[ Moved to Mario Update
+	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and gameisbeat then --GRANT TROPHY #13
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 1356, -1055, -4816, function(t)
 			t.oBehParams = 13 << 16 | 1
 		end)
 	end
+	]]
 
 	if np.currLevelNum == LEVEL_HELL and gameisbeat then --GRANT TROPHY #14
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -4367, 1680, 4883, function(t)
@@ -3040,13 +3047,13 @@ hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 
-	if np.currLevelNum == LEVEL_HMC then --GRANT TROPHY #16
+	if np.currLevelNum == LEVEL_HMC and gameisbeat then --GRANT TROPHY #16
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -5298, 2810, -7961, function(t)
 			t.oBehParams = 16 << 16 | 1
 		end)
 	end
 
-	if np.currLevelNum == LEVEL_LLL and np.currAreaIndex == 2 then --GRANT TROPHY #15
+	if np.currLevelNum == LEVEL_LLL and np.currAreaIndex == 2 and gameisbeat then --GRANT TROPHY #15
 		spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 1331, 4032, 1281, nil)
 		spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 493, 4532, 652, nil)
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 493, 4640, 652, function(t)

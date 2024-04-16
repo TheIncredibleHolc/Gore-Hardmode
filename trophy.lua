@@ -34,11 +34,14 @@ trophyinfo = {
 	{ name = "portal",    model = E_MODEL_NETHERPORTAL,     scale = 0.2, y_offset = 10,  podium = E_MODEL_FIND_TROPHY_PODIUM,
 	  loop = function (o)
 		o.oAnimState = o.oTimer % 32
-	  end
-	}, --Trophy #14 - Find the NetherPortal.
+	  end}, --Trophy #14 - Find the NetherPortal.
 	{ name = "bully",     model = E_MODEL_BULLY,            scale = 0.5, y_offset = -20, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #15 - (Found in LLL Volcano) "Highest point of the hottest area."
 	{ name = "snufit",    model = E_MODEL_SNUFIT,           scale = 0.6, y_offset = -20, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #16 - (Found in HMC) "Surely you've found a way around those boulders..."
-	{ name = "trophy17",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #17
+	{ name = "whomp",     model = E_MODEL_WHOMP,            scale = 0.2, y_offset = -20, podium = E_MODEL_FIND_TROPHY_PODIUM,
+	  loop = function (o)
+		o.oAnimations = gObjectAnimations.whomp_seg6_anims_06020A04
+		o.oAnimState = o.oTimer % 32
+	  end}, --Trophy #17 - (Found in WF) "Somewhere in first 4 levels, must be found on Course Star #2 or higher."
 	{ name = "killyoshi", model = E_MODEL_YOSHI,            scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #18 - Kill Yoshi
 	{ name = "deadtoad",  model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
 	{ name = "trophy20",  model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }  --Trophy #20 - 
