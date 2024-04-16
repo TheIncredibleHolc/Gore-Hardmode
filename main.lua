@@ -751,12 +751,12 @@ function bhv_bowser_key_ukiki_loop(obj) --Bow1 spawns Ukiki minigame, Bow2 spawn
 			obj_copy_pos(obj, o)
 			obj.oBehParams = 1
 		elseif obj.oBehParams == 1 then
-			
+			spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, obj.oPosX, obj.oPosY, obj.oPosX, nil)
 			cur_obj_enable_rendering_and_become_tangible(obj)
 			--obj.oAction = 0
-			if obj.oPosY ~= obj.oFloorHeight then
-				obj.oPosY = obj.oFloorHeight
-				spawn_non_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, obj.oPosX, obj.oPosY, obj.oPosX, nil)
+			if obj.oPosY >= obj.oFloorHeight then
+				obj.oPosY = obj.oPosY - 5
+				
 			else
 				obj.oBehParams = 0
 				stream_fade(50)
