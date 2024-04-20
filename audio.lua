@@ -6,6 +6,7 @@ musicHell = audio_stream_load("hell.mp3") 				audio_stream_set_looping(musicHell
 secret = audio_stream_load("secret.mp3") 				audio_stream_set_looping(secret, true)
 musicUnderground = audio_stream_load("underground.mp3")	audio_stream_set_looping(musicUnderground, true)
 musicbows2 = audio_stream_load("bows2loop.mp3")         audio_stream_set_looping(musicbows2, true)
+timeattack = audio_stream_load("timeattack.mp3")
 
 currentlyPlaying = nil
 local fadeTimer = 0
@@ -35,6 +36,7 @@ function stream_stop_all()
 	audio_stream_stop(secret)
 	audio_stream_stop(musicUnderground)
 	audio_stream_stop(musicbows2)
+	audio_stream_stop(timeattack)
 	currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()

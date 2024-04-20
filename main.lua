@@ -83,7 +83,9 @@ function testing(m)
 		s.isgold = true
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvBouncy1up, E_MODEL_1UP, m.pos.x + 250, m.pos.y + 250, m.pos.z + 150, nil)
+		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, m.pos.x + 250, m.pos.y, m.pos.z + 150, nil)
+
+
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
 		m.pos.x = 5254
@@ -173,6 +175,7 @@ E_MODEL_SWING_BLADE = smlua_model_util_get_id("SwingBlade_geo")
 COL_MODEL_SWING_BLADE = smlua_collision_util_get("SwingBlade_collision")
 E_MODEL_GRINDER = smlua_model_util_get_id("Grinder_geo")
 E_MODEL_CHOMP = smlua_model_util_get_id("chomp_geo")
+E_MODEL_STOPWATCH = smlua_model_util_get_id("stopwatch_geo")
 
 E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
 E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")
@@ -498,7 +501,8 @@ function bhv_custom_chain_chomp(obj)
 				end
 			end
 		end 
-		if feedchomp == 5 and gameisbeat then --GRANT TROPHY #19
+		if feedchomp == 5 and gameisbeat and not trophy_unlocked(7) then --GRANT TROPHY #19
+			play_puzzle_jingle()
 			network_play(sBurp, m.pos, 1, m.playerIndex)
 			play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
 			spawn_non_sync_object(id_bhvMistParticleSpawner, E_MODEL_MIST, 272, 975, 1914, nil)
@@ -574,7 +578,7 @@ function bhv_custom_thwomp(obj)
 			end
 		end
 		if obj.oAction == 3 then --EARTHQUAAAAKE
-			cur_obj_shake_screen(SHAKE_POS_MEDIUM)
+			cur_obj_shake_screen(SHAKE_POS_SMAL)
 			spawn_mist_particles()
 		end
 		if obj.oAction == 4 then --No more waiting to rise!
@@ -920,6 +924,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
+	--djui_chat_message_create(tostring(m.marioObj.oFaceAngleYaw))
 ----------------------------------------------------------------------------------------------------------------------------------
 	if not trophy_unlocked(13) and n.currLevelNum == LEVEL_TTM and n.currAreaIndex == 3 and gameisbeat then --GRANT TROPHY #13
 		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
@@ -982,6 +987,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	if n.currLevelNum == LEVEL_BITFS then
+
 		local minvertedpyramid = obj_get_first_with_behavior_id(id_bhvBitfsTiltingInvertedPyramid)
 		while minvertedpyramid do
 			obj_mark_for_deletion(minvertedpyramid)
@@ -2704,7 +2710,7 @@ end
 
 function bhv_secretwarp_loop(o)
 	m = gMarioStates[0]
-	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 then
+	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 and m.action ~= ACT_UNLOCKING_STAR_DOOR then
 		set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
 		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
 		m.pos.y = m.pos.y + 120
@@ -2716,7 +2722,7 @@ function bhv_secretwarp_loop(o)
 		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
 		local scalezx = 1
 		local scaley = 1
-		if o.oTimer == 140 and m.action == ACT_UNLOCKING_STAR_DOOR then
+		if o.oTimer == 138 and m.action == ACT_UNLOCKING_STAR_DOOR then
 			play_sound(SOUND_GENERAL_VANISH_SFX, gMarioStates[0].pos)
 			play_transition(WARP_TRANSITION_FADE_INTO_STAR, 19, 0, 0, 0)
 		end
@@ -2724,7 +2730,7 @@ function bhv_secretwarp_loop(o)
 			m.pos.y = m.pos.y + 20
 			--obj_scale_xyz(m.marioObj, scalezx - 0.1, scaley + 0.1, scalezx - 0.1)
 		end
-		if o.oTimer == 159 and m.action == ACT_UNLOCKING_STAR_DOOR then
+		if o.oTimer == 157 and m.action == ACT_UNLOCKING_STAR_DOOR then
 			warp_to_level(LEVEL_SECRETHUB, 1, 0)
 		end
 	end
@@ -2781,9 +2787,65 @@ function bhv_squishable_platform_loop(o)
     o.oPlatformTimer = o.oPlatformTimer + 768
 end
 
--------Behavior Hooks-------
-hook_behavior(id_bhvSquishablePlatform, OBJ_LIST_SURFACE, false, nil, bhv_squishable_platform_loop)
+function stopwatch_init(o)
+	o.hitboxHeight = 75
+	o.hitboxRadius = 75
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+	obj_scale(o, 0.5)
+	--o.oFaceAngleRoll = -16384 --ACTS LIKE PITCH
+	--o.oFaceAngleYaw = -16384 --ACTS LIKE ROLL
+	o.oAction = 0
+end
 
+function stopwatch_loop(o)
+	m = gMarioStates[0]
+	o.oFaceAngleYaw = o.oFaceAngleYaw + 1500
+	cur_obj_wait_then_blink(120, 20)
+	if o.oTimer >= 180 and o.oAction == 0 then
+		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+		obj_mark_for_deletion(o)
+		local_play(sFart, m.pos, 1)
+
+	end
+
+	if obj_check_hitbox_overlap(m.marioObj, o) and o.oAction == 0 then
+		play_sound(SOUND_GENERAL_RACE_GUN_SHOT, m.pos)
+		--stop_background_music(SEQ_LEVEL_KOOPA_ROAD)
+		play_secondary_music(0, 0, 0, 20)
+		stream_play(timeattack)
+		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+		cur_obj_disable_rendering()
+		o.oTimer = 0
+		o.oAction = 1
+		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5748, 4403, 85, function(t)
+			t.oFaceAngleYaw = 0
+			t.oFaceAnglePitch = 0
+			t.oFaceAngleRoll = 0
+			t.oBehParams = 10 << 16 | 1
+		end)
+
+	end
+
+	if o.oAction == 1 and o.oTimer == 1620 then
+		t = obj_get_nearest_object_with_behavior_id(o, id_bhvTrophy)
+		if t then
+			local_play(sFart, m.pos, 1)
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, t.oPosX, t.oPosY, t.oPosZ, nil)
+			obj_mark_for_deletion(t.parentObj)
+			obj_mark_for_deletion(t)
+		end
+		stream_stop_all()
+		stop_secondary_music(5)
+
+		--set_background_music()
+	end
+end
+
+
+-------Behavior Hooks-------
+
+hook_behavior(id_bhvSquishablePlatform, OBJ_LIST_SURFACE, false, nil, bhv_squishable_platform_loop)
 hook_behavior(id_bhvYoshi, OBJ_LIST_GENACTOR, false, nil, bhv_custom_yoshi)
 hook_behavior(id_bhvActivatedBackAndForthPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_ActivatedBackAndForthPlatform)
 hook_behavior(id_bhvCirclingAmp, OBJ_LIST_GENACTOR, false, nil, bhv_custom_circlingamp)
@@ -2835,6 +2897,7 @@ hook_behavior(id_bhvExplosion, OBJ_LIST_DESTRUCTIVE, false, bhv_custom_explosion
 hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
+id_bhvStopwatch = hook_behavior(nil, OBJ_LIST_GENACTOR, true, stopwatch_init, stopwatch_loop, "bhvStopwatch")
 id_bhvSecretWarp = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_secretwarp_init, bhv_secretwarp_loop, "bhvSecretWarp")
 id_bhvGoalpost = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_goalpost_init, bhv_goalpost_loop, "bhvGoalpost")
 id_bhvNetherPortal = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_netherportal_init, bhv_netherportal_loop, "bhvNetherPortal")
@@ -2976,6 +3039,10 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	if gStateExtras[0].isinhell and np.currLevelNum ~= LEVEL_HELL then
 		gMarioStates[0].numLives = 0
 		warp_to_level(LEVEL_HELL, 1, 0)
+	end
+
+	if gameisbeat and not trophy_unlocked(10) and np.currLevelNum == LEVEL_BITFS then
+		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, -7135, -2764, -3, nil)
 	end
 
 	if np.currLevelNum == LEVEL_CASTLE_GROUNDS and gameisbeat then
