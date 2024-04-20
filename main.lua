@@ -211,7 +211,8 @@ for i = 0, MAX_PLAYERS-1 do
 		outsidegastimer = 60,
 		highdeathtimer = 0,
 		ssldiethirst = 0,
-		splatterdeath = 0
+		splatterdeath = 0,
+		timeattack = false,
 	}
 end
 
@@ -922,7 +923,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	local n = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-	--djui_chat_message_create(tostring(m.marioObj.oFaceAngleYaw))
+	--djui_chat_message_create(tostring(m.marioObj.oFloorHeight))
+
 ----------------------------------------------------------------------------------------------------------------------------------
 	if not trophy_unlocked(13) and n.currLevelNum == LEVEL_TTM and n.currAreaIndex == 3 and gameisbeat then --GRANT TROPHY #13
 		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
@@ -1902,7 +1904,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 	s.bigthrowenabled = 0
-	
+	s.timeattack = false
 	--set_override_envfx(ENVFX_MODE_NONE)
 	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then
@@ -1967,6 +1969,24 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	local m = gMarioStates[0]
 	local n = gNetworkPlayers[0]
 	if m.floor and m.floor.object and obj_has_behavior_id(m.floor.object, id_bhvBackroom) ~= 0 then return end
+
+	if s.timeattack then
+		--djui_hud_set_resolution(RESOLUTION_N64)
+		--djui_hud_set_font(FONT_MENU)
+	
+		local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvStopwatch)
+		if o then
+			local totalSeconds = math.ceil((gGlobalSyncTable.timerMax - o.oTimer) / 30)
+			local minutes = math.floor(totalSeconds / 60)
+			local seconds = totalSeconds % 60
+			local timerString = string.format("%02d :%02d", minutes, seconds)
+			djui_hud_print_text(timerString, 850, 100, 1)
+		else
+			s.timeattack = false
+		end
+
+	end
+
 
 	screenHeight = djui_hud_get_screen_height()
 	screenWidth = djui_hud_get_screen_width()
@@ -2791,38 +2811,36 @@ function stopwatch_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
 	obj_scale(o, 0.5)
-	--o.oFaceAngleRoll = -16384 --ACTS LIKE PITCH
-	--o.oFaceAngleYaw = -16384 --ACTS LIKE ROLL
 	o.oAction = 0
 end
 
 function stopwatch_loop(o)
-	m = gMarioStates[0]
+	local m = gMarioStates[0]
+	local s = gStateExtras[m.playerIndex]
 	o.oFaceAngleYaw = o.oFaceAngleYaw + 1500
 	cur_obj_wait_then_blink(120, 20)
 	if o.oTimer >= 180 and o.oAction == 0 then
 		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 		obj_mark_for_deletion(o)
 		local_play(sFart, m.pos, 1)
-
 	end
 
 	if obj_check_hitbox_overlap(m.marioObj, o) and o.oAction == 0 then
 		play_sound(SOUND_GENERAL_RACE_GUN_SHOT, m.pos)
-		--stop_background_music(SEQ_LEVEL_KOOPA_ROAD)
 		play_secondary_music(0, 0, 0, 20)
 		stream_play(timeattack)
 		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 		cur_obj_disable_rendering()
 		o.oTimer = 0
 		o.oAction = 1
+		gGlobalSyncTable.timerMax = 1620
+		s.timeattack = true
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5748, 4403, 85, function(t)
 			t.oFaceAngleYaw = 0
 			t.oFaceAnglePitch = 0
 			t.oFaceAngleRoll = 0
 			t.oBehParams = 10 << 16 | 1
 		end)
-
 	end
 
 	if o.oAction == 1 and o.oTimer == 1620 then
@@ -2830,12 +2848,13 @@ function stopwatch_loop(o)
 		if t then
 			local_play(sFart, m.pos, 1)
 			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, t.oPosX, t.oPosY, t.oPosZ, nil)
+			s.timeattack = false
 			obj_mark_for_deletion(t.parentObj)
 			obj_mark_for_deletion(t)
 		end
 		stream_stop_all()
 		stop_secondary_music(5)
-
+		obj_mark_for_deletion(o)
 		--set_background_music()
 	end
 end
@@ -2850,7 +2869,11 @@ function squishblood_init(o)
 end
 
 function squishblood_loop(o)
-	if o.oPosY ~= o.oFloorHeight then
+	cur_obj_update_floor()
+	local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
+	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
+	o.oFaceAngleYaw = calculate_yaw(z, normal)
+	if o.oPosY ~= o.oFloorHeight + 2 then
 		o.oPosY = o.oFloorHeight + 2
 	end
 end
@@ -2880,9 +2903,6 @@ hook_behavior(id_bhvBigBoulder, OBJ_LIST_GENACTOR, false, nil, bhv_custom_boulde
 hook_behavior(id_bhvBouncingFireball, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bouncing_fireball)
 hook_behavior(id_bhvChainChomp, OBJ_LIST_GENACTOR, false, nil, bhv_custom_chain_chomp)
 hook_behavior(id_bhvBowserBomb, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bowserbomb)
---hook_behavior(id_bhvYellowCoin, OBJ_LIST_LEVEL, false, nil, bhv_custom_coins)
---hook_behavior(id_bhvOneCoin, OBJ_LIST_LEVEL, false, nil, bhv_custom_coins)
---hook_behavior(id_bhvMovingYellowCoin, OBJ_LIST_LEVEL, false, nil, bhv_custom_coins)
 hook_behavior(id_bhvCheckerboardPlatformSub, OBJ_LIST_SURFACE, false, nil, bhv_checkerboard_platform)
 hook_behavior(id_bhvFerrisWheelAxle, OBJ_LIST_SURFACE, false, nil, bhv_ferris_wheel_axle)
 hook_behavior(id_bhvFerrisWheelPlatform, OBJ_LIST_SURFACE, false, nil, bhv_ferris_wheel)
@@ -2891,7 +2911,6 @@ hook_behavior(id_bhvSpindel, OBJ_LIST_SURFACE, false, nil, bhv_custom_spindel)
 hook_behavior(id_bhvLllRotatingHexFlame, OBJ_LIST_SURFACE, false, nil, bhv_custom_firebars)
 hook_behavior(id_bhvLllRotatingHexagonalPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_hex_platform)
 hook_behavior(id_bhvLllVolcanoFallingTrap, OBJ_LIST_SURFACE, false, nil, bhv_custom_crushtrap)
-
 hook_behavior(id_bhvSmallBully, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bully)
 hook_behavior(id_bhvToxBox, OBJ_LIST_SURFACE, false, nil, bhv_custom_toxbox)
 hook_behavior(id_bhvWfSlidingPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_whomp_slidingpltf)
@@ -3127,6 +3146,11 @@ end)
 hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
+	local s = gStateExtras[m.playerIndex]
+
+	if s.timeattack then
+		s.timeattack = false
+	end
 
 	if np.currLevelNum == LEVEL_HMC and gameisbeat then --GRANT TROPHY #16
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -5298, 2810, -7961, function(t)
