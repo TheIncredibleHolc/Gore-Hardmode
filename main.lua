@@ -283,7 +283,7 @@ function bhv_custom_kingwhomp(obj) -- makes king whomp give you quicksand
 	if obj.oHealth == 2 then
 		whompblood = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, obj.oPosX, obj.oPosY + 1, obj.oPosZ, nil)
 		obj_scale(whompblood, .4)
-		local_play(sSplatter, m.pos, 1)
+		--local_play(sSplatter, m.pos, 1)
 		--play_sound_with_freq_scale(SOUND_OBJ_KING_WHOMP_DEATH, m.marioObj.header.gfx.cameraToObject, 3.0)
 		obj_mark_for_deletion(obj)
 		stop_background_music(SEQ_EVENT_BOSS)
@@ -771,12 +771,7 @@ end
 -------ACT_FUNCTIONS------------
 
 function squishblood(o) -- Creates instant pool of impact-blood under mario.
-	spawn_sync_if_main(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ,
-	function (obj)
-		local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
-		obj.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
-		obj.oFaceAngleYaw = calculate_yaw(z, normal)
-	end, 0)
+	spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil, 0)
 end
 
 ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
@@ -1119,12 +1114,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		end
 
 		if s.jumpland == 1 and m.squishTimer >= 1 then -- Checks if Mario is squished from fall damage. If so, his mangled corpse will stay on screen.
-			local_play(sSplatter, m.pos, 1)
+			--local_play(sSplatter, m.pos, 1)
 			s.splatterdeath = 1
 			s.splatter = 0
 		end
 		if s.jumpland == 0 and m.squishTimer >= 1 then --Checks if Mario was squished from NON-FALL damage. Objects/enemies that squish Mario will smoosh his corpse to invisible. 
-			local_play(sSplatter, m.pos, 1)
+			--local_play(sSplatter, m.pos, 1)
 			s.splatterdeath = 1
 			s.splatter = 0
 			s.disappear = 1 -- No corpse mode.  
@@ -1335,7 +1330,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		if (peach.oTimer == 957) then
 			spawn_mist_particles()
 			play_character_sound(m, CHAR_SOUND_ATTACKED)
-			local_play(sSplatter, m.pos, 1)
+			--local_play(sSplatter, m.pos, 1)
 		end
 		if (peach.oTimer == 960) then
 			squishblood(m.marioObj)
@@ -1387,7 +1382,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			--if (racepen.oRacingPenguinReachedBottom ~= 0) and racepen.oPosZ == -7150 then --(racepen.oMoveFlags & OBJ_MOVE_HIT_WALL ~= 0) then
 			if racepen.oPosZ <= -7140 then
 				squishblood(racepen)
-				local_play(sSplatter, m.pos, 1)
+				--local_play(sSplatter, m.pos, 1)
 				cur_obj_play_sound_2(SOUND_OBJ_POUNDING_LOUD)
 				set_camera_shake_from_point(SHAKE_POS_LARGE, racepen.oPosX, racepen.oPosY, racepen.oPosZ)
 				obj_mark_for_deletion(racepen)
@@ -1474,7 +1469,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		if m.playerIndex == ukikiheldby then
 			m.particleFlags = PARTICLE_MIST_CIRCLE
 			squishblood(m.marioObj)
-			local_play(sSplatter, m.pos, 1)
+			--local_play(sSplatter, m.pos, 1)
 			ukikiheldby = -1
 			ukikiholding = 0
 			ukikitimer = 0
@@ -1555,7 +1550,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		klepto.oKleptoSpeed = 120.0
 		if (klepto.oAction == KLEPTO_ACT_STRUCK_BY_MARIO) then
 			squishblood(klepto)
-			local_play(sSplatter, m.pos, 1)
+			--local_play(sSplatter, m.pos, 1)
 			play_sound(SOUND_OBJ_KLEPTO1, m.pos)
 			obj_mark_for_deletion(klepto)
 		end
@@ -1610,7 +1605,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		play_sound_with_freq_scale(SOUND_MARIO_ATTACKED, m.marioObj.header.gfx.cameraToObject, 1.25)
 		squishblood(o)
 		obj_mark_for_deletion(o)
-		network_play(sSplatter, m.pos, 1, m.playerIndex)
+		--network_play(sSplatter, m.pos, 1, m.playerIndex)
 		if m.action & ACT_FLAG_AIR == 0 then
 			set_mario_action(m, ACT_PUNCHING, 0)
 		end
@@ -1629,7 +1624,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		o.oAction = 6
 		o.oTimer = 0
 		play_sound(SOUND_ACTION_BONK, m.pos)
-		local_play(sSplatter, m.pos, 1)
+		--local_play(sSplatter, m.pos, 1)
 		local_play(sKillYoshi, m.pos, 1)
 		for i = 0, 100 do
 			spawn_sync_object(id_bhvBouncy1up, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, nil)
@@ -1717,7 +1712,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
 	if m.character.type == CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 and not s.headless then
 		s.headless = true
-		network_play(sSplatter, m.pos, 1, m.playerIndex)
+		--network_play(sSplatter, m.pos, 1, m.playerIndex)
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
 		squishblood(m.marioObj)
 		m.health = 0xff
@@ -1730,7 +1725,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
 	if m.character.type == CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvFlyingBookend) ~= 0 and not s.headless then
 		s.headless = true
-		network_play(sSplatter, m.pos, 1, m.playerIndex)
+		--network_play(sSplatter, m.pos, 1, m.playerIndex)
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
 		squishblood(m.marioObj)
 		m.health = 0xff
@@ -1744,7 +1739,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and not s.headless then
 		if m.character.type == CT_MARIO and o.oAction == GOOMBA_ACT_JUMP then
 			s.headless = true
-			network_play(sSplatter, m.pos, 1, m.playerIndex)
+			--network_play(sSplatter, m.pos, 1, m.playerIndex)
 			squishblood(m.marioObj)
 			m.health = 0xff
 			set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
@@ -1775,7 +1770,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvMadPiano) ~= 0 then
 		if m.character.type == CT_MARIO or m.character.type == CT_LUIGI then
 			s.bottomless = true
-			network_play(sSplatter, m.pos, 1, m.playerIndex)
+			--network_play(sSplatter, m.pos, 1, m.playerIndex)
 			network_play(sCrunch, m.pos, 1, m.playerIndex)
 			squishblood(m.marioObj)
 			m.health = 0xff
@@ -1813,7 +1808,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 and not s.bottomless and (m.hurtCounter > 0) and (m.action == ACT_BACKWARD_GROUND_KB or m.action == ACT_FORWARD_GROUND_KB) then --Custom Chain Chomp Mario Kill backward
 		if m.character.type == CT_MARIO or m.character.type == CT_LUIGI then
 			s.bottomless = true
-			network_play(sSplatter, m.pos, 1, m.playerIndex)
+			--network_play(sSplatter, m.pos, 1, m.playerIndex)
 			network_play(sCrunch, m.pos, 1, m.playerIndex)
 			squishblood(m.marioObj)
 			m.health = 0xff
@@ -2186,7 +2181,7 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 
 	--Enables 'ground pound' PvP splattering. 
 	if attacker.action == ACT_GROUND_POUND and s.splatter == 1 then
-		local_play(sSplatter, victim.pos, 1)
+		--local_play(sSplatter, victim.pos, 1)
 		s.splatterdeath = 1
 		s.splatter = 0
 		s.disappear = 1 -- No corpse mode.  
@@ -2381,7 +2376,7 @@ function bhv_backroom_smiler_loop(o)
 	if obj_check_hitbox_overlap(o, m.marioObj) and not s.isdead then
 		if m.character.type == CT_MARIO or m.character.type == CT_LUIGI then
 			s.bottomless = true
-			network_play(sSplatter, m.pos, 1, m.playerIndex)
+			--network_play(sSplatter, m.pos, 1, m.playerIndex)
 			network_play(sCrunch, m.pos, 1, m.playerIndex)
 			audio_sample_stop(gSamples[sSmiler])
 			squishblood(m.marioObj)
@@ -2498,7 +2493,7 @@ function bhv_custom_tuxie(o)
 		if o.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
 			if o.oFloor.type ~= SURFACE_DEATH_PLANE then
 				squishblood(o)
-				local_play(sSplatter, o.header.gfx.pos, 1)
+				--local_play(sSplatter, o.header.gfx.pos, 1)
 			end
 			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 			cur_obj_shake_screen(SHAKE_POS_SMALL)
@@ -2710,7 +2705,7 @@ function bhv_custom_yoshi(o)
 		if o.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
 			if o.oFloor.type ~= SURFACE_DEATH_PLANE then
 				squishblood(o)
-				local_play(sSplatter, o.header.gfx.pos, 1)
+				--local_play(sSplatter, o.header.gfx.pos, 1)
 			end
 			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 			cur_obj_shake_screen(SHAKE_POS_SMALL)
