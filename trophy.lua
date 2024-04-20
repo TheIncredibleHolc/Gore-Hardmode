@@ -27,7 +27,7 @@ trophyinfo = {
 	{ name = "chainchomp", model = E_MODEL_CHOMP,            scale = 0.2, y_offset = -15, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #7  - Feed Chain Chomp 5 enemies.
 	{ name = "smiler",     model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
 	{ name = "fieldgoal",  model = E_MODEL_GOALPOST,         scale = 0.06, y_offset = 10, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
-	{ name = "stopwatch",  model = E_MODEL_STOPWATCH,        scale = 0.4, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - (BITFS) Time-Attack!
+	{ name = "stopwatch",  model = E_MODEL_STOPWATCH,        scale = 0.3, y_offset = 20,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - (BITFS) Time-Attack!
 	{ name = "trophy11",   model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11 - (Found in MWOTR)
 	{ name = "snowman",    model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - (Found in Mirror room) "Take a good look at yourself." 
 	{ name = "smileymoon", model = E_MODEL_SMILER3,          scale = 1.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #13 - (Found in TTM) "Find this right next to the skull."

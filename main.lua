@@ -83,7 +83,7 @@ function testing(m)
 		s.isgold = true
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, m.pos.x + 250, m.pos.y, m.pos.z + 150, nil)
+		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, m.pos.x + 250, m.pos.y + 2, m.pos.z + 150, nil)
 
 
 	end
@@ -93,9 +93,7 @@ function testing(m)
 		m.pos.z = 1047
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5222, 1508, 1897, function(t)
-			t.oBehParams = 12 << 16 | 1
-		end)
+		spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y + 2, m.pos.z, nil, 0)
 	end
 end
 
@@ -578,7 +576,7 @@ function bhv_custom_thwomp(obj)
 			end
 		end
 		if obj.oAction == 3 then --EARTHQUAAAAKE
-			cur_obj_shake_screen(SHAKE_POS_SMAL)
+			--cur_obj_shake_screen(SHAKE_POS_SMALL)
 			spawn_mist_particles()
 		end
 		if obj.oAction == 4 then --No more waiting to rise!
@@ -2842,6 +2840,21 @@ function stopwatch_loop(o)
 	end
 end
 
+function squishblood_init(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true	
+	local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
+	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
+	o.oFaceAngleYaw = calculate_yaw(z, normal)
+	network_play(sSplatter, m.pos, 1, m.playerIndex)
+end
+
+function squishblood_loop(o)
+	if o.oPosY ~= o.oFloorHeight then
+		o.oPosY = o.oFloorHeight + 2
+	end
+end
+
 
 -------Behavior Hooks-------
 
@@ -2897,6 +2910,7 @@ hook_behavior(id_bhvExplosion, OBJ_LIST_DESTRUCTIVE, false, bhv_custom_explosion
 hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
+id_bhvSquishblood = hook_behavior(nil, OBJ_LIST_GENACTOR, true, squishblood_init, squishblood_loop, "bhvSquishblood")
 id_bhvStopwatch = hook_behavior(nil, OBJ_LIST_GENACTOR, true, stopwatch_init, stopwatch_loop, "bhvStopwatch")
 id_bhvSecretWarp = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bhv_secretwarp_init, bhv_secretwarp_loop, "bhvSecretWarp")
 id_bhvGoalpost = hook_behavior(nil, OBJ_LIST_SURFACE, true, bhv_goalpost_init, bhv_goalpost_loop, "bhvGoalpost")

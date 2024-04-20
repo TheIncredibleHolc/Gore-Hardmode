@@ -1,12 +1,12 @@
-highmusic = audio_stream_load("high.mp3")
-smwbonusmusic = audio_stream_load("smwbonusloop.mp3")   audio_stream_set_looping(smwbonusmusic, true)
-boss = audio_stream_load("croppedcastle.mp3")
-backroomMusic = audio_stream_load("backroom.mp3")		audio_stream_set_looping(backroomMusic, true)
-musicHell = audio_stream_load("hell.mp3") 				audio_stream_set_looping(musicHell, true)
-secret = audio_stream_load("secret.mp3") 				audio_stream_set_looping(secret, true)
-musicUnderground = audio_stream_load("underground.mp3")	audio_stream_set_looping(musicUnderground, true)
-musicbows2 = audio_stream_load("bows2loop.mp3")         audio_stream_set_looping(musicbows2, true)
-timeattack = audio_stream_load("timeattack.mp3")
+highmusic = audio_stream_load("high.ogg")
+smwbonusmusic = audio_stream_load("smwbonusloop.ogg")   audio_stream_set_looping(smwbonusmusic, true)
+boss = audio_stream_load("croppedcastle.ogg")
+backroomMusic = audio_stream_load("backroom.ogg")		audio_stream_set_looping(backroomMusic, true)
+musicHell = audio_stream_load("hell.ogg") 				audio_stream_set_looping(musicHell, true)
+secret = audio_stream_load("secret.ogg") 				audio_stream_set_looping(secret, true)
+musicUnderground = audio_stream_load("underground.ogg")	audio_stream_set_looping(musicUnderground, true)
+musicbows2 = audio_stream_load("bows2loop.ogg")         audio_stream_set_looping(musicbows2, true)
+timeattack = audio_stream_load("timeattack.ogg")
 
 currentlyPlaying = nil
 local fadeTimer = 0
@@ -52,35 +52,35 @@ hook_event(HOOK_UPDATE, function ()
 end)
 
 gSamples = {
-	audio_sample_load("bonebreak.mp3"),
-	audio_sample_load("bigexplosion.mp3"),
-	audio_sample_load("electricscream.mp3"),
-	audio_sample_load("shock.mp3"),
-	audio_sample_load("mariodeath.mp3"),
-	audio_sample_load("angrymario.mp3"),
-	audio_sample_load("flames.mp3"),
-	audio_sample_load("killyoshi.mp3"),
-	audio_sample_load("smwbonusend.mp3"),
-	audio_sample_load("smiler.mp3"),
-	audio_sample_load("splash.mp3"),
-	audio_sample_load("punch.mp3"),
-	audio_sample_load("goomba.mp3"),
-	audio_sample_load("agonymario.mp3"),
-	audio_sample_load("cooloff.mp3"),
-	audio_sample_load("thunder.mp3"),
-	audio_sample_load("gslaser.mp3"),
-	audio_sample_load("gsbeam.mp3"),
-	audio_sample_load("crunch.mp3"),
-	audio_sample_load("agonytoad.mp3"),
-	audio_sample_load("fart.mp3"),
-	audio_sample_load("glass.mp3"),
+	audio_sample_load("bonebreak.ogg"),
+	audio_sample_load("bigexplosion.ogg"),
+	audio_sample_load("electricscream.ogg"),
+	audio_sample_load("shock.ogg"),
+	audio_sample_load("mariodeath.ogg"),
+	audio_sample_load("angrymario.ogg"),
+	audio_sample_load("flames.ogg"),
+	audio_sample_load("killyoshi.ogg"),
+	audio_sample_load("smwbonusend.ogg"),
+	audio_sample_load("smiler.ogg"),
+	audio_sample_load("splash.ogg"),
+	audio_sample_load("punch.ogg"),
+	audio_sample_load("goomba.ogg"),
+	audio_sample_load("agonymario.ogg"),
+	audio_sample_load("cooloff.ogg"),
+	audio_sample_load("thunder.ogg"),
+	audio_sample_load("gslaser.ogg"),
+	audio_sample_load("gsbeam.ogg"),
+	audio_sample_load("crunch.ogg"),
+	audio_sample_load("agonytoad.ogg"),
+	audio_sample_load("fart.ogg"),
+	audio_sample_load("glass.ogg"),
 	audio_sample_load("portal_ambient.ogg"),
 	audio_sample_load("portal_enter.ogg"),
 	audio_sample_load("portal_travel.ogg"),
-	audio_sample_load("trophy.mp3"),
-	audio_sample_load("agonyluigi.mp3"),
-	audio_sample_load("burp.mp3"),
-	audio_sample_load("bows2intro.mp3")
+	audio_sample_load("trophy.ogg"),
+	audio_sample_load("agonyluigi.ogg"),
+	audio_sample_load("burp.ogg"),
+	audio_sample_load("bows2intro.ogg")
 }
 
 sBoneBreak = 1
