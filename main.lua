@@ -553,7 +553,7 @@ function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable.
 	end
 
 	if n.currLevelNum == LEVEL_BOWSER_2 and obj.oPosY == obj.oFloorHeight then
-		obj.oForwardVel = 20
+		obj.oForwardVel = 30
 	end
 
 	if obj.oAction == GOOMBA_ACT_JUMP and obj.oTimer < 6 then

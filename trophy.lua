@@ -110,7 +110,7 @@ function trophy_load(o)
 	-- Checks to see if trophy should display. (show if unlocked and display or locked and collectible)
 	if trophyunlocked == (o.oBehParams & 1 == 0) then
 		obj_set_model_extended(o, trophy.podium)
-		cur_obj_scale(.2)
+		--cur_obj_scale(.2)
 		spawn_non_sync_object(id_bhvStaticObject, trophy.model, 0, 0, 0, function(display)
 			display.oFlags = display.oFlags | OBJ_FLAG_TRANSFORM_RELATIVE_TO_PARENT
 			obj_scale(display, trophy.scale*5)
@@ -141,7 +141,7 @@ function trophy_loop(o)
 	display.oAngleVelYaw = 300
 	display.oFaceAngleYaw = display.oFaceAngleYaw + display.oAngleVelYaw
 
-	cur_obj_scale(0.2)
+	--cur_obj_scale(0.2)
 	obj_scale(display, trophy.scale*5)
 
 	if trophy.loop then trophy.loop(o) end
