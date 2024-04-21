@@ -19,48 +19,48 @@ E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
 E_MODEL_TROPHY_YOSHI = smlua_model_util_get_id("trophy_yoshi_owie_geo")
 
 trophyinfo = {
-	{ name = "mario",      model = E_MODEL_TROPHY_MARIO,     scale = 0.1, y_offset = 84,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #1  - Beat the game as Mario.
-	{ name = "luigi",      model = E_MODEL_TROPHY_LUIGI,     scale = 0.1, y_offset = 84,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #2  - Beat the game as Luigi.
-	{ name = "toad",       model = E_MODEL_TROPHY_TOAD,      scale = 0.1, y_offset = 84,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #3  - Beat the game as Toad.
-	{ name = "waluigi",    model = E_MODEL_TROPHY_WALUIGI,   scale = 0.1, y_offset = 84,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #4  - Beat the game as Waluigi.
-	{ name = "wario",      model = E_MODEL_TROPHY_WARIO,     scale = 0.1, y_offset = 84,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #5  - Beat the game as Wario.
-	{ name = "star",       model = E_MODEL_STAR,             scale = 0.6, y_offset = 77, podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #6  - Beat the game with all 5 characters. (Or get 120 stars?).
-	{ name = "chainchomp", model = E_MODEL_CHOMP,            scale = 0.2, y_offset = 77, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #7  - Feed Chain Chomp 5 enemies.
-	{ name = "smiler",     model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = 77, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
-	{ name = "fieldgoal",  model = E_MODEL_GOALPOST,         scale = 0.06, y_offset = 82, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
-	{ name = "stopwatch",  model = E_MODEL_STOPWATCH,        scale = 0.3, y_offset = 84,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - (BITFS) Time-Attack!
-	{ name = "trophy11",   model = E_MODEL_NONE,             scale = 0.2, y_offset = 64,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11 - (Found in MWOTR)
-	{ name = "snowman",    model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = 76, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - (Found in Mirror room) "Take a good look at yourself." 
-	{ name = "smileymoon", model = E_MODEL_SMILER3,          scale = 1.2, y_offset = 76, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #13 - (Found in TTM) "Find this right next to the skull."
-	{ name = "portal",     model = E_MODEL_NETHERPORTAL,     scale = 0.2, y_offset = 84,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #14 - Find the NetherPortal.
+	{ name = "mario",      model = E_MODEL_TROPHY_MARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #1  - Beat the game as Mario.
+	{ name = "luigi",      model = E_MODEL_TROPHY_LUIGI,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #2  - Beat the game as Luigi.
+	{ name = "toad",       model = E_MODEL_TROPHY_TOAD,      scale = 0.1, y_offset = 26,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #3  - Beat the game as Toad.
+	{ name = "waluigi",    model = E_MODEL_TROPHY_WALUIGI,   scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #4  - Beat the game as Waluigi.
+	{ name = "wario",      model = E_MODEL_TROPHY_WARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #5  - Beat the game as Wario.
+	{ name = "star",       model = E_MODEL_STAR,             scale = 0.6, y_offset = -15, podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #6  - Beat the game with all 5 characters. (Or get 120 stars?).
+	{ name = "chainchomp", model = E_MODEL_CHOMP,            scale = 0.2, y_offset = -15, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #7  - Feed Chain Chomp 5 enemies.
+	{ name = "smiler",     model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
+	{ name = "fieldgoal",  model = E_MODEL_GOALPOST,         scale = 0.06, y_offset = 10, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
+	{ name = "stopwatch",  model = E_MODEL_STOPWATCH,        scale = 0.3, y_offset = 20,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - (BITFS) Time-Attack!
+	{ name = "trophy11",   model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11 - (Found in MWOTR)
+	{ name = "snowman",    model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - (Found in Mirror room) "Take a good look at yourself." 
+	{ name = "smileymoon", model = E_MODEL_SMILER3,          scale = 1.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #13 - (Found in TTM) "Find this right next to the skull."
+	{ name = "portal",     model = E_MODEL_NETHERPORTAL,     scale = 0.2, y_offset = 10,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #14 - Find the NetherPortal.
 	  loop = function (o)
 		o.parentObj.oAnimState = o.oTimer % 32
 	  end},
 
-	{ name = "bully",      model = E_MODEL_BULLY,            scale = 0.5, y_offset = 84,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #15 - (Found in LLL Volcano) "Highest point of the hottest area."
+	{ name = "bully",      model = E_MODEL_NONE,            scale = 0.5, y_offset = -20,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #15 - (Found in LLL Volcano) "Highest point of the hottest area."
 	  loop = function (o)
 		o.oAnimations = gObjectAnimations.bully_seg5_anims_0500470C
 		obj_init_animation(o.parentObj, 0)
 	  end},
 
-	{ name = "boulder",    model = E_MODEL_HMC_ROLLING_ROCK, scale = 0.2, y_offset = 74, podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #16 - (Found in HMC) "Surely you've found a way around those boulders..."
+	{ name = "boulder",    model = E_MODEL_HMC_ROLLING_ROCK, scale = 0.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #16 - (Found in HMC) "Surely you've found a way around those boulders..."
 	  loop = function (o)
 		o.parentObj.oFaceAnglePitch = o.parentObj.oFaceAnglePitch -2000
 	  end},
 
-	{ name = "hoot",       model = E_MODEL_HOOT,             scale = 0.6, y_offset = 86,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #17 - (Found in WF) "Somewhere in first 4 levels, must be found on Course Star #2 or higher."
+	{ name = "hoot",       model = E_MODEL_HOOT,             scale = 0.6, y_offset = 24,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #17 - (Found in WF) "Somewhere in first 4 levels, must be found on Course Star #2 or higher."
 	  loop = function (o)
 		o.oAnimations = gObjectAnimations.hoot_seg5_anims_05005768
 		obj_init_animation(o.parentObj, 0)
 	  end},
 
-	{ name = "killyoshi",  model = E_MODEL_TROPHY_YOSHI,            scale = 0.4, y_offset = 84,   podium = E_MODEL_GORE_TROPHY_PODIUM,   --Trophy #18 - Kill Yoshi
+	{ name = "killyoshi",  model = E_MODEL_TROPHY_YOSHI,            scale = 0.4, y_offset = 10,   podium = E_MODEL_GORE_TROPHY_PODIUM,   --Trophy #18 - Kill Yoshi
 	loop = function (o)
 		o.oAnimations = gObjectAnimations.yoshi_seg5_anims_05024100
 		obj_init_animation(o.parentObj, 0)
 	  end},
 
-	{ name = "deadtoad",   model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 84,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
+	{ name = "deadtoad",   model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
 	{ name = "trophy20",   model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }  --Trophy #20 - 
 }
 
@@ -114,7 +114,7 @@ function trophy_load(o)
 		spawn_non_sync_object(id_bhvStaticObject, trophy.model, 0, 0, 0, function(display)
 			display.oFlags = display.oFlags | OBJ_FLAG_TRANSFORM_RELATIVE_TO_PARENT
 			obj_scale(display, trophy.scale*5)
-			display.oParentRelativePosY = (102 - trophy.y_offset)*5
+			display.oParentRelativePosY = 102 - trophy.y_offset
 			display.parentObj = o
 			o.parentObj = display
 		end)
@@ -141,8 +141,7 @@ function trophy_loop(o)
 	display.oAngleVelYaw = 300
 	display.oFaceAngleYaw = display.oFaceAngleYaw + display.oAngleVelYaw
 
-	--cur_obj_scale(0.2)
-	obj_scale(display, trophy.scale*1)
+	obj_scale(display, trophy.scale)
 
 	if trophy.loop then trophy.loop(o) end
 
