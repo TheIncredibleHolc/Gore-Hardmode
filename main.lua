@@ -93,7 +93,8 @@ function testing(m)
 		m.pos.z = 1047
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-		spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y + 2, m.pos.z, nil, 0)
+		--spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y + 2, m.pos.z, nil, 0)
+		gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 7
 	end
 end
 
@@ -300,6 +301,10 @@ end
 
 function bhv_custom_kingbobomb(obj) -- Funny boss battle
 	local m = nearest_mario_state_to_object(obj)
+
+	obj.oHomeX, obj.oHomeY, obj.oHomeZ = obj.oPosX, obj.oPosY, obj.oPosZ
+	
+
 	if obj.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
 		--obj.oHealth = obj.oHealth - 1
 	end
@@ -323,6 +328,8 @@ function bhv_custom_kingbobomb(obj) -- Funny boss battle
 		cur_obj_scale(.25)
 		gBehaviorValues.KingBobombFVel = 26
 		gBehaviorValues.KingBobombYawVel = 1400
+		
+
 	elseif obj.oHealth == 1 then
 		local bobsplat = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, obj.oPosX, obj.oPosY + 1, obj.oPosZ, nil)
 		obj_scale(bobsplat, .4)
@@ -347,6 +354,8 @@ function bhv_custom_kingbobomb(obj) -- Funny boss battle
 	if obj.oHealth == 2 and obj.oMoveFlags == 128 then
 		obj.oForwardVel = obj.oForwardVel + 5
 		obj.oFaceAnglePitch = obj.oFaceAnglePitch + 4000
+	else
+		obj.oFaceAnglePitch = 0
 	end
 	if obj.oAction == 3 then
 		if obj.oTimer == 0 and gMarioStates[0].marioObj == obj.usingObj then
@@ -2696,6 +2705,7 @@ function bhv_custom_yoshi(o)
 			o.oVelY = 55
 		end
 		local yaw = obj_angle_to_object(o, m.marioObj)
+		obj_set_model_extended(o, E_MODEL_TROPHY_YOSHI)
 
 		o.oFaceAngleYaw = yaw + 32768
 		o.oMoveAngleYaw = o.oFaceAngleYaw

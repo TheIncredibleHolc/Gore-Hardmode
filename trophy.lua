@@ -16,6 +16,7 @@ E_MODEL_TROPHY_WALUIGI = smlua_model_util_get_id("trophy_waluigi_win_geo")
 E_MODEL_GOALPOST = smlua_model_util_get_id("goalpost_geo")
 COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
 E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
+E_MODEL_TROPHY_YOSHI = smlua_model_util_get_id("trophy_yoshi_owie_geo")
 
 trophyinfo = {
 	{ name = "mario",      model = E_MODEL_TROPHY_MARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #1  - Beat the game as Mario.
@@ -53,7 +54,7 @@ trophyinfo = {
 		obj_init_animation(o.parentObj, 0)
 	  end},
 
-	{ name = "killyoshi",  model = E_MODEL_YOSHI,            scale = 0.4, y_offset = 10,   podium = E_MODEL_GORE_TROPHY_PODIUM,   --Trophy #18 - Kill Yoshi
+	{ name = "killyoshi",  model = E_MODEL_TROPHY_YOSHI,            scale = 0.4, y_offset = 10,   podium = E_MODEL_GORE_TROPHY_PODIUM,   --Trophy #18 - Kill Yoshi
 	loop = function (o)
 		o.oAnimations = gObjectAnimations.yoshi_seg5_anims_05024100
 		obj_init_animation(o.parentObj, 0)
