@@ -37,6 +37,8 @@ end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
+--gLevelValues.entryLevel = LEVEL_SECRETHUB
+
 --Turns off bubble death.
 gServerSettings.bubbleDeath = false
 
@@ -81,6 +83,7 @@ function testing(m)
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
 		s.isgold = true
+		warp_to_level(LEVEL_SECRETHUB, 1, 0)
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, m.pos.x + 250, m.pos.y + 2, m.pos.z + 150, nil)
