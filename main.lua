@@ -60,6 +60,8 @@ gBehaviorValues.KingBobombHealth = 6
 gLevelValues.pssSlideStarTime = 315 -- 10.5 Seconds
 gLevelValues.metalCapDuration = 90 -- 3 seconds, LOL.
 
+local savedCollisionBugStatus
+
 -- Unlock JRB cannon
 save_file_set_star_flags(get_current_save_file_num() - 1, COURSE_JRB, 0x80)
 
@@ -3200,7 +3202,10 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_color(1,127)
 		set_lighting_color(2,100)
 		set_lighting_dir(1,-128)
-		gLevelValues.fixCollisionBugs = true
+		if savedCollisionBugStatus == nil then
+			savedCollisionBugStatus = gLevelValues.fixCollisionBugs
+			gLevelValues.fixCollisionBugs = true
+		end
 	else
 		set_lighting_color(0, 255)
 		set_lighting_color(1, 255)
@@ -3208,7 +3213,10 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_dir(1,0)
 		set_override_skybox(-1)
 		set_override_envfx(-1)
-		gLevelValues.fixCollisionBugs = false
+		if savedCollisionBugStatus ~= nil then
+			gLevelValues.fixCollisionBugs = savedCollisionBugStatus
+			savedCollisionBugStatus = nil
+		end
 	end
 
 	if np.currLevelNum == LEVEL_TTC then
