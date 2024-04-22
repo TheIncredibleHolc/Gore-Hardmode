@@ -1095,6 +1095,13 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 				o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
 				o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
 			end)
+			for i = 0, 50 do
+				local random = math.random()	
+				spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
+					obj_scale(gib, random)
+				end)
+				
+			end
 	    end
 	end
 
@@ -2882,13 +2889,16 @@ function squishblood_init(o)
 	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
 	o.oFaceAngleYaw = calculate_yaw(z, normal)
 	network_play(sSplatter, m.pos, 1, m.playerIndex)
-	for i = 0, 15 do
+
+	--spawn_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, nil)
+	for i = 0, 60 do
 		local random1 = 0.6
 		local random2 = 0.9
-		--local random = math.random(random1, random2)		
+		local random = math.random()		
 		spawn_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
-			--obj_scale(gib, random)
+			obj_scale(gib, random/2)
 		end)
+		
 	end
 end
 
@@ -2909,7 +2919,7 @@ function gib_init(o)
 	o.oCollisionDistance = 7000
     o.collisionData = COL_GIB
 	local randomfvel = math.random(1,20) --Perhaps we can partially add Mario's velocity into this equation?
-	local random = math.random(10,50)
+	local random = math.random(20,50)
 	local randomyaw = math.random(1,65536)
 	o.oBounciness = 0
 	o.oGravity = -4
@@ -2917,18 +2927,28 @@ function gib_init(o)
 	o.oForwardVel = randomfvel
 	o.oFaceAngleYaw = randomyaw
 	o.oMoveAngleYaw = o.oFaceAngleYaw
+	--o.oPosY = o.oPosY + 100 --This gets the gibs off the floor, allowing the loop code to run.
 end
 
 function gib_loop(o)
-	load_object_collision_model()
+	--load_object_collision_model()
 	--m = gMarioStates[0]
-	cur_obj_move_using_fvel_and_gravity()
-	cur_obj_move_using_vel()
+	local random = math.random(1,1500)
+	--djui_chat_message_create(tostring(o.oFloorHeight))
 
-	if o.oPosY <= o.oFloorHeight then
+	if o.oPosY > o.oFloorHeight then
+		cur_obj_move_using_fvel_and_gravity()
+		cur_obj_move_using_vel()
+		cur_obj_update_floor_height_and_get_floor()
+		o.oFaceAnglePitch = random
+		o.oFaceAngleRoll = random
+		o.oFaceAngleYaw = random
+
+	else
+		--djui_chat_message_create("Under Floor")
 		o.oPosY = o.oFloorHeight
-		o.oGravity = 0
-		o.oForwardVel = 0
+		--o.oGravity = 0
+		--o.oForwardVel = 0
 	end
 end
 
