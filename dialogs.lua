@@ -51,23 +51,6 @@ fast! A human blur!\
 Here you go--you've won\
 it, fair and square!"))
 
-smlua_text_utils_dialog_replace(DIALOG_008,1,4,30,200, ("Uh oh, it looks\
-like Mario died and\
-went straight to hell!\
-(gasp!)\
-Lucky for Mario, there\
-are a few paths\
-through Hell to get\
-back to the overworld.\
-Some paths will be hard\
-and give REAL 1-ups!\
-Others are easier but\
-will yield you no help.\
-You must be careful\
-not to die again, for\
-the ETERNAL DEATH is\
-right around the corner!"))
-
 smlua_text_utils_dialog_replace(DIALOG_009,1,5,30,200, ("Long time, no see! Wow,\
 have you gotten fast!\
 Have you been training\
@@ -1736,3 +1719,19 @@ Anyone entering this cave\
 without permission will\
 meet certain disaster."))
 
+smlua_text_utils_dialog_replace(DIALOG_008,1,4,30,200, ("Uh oh, it looks\
+like Mario died and\
+went straight to hell!\
+(gasp!)\
+Lucky for Mario, there\
+are a few paths\
+through Hell to get\
+back to the overworld.\
+Some paths will be hard\
+and give REAL 1-ups!\
+Others are easier but\
+will yield you no help.\
+You must be careful\
+not to die again, for\
+the ETERNAL DEATH is\
+right around the corner!"))

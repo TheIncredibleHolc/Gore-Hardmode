@@ -37,7 +37,7 @@ trophyinfo = {
 		o.parentObj.oAnimState = o.oTimer % 32
 	  end},
 
-	{ name = "bully",      model = E_MODEL_NONE,            scale = 0.5, y_offset = -20,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #15 - (Found in LLL Volcano) "Highest point of the hottest area."
+	{ name = "bully",      model = E_MODEL_BULLY,            scale = 0.5, y_offset = -20,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #15 - (Found in LLL Volcano) "Highest point of the hottest area."
 	  loop = function (o)
 		o.oAnimations = gObjectAnimations.bully_seg5_anims_0500470C
 		obj_init_animation(o.parentObj, 0)
@@ -110,7 +110,6 @@ function trophy_load(o)
 	-- Checks to see if trophy should display. (show if unlocked and display or locked and collectible)
 	if trophyunlocked == (o.oBehParams & 1 == 0) then
 		obj_set_model_extended(o, trophy.podium)
-		--cur_obj_scale(.2)
 		spawn_non_sync_object(id_bhvStaticObject, trophy.model, 0, 0, 0, function(display)
 			display.oFlags = display.oFlags | OBJ_FLAG_TRANSFORM_RELATIVE_TO_PARENT
 			obj_scale(display, trophy.scale*5)

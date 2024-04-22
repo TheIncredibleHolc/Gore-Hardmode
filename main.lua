@@ -178,6 +178,8 @@ COL_MODEL_SWING_BLADE = smlua_collision_util_get("SwingBlade_collision")
 E_MODEL_GRINDER = smlua_model_util_get_id("Grinder_geo")
 E_MODEL_CHOMP = smlua_model_util_get_id("chomp_geo")
 E_MODEL_STOPWATCH = smlua_model_util_get_id("stopwatch_geo")
+E_MODEL_GIB = smlua_model_util_get_id("gib_geo")
+COL_GIB = smlua_collision_util_get("gib_collision")
 
 E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
 E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")
@@ -443,7 +445,12 @@ end
 ]]
 
 function bhv_custom_bully(obj)
+	local n = gNetworkPlayers[0]
 	local m = nearest_mario_state_to_object(obj)
+	if n.currLevelNum == LEVEL_SECRETHUB then
+		cur_obj_scale(0.5)
+	end
+
 	obj.oHomeX = m.pos.x
 	obj.oHomeY = m.pos.y
 	obj.oHomeZ = m.pos.z
@@ -837,6 +844,7 @@ ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABL
 function act_decapitated(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
+	--mario_blow_off_cap(m, 15) --Causes Mario to not decapitate??
 	obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
     --common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80);
 	common_death_handler(m, MARIO_ANIM_ELECTROCUTION, 50);
@@ -2874,6 +2882,14 @@ function squishblood_init(o)
 	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
 	o.oFaceAngleYaw = calculate_yaw(z, normal)
 	network_play(sSplatter, m.pos, 1, m.playerIndex)
+	for i = 0, 15 do
+		local random1 = 0.6
+		local random2 = 0.9
+		--local random = math.random(random1, random2)		
+		spawn_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
+			--obj_scale(gib, random)
+		end)
+	end
 end
 
 function squishblood_loop(o)
@@ -2886,6 +2902,35 @@ function squishblood_loop(o)
 	end
 end
 
+function gib_init(o)
+	o.oAction = 9
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+	o.oCollisionDistance = 7000
+    o.collisionData = COL_GIB
+	local randomfvel = math.random(1,20) --Perhaps we can partially add Mario's velocity into this equation?
+	local random = math.random(10,50)
+	local randomyaw = math.random(1,65536)
+	o.oBounciness = 0
+	o.oGravity = -4
+	o.oVelY = random
+	o.oForwardVel = randomfvel
+	o.oFaceAngleYaw = randomyaw
+	o.oMoveAngleYaw = o.oFaceAngleYaw
+end
+
+function gib_loop(o)
+	load_object_collision_model()
+	--m = gMarioStates[0]
+	cur_obj_move_using_fvel_and_gravity()
+	cur_obj_move_using_vel()
+
+	if o.oPosY <= o.oFloorHeight then
+		o.oPosY = o.oFloorHeight
+		o.oGravity = 0
+		o.oForwardVel = 0
+	end
+end
 
 -------Behavior Hooks-------
 
@@ -2949,6 +2994,7 @@ id_bhvLava = hook_behavior(nil, OBJ_LIST_SURFACE, true, lava_init, lava_loop, "b
 id_bhvQuickWarp = hook_behavior(nil, OBJ_LIST_SURFACE, true, warp_init, warp_loop, "bhvWarp")
 id_bhvFlatStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, flatstar_init, flatstar_loop, "bhvFlatStar")
 id_bhvBouncy1up = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bouncy_init, bouncy_loop, "bhvBouncy1up")
+id_bhvGib = hook_behavior(nil, OBJ_LIST_GENACTOR, true, gib_init, gib_loop, "bhvGib")
 
 -- test function to warp to level, disable if necessary
 hook_chat_command("bow", "ser", function ()
