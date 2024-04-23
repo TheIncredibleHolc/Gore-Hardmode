@@ -159,8 +159,6 @@ E_MODEL_RING = smlua_model_util_get_id("ring_geo")
 E_MODEL_GSCHARGE = smlua_model_util_get_id("gscharge_geo")
 E_MODEL_GSBEAM = smlua_model_util_get_id("gsbeam_geo")
 COL_GSBEAM = smlua_collision_util_get("gsbeamcol_collision")
-E_MODEL_HEADLESSMARIO = smlua_model_util_get_id("headlessmario_geo")
-E_MODEL_BOTTOMLESSMARIO = smlua_model_util_get_id("bottomlessmario_geo")
 E_MODEL_HELLPLATFORM = smlua_model_util_get_id("hellplatform_geo")
 COL_HELLPLATFORM = smlua_collision_util_get("hellplatform_collision")
 E_MODEL_HELLTHWOMPER = smlua_model_util_get_id("hellthwomper_geo")
@@ -180,6 +178,16 @@ E_MODEL_CHOMP = smlua_model_util_get_id("chomp_geo")
 E_MODEL_STOPWATCH = smlua_model_util_get_id("stopwatch_geo")
 E_MODEL_GIB = smlua_model_util_get_id("gib_geo")
 COL_GIB = smlua_collision_util_get("gib_collision")
+
+E_MODEL_HEADLESSMARIO = smlua_model_util_get_id("headlessmario_geo")
+E_MODEL_BOTTOMLESSMARIO = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_HEADLESS_LUIGI = smlua_model_util_get_id("luigidead_geo")
+--E_MODEL_BOTTOMLESS_LUIGI = smlua_model_util_get_id("luigi_bottomless") Not needed cause we just use Marios legs.
+E_MODEL_HEADLESS_TOAD = smlua_model_util_get_id("toad_headless_geo")
+E_MODEL_TOPLESS_TOAD = smlua_model_util_get_id("toad_topless_geo")
+E_MODEL_HEADLESS_WARIO = smlua_model_util_get_id("wario_headless_geo")
+E_MODEL_TOPLESS_WALUIGI = smlua_model_util_get_id("waluigi_topless_geo")
+
 
 E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
 E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")
@@ -845,7 +853,18 @@ function act_decapitated(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
 	--mario_blow_off_cap(m, 15) --Causes Mario to not decapitate??
-	obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
+	if m.character.type == CT_MARIO then
+		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
+	elseif m.character.type == CT_LUIGI then
+		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESS_LUIGI)
+	elseif m.character.type == CT_TOAD then
+		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESS_TOAD)
+	elseif m.character.type == CT_WARIO then
+		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESS_WARIO)
+	elseif m.character.type == CT_WALUIGI then
+		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESS_WALUIGI)
+	end
+
     --common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80);
 	common_death_handler(m, MARIO_ANIM_ELECTROCUTION, 50);
 	
@@ -857,7 +876,17 @@ ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNER
 function act_bitten_in_half(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
-	obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
+	if m.character.type == CT_MARIO then
+		obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
+	elseif m.character.type == CT_LUIGI then
+		obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
+	elseif m.character.type == CT_TOAD then
+		obj_set_model_extended(m.marioObj, E_MODEL_TOPLESS_TOAD)
+	elseif m.character.type == CT_WARIO then
+		obj_set_model_extended(m.marioObj, E_MODEL_TOPLESS_WARIO)
+	elseif m.character.type == CT_WALUIGI then
+		obj_set_model_extended(m.marioObj, E_MODEL_TOPLESS_WALUIGI)
+	end
     common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
 end
 hook_mario_action(ACT_BITTEN_IN_HALF, act_bitten_in_half)
@@ -1737,7 +1766,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
 	end
 
-	if m.character.type == CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 and not s.headless then
+	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 and not s.headless then
 		s.headless = true
 		--network_play(sSplatter, m.pos, 1, m.playerIndex)
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
@@ -1746,11 +1775,10 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 		m.particleFlags = PARTICLE_MIST_CIRCLE
 		set_mario_action(m, ACT_DECAPITATED, 0)
-	elseif m.character.type ~= CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 then
-		m.squishTimer = 50
+
 	end
 
-	if m.character.type == CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvFlyingBookend) ~= 0 and not s.headless then
+	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvFlyingBookend) ~= 0 and not s.headless then
 		s.headless = true
 		--network_play(sSplatter, m.pos, 1, m.playerIndex)
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
@@ -1759,12 +1787,10 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 		m.particleFlags = PARTICLE_MIST_CIRCLE
 		set_mario_action(m, ACT_DECAPITATED, 0)
-	elseif m.character.type ~= CT_MARIO and (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvFlyingBookend) ~= 0 then
-		m.squishTimer = 50
 	end
 
 	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and not s.headless then
-		if m.character.type == CT_MARIO and o.oAction == GOOMBA_ACT_JUMP then
+		if o.oAction == GOOMBA_ACT_JUMP then
 			s.headless = true
 			--network_play(sSplatter, m.pos, 1, m.playerIndex)
 			squishblood(m.marioObj)
@@ -1795,19 +1821,18 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	end
 
 	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvMadPiano) ~= 0 then
-		if m.character.type == CT_MARIO or m.character.type == CT_LUIGI then
-			s.bottomless = true
-			--network_play(sSplatter, m.pos, 1, m.playerIndex)
-			network_play(sCrunch, m.pos, 1, m.playerIndex)
-			squishblood(m.marioObj)
-			m.health = 0xff
-			mario_blow_off_cap(m, 15)
-			set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
-			cur_obj_become_intangible()
-			m.hurtCounter = 0
-		else
-			m.squishTimer = 50
-		end
+		
+		s.bottomless = true
+		--network_play(sSplatter, m.pos, 1, m.playerIndex)
+		network_play(sCrunch, m.pos, 1, m.playerIndex)
+		squishblood(m.marioObj)
+		m.health = 0xff
+		mario_blow_off_cap(m, 15)
+		set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
+		cur_obj_become_intangible()
+		m.hurtCounter = 0
+
+
 	end
 	
 	-- Custom shocking amp Kill
@@ -1833,20 +1858,16 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
 	--Chain Chomp insta-deaths
 	if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 and not s.bottomless and (m.hurtCounter > 0) and (m.action == ACT_BACKWARD_GROUND_KB or m.action == ACT_FORWARD_GROUND_KB) then --Custom Chain Chomp Mario Kill backward
-		if m.character.type == CT_MARIO or m.character.type == CT_LUIGI then
-			s.bottomless = true
-			--network_play(sSplatter, m.pos, 1, m.playerIndex)
-			network_play(sCrunch, m.pos, 1, m.playerIndex)
-			squishblood(m.marioObj)
-			m.health = 0xff
-			mario_blow_off_cap(m, 15)
-			cur_obj_shake_screen(SHAKE_POS_LARGE)
-			set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
-		else
-			m.squishTimer = 50
-			m.particleFlags = PARTICLE_MIST_CIRCLE
-			set_mario_action(m, ACT_GONE, 80)
-		end
+
+		s.bottomless = true
+		--network_play(sSplatter, m.pos, 1, m.playerIndex)
+		network_play(sCrunch, m.pos, 1, m.playerIndex)
+		squishblood(m.marioObj)
+		m.health = 0xff
+		mario_blow_off_cap(m, 15)
+		cur_obj_shake_screen(SHAKE_POS_LARGE)
+		set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
+		
 	end
 
 	--Big bully kill mario
@@ -2401,29 +2422,25 @@ function bhv_backroom_smiler_loop(o)
 		local_play(sSmiler, o.header.gfx.pos, 1)
 	end
 	if obj_check_hitbox_overlap(o, m.marioObj) and not s.isdead then
-		if m.character.type == CT_MARIO or m.character.type == CT_LUIGI then
-			s.bottomless = true
-			--network_play(sSplatter, m.pos, 1, m.playerIndex)
-			network_play(sCrunch, m.pos, 1, m.playerIndex)
-			audio_sample_stop(gSamples[sSmiler])
-			squishblood(m.marioObj)
-			m.health = 0xff
-			mario_blow_off_cap(m, 15)
-			set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
-			if mod_storage_load("smiler") == "1" then
-				--nothing
-			else
-				spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, m.pos.x, m.pos.y, m.pos.z, function(t)
-					t.oBehParams = 8 << 16 | 1
-				end)
-			end
-			obj_mark_for_deletion(o)
+
+		s.bottomless = true
+		--network_play(sSplatter, m.pos, 1, m.playerIndex)
+		network_play(sCrunch, m.pos, 1, m.playerIndex)
+		audio_sample_stop(gSamples[sSmiler])
+		squishblood(m.marioObj)
+		m.health = 0xff
+		mario_blow_off_cap(m, 15)
+		set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
+		if mod_storage_load("smiler") == "1" then
+			--nothing
 		else
-			m.squishTimer = 50
-			m.particleFlags = PARTICLE_MIST_CIRCLE
-			set_mario_action(m, ACT_GONE, 80)
-			obj_mark_for_deletion(o)
+			spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, m.pos.x, m.pos.y, m.pos.z, function(t)
+				t.oBehParams = 8 << 16 | 1
+			end)
 		end
+		obj_mark_for_deletion(o)
+
+		
 	end
 end
 
@@ -2950,6 +2967,11 @@ function gib_loop(o)
 		--o.oGravity = 0
 		--o.oForwardVel = 0
 	end
+
+	if o.oTimer > 7200 then -- 4 Minute timer before deleting. 
+		obj_mark_for_deletion(o)
+	end
+
 end
 
 -------Behavior Hooks-------
