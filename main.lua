@@ -181,8 +181,8 @@ E_MODEL_STOPWATCH = smlua_model_util_get_id("stopwatch_geo")
 E_MODEL_GIB = smlua_model_util_get_id("gib_geo")
 COL_GIB = smlua_collision_util_get("gib_collision")
 
-E_MODEL_HEADLESSMARIO = smlua_model_util_get_id("headlessmario_geo")
-E_MODEL_BOTTOMLESSMARIO = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_HEADLESS_MARIO = smlua_model_util_get_id("headlessmario_geo")
+E_MODEL_BOTTOMLESS_MARIO = smlua_model_util_get_id("bottomlessmario_geo")
 E_MODEL_HEADLESS_LUIGI = smlua_model_util_get_id("luigidead_geo")
 --E_MODEL_BOTTOMLESS_LUIGI = smlua_model_util_get_id("luigi_bottomless") Not needed cause we just use Marios legs.
 E_MODEL_HEADLESS_TOAD = smlua_model_util_get_id("toad_headless_geo")
@@ -455,9 +455,9 @@ end
 ]]
 
 function bhv_custom_bully(obj)
-	local n = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 	local m = nearest_mario_state_to_object(obj)
-	if n.currLevelNum == LEVEL_SECRETHUB then
+	if np.currLevelNum == LEVEL_SECRETHUB then
 		cur_obj_scale(0.5)
 	end
 
@@ -565,14 +565,14 @@ end
 
 function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable. Will lunge at Mario
 	local m = nearest_mario_state_to_object(obj)
-	local n = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 	if obj.oGoombaJumpCooldown >= 9 then
 		obj.oGoombaJumpCooldown = 8
 		obj.oVelY = obj.oVelY + 10
 		obj.oForwardVel = 70
 	end
 
-	if n.currLevelNum == LEVEL_BOWSER_2 and obj.oPosY == obj.oFloorHeight then
+	if np.currLevelNum == LEVEL_BOWSER_2 and obj.oPosY == obj.oFloorHeight then
 		obj.oForwardVel = 30
 	end
 
@@ -594,9 +594,8 @@ end
 
 function bhv_custom_thwomp(obj)
 	local m = nearest_player_to_object(obj)
-	local n = gNetworkPlayers[0]
-	if n.currLevelNum ~= LEVEL_TTC then --TTC is excluded for flood as its nearly unbeatable. Giving the player mercy by turning it off in regular game mode too.	
-		
+	local np = gNetworkPlayers[0]
+	if np.currLevelNum ~= LEVEL_TTC then --TTC is excluded for flood as its nearly unbeatable. Giving the player mercy by turning it off in regular game mode too.	
 		obj.oThwompRandomTimer = 0 --Instant falling
 
 		if obj.oAction == 0 then --ARISE!!
@@ -690,8 +689,8 @@ function bhv_custom_bowlballspawner(obj) -- Idk if this actually does anything, 
 end
 
 function bhv_bowser_key_spawn_ukiki(obj) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
-	n = gNetworkPlayers[0]
-	if n.currLevelNum == LEVEL_BOWSER_1 then
+	local np = gNetworkPlayers[0]
+	if np.currLevelNum == LEVEL_BOWSER_1 then
 		spawn_sync_if_main(id_bhvUkiki, E_MODEL_UKIKI, obj.oPosX, obj.oPosY + 50, obj.oPosZ, function (o)
 			o.oAction = 3
 		end, 0)
@@ -699,11 +698,9 @@ function bhv_bowser_key_spawn_ukiki(obj) --Bow1 spawns Ukiki minigame, Bow2 spaw
 		fadeout_music(0)
 		stream_play(smwbonusmusic)
 	end
-	if n.currLevelNum == LEVEL_BOWSER_2 then
-		local m = gMarioStates[0]
+	if np.currLevelNum == LEVEL_BOWSER_2 then
 		cur_obj_disable_rendering_and_become_intangible(obj)
 		fadeout_music(0)
-		if m.playerIndex ~= 0 then return end
 		local_play(sBows2intro, m.pos, 1)
 	end
 end
@@ -711,11 +708,11 @@ end
 function bhv_bowser_key_ukiki_loop(obj) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
 	--djui_chat_message_create(tostring(obj.oTimer))
 	--djui_chat_message_create(tostring(obj.oAction))
-	n = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 
-	if n.currLevelNum == LEVEL_BOWSER_1 then
+	if np.currLevelNum == LEVEL_BOWSER_1 then
 		local o = obj_get_nearest_object_with_behavior_id(obj, id_bhvUkiki)
-		if o ~= nil then
+		if o then
 			cur_obj_disable_rendering_and_become_intangible(obj)
 			obj_copy_pos(obj, o)
 			obj.oBehParams = 1
@@ -728,57 +725,58 @@ function bhv_bowser_key_ukiki_loop(obj) --Bow1 spawns Ukiki minigame, Bow2 spawn
 	end
 
 
-	if n.currLevelNum == LEVEL_BOWSER_2 then
+	if np.currLevelNum == LEVEL_BOWSER_2 then
+		if obj.oAction == 1 then
+			if obj.oTimer <= 60 then
+				cur_obj_disable_rendering_and_become_intangible(obj)
+			end
+			if obj.oTimer == 42 then
+				stream_play(musicbows2)
+			end
 
-		if obj.oTimer <= 60 and obj.oAction == 1 then
-			cur_obj_disable_rendering_and_become_intangible(obj)
+			if obj.oTimer == 40 then
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, -698, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1688, 1230, -698, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, 690, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1713, 1230, 690, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 695, 1230, 1697, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -721, 1230, 1697, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1716, 1230, 680, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1716, 1230, 680, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1670, 1230, -680, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1670, 1230, -680, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -696, 1230, -1708, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -696, 1230, -1708, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -743, 1230, -1708, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -743, 1230, -1708, nil, 0)
+			end
+
+			if obj.oTimer == 100 then
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 2650, 1230, -128, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 2650, 1230, -128, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 58, 1230, 2402, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 58, 1230, 2402, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -2357, 1230, 98, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -2357, 1230, 98, nil, 0)
+
+				spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 32, 1230, -2404, nil, 0)
+				spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 32, 1230, -2404, nil, 0)
+			end
 		end
-		if obj.oTimer == 42 and obj.oAction == 1 then
-			stream_play(musicbows2)
-		end
 
-		if obj.oTimer == 40 and obj.oAction == 1 then
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, -698, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1688, 1230, -698, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 1713, 1230, 690, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 1713, 1230, 690, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 695, 1230, 1697, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -721, 1230, 1697, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 695, 1230, 1697, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1716, 1230, 680, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1716, 1230, 680, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -1670, 1230, -680, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -1670, 1230, -680, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -696, 1230, -1708, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -696, 1230, -1708, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -743, 1230, -1708, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -743, 1230, -1708, nil, 0)
-		end
-
-		if  obj.oTimer == 100 and obj.oAction == 1 then
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 2650, 1230, -128, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 2650, 1230, -128, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 58, 1230, 2402, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 58, 1230, 2402, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, -2357, 1230, 98, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, -2357, 1230, 98, nil, 0)
-
-			spawn_sync_if_main(id_bhvGoomba, E_MODEL_GOOMBA, 32, 1230, -2404, nil, 0)
-			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 32, 1230, -2404, nil, 0)
-		end
-
-		local o = obj_get_nearest_object_with_behavior_id(obj, id_bhvGoomba)
-		if o ~= nil then
+		local o = obj_get_first_with_behavior_id(id_bhvGoomba)
+		if o then
 			cur_obj_disable_rendering_and_become_intangible(obj)
 			obj_copy_pos(obj, o)
 			obj.oBehParams = 1
@@ -787,14 +785,12 @@ function bhv_bowser_key_ukiki_loop(obj) --Bow1 spawns Ukiki minigame, Bow2 spawn
 			--obj.oAction = 0
 			if obj.oPosY >= obj.oFloorHeight then
 				obj.oPosY = obj.oPosY - 5
-				
 			else
 				obj.oBehParams = 0
 				stream_fade(50)
 			end
 		end
 	end
-
 end
 
 -------ACT_FUNCTIONS------------
@@ -819,6 +815,26 @@ function act_necksnap(m)
 end
 hook_mario_action(ACT_NECKSNAP, act_necksnap)
 
+local particleTiming = {
+	[75]=1,
+	[82]=1,
+	[90]=1,
+	[95]=1,
+	[100]=1,
+	[105]=1,
+	[108]=1,
+	[114]=1,
+	[118]=1,
+	[121]=1,
+	[124]=1,
+	[127]=1,
+	[130]=1,
+	[132]=1,
+	[134]=1,
+	[136]=1,
+	[138]=1
+}
+
 --Electricutes the F out of Mario
 function act_shocked(m)
 	local s = gStateExtras[m.playerIndex]
@@ -830,19 +846,16 @@ function act_shocked(m)
 	else
 		m.flags = m.flags & ~(MARIO_METAL_SHOCK)
 	end
-	if (m.actionTimer) == 20 or (m.actionTimer) == 40 or (m.actionTimer) == 50 or (m.actionTimer) == 65 then
+	if m.actionTimer == 20 or m.actionTimer == 40 or m.actionTimer == 50 or m.actionTimer == 65 then
 		m.particleFlags = PARTICLE_MIST_CIRCLE
 	end
-	if (m.actionTimer) >= 50 then
+	if m.actionTimer >= 50 then
 		m.marioBodyState.eyeState = MARIO_EYES_DEAD
 	end
-	if (m.actionTimer) == 75 or (m.actionTimer) == 82 or (m.actionTimer) == 90 or (m.actionTimer) == 95 or
-	   (m.actionTimer) == 100 or (m.actionTimer) == 105 or (m.actionTimer) == 108 or (m.actionTimer) == 114 or
-	   (m.actionTimer) == 118 or (m.actionTimer) == 121 or (m.actionTimer) == 124 or (m.actionTimer) == 127 or
-	   (m.actionTimer) == 130 or (m.actionTimer) == 132 or (m.actionTimer) == 134 or (m.actionTimer) == 136 or (m.actionTimer) == 138 then
+	if particleTiming[m.actionTimer] then
 		m.particleFlags = PARTICLE_TRIANGLE|PARTICLE_MIST_CIRCLE
 	end
-	if (m.actionTimer) == 140 then
+	if m.actionTimer == 140 then
 		m.particleFlags = PARTICLE_TRIANGLE
 		m.squishTimer = 50
 	end
@@ -851,21 +864,20 @@ hook_mario_action(ACT_SHOCKED, act_shocked)
 
 --Mario is decapitated.
 ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+
+local headlessModel = {
+	E_MODEL_HEADLESS_MARIO,
+	E_MODEL_HEADLESS_LUIGI,
+	E_MODEL_HEADLESS_TOAD,
+	E_MODEL_HEADLESS_WALUIGI,
+	E_MODEL_HEADLESS_WARIO,
+}
+
 function act_decapitated(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
 	--mario_blow_off_cap(m, 15) --Causes Mario to not decapitate??
-	if m.character.type == CT_MARIO then
-		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESSMARIO)
-	elseif m.character.type == CT_LUIGI then
-		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESS_LUIGI)
-	elseif m.character.type == CT_TOAD then
-		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESS_TOAD)
-	elseif m.character.type == CT_WARIO then
-		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESS_WARIO)
-	elseif m.character.type == CT_WALUIGI then
-		obj_set_model_extended(m.marioObj, E_MODEL_HEADLESS_WALUIGI)
-	end
+	obj_set_model_extended(m.marioObj, headlessModel[m.character.type])
 
     --common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80);
 	common_death_handler(m, MARIO_ANIM_ELECTROCUTION, 50);
@@ -875,27 +887,23 @@ hook_mario_action(ACT_DECAPITATED, act_decapitated)
 
 --Mario is bitten in half.
 ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+
+local toplessModel = {
+	E_MODEL_BOTTOMLESS_MARIO,
+	E_MODEL_BOTTOMLESS_MARIO,
+	E_MODEL_TOPLESS_TOAD,
+	E_MODEL_TOPLESS_WALUIGI,
+	E_MODEL_TOPLESS_WARIO
+}
+
 function act_bitten_in_half(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
-	if m.character.type == CT_MARIO then
-		obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
-	elseif m.character.type == CT_LUIGI then
-		obj_set_model_extended(m.marioObj, E_MODEL_BOTTOMLESSMARIO)
-	elseif m.character.type == CT_TOAD then
-		obj_set_model_extended(m.marioObj, E_MODEL_TOPLESS_TOAD)
-	elseif m.character.type == CT_WARIO then
-		obj_set_model_extended(m.marioObj, E_MODEL_TOPLESS_WARIO)
-	elseif m.character.type == CT_WALUIGI then
-		obj_set_model_extended(m.marioObj, E_MODEL_TOPLESS_WALUIGI)
-	end
+
+	obj_set_model_extended(m.marioObj, toplessModel[m.character.type])
     common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
 end
 hook_mario_action(ACT_BITTEN_IN_HALF, act_bitten_in_half)
-
-
-
-
 
 function splattertimer(m) --This timer is needed to prevent mario from immediately splatting again right after respawning. Adds some fluff to his death too.
 	local s = gStateExtras[m.playerIndex]
@@ -966,13 +974,13 @@ end
 
 function mario_update(m) -- ALL Mario_Update hooked commands.
 	if is_player_active(m) == 0 then return end
-	local n = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
 	--djui_chat_message_create(tostring(m.marioObj.oFloorHeight))
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	if not trophy_unlocked(13) and n.currLevelNum == LEVEL_TTM and n.currAreaIndex == 3 and gameisbeat then --GRANT TROPHY #13
+	if not trophy_unlocked(13) and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3 and gameisbeat then --GRANT TROPHY #13
 		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
 		if trophy then
 			--djui_chat_message_create("trophy exists")
@@ -985,7 +993,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	if n.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or n.currLevelNum == LEVEL_TTM and n.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE then
+	if np.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE then
 		local turnSpeed = (0x100)*(m.forwardVel*0.2)
 		m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, turnSpeed, turnSpeed)
 	end
@@ -1012,7 +1020,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		s.isgold = false
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
-	if n.currLevelNum == LEVEL_BOB then
+	if np.currLevelNum == LEVEL_BOB then
 		gBehaviorValues.KoopaCatchupAgility = 60
 	else
 		gBehaviorValues.KoopaCatchupAgility = 8
@@ -1025,14 +1033,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		obj_mark_for_deletion(wallsigns)
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
-	if n.currLevelNum == LEVEL_BBH then
+	if np.currLevelNum == LEVEL_BBH then
 		set_lighting_color(0,50)
 		set_lighting_color(1,50)
 		set_lighting_color(2,65)
 		set_lighting_dir(1,128)
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
-	if n.currLevelNum == LEVEL_BITFS then
+	if np.currLevelNum == LEVEL_BITFS then
 
 		local minvertedpyramid = obj_get_first_with_behavior_id(id_bhvBitfsTiltingInvertedPyramid)
 		while minvertedpyramid do
@@ -1045,7 +1053,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	if n.currLevelNum == LEVEL_WDW then --Wet/Dry world is now just dry world... LOL...
+	if np.currLevelNum == LEVEL_WDW then --Wet/Dry world is now just dry world... LOL...
 		set_environment_region(0, -10000)
 		set_environment_region(1, -10000)
 		set_environment_region(2, -10000)
@@ -1061,7 +1069,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--Backroom Teleport
 
 	--djui_chat_message_create(tostring(m.forwardVel))
-	if n.currLevelNum == LEVEL_CASTLE and m.forwardVel < -120 and ia(m) then
+	if np.currLevelNum == LEVEL_CASTLE and m.forwardVel < -120 and ia(m) then
 		m.forwardVel = 0
 		if not obj_get_first_with_behavior_id(id_bhvBackroom) then
 			spawn_non_sync_object(id_bhvBackroom, E_MODEL_BACKROOM, 0, 10000, 0, function(o)
@@ -1096,12 +1104,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 ----------------------------------------------------------------------------------------------------------------------------------
 	--(PSS Only) Faster sliding when picking up coins.
 
-	if n.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or n.currLevelNum == LEVEL_PSS and m.action == ACT_DIVE_SLIDE then
+	if np.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_PSS and m.action == ACT_DIVE_SLIDE then
 		m.slideVelX = m.slideVelX + 100 * sins(m.faceAngle.y)
 		m.slideVelZ = m.slideVelZ + 100 * coss(m.faceAngle.y)
 	end
 
-	if n.currLevelNum == LEVEL_TTM and n.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE or n.currLevelNum == LEVEL_TTM and n.currAreaIndex >= 2 and m.action == ACT_DIVE_SLIDE then
+	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_DIVE_SLIDE then
 		m.slideVelX = m.slideVelX + 40 * sins(m.faceAngle.y)
 		m.slideVelZ = m.slideVelZ + 40 * coss(m.faceAngle.y)
 	end
@@ -1137,7 +1145,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 
 	-- BONK DEATH DETECTION FOR HEAVEHO THROWS SPECIFICALLY (Really just for WDW)
-	if (m.action == ACT_THROWN_BACKWARD) or (m.action == ACT_THROWN_FORWARD) and (s.flyingVel > 60) and n.currLevelNum == LEVEL_WDW then 
+	if (m.action == ACT_THROWN_BACKWARD) or (m.action == ACT_THROWN_FORWARD) and (s.flyingVel > 60) and np.currLevelNum == LEVEL_WDW then 
 		local heaveho = obj_get_nearest_object_with_behavior_id(o, id_bhvHeaveHoThrowMario)
 		if heaveho ~= nil and mario_is_within_rectangle(heaveho.oPosX - 100, heaveho.oPosX + 100, heaveho.oPosZ - 100, heaveho.oPosZ + 100) == 0 and m.wall ~= nil then
 			mario_blow_off_cap(m, 45)
@@ -1301,7 +1309,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 
 
 
-	if n.currLevelNum == LEVEL_SSL and n.currAreaIndex == 1 then
+	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
 		if m.marioObj.oTimer == 30 then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
 		end
@@ -1325,7 +1333,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		s.ssldiethirst = 0
 	end
 
-	if n.currLevelNum == LEVEL_SL and n.currAreaIndex == 1 then
+	if np.currLevelNum == LEVEL_SL and np.currAreaIndex == 1 then
 		if m.marioObj.oTimer == 30 then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
 		end
@@ -1409,8 +1417,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Hell entrance cutscene
-	n = gNetworkPlayers[0]
-	if n.currLevelNum == LEVEL_HELL and m.marioObj.oTimer == 28 then
+	if np.currLevelNum == LEVEL_HELL and m.marioObj.oTimer == 28 then
 		if ia(m) then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_008)
 		end
@@ -1496,7 +1503,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
  	end
 ----------------------------------------------------------------------------------------------------------------------------------
 
-	if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj, id_bhvUkiki) ~= 0) and n.currLevelNum == LEVEL_BOWSER_1 then
+	if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj, id_bhvUkiki) ~= 0) and np.currLevelNum == LEVEL_BOWSER_1 then
 		ukikiholding = 1
 		ukikiheldby = m.playerIndex
 
@@ -1823,7 +1830,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	end
 
 	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvMadPiano) ~= 0 then
-		
 		s.bottomless = true
 		--network_play(sSplatter, m.pos, 1, m.playerIndex)
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
@@ -1833,17 +1839,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
 		cur_obj_become_intangible()
 		m.hurtCounter = 0
-
-
 	end
-	
-	-- Custom shocking amp Kill
-	if obj_has_behavior_id(o, id_bhvCirclingAmp) ~= 0 and (m.hurtCounter > 0) then
-		if not floodenabled then
-			--m.health = 120 
-		end
-	end
-	
 
 	-- Custom FlyGuy insta-death
 	if obj_has_behavior_id(o, id_bhvFlyGuy) ~= 0 and (m.hurtCounter > 0) then
@@ -1852,15 +1848,15 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
 	-- Bowling Ball insta-death
 	if obj_has_behavior_id(o, id_bhvBowlingBall) ~= 0 and (m.hurtCounter > 0) then
-		if (m.action == ACT_JUMP) or (m.action == ACT_DOUBLE_JUMP) or (m.action == ACT_JUMP_KICK) or (m.action == ACT_HOLD_JUMP) or (m.action == ACT_LONG_JUMP) then
-		else
+		-- if (m.action == ACT_JUMP) or (m.action == ACT_DOUBLE_JUMP) or (m.action == ACT_JUMP_KICK) or (m.action == ACT_HOLD_JUMP) or (m.action == ACT_LONG_JUMP) then
+		-- else
+		if m.action & ACT_FLAG_AIR == 0 then
 			m.squishTimer = 50
 		end
 	end
 
 	--Chain Chomp insta-deaths
 	if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 and not s.bottomless and (m.hurtCounter > 0) and (m.action == ACT_BACKWARD_GROUND_KB or m.action == ACT_FORWARD_GROUND_KB) then --Custom Chain Chomp Mario Kill backward
-
 		s.bottomless = true
 		--network_play(sSplatter, m.pos, 1, m.playerIndex)
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
@@ -1869,7 +1865,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		mario_blow_off_cap(m, 15)
 		cur_obj_shake_screen(SHAKE_POS_LARGE)
 		set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
-		
 	end
 
 	--Big bully kill mario
@@ -1884,10 +1879,10 @@ end
 
 function before_mario_action(m, action)
 	local s = gStateExtras[m.playerIndex]
-	local n = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 -------------------------------------------------------------------------------------------------------------------------------------------------
 	--Disables LAVA_BOOST and replaces with a splash and insta-death... KERPLUNK!!
-	if (action == ACT_LAVA_BOOST) and n.currLevelNum ~= LEVEL_SL then
+	if (action == ACT_LAVA_BOOST) and np.currLevelNum ~= LEVEL_SL then
 		set_mario_action(m, ACT_GONE, 1)
 		network_play(sSplash, m.pos, 1, m.playerIndex)
 		spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
@@ -1896,7 +1891,7 @@ function before_mario_action(m, action)
 	end
 
 	--If lava boosted from ice, insta-kill Mario
-	if (action == ACT_LAVA_BOOST) and n.currLevelNum == LEVEL_SL then
+	if (action == ACT_LAVA_BOOST) and np.currLevelNum == LEVEL_SL then
 		m.pos.y = m.pos.y + 100
 		m.health = 0xff
 	end
@@ -1960,7 +1955,7 @@ end
 
 function marioalive() -- Resumes the death counter to accept death counts. 
 	local s = gStateExtras[0]
-	local n = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 	local m = gMarioStates[0]
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
@@ -1972,7 +1967,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	s.headless = false --Gives Mario his head back
 	s.bottomless = false --Gives Mario his whole upper body back
 
-	if n.currLevelNum == LEVEL_TTM and n.currAreaIndex < 2 then
+	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex < 2 then
 		m.pos.y = m.pos.y + 920
 	end
 
@@ -1980,8 +1975,6 @@ function marioalive() -- Resumes the death counter to accept death counts.
 		s.isinhell = true
 		warp_to_level(LEVEL_HELL, 1, 0)
 	end
-
-	
 
 	--Resets the baby penguin timer on warp so it doesn't glitch out if mario leaves the level without fully killing the baby penguin.
 	s.penguinholding = 0
@@ -2158,21 +2151,19 @@ end
 
 -----GREEN DEMONS (ONCE AND FOR ALL!!) This finally works so DON'T TOUCH IT!!
 local function before_phys_step(m,stepType) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
-
-	local n = gNetworkPlayers[0]
-
+	local np = gNetworkPlayers[0]
 
 	if not ia(m) then return end
 
 	local obj = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhv1Up)
-    if obj and n.currLevelNum ~= LEVEL_HELL and nearest_interacting_mario_state_to_object(obj).playerIndex == 0 and mario_is_within_rectangle(obj.oPosX - 200, obj.oPosX + 200, obj.oPosZ - 200, obj.oPosZ + 200) ~= 0 and m.pos.y > obj.oPosY - 200 and m.pos.y < obj.oPosY + 200 then --if local mario is touching 1up then
+    if obj and np.currLevelNum ~= LEVEL_HELL and nearest_interacting_mario_state_to_object(obj).playerIndex == 0 and mario_is_within_rectangle(obj.oPosX - 200, obj.oPosX + 200, obj.oPosZ - 200, obj.oPosZ + 200) ~= 0 and m.pos.y > obj.oPosY - 200 and m.pos.y < obj.oPosY + 200 then --if local mario is touching 1up then
 		spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
 		obj_mark_for_deletion(obj)
 		local_play(sFart, m.pos, 1)
     end
 
 	local demon = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON
-    if n.currLevelNum ~= LEVEL_HELL and demon and nearest_interacting_mario_state_to_object(demon).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
+    if np.currLevelNum ~= LEVEL_HELL and demon and nearest_interacting_mario_state_to_object(demon).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
 		obj_mark_for_deletion(demon)
 		local_play(sFart, m.pos, 1)
     end
@@ -2700,32 +2691,32 @@ function bhv_custom_circlingamp(o)
 end
 
 function bhv_custom_squarishPathMoving(o)
-	n = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 
-	if n.currLevelNum == LEVEL_BITDW and o.oPosY <= -2959 then
+	if np.currLevelNum == LEVEL_BITDW and o.oPosY <= -2959 then
 		obj_mark_for_deletion(o)
 	end
 
-	if n.currLevelNum == LEVEL_BITFS then
+	if np.currLevelNum == LEVEL_BITFS then
 		obj_mark_for_deletion(o)
 	end
 
 end
 
 function bhv_custom_ActivatedBackAndForthPlatform(o)
-	m = nearest_mario_state_to_object(o)
-	n = gNetworkPlayers[0]
+	local m = nearest_mario_state_to_object(o)
+	local np = gNetworkPlayers[0]
 
-	if n.currLevelNum == LEVEL_BITFS and m.pos.y >= o.oPosY -10 and mario_is_within_rectangle(o.oPosX - 500, o.oPosX + 500, o.oPosZ - 500, o.oPosZ + 500) ~= 0 then
+	if np.currLevelNum == LEVEL_BITFS and m.pos.y >= o.oPosY -10 and mario_is_within_rectangle(o.oPosX - 500, o.oPosX + 500, o.oPosZ - 500, o.oPosZ + 500) ~= 0 then
 		spawn_triangle_break_particles(30, 138, 1, 4)
-		play_sound(SOUND_GENERAL_WALL_EXPLOSION, m.marioObj.header.gfx.cameraToObject)
-		play_sound(SOUND_GENERAL_EXPLOSION6, m.pos)
+		cur_obj_play_sound_1(SOUND_GENERAL_WALL_EXPLOSION)
+		cur_obj_play_sound_1(SOUND_GENERAL_EXPLOSION6)
 		obj_mark_for_deletion(o)
 	end
 end
 
 function bhv_custom_yoshi(o)
-	m = gMarioStates[0]
+	local m = gMarioStates[0]
 	if o.oAction == 6 then
 
 
