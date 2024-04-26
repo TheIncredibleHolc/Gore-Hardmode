@@ -93,13 +93,19 @@ function testing(m)
 
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		m.pos.x = 5254
-		m.pos.y = -4607
-		m.pos.z = 1047
+		m.numLives = 1
+		squishblood(m.marioObj)
+		set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-		--spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y + 2, m.pos.z, nil, 0)
-		gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 7
+		local yaw = 0
+		for i = 0, 16 do
+			yaw = yaw + 4096	
+			spawn_sync_if_main(id_bhvFireRing, E_MODEL_RED_FLAME, m.pos.x, m.pos.y + 26, m.pos.z, function (o)
+				o.oFaceAngleYaw = yaw
+				o.oMoveAngleYaw = o.oFaceAngleYaw
+			end, 0)
+		end
 	end
 end
 
@@ -184,10 +190,12 @@ COL_GIB = smlua_collision_util_get("gib_collision")
 E_MODEL_HEADLESS_MARIO = smlua_model_util_get_id("headlessmario_geo")
 E_MODEL_BOTTOMLESS_MARIO = smlua_model_util_get_id("bottomlessmario_geo")
 E_MODEL_HEADLESS_LUIGI = smlua_model_util_get_id("luigidead_geo")
---E_MODEL_BOTTOMLESS_LUIGI = smlua_model_util_get_id("luigi_bottomless") Not needed cause we just use Marios legs.
+--E_MODEL_BOTTOMLESS_LUIGI = smlua_model_util_get_id("bottomlessmario_geo")
 E_MODEL_HEADLESS_TOAD = smlua_model_util_get_id("toad_headless_geo")
 E_MODEL_TOPLESS_TOAD = smlua_model_util_get_id("toad_topless_geo")
 E_MODEL_HEADLESS_WARIO = smlua_model_util_get_id("wario_headless_geo")
+E_MODEL_TOPLESS_WARIO = smlua_model_util_get_id("wario_topless_geo")
+E_MODEL_HEADLESS_WALUIGI = smlua_model_util_get_id("waluigi_headless_geo")
 E_MODEL_TOPLESS_WALUIGI = smlua_model_util_get_id("waluigi_topless_geo")
 
 
@@ -229,6 +237,7 @@ for i = 0, MAX_PLAYERS-1 do
 		ssldiethirst = 0,
 		splatterdeath = 0,
 		timeattack = false,
+		visitedhell = false,
 	}
 end
 
@@ -803,11 +812,13 @@ ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|A
 
 --Mario's neck snapping action.
 function act_necksnap(m)
+	local m = gMarioStates[0]
 	local s = gStateExtras[m.playerIndex]
-    common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
+	common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
 	smlua_anim_util_set_animation(m.marioObj, "MARIO_NECKSNAP")
 	m.actionTimer = m.actionTimer + 1
 	if m.actionTimer == 1 then
+		network_play(sBoneBreak, m.pos, 1, m.playerIndex)
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 	end
 	s.isgold = false
@@ -1417,10 +1428,58 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Hell entrance cutscene
-	if np.currLevelNum == LEVEL_HELL and m.marioObj.oTimer == 28 then
-		if ia(m) then
-			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_008)
+	local m = gMarioStates[0]
+	local np = gNetworkPlayers[0]
+	local s = gStateExtras[m.playerIndex]
+
+	if np.currLevelNum == LEVEL_HELL and not s.visitedhell then
+		if m.playerIndex ~= 0 then return end
+		
+		if m.marioObj.oTimer <= 60 then
+			--cur_obj_disable_rendering_and_become_intangible(m.marioObj)
+			cur_obj_disable_rendering()
+			m.pos.x = 69
+			m.pos.y = 1100
+			m.pos.z = -11800
+			m.marioObj.oFaceAngleYaw = 0
 		end
+		if m.marioObj.oTimer == 61 then
+			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
+			network_play(sFlames, m.pos, 1, m.playerIndex)
+			cur_obj_enable_rendering()
+			
+			local yaw = 0 --Creates a flame ring portal for Mario to spawn from.
+			for i = 0, 16 do
+				yaw = yaw + 4096	
+				spawn_sync_if_main(id_bhvFireRing, E_MODEL_RED_FLAME, m.pos.x, m.pos.y + 26, m.pos.z, function (o)
+					o.oFaceAngleYaw = yaw
+					o.oMoveAngleYaw = o.oFaceAngleYaw
+				end, 0)
+			end
+			
+			--m.pos.x = 69
+			--m.pos.y = 1690
+			--m.pos.z = -11735
+			--set_mario_action(m, ACT_THROWN_FORWARD, 0)
+			m.forwardVel = 65
+			set_mario_action(m, ACT_HARD_FORWARD_AIR_KB, 0)
+		end
+
+
+		if m.marioObj.oTimer == 120 then
+			if ia(m) then
+				cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_008)
+				s.visitedhell = true
+			end
+		end
+
+
+
+
+	elseif np.currLevelNum == LEVEL_HELL and m.marioObj.oTimer == 1 then
+		m.pos.x = 69
+		m.pos.y = 1690
+		m.pos.z = -11771
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -1702,7 +1761,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
 	--Custom Bully necksnap
 	if obj_has_behavior_id(o, id_bhvSmallBully) ~= 0 and (m.action == ACT_SOFT_FORWARD_GROUND_KB or m.action == ACT_SOFT_BACKWARD_GROUND_KB) then
-		network_play(sBoneBreak, m.pos, 1, m.playerIndex)
+		--network_play(sBoneBreak, m.pos, 1, m.playerIndex)
 		set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 
@@ -2242,7 +2301,7 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 
 	--Neck snapping
 	if attacker.action == ACT_DIVE then
-		local_play(sBoneBreak, victim.pos, 1)
+		--local_play(sBoneBreak, victim.pos, 1)
 		set_mario_action(victim, ACT_NECKSNAP, 0)
 	end
 
@@ -2893,12 +2952,15 @@ function stopwatch_loop(o)
 end
 
 function squishblood_init(o)
+	local m = gMarioStates[0]
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true	
 	local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
 	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
 	o.oFaceAngleYaw = calculate_yaw(z, normal)
-	network_play(sSplatter, m.pos, 1, m.playerIndex)
+	if m.action ~= ACT_NECKSNAP then
+		network_play(sSplatter, m.pos, 1, m.playerIndex)
+	end
 
 	--spawn_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, nil)
 	for i = 0, 60 do
@@ -2961,10 +3023,30 @@ function gib_loop(o)
 		--o.oForwardVel = 0
 	end
 
-	if o.oTimer > 7200 then -- 4 Minute timer before deleting. 
+	if o.oTimer > 1200 then -- 4 Minute timer before deleting. 
 		obj_mark_for_deletion(o)
 	end
 
+end
+
+
+function firering_init(o)
+	obj_set_billboard(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+	local random = math.random(1,65536)
+	o.oBounciness = 0
+	o.oForwardVel = 30
+	o.oFaceAngleYaw = o.oFaceAngleYaw + random
+	obj_scale(o, 4)
+end
+
+function firering_loop(o)
+	o.oAnimState = o.oTimer % 4
+	cur_obj_move_using_fvel_and_gravity()
+	if o.oTimer > 20 then
+		obj_mark_for_deletion(o)
+	end
 end
 
 -------Behavior Hooks-------
@@ -3030,6 +3112,7 @@ id_bhvQuickWarp = hook_behavior(nil, OBJ_LIST_SURFACE, true, warp_init, warp_loo
 id_bhvFlatStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, flatstar_init, flatstar_loop, "bhvFlatStar")
 id_bhvBouncy1up = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bouncy_init, bouncy_loop, "bhvBouncy1up")
 id_bhvGib = hook_behavior(nil, OBJ_LIST_GENACTOR, true, gib_init, gib_loop, "bhvGib")
+id_bhvFireRing = hook_behavior(nil, OBJ_LIST_GENACTOR, true, firering_init, firering_loop, "bhvFireRing")
 
 -- test function to warp to level, disable if necessary
 hook_chat_command("bow", "ser", function ()
