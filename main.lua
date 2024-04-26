@@ -812,13 +812,12 @@ ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|A
 
 --Mario's neck snapping action.
 function act_necksnap(m)
-	local m = gMarioStates[0]
 	local s = gStateExtras[m.playerIndex]
 	common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
 	smlua_anim_util_set_animation(m.marioObj, "MARIO_NECKSNAP")
 	m.actionTimer = m.actionTimer + 1
 	if m.actionTimer == 1 then
-		network_play(sBoneBreak, m.pos, 1, m.playerIndex)
+		local_play(sBoneBreak, m.pos, 1)
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 	end
 	s.isgold = false
@@ -877,7 +876,7 @@ hook_mario_action(ACT_SHOCKED, act_shocked)
 ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 
 local headlessModel = {
-	E_MODEL_HEADLESS_MARIO,
+[0]=E_MODEL_HEADLESS_MARIO,
 	E_MODEL_HEADLESS_LUIGI,
 	E_MODEL_HEADLESS_TOAD,
 	E_MODEL_HEADLESS_WALUIGI,
@@ -890,9 +889,8 @@ function act_decapitated(m)
 	--mario_blow_off_cap(m, 15) --Causes Mario to not decapitate??
 	obj_set_model_extended(m.marioObj, headlessModel[m.character.type])
 
-    --common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80);
-	common_death_handler(m, MARIO_ANIM_ELECTROCUTION, 50);
-	
+    --common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80)
+	common_death_handler(m, MARIO_ANIM_ELECTROCUTION, 50)
 end
 hook_mario_action(ACT_DECAPITATED, act_decapitated)
 
@@ -900,7 +898,7 @@ hook_mario_action(ACT_DECAPITATED, act_decapitated)
 ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 
 local toplessModel = {
-	E_MODEL_BOTTOMLESS_MARIO,
+[0]=E_MODEL_BOTTOMLESS_MARIO,
 	E_MODEL_BOTTOMLESS_MARIO,
 	E_MODEL_TOPLESS_TOAD,
 	E_MODEL_TOPLESS_WALUIGI,
@@ -918,20 +916,20 @@ hook_mario_action(ACT_BITTEN_IN_HALF, act_bitten_in_half)
 
 function splattertimer(m) --This timer is needed to prevent mario from immediately splatting again right after respawning. Adds some fluff to his death too.
 	local s = gStateExtras[m.playerIndex]
-	if (s.enablesplattimer) == 1 then
+	if s.enablesplattimer == 1 then
 		s.splattimer = s.splattimer + 1
 	end
-	if (s.splattimer) == 2 then
+	if s.splattimer == 2 then
 		m.health = 120
 		set_mario_action(m, ACT_THROWN_FORWARD, 0) --Throws mario forward more to "sell" the fall damage big impact.
-		if (s.disappear) == 1 then --No fall damage, so Mario got squished. No corpse. It's funnier this way. 
+		if s.disappear == 1 then --No fall damage, so Mario got squished. No corpse. It's funnier this way. 
 			set_mario_action(m, ACT_GONE, 78)
 			-- if not s.isdead and ia(m) then
 			-- 	gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
 			-- end
 			-- s.isdead = true
 		end
-		if (s.disappear) == 1 then --Not a fall damage death, so cap won't fly as far. Works better since this is mostly triggered by enemies or objects smashing mario.
+		if s.disappear == 1 then --Not a fall damage death, so cap won't fly as far. Works better since this is mostly triggered by enemies or objects smashing mario.
 			mario_blow_off_cap(m, 15)
 		else --Fall damage death means bigger impact, so hat is blown off more violently than above.
 			mario_blow_off_cap(m, 45)
@@ -1261,31 +1259,31 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
 	end
 	if ia(m) then
-		if (s.highdeathtimer) == 200 or --Some butterflies start spawning around Mario.
-		(s.highdeathtimer) == 400 or
-		(s.highdeathtimer) == 600 or
-		(s.highdeathtimer) == 700 or
-		(s.highdeathtimer) == 800 or
-		(s.highdeathtimer) == 900 or
-		(s.highdeathtimer) == 1000 or
-		(s.highdeathtimer) == 1100 or
-		(s.highdeathtimer) == 1200 then
+		if s.highdeathtimer == 200 or --Some butterflies start spawning around Mario.
+		   s.highdeathtimer == 400 or
+		   s.highdeathtimer == 600 or
+		   s.highdeathtimer == 700 or
+		   s.highdeathtimer == 800 or
+		   s.highdeathtimer == 900 or
+		   s.highdeathtimer == 1000 or
+		   s.highdeathtimer == 1100 or
+		   s.highdeathtimer == 1200 then
 			spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x + 5, m.pos.y - 5, m.pos.z + 5, nil)
 			spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
 		end
-		if (s.highdeathtimer) == 100 or --Spawns occasional coins spawn to keep Mario alive
-		(s.highdeathtimer) == 300 or
-		(s.highdeathtimer) == 500 or
-		(s.highdeathtimer) == 700 or
-		(s.highdeathtimer) == 900 or
-		(s.highdeathtimer) == 1100 or
-		(s.highdeathtimer) == 1200 then
+		if s.highdeathtimer == 100 or --Spawns occasional coins spawn to keep Mario alive
+		   s.highdeathtimer == 300 or
+		   s.highdeathtimer == 500 or
+		   s.highdeathtimer == 700 or
+		   s.highdeathtimer == 900 or
+		   s.highdeathtimer == 1100 or
+		   s.highdeathtimer == 1200 then
 			local randommodel = math.random(3)
-			if (randommodel == 1) then
+			if randommodel == 1 then
 				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER, m.pos.x, m.pos.y, m.pos.z, nil)
-			elseif (randommodel == 2) then
+			elseif randommodel == 2 then
 				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER2, m.pos.x, m.pos.y, m.pos.z, nil)
-			elseif (randommodel == 3) then
+			elseif randommodel == 3 then
 				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER3, m.pos.x, m.pos.y, m.pos.z, nil)
 			end
 		end
@@ -1428,12 +1426,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Hell entrance cutscene
-	local m = gMarioStates[0]
-	local np = gNetworkPlayers[0]
-	local s = gStateExtras[m.playerIndex]
-
 	if np.currLevelNum == LEVEL_HELL and not s.visitedhell then
-		if m.playerIndex ~= 0 then return end
+		if not ia(m) then return end
 		
 		if m.marioObj.oTimer <= 60 then
 			--cur_obj_disable_rendering_and_become_intangible(m.marioObj)
