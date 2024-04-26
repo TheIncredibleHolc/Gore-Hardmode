@@ -88,8 +88,7 @@ function testing(m)
 		warp_to_level(LEVEL_SECRETHUB, 1, 0)
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, m.pos.x + 250, m.pos.y + 2, m.pos.z + 150, nil)
-
+		djui_chat_message_create(tostring(gameisbeat))
 
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
@@ -710,7 +709,7 @@ function bhv_bowser_key_spawn_ukiki(obj) --Bow1 spawns Ukiki minigame, Bow2 spaw
 	if np.currLevelNum == LEVEL_BOWSER_2 then
 		cur_obj_disable_rendering_and_become_intangible(obj)
 		fadeout_music(0)
-		local_play(sBows2intro, m.pos, 1)
+		network_play(sBows2intro, m.pos, 1, m.playerIndex)
 	end
 end
 
@@ -2273,6 +2272,13 @@ hook_event(HOOK_BEFORE_PHYS_STEP, before_phys_step) --Called once per player per
 hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 	local s = gStateExtras[victim.playerIndex]
 
+	local actionExceptions = {
+		[ACT_BACKWARD_GROUND_KB] = true,
+		[ACT_FORWARD_GROUND_KB] = true,
+		[ACT_FORWARD_AIR_KB] = true,
+		[ACT_BACKWARD_AIR_KB] = true
+	}
+
 	--Enables 'ground pound' PvP splattering. 
 	if attacker.action == ACT_GROUND_POUND and s.splatter == 1 then
 		--local_play(sSplatter, victim.pos, 1)
@@ -2285,16 +2291,19 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 	if (attacker.action == ACT_PUNCHING) or (attacker.action == ACT_JUMP_KICK) or (attacker.action == ACT_MOVE_PUNCHING) then
 		local_play(sPunch, victim.pos, 1)
 		squishblood(victim.marioObj)
+		if not actionExceptions[victim.action] then
+			
+		end
 	end
 
 	--Tripping
-	if attacker.action == ACT_SLIDE_KICK then
+	if attacker.action == ACT_SLIDE_KICK and victim.action ~= ACT_GROUND_BONK then
 		--local_play(sBoneBreak, victim.pos, 1) --Doesn't play consistently and I don't know why. Sometimes none, sometimes doubles. Probably not even a good sound for this anyway.
 		set_mario_action(victim, ACT_GROUND_BONK, 0)
 	end
 
 	--Neck snapping
-	if attacker.action == ACT_DIVE then
+	if attacker.action == ACT_DIVE and victim.action ~= ACT_NECKSNAP then
 		--local_play(sBoneBreak, victim.pos, 1)
 		set_mario_action(victim, ACT_NECKSNAP, 0)
 	end
@@ -2946,14 +2955,15 @@ function stopwatch_loop(o)
 end
 
 function squishblood_init(o)
-	local m = gMarioStates[0]
+	
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true	
 	local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
 	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
 	o.oFaceAngleYaw = calculate_yaw(z, normal)
-	if m.action ~= ACT_NECKSNAP then
-		network_play(sSplatter, m.pos, 1, m.playerIndex)
+	if o.oAction ~= ACT_NECKSNAP then
+		local m = gMarioStates[0]
+		local_play(sSplatter, m.pos, 1)
 	end
 
 	--spawn_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, nil)
@@ -2961,7 +2971,7 @@ function squishblood_init(o)
 		local random1 = 0.6
 		local random2 = 0.9
 		local random = math.random()		
-		spawn_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
+		spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
 			obj_scale(gib, random/2)
 		end)
 		
