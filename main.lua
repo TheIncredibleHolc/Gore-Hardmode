@@ -250,7 +250,9 @@ hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
 
-gameisbeat = mod_storage_load("gameisbeat")
+if network_is_server() then
+	gGlobalSyncTable.gameisbeat = mod_storage_load("gameisbeat") == "true"
+end
 --gameisbeat = true --This variable will determine if secret room and trophies are spawnable in main world.
 
 ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
@@ -537,7 +539,7 @@ function bhv_custom_chain_chomp(obj)
 				end
 			end
 		end 
-		if feedchomp == 5 and gameisbeat and not trophy_unlocked(7) then --GRANT TROPHY #19
+		if feedchomp == 5 and gGlobalSyncTable.gameisbeat and not trophy_unlocked(7) then --GRANT TROPHY #19
 			play_puzzle_jingle()
 			network_play(sBurp, m.pos, 1, m.playerIndex)
 			play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
@@ -988,7 +990,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--djui_chat_message_create(tostring(m.marioObj.oFloorHeight))
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	if not trophy_unlocked(13) and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3 and gameisbeat then --GRANT TROPHY #13
+	if not trophy_unlocked(13) and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #13
 		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
 		if trophy then
 			--djui_chat_message_create("trophy exists")
@@ -2045,7 +2047,7 @@ function toaddeath(o)
 		if deaths == 30 then
 			bhv_spawn_star_no_level_exit(o, 2, 1)
 		end
-		if deaths >= 50 and gameisbeat then --GRANT TROPHY #19
+		if deaths >= 50 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #19
 			spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
 				t.oBehParams = 19 << 16 | 1
 			end)
@@ -3250,11 +3252,11 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		warp_to_level(LEVEL_HELL, 1, 0)
 	end
 
-	if gameisbeat and not trophy_unlocked(10) and np.currLevelNum == LEVEL_BITFS then
+	if gGlobalSyncTable.gameisbeat and not trophy_unlocked(10) and np.currLevelNum == LEVEL_BITFS then
 		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, -7135, -2764, -3, nil)
 	end
 
-	if np.currLevelNum == LEVEL_CASTLE_GROUNDS and gameisbeat then
+	if np.currLevelNum == LEVEL_CASTLE_GROUNDS and gGlobalSyncTable.gameisbeat then
 		spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -37, 808, 545, nil)
 		spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -37, 811, 545, nil)
 	end
@@ -3272,7 +3274,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_dir(1,0)
 	end
 
-	if np.currLevelNum == LEVEL_WF and np.currActNum >= 2 and gameisbeat then --GRANT TROPHY #17
+	if np.currLevelNum == LEVEL_WF and np.currActNum >= 2 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #17
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -404, 3584, -4, function(t)
 			t.oFaceAngleYaw = -16303
 			t.oBehParams = 17 << 16 | 1
@@ -3280,14 +3282,14 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	end
 
 	--[[ Moved to Mario Update
-	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and gameisbeat then --GRANT TROPHY #13
+	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #13
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 1356, -1055, -4816, function(t)
 			t.oBehParams = 13 << 16 | 1
 		end)
 	end
 	]]
 
-	if np.currLevelNum == LEVEL_HELL and gameisbeat then --GRANT TROPHY #14
+	if np.currLevelNum == LEVEL_HELL and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #14
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -4367, 1680, 4883, function(t)
 			t.oBehParams = 14 << 16 | 1
 		end)
@@ -3334,13 +3336,13 @@ hook_event(HOOK_ON_WARP, function ()
 		s.timeattack = false
 	end
 
-	if np.currLevelNum == LEVEL_HMC and gameisbeat then --GRANT TROPHY #16
+	if np.currLevelNum == LEVEL_HMC and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #16
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -5298, 2810, -7961, function(t)
 			t.oBehParams = 16 << 16 | 1
 		end)
 	end
 
-	if np.currLevelNum == LEVEL_LLL and np.currAreaIndex == 2 and gameisbeat then --GRANT TROPHY #15
+	if np.currLevelNum == LEVEL_LLL and np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #15
 		spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 1331, 4032, 1281, nil)
 		spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 493, 4532, 652, nil)
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 493, 4640, 652, function(t)
@@ -3394,13 +3396,13 @@ hook_event(HOOK_ON_WARP, function ()
 			stream_play(musicUnderground)
 		end
 	end
-	if np.currLevelNum == LEVEL_CCM and (gameisbeat) then
+	if np.currLevelNum == LEVEL_CCM and gGlobalSyncTable.gameisbeat then
 		spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
 			goalpost.oFaceAngleYaw = goalpost.oFaceAngleYaw + 4000
 			goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
 		end)
 	end
-	if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 2 and gameisbeat then --GRANT TROPHY #12 (Mirror room)
+	if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #12 (Mirror room)
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5514, 1613, 3159, function(t)
 			t.oBehParams = 12 << 16 | 1
 		end)
