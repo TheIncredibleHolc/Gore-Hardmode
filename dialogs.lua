@@ -160,9 +160,6 @@ smlua_text_utils_dialog_replace(DIALOG_018,1,4,30,200, ("I'm sleeping because...
 like being disturbed.\
 Please walk quietly."))
 
-smlua_text_utils_dialog_replace(DIALOG_019,1,2,30,200, ("Shhh! Please walk\
-quietly in the hallway!"))
-
 smlua_text_utils_dialog_replace(DIALOG_020,1,6,95,150, ("Dear Mario:\
 Please stay away\
 from this castle.\
@@ -1719,19 +1716,12 @@ Anyone entering this cave\
 without permission will\
 meet certain disaster."))
 
-smlua_text_utils_dialog_replace(DIALOG_008,1,4,30,200, ("Uh oh, it looks\
-like Mario died and\
+smlua_text_utils_dialog_replace(DIALOG_019,1,4,30,200, ("Uh oh, it looks\
+like you died and\
 went straight to hell!\
 (gasp!)\
-Lucky for Mario, there\
-are a few paths\
-through Hell to get\
+Luckily, there is a\
+rocky path through\
+Hell that will take you\
 back to the overworld.\
-Some paths will be hard\
-and give REAL 1-ups!\
-Others are easier but\
-will yield you no help.\
-You must be careful\
-not to die again, for\
-the ETERNAL DEATH is\
-right around the corner!"))
+Watch your step!!"))
