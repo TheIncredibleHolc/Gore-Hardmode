@@ -699,6 +699,7 @@ function bhv_custom_bowlballspawner(obj) -- Idk if this actually does anything, 
 end
 
 function bhv_bowser_key_spawn_ukiki(obj) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
+	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 	if np.currLevelNum == LEVEL_BOWSER_1 then
 		spawn_sync_if_main(id_bhvUkiki, E_MODEL_UKIKI, obj.oPosX, obj.oPosY + 50, obj.oPosZ, function (o)
@@ -711,7 +712,9 @@ function bhv_bowser_key_spawn_ukiki(obj) --Bow1 spawns Ukiki minigame, Bow2 spaw
 	if np.currLevelNum == LEVEL_BOWSER_2 then
 		cur_obj_disable_rendering_and_become_intangible(obj)
 		fadeout_music(0)
-		network_play(sBows2intro, m.pos, 1, m.playerIndex)
+		if m.playerIndex == 0 then
+			local_play(sBows2intro, m.pos, 1)
+		end
 	end
 end
 
@@ -889,7 +892,10 @@ function act_decapitated(m)
 	s.isgold = false
 	--mario_blow_off_cap(m, 15) --Causes Mario to not decapitate??
 	obj_set_model_extended(m.marioObj, headlessModel[m.character.type])
-
+	if m.actionTimer == 0 then
+		squishblood(m.marioObj)
+		m.actionTimer = m.actionTimer + 1
+	end
     --common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80)
 	common_death_handler(m, MARIO_ANIM_ELECTROCUTION, 50)
 end
@@ -990,7 +996,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	--djui_chat_message_create(tostring(m.marioObj.oFloorHeight))
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	if not trophy_unlocked(13) and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #13
+	if gGlobalSyncTable.gameisbeat and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3  and not trophy_unlocked(13) then --GRANT TROPHY #13
 		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
 		if trophy then
 			--djui_chat_message_create("trophy exists")
@@ -1365,6 +1371,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			m.squishTimer = 50
 			audio_sample_stop(gSamples[sAgonyMario])
 			audio_sample_stop(gSamples[sAgonyLuigi])
+			audio_sample_stop(gSamples[sAgonyWario])
 			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
 		end
 
@@ -1379,6 +1386,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 			audio_sample_stop(gSamples[sAgonyMario])
 			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
 			audio_sample_stop(gSamples[sAgonyLuigi])
+			audio_sample_stop(gSamples[sAgonyWario])
 			if m.usedObj then
 				obj_mark_for_deletion(m.usedObj)
 			end
@@ -1833,7 +1841,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		s.headless = true
 		--network_play(sSplatter, m.pos, 1, m.playerIndex)
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
-		squishblood(m.marioObj)
+		--squishblood(m.marioObj)
 		m.health = 0xff
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 		m.particleFlags = PARTICLE_MIST_CIRCLE
@@ -1845,7 +1853,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		s.headless = true
 		--network_play(sSplatter, m.pos, 1, m.playerIndex)
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
-		squishblood(m.marioObj)
+		--squishblood(m.marioObj)
 		m.health = 0xff
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 		m.particleFlags = PARTICLE_MIST_CIRCLE
@@ -1856,7 +1864,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		if o.oAction == GOOMBA_ACT_JUMP then
 			s.headless = true
 			--network_play(sSplatter, m.pos, 1, m.playerIndex)
-			squishblood(m.marioObj)
+			
 			m.health = 0xff
 			set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 			m.particleFlags = PARTICLE_MIST_CIRCLE
@@ -1938,8 +1946,8 @@ function before_mario_action(m, action)
 	--Disables LAVA_BOOST and replaces with a splash and insta-death... KERPLUNK!!
 	if (action == ACT_LAVA_BOOST) and np.currLevelNum ~= LEVEL_SL then
 		set_mario_action(m, ACT_GONE, 1)
-		network_play(sSplash, m.pos, 1, m.playerIndex)
-		spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
+		local_play(sSplash, m.pos, 1)
+		spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
 		m.health = 120
 		return 1
 	end
@@ -1964,6 +1972,8 @@ function before_mario_action(m, action)
 				network_play(sAgonyLuigi, m.pos, 1, m.playerIndex)
 			elseif m.character.type == CT_TOAD then
 				network_play(sToadburn, m.pos, 1, m.playerIndex)
+			elseif m.character.type == CT_WARIO then
+				network_play(sAgonyWario, m.pos, 1, m.playerIndex)
 			end
 		end
 	end
@@ -1997,6 +2007,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
 	audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
+	audio_sample_stop(gSamples[sAgonyWario]) --Stops Wario's super long scream
 	s.bigthrowenabled = 0
 	s.timeattack = false
 	--set_override_envfx(ENVFX_MODE_NONE)
@@ -2013,6 +2024,8 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	local m = gMarioStates[0]
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
+	audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
+	audio_sample_stop(gSamples[sAgonyWario]) --Stops Wario's super long scream
 
 	hud_show()
 
@@ -2308,6 +2321,7 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 	if attacker.action == ACT_DIVE and victim.action ~= ACT_NECKSNAP then
 		--local_play(sBoneBreak, victim.pos, 1)
 		set_mario_action(victim, ACT_NECKSNAP, 0)
+		set_mario_action(attacker, ACT_DIVE_SLIDE, 0)
 	end
 
 
@@ -2957,14 +2971,13 @@ function stopwatch_loop(o)
 end
 
 function squishblood_init(o)
-	
+	local m = gMarioStates[0]
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true	
 	local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
 	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
 	o.oFaceAngleYaw = calculate_yaw(z, normal)
-	if o.oAction ~= ACT_NECKSNAP then
-		local m = gMarioStates[0]
+	if m.action ~= ACT_NECKSNAP and m.marioObj.oTimer > 10 then
 		local_play(sSplatter, m.pos, 1)
 	end
 
@@ -3117,7 +3130,7 @@ id_bhvLava = hook_behavior(nil, OBJ_LIST_SURFACE, true, lava_init, lava_loop, "b
 id_bhvQuickWarp = hook_behavior(nil, OBJ_LIST_SURFACE, true, warp_init, warp_loop, "bhvWarp")
 id_bhvFlatStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, flatstar_init, flatstar_loop, "bhvFlatStar")
 id_bhvBouncy1up = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bouncy_init, bouncy_loop, "bhvBouncy1up")
-id_bhvGib = hook_behavior(nil, OBJ_LIST_GENACTOR, true, gib_init, gib_loop, "bhvGib")
+id_bhvGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, gib_init, gib_loop, "bhvGib")
 id_bhvFireRing = hook_behavior(nil, OBJ_LIST_GENACTOR, true, firering_init, firering_loop, "bhvFireRing")
 
 -- test function to warp to level, disable if necessary

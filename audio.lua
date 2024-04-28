@@ -80,7 +80,8 @@ gSamples = {
 	audio_sample_load("trophy.ogg"),
 	audio_sample_load("agonyluigi.ogg"),
 	audio_sample_load("burp.ogg"),
-	audio_sample_load("bows2intro.ogg")
+	audio_sample_load("bows2intro.ogg"),
+	audio_sample_load("agonywario.ogg")
 }
 
 sBoneBreak = 1
@@ -112,6 +113,7 @@ sTrophy = 26
 sAgonyLuigi = 27
 sBurp = 28
 sBows2intro = 29
+sAgonyWario = 30
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))
