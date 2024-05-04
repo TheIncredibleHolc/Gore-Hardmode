@@ -1037,7 +1037,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	--Lava bubbling at HMC
 	if np.currLevelNum == LEVEL_HMC and m.pos.y < -3900 then
 		set_override_envfx(ENVFX_LAVA_BUBBLES)
-	else
+	elseif np.currLevelNum == LEVEL_HMC and m.pos >= -3900 then
 		set_override_envfx(ENVFX_MODE_NONE)
 	end
 
@@ -1533,6 +1533,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		m.pos.y = 1690
 		m.pos.z = -11771
 	end
+
+
+
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mips is a pain to catch
@@ -3434,6 +3437,15 @@ hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
+
+	if np.currLevelNum == LEVEL_HELL then
+		local dorrie = obj_get_first_with_behavior_id(id_bhvDorrie)
+		if not dorrie then
+			spawn_non_sync_object(id_bhvDorrie, E_MODEL_DORRIE, 4807, 220, 1500, function(o)
+				obj_scale(o, .6)
+			end)
+		end
+	end
 
 	if s.isgold then
 		--if m.playerIndex ~= 0 then return end
