@@ -7,6 +7,7 @@ secret = audio_stream_load("secret.ogg") 				audio_stream_set_looping(secret, tr
 musicUnderground = audio_stream_load("underground.ogg")	audio_stream_set_looping(musicUnderground, true)
 musicbows2 = audio_stream_load("bows2loop.ogg")         audio_stream_set_looping(musicbows2, true)
 timeattack = audio_stream_load("timeattack.ogg")
+edils = audio_stream_load("edils.ogg")					audio_stream_set_looping(edils, true)
 
 currentlyPlaying = nil
 local fadeTimer = 0
@@ -37,6 +38,7 @@ function stream_stop_all()
 	audio_stream_stop(musicUnderground)
 	audio_stream_stop(musicbows2)
 	audio_stream_stop(timeattack)
+	audio_stream_stop(edils)
 	currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()
@@ -81,7 +83,8 @@ gSamples = {
 	audio_sample_load("agonyluigi.ogg"),
 	audio_sample_load("burp.ogg"),
 	audio_sample_load("bows2intro.ogg"),
-	audio_sample_load("agonywario.ogg")
+	audio_sample_load("agonywario.ogg"),
+	audio_sample_load("dorriebackbreak.ogg")
 }
 
 sBoneBreak = 1
@@ -114,6 +117,7 @@ sAgonyLuigi = 27
 sBurp = 28
 sBows2intro = 29
 sAgonyWario = 30
+sDorrie = 31
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))

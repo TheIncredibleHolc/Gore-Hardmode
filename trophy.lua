@@ -17,6 +17,7 @@ E_MODEL_GOALPOST = smlua_model_util_get_id("goalpost_geo")
 COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
 E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
 E_MODEL_TROPHY_YOSHI = smlua_model_util_get_id("trophy_yoshi_owie_geo")
+E_MODEL_3D_COIN = smlua_model_util_get_id("coin3d_geo")
 
 trophyinfo = {
 	{ name = "mario",      model = E_MODEL_TROPHY_MARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #1  - Beat the game as Mario.
@@ -28,8 +29,8 @@ trophyinfo = {
 	{ name = "chainchomp", model = E_MODEL_CHOMP,            scale = 0.2, y_offset = -15, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #7  - Feed Chain Chomp 5 enemies.
 	{ name = "smiler",     model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
 	{ name = "fieldgoal",  model = E_MODEL_GOALPOST,         scale = 0.06, y_offset = 10, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
-	{ name = "stopwatch",  model = E_MODEL_STOPWATCH,        scale = 0.3, y_offset = 20,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - (BITFS) Time-Attack!
-	{ name = "trophy11",   model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11 - (Found in MWOTR)
+	{ name = "stopwatch",  model = E_MODEL_STOPWATCH,        scale = 0.3, y_offset = 20,  podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - (BITFS) Time-Attack!
+	{ name = "coin",       model = E_MODEL_3D_COIN,          scale = 0.3, y_offset = -25, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11 - (Found in PSS needs 81 coins)
 	{ name = "snowman",    model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - (Found in Mirror room) "Take a good look at yourself." 
 	{ name = "smileymoon", model = E_MODEL_SMILER3,          scale = 1.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #13 - (Found in TTM) "Find this right next to the skull."
 	{ name = "portal",     model = E_MODEL_NETHERPORTAL,     scale = 0.2, y_offset = 10,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #14 - Find the NetherPortal.

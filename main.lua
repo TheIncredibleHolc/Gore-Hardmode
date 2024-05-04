@@ -84,12 +84,12 @@ function testing(m)
 	local s = gStateExtras[m.playerIndex]
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		s.isgold = true
-
+		--s.isgold = true
+		play_sound(SOUND_OBJ_DORRIE, m.pos)
+		m.numCoins = 78
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		djui_chat_message_create(tostring(gameisbeat))
-
+		squishblood(m.marioObj)
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
 		m.numLives = 1
@@ -185,6 +185,7 @@ E_MODEL_CHOMP = smlua_model_util_get_id("chomp_geo")
 E_MODEL_STOPWATCH = smlua_model_util_get_id("stopwatch_geo")
 E_MODEL_GIB = smlua_model_util_get_id("gib_geo")
 COL_GIB = smlua_collision_util_get("gib_collision")
+DORRIE_DEAD = smlua_model_util_get_id("dorrie_ded_lol_geo")
 
 E_MODEL_HEADLESS_MARIO = smlua_model_util_get_id("headlessmario_geo")
 E_MODEL_BOTTOMLESS_MARIO = smlua_model_util_get_id("bottomlessmario_geo")
@@ -249,6 +250,7 @@ bloodalpha = 0
 hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
+
 
 if network_is_server() then
 	gGlobalSyncTable.gameisbeat = mod_storage_load("gameisbeat") == "true"
@@ -989,12 +991,56 @@ function convert_s16(num)
 	return num
 end
 
-function mario_update(m) -- ALL Mario_Update hooked commands.
+function mario_update(m) -- ALL Mario_Update hooked commands.,
 	if is_player_active(m) == 0 then return end
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-	--djui_chat_message_create(tostring(m.marioObj.oFloorHeight))
+
+
+	if mod_storage_load("file1coin") == "1" then
+		--DO NOTHING
+	else
+		local psstrophy = obj_get_first_with_behavior_id(id_bhvTrophy)
+
+		if np.currLevelNum == LEVEL_PSS and m.pos.y <= -4587 and gGlobalSyncTable.gameisbeat and m.numCoins < 81 and not psstrophy then
+			m.pos.x = -6401
+			m.pos.y = -4162
+			m.pos.z = 148
+			m.faceAngle.y = 32768
+			m.intendedYaw = 32768
+			set_mario_action(m, ACT_BUTT_SLIDE, 0)
+			m.forwardVel = 120
+			play_secondary_music(0, 0, 0, 20)
+			stream_play(edils)
+		end
+
+		if m.numCoins == 81 and np.currLevelNum == LEVEL_PSS and gGlobalSyncTable.gameisbeat and not psstrophy then
+			play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
+			stream_stop_all()
+			stop_secondary_music(0)
+			djui_chat_message_create("Trophy spawned!")
+			spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, -6386, -4484, 5416, function(t)
+				t.oFaceAngleYaw = 32768
+				t.oBehParams = 11 << 16 | 1
+			end)
+		end
+
+
+
+
+
+	end
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+	--Lava bubbling at HMC
+	if np.currLevelNum == LEVEL_HMC and m.pos.y < -3900 then
+		set_override_envfx(ENVFX_LAVA_BUBBLES)
+	else
+		set_override_envfx(ENVFX_MODE_NONE)
+	end
+
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	if gGlobalSyncTable.gameisbeat and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3  and not trophy_unlocked(13) then --GRANT TROPHY #13
@@ -1010,8 +1056,21 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
+
+	--(PSS/TTM Only) Faster sliding.
+
+	if np.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_PSS and m.action == ACT_DIVE_SLIDE then
+		m.slideVelX = m.slideVelX + 50 * sins(m.faceAngle.y)
+		m.slideVelZ = m.slideVelZ + 50 * coss(m.faceAngle.y)
+	end
+
+	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_DIVE_SLIDE then
+		m.slideVelX = m.slideVelX + 40 * sins(m.faceAngle.y)
+		m.slideVelZ = m.slideVelZ + 40 * coss(m.faceAngle.y)
+	end
+
 	if np.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE then
-		local turnSpeed = (0x100)*(m.forwardVel*0.2)
+		local turnSpeed = (0x600)*(m.forwardVel*0.1)
 		m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, turnSpeed, turnSpeed)
 	end
 
@@ -1118,18 +1177,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.
 		m.forwardVel = m.forwardVel + 0.3
 		s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
 	end
-----------------------------------------------------------------------------------------------------------------------------------
-	--(PSS Only) Faster sliding when picking up coins.
 
-	if np.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_PSS and m.action == ACT_DIVE_SLIDE then
-		m.slideVelX = m.slideVelX + 100 * sins(m.faceAngle.y)
-		m.slideVelZ = m.slideVelZ + 100 * coss(m.faceAngle.y)
-	end
-
-	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_DIVE_SLIDE then
-		m.slideVelX = m.slideVelX + 40 * sins(m.faceAngle.y)
-		m.slideVelZ = m.slideVelZ + 40 * coss(m.faceAngle.y)
-	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	-- BONKING DEATHS!!
 	if m.action == ACT_BACKWARD_AIR_KB or m.action == ACT_FORWARD_AIR_KB and s.flyingVel > 60 then -- Enables Mario to wall-splat when air-bonking objects.
@@ -1804,9 +1852,13 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	]]
 	--Killable Dorrie?
 	if obj_has_behavior_id(o, id_bhvDorrie) ~= 0 and (m.action & ACT_GROUND_POUND) ~= 0 then
-		local_play(sSplatter, m.pos, 1)
-		squishblood(o)
-		obj_mark_for_deletion(o)
+		
+		local dorrie = obj_get_nearest_object_with_behavior_id(o, id_bhvDorrie)
+		if dorrie ~= nil then
+			dorrie.oAction = 9
+		end
+		--squishblood(o)
+		--obj_mark_for_deletion(o)
 	end
 
 	--Skeeter insta-kill
@@ -2998,6 +3050,11 @@ function squishblood_loop(o)
 	if o.oPosY ~= o.oFloorHeight + 2 then
 		o.oPosY = o.oFloorHeight + 2
 	end
+
+	if o.oFloor.type == SURFACE_DEATH_PLANE then
+		obj_mark_for_deletion(o)
+	end
+
 end
 
 function gib_init(o)
@@ -3028,9 +3085,9 @@ function gib_loop(o)
 		cur_obj_move_using_fvel_and_gravity()
 		cur_obj_move_using_vel()
 		cur_obj_update_floor_height_and_get_floor()
-		o.oFaceAnglePitch = random
-		o.oFaceAngleRoll = random
-		o.oFaceAngleYaw = random
+		o.oFaceAnglePitch = o.oFaceAnglePitch + random
+		o.oFaceAngleRoll = o.oFaceAngleRoll + random
+		o.oFaceAngleYaw = o.oFaceAngleYaw + random
 
 	else
 		--djui_chat_message_create("Floor")
@@ -3039,7 +3096,7 @@ function gib_loop(o)
 		--o.oForwardVel = 0
 	end
 
-	if o.oTimer > 1200 then -- 4 Minute timer before deleting. 
+	if o.oTimer > 1200 then -- 40 second timer before deleting. 
 		obj_mark_for_deletion(o)
 	end
 
@@ -3065,8 +3122,44 @@ function firering_loop(o)
 	end
 end
 
--------Behavior Hooks-------
+function wiggler_loop(o)
+	if o.oAction == WIGGLER_ACT_WALK then
+		o.oForwardVel = 80
+		cur_obj_rotate_yaw_toward(0, 0x400)
 
+	end
+end
+
+function eyerok_loop(o)
+	if o.oAction == EYEROK_BOSS_ACT_WAKE_UP then
+		o.oEyerokBossNumHands = o.parentObj.oEyerokBossNumHands + 4
+	end
+end
+
+function dorrie_dead(o)
+	--djui_chat_message_create(tostring(o.oAction))
+	if o.oAction == DORRIE_ACT_LOWER_HEAD then
+		local_play(sDorrie, m.pos, 1)
+		for i = 0, 60 do
+			local random = math.random()		
+			spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY + 50, o.oPosZ, function (gib)
+				obj_scale(gib, random/2)
+			end)
+		end
+		o.oAction = 9
+	end
+	if o.oAction == 9 then
+		obj_set_model_extended(o, DORRIE_DEAD)
+		o.oDorrieVelY = -3
+		o.oPosY = o.oPosY - 25
+		o.oFaceAnglePitch = o.oFaceAnglePitch - 20
+		o.oMoveAnglePitch = o.oFaceAnglePitch
+	end
+end
+-------Behavior Hooks-------
+hook_behavior(id_bhvDorrie, OBJ_LIST_SURFACE, false, nil, dorrie_dead)
+hook_behavior(id_bhvEyerokBoss, OBJ_LIST_GENACTOR, false, nil, eyerok_loop)
+hook_behavior(id_bhvWigglerHead, OBJ_LIST_GENACTOR, false, nil, wiggler_loop)
 hook_behavior(id_bhvSquishablePlatform, OBJ_LIST_SURFACE, false, nil, bhv_squishable_platform_loop)
 hook_behavior(id_bhvYoshi, OBJ_LIST_GENACTOR, false, nil, bhv_custom_yoshi)
 hook_behavior(id_bhvActivatedBackAndForthPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_ActivatedBackAndForthPlatform)
@@ -3378,10 +3471,14 @@ hook_event(HOOK_ON_WARP, function ()
 	end
 
 	if np.currLevelNum == LEVEL_HMC then
+
+
 		local dorrie = obj_get_nearest_object_with_behavior_id(o, id_bhvDorrie)
 		if dorrie ~= nil then
-			obj_mark_for_deletion(dorrie)
+			dorrie.oPosY = dorrie.oPosY - 200
 		end
+	
+		
 		set_environment_region(0, -10000)
 		set_environment_region(1, -10000)
 		set_environment_region(3, -10000)
