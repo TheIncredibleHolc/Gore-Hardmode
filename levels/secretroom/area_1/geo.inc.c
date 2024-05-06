@@ -34,6 +34,7 @@ const GeoLayout secretroom_area_1_geo[] = {
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, -1000, 4000, -600, secretroom_dl_Skybox_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -3490, 784, -1228, 0, 60, 0, secretroom_dl_theincredibleholc_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, 1044, 293, -1908, 0, -60, 0, secretroom_dl_Trophy_Shelf_mesh_layer_1),
+		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, -1186, 293, -1779, secretroom_dl_Trophy_Shelf_001_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_ALPHA, 1100, 939, -1900, 90, 0, 60, secretroom_dl_TrophyCollectionText_mesh_layer_4),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, 398, 295, -2862, 0, -60, 0, secretroom_dl_TrophyPlate1_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, 949, 295, -1919, 90, 0, 60, secretroom_dl_TrophyPlate10_mesh_layer_1),

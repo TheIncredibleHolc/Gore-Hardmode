@@ -85,11 +85,13 @@ function testing(m)
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
 		--s.isgold = true
-		play_sound(SOUND_OBJ_DORRIE, m.pos)
-		m.numCoins = 78
+		warp_to_level(LEVEL_SECRETHUB, 1, 0)
+
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 		squishblood(m.marioObj)
+		gLakituState.mode = CAMERA_MODE_OUTWARD_RADIAL
+
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
 		m.numLives = 1
@@ -186,6 +188,7 @@ E_MODEL_STOPWATCH = smlua_model_util_get_id("stopwatch_geo")
 E_MODEL_GIB = smlua_model_util_get_id("gib_geo")
 COL_GIB = smlua_collision_util_get("gib_collision")
 DORRIE_DEAD = smlua_model_util_get_id("dorrie_ded_lol_geo")
+E_MODEL_HELL_DORRIE = smlua_model_util_get_id("hell_dorrie_geo")
 
 E_MODEL_HEADLESS_MARIO = smlua_model_util_get_id("headlessmario_geo")
 E_MODEL_BOTTOMLESS_MARIO = smlua_model_util_get_id("bottomlessmario_geo")
@@ -815,9 +818,25 @@ function squishblood(o) -- Creates instant pool of impact-blood under mario.
 	spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil, 0)
 end
 
-ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+
+
+--Mario reading a sign or trophy plate.
+ACT_READING_TROPHY = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_STATIONARY)
+function act_reading_trophy(m)
+	if m.actionTimer == 1 then
+		set_mario_animation(m, MARIO_ANIM_START_REACH_POCKET, 0)
+	end
+	if m.actionTimer == 30 then
+		set_mario_action(m, ACT_IDLE, 0)
+	end
+end
+hook_mario_action(ACT_READING_TROPHY, act_reading_trophy)
+
+
+
 
 --Mario's neck snapping action.
+ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 function act_necksnap(m)
 	local s = gStateExtras[m.playerIndex]
 	common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
@@ -828,9 +847,10 @@ function act_necksnap(m)
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 	end
 	s.isgold = false
-	--djui_chat_message_create(tostring(m.actionTimer))
 end
 hook_mario_action(ACT_NECKSNAP, act_necksnap)
+
+
 
 local particleTiming = {
 	[75]=1,
@@ -998,6 +1018,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 
 
+----------------------------------------------------------------------------------------------------------------------------------
+	--PSS TROPHY
+
 	if mod_storage_load("file1coin") == "1" then
 		--DO NOTHING
 	else
@@ -1025,11 +1048,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 				t.oBehParams = 11 << 16 | 1
 			end)
 		end
-
-
-
-
-
 	end
 
 
@@ -1494,6 +1512,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			m.pos.y = 1100
 			m.pos.z = -11800
 			m.marioObj.oFaceAngleYaw = 0
+			m.faceAngle.y = 0
 		end
 		if m.marioObj.oTimer == 61 then
 			spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
@@ -1532,6 +1551,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		m.pos.x = 69
 		m.pos.y = 1690
 		m.pos.z = -11771
+		m.faceAngle.y = 0
+		
+		
 	end
 
 
@@ -1854,15 +1876,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	end
 	]]
 	--Killable Dorrie?
-	if obj_has_behavior_id(o, id_bhvDorrie) ~= 0 and (m.action & ACT_GROUND_POUND) ~= 0 then
-		
-		local dorrie = obj_get_nearest_object_with_behavior_id(o, id_bhvDorrie)
-		if dorrie ~= nil then
-			dorrie.oAction = 9
-		end
-		--squishblood(o)
-		--obj_mark_for_deletion(o)
-	end
 
 	--Skeeter insta-kill
 	if obj_has_behavior_id(o, id_bhvSkeeter) ~= 0 and (m.hurtCounter > 0) then
@@ -3140,23 +3153,51 @@ function eyerok_loop(o)
 end
 
 function dorrie_dead(o)
-	--djui_chat_message_create(tostring(o.oAction))
-	if o.oAction == DORRIE_ACT_LOWER_HEAD then
-		local_play(sDorrie, m.pos, 1)
-		for i = 0, 60 do
-			local random = math.random()		
-			spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY + 50, o.oPosZ, function (gib)
-				obj_scale(gib, random/2)
-			end)
+	local np = gNetworkPlayers[0]
+	local nm = nearest_mario_state_to_object(o)
+	if np.currLevelNum ~= LEVEL_HELL then
+		if o.oAction == DORRIE_ACT_LOWER_HEAD then
+			local_play(sDorrie, m.pos, 1)
+			for i = 0, 60 do
+				local random = math.random()		
+				spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY + 50, o.oPosZ, function (gib)
+					obj_scale(gib, random/2)
+				end)
+			end
+			o.oAction = 9
 		end
-		o.oAction = 9
-	end
-	if o.oAction == 9 then
-		obj_set_model_extended(o, DORRIE_DEAD)
-		o.oDorrieVelY = -3
-		o.oPosY = o.oPosY - 25
-		o.oFaceAnglePitch = o.oFaceAnglePitch - 20
-		o.oMoveAnglePitch = o.oFaceAnglePitch
+		if o.oAction == 9 then
+			obj_set_model_extended(o, DORRIE_DEAD)
+			o.oDorrieVelY = -3
+			o.oPosY = o.oPosY - 25
+			o.oFaceAnglePitch = o.oFaceAnglePitch - 20
+			o.oMoveAnglePitch = o.oFaceAnglePitch
+		end
+
+	elseif np.currLevelNum == LEVEL_HELL then
+		o.oAction = 8
+		--o.oHomeX = o.oPosX + 800
+		--o.oHomeZ = o.oPosZ + 800
+		if o.oAction == 8 then
+			local dorriemounted = cur_obj_is_any_player_on_platform()
+			if dorriemounted == 1 then
+				--o.oHomeX = 50
+				--o.oHomeZ = 13575
+				local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+				local portalangle = obj_angle_to_object(o, netherportal)
+				obj_turn_toward_object(o, netherportal, 16, 256)
+				o.oForwardVel = 15
+			else
+				if mario_is_within_rectangle(o.oPosX - 1300, o.oPosX + 1300, o.oPosZ - 1300, o.oPosZ + 1300) ~= 0 then
+					local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+					obj_turn_toward_object(o, netherportal, 16, 256)
+				else
+				local marioangle = obj_angle_to_object(o, nm.marioObj)
+				obj_turn_toward_object(o, nm.marioObj, 16, 256)
+				o.oForwardVel = 15
+				end
+			end
+		end
 	end
 end
 -------Behavior Hooks-------
@@ -3441,8 +3482,9 @@ hook_event(HOOK_ON_WARP, function ()
 	if np.currLevelNum == LEVEL_HELL then
 		local dorrie = obj_get_first_with_behavior_id(id_bhvDorrie)
 		if not dorrie then
-			spawn_non_sync_object(id_bhvDorrie, E_MODEL_DORRIE, 4807, 220, 1500, function(o)
-				obj_scale(o, .6)
+			--spawn_non_sync_object(id_bhvDorrie, E_MODEL_HELL_DORRIE, 4807, 80, 1500, function(o)
+			spawn_non_sync_object(id_bhvDorrie, E_MODEL_HELL_DORRIE, -171, 80, 8206, function(o)
+				obj_scale(o, .7)
 			end)
 		end
 	end
@@ -3550,6 +3592,7 @@ end)
 --Disable mario's fire scream to make room for custom scream.
 hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
 	local s = gStateExtras[m.playerIndex]
+	local np = gNetworkPlayers[0]
 	if sound == CHAR_SOUND_ON_FIRE then return 0 end
 
 	local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvPiranhaPlant)
@@ -3559,4 +3602,8 @@ hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
 
 	if sound == CHAR_SOUND_WAAAOOOW and m.action == ACT_THROWN_FORWARD or m.action == ACT_THROWN_BACKWARD then return 0 end --and (s.flyingVel > 60)
 
+	local trophyplate = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophyPlate)
+	if np.currLevelNum == LEVEL_SECRETHUB and sound == CHAR_SOUND_PUNCH_YAH and obj_check_hitbox_overlap(m.marioObj, trophyplate) then
+		return 0
+	end  
 end)

@@ -1,7 +1,7 @@
 -------------------------TROPHY SYSTEM-------------------------
 
-silverplate = smlua_model_util_get_id("silverplate_geo") --This is the description panel under the display trophy.
-goldplate  = smlua_model_util_get_id("goldplate_geo")  --This is the description panel under the display trophy.
+E_MODEL_SILVER_PLATE = smlua_model_util_get_id("silverplate_geo") --This is the description panel under the display trophy.
+E_MODEL_GOLD_PLATE  = smlua_model_util_get_id("goldplate_geo")  --This is the description panel under the display trophy.
 
 E_MODEL_GOLD_TROPHY_PODIUM = smlua_model_util_get_id("podium_geo")
 E_MODEL_PLAT_TROPHY_PODIUM = smlua_model_util_get_id("podium_platinum_geo")
@@ -20,50 +20,52 @@ E_MODEL_TROPHY_YOSHI = smlua_model_util_get_id("trophy_yoshi_owie_geo")
 E_MODEL_3D_COIN = smlua_model_util_get_id("coin3d_geo")
 
 trophyinfo = {
-	{ name = "mario",      model = E_MODEL_TROPHY_MARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #1  - Beat the game as Mario.
-	{ name = "luigi",      model = E_MODEL_TROPHY_LUIGI,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #2  - Beat the game as Luigi.
-	{ name = "toad",       model = E_MODEL_TROPHY_TOAD,      scale = 0.1, y_offset = 26,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #3  - Beat the game as Toad.
-	{ name = "waluigi",    model = E_MODEL_TROPHY_WALUIGI,   scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #4  - Beat the game as Waluigi.
-	{ name = "wario",      model = E_MODEL_TROPHY_WARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #5  - Beat the game as Wario.
-	{ name = "star",       model = E_MODEL_STAR,             scale = 0.6, y_offset = -15, podium = E_MODEL_PLAT_TROPHY_PODIUM }, --Trophy #6  - Beat the game with all 5 characters. (Or get 120 stars?).
-	{ name = "chainchomp", model = E_MODEL_CHOMP,            scale = 0.2, y_offset = -15, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #7  - Feed Chain Chomp 5 enemies.
-	{ name = "smiler",     model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #8  - Visit the Backrooms.
-	{ name = "fieldgoal",  model = E_MODEL_GOALPOST,         scale = 0.06, y_offset = 10, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #9  - Kick a field goal in CCM.
-	{ name = "stopwatch",  model = E_MODEL_STOPWATCH,        scale = 0.3, y_offset = 20,  podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #10 - (BITFS) Time-Attack!
-	{ name = "coin",       model = E_MODEL_3D_COIN,          scale = 0.3, y_offset = -25, podium = E_MODEL_GOLD_TROPHY_PODIUM }, --Trophy #11 - (Found in PSS needs 81 coins)
-	{ name = "snowman",    model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #12 - (Found in Mirror room) "Take a good look at yourself." 
-	{ name = "smileymoon", model = E_MODEL_SMILER3,          scale = 1.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM }, --Trophy #13 - (Found in TTM) "Find this right next to the skull."
-	{ name = "portal",     model = E_MODEL_NETHERPORTAL,     scale = 0.2, y_offset = 10,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #14 - Find the NetherPortal.
+	{ name = "mario",      model = E_MODEL_TROPHY_MARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM, message = "Trophy #1 - Beat the game as Mario."  },
+	{ name = "luigi",      model = E_MODEL_TROPHY_LUIGI,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM, message = "Trophy #2 - Beat the game as Luigi."  },
+	{ name = "toad",       model = E_MODEL_TROPHY_TOAD,      scale = 0.1, y_offset = 26,  podium = E_MODEL_PLAT_TROPHY_PODIUM, message = "Trophy #3 - Beat the game as Toad."   },
+	{ name = "waluigi",    model = E_MODEL_TROPHY_WALUIGI,   scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM, message = "Trophy #4 - Beat the game as Wario."  },
+	{ name = "wario",      model = E_MODEL_TROPHY_WARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM, message = "Trophy #5 - Beat the game as Waluigi."},
+	{ name = "star",       model = E_MODEL_STAR,             scale = 0.6, y_offset = -15, podium = E_MODEL_PLAT_TROPHY_PODIUM, message = "Trophy #6 - Beat the game with all 5 characters." },
+	{ name = "chainchomp", model = E_MODEL_CHOMP,            scale = 0.2, y_offset = -15, podium = E_MODEL_GOLD_TROPHY_PODIUM, message = "Trophy #7 - Feed Chain-Chomp 5 enemies."},
+	{ name = "smiler",     model = E_MODEL_BACKROOM_SMILER,  scale = 0.2, y_offset = -20, podium = E_MODEL_GOLD_TROPHY_PODIUM, message = "Trophy #8 - Visit the Backrooms."       },
+	{ name = "fieldgoal",  model = E_MODEL_GOALPOST,         scale = 0.06, y_offset = 10, podium = E_MODEL_GOLD_TROPHY_PODIUM, message = "Trophy #9 - (CCM) Kick a field goal."   },
+	{ name = "stopwatch",  model = E_MODEL_STOPWATCH,        scale = 0.3, y_offset = 10,  podium = E_MODEL_GOLD_TROPHY_PODIUM, message = "Trophy #10 - (BITFS) Time-Attack!"       },
+	{ name = "coin",       model = E_MODEL_3D_COIN,          scale = 0.3, y_offset = -25, podium = E_MODEL_GOLD_TROPHY_PODIUM, message = "Trophy #11 - (PSS) Collect 81 Coins."    },
+	{ name = "snowman",    model = E_MODEL_CCM_SNOWMAN_HEAD, scale = 0.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM, message = "Trophy #12 - Take a good look at yourself."},
+	{ name = "smileymoon", model = E_MODEL_SMILER3,          scale = 1.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM, message = "Trophy #13 - Find this right next to the skull."},
+	{ name = "portal",     model = E_MODEL_NETHERPORTAL,     scale = 0.2, y_offset = 10,  podium = E_MODEL_FIND_TROPHY_PODIUM, message = "Trophy #14 - Take a trip through Hell.",
 	  loop = function (o)
 		o.parentObj.oAnimState = o.oTimer % 32
 	  end},
 
-	{ name = "bully",      model = E_MODEL_BULLY,            scale = 0.5, y_offset = -20,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #15 - (Found in LLL Volcano) "Highest point of the hottest area."
+	{ name = "bully",      model = E_MODEL_BULLY,            scale = 0.5, y_offset = -20,  podium = E_MODEL_FIND_TROPHY_PODIUM, message = "Trophy #15 - When you're at the top of the volcano, go higher.",
 	  loop = function (o)
 		o.oAnimations = gObjectAnimations.bully_seg5_anims_0500470C
 		obj_init_animation(o.parentObj, 0)
 	  end},
 
-	{ name = "boulder",    model = E_MODEL_HMC_ROLLING_ROCK, scale = 0.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #16 - (Found in HMC) "Surely you've found a way around those boulders..."
+	{ name = "boulder",    model = E_MODEL_HMC_ROLLING_ROCK, scale = 0.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM, message = "Trophy #16 - Surely you've found the way around those boulders..",
 	  loop = function (o)
 		o.parentObj.oFaceAnglePitch = o.parentObj.oFaceAnglePitch -2000
 	  end},
 
-	{ name = "hoot",       model = E_MODEL_HOOT,             scale = 0.6, y_offset = 24,  podium = E_MODEL_FIND_TROPHY_PODIUM,   --Trophy #17 - (Found in WF) "Somewhere in first 4 levels, must be found on Course Star #2 or higher."
+	{ name = "hoot",       model = E_MODEL_HOOT,             scale = 0.6, y_offset = 24,  podium = E_MODEL_FIND_TROPHY_PODIUM, message = "Trophy #17 - Somewhere in first 4 levels, must be found on Course Star #2 or higher.",
 	  loop = function (o)
 		o.oAnimations = gObjectAnimations.hoot_seg5_anims_05005768
 		obj_init_animation(o.parentObj, 0)
 	  end},
 
-	{ name = "killyoshi",  model = E_MODEL_TROPHY_YOSHI,            scale = 0.4, y_offset = 10,   podium = E_MODEL_GORE_TROPHY_PODIUM,   --Trophy #18 - Kill Yoshi
+	{ name = "killyoshi",  model = E_MODEL_TROPHY_YOSHI,            scale = 0.4, y_offset = 10,   podium = E_MODEL_GORE_TROPHY_PODIUM, message = "Trophy #18 - Bad news, you need all 120 stars and have to kill your favorite dinosaur. Good news, you're gonna want to kill him by the time you finish those stars.",
 	loop = function (o)
 		o.oAnimations = gObjectAnimations.yoshi_seg5_anims_05024100
 		obj_init_animation(o.parentObj, 0)
 	  end},
 
-	{ name = "deadtoad",   model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }, --Trophy #19 - Kill Toad 50x
-	{ name = "trophy20",   model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM }  --Trophy #20 - 
+	{ name = "deadtoad",   model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM, message = "Trophy #19 - Toadal Genocide (50x kills)"},
+	{ name = "trophy20",   model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM, message = "Trophy #20 - ???????????" }
 }
+
+
 
 PACKET_UNLOCK = 0
 function unlock_trophy(id)
@@ -204,40 +206,36 @@ end
 ---@param o Object
 function trophyplate_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-	o.oInteractType = INTERACT_TEXT
 	obj_set_hitbox_radius_and_height(o, 40, 100)
 end
 
 function trophyplate_loop(o)
-	if o.oBehParams & 1 == 0 then -- if trophy NOT collected already...
-		
-	else
+	local m = gMarioStates[0]
+	local trophy = trophyinfo[o.oBehParams >> 16]
 
+
+	if mod_storage_load("file"..get_current_save_file_num()..trophy.name) == "1" then
+		obj_set_model_extended(o, E_MODEL_GOLD_PLATE)
+		if obj_check_hitbox_overlap(o, m.marioObj) and (m.controller.buttonPressed & B_BUTTON) ~= 0 then
+			djui_chat_message_create(tostring(trophy.message))
+			m.faceAngle.y = -32768
+			set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
+			set_mario_action(m, ACT_IDLE, 0)
+			local_play(sSmwping, m.pos, 1)
+		end
+	else
+		obj_set_model_extended(o, E_MODEL_SILVER_PLATE)
+		if obj_check_hitbox_overlap(o, m.marioObj) and (m.controller.buttonPressed & B_BUTTON) ~= 0 then
+			djui_chat_message_create(tostring(trophy.message))
+			m.faceAngle.y = -32768
+			set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
+			set_mario_action(m, ACT_IDLE, 0)
+		end
 	end
 end
 
 
-------------------------------------------------------------------------------------------------------------
--------- Trying to do a check for the first 5 trophies to grant the 6th trophy (beat game with all characters). No luck so far. -- check epicbowser.lua:469
--- t1 = mod_storage_load("mario")
--- t2 = mod_storage_load("luigi")
--- t3 = mod_storage_load("toad")
--- t4 = mod_storage_load("wario")
--- t5 = mod_storage_load("waluigi")
 
--- function trophy_check(o)
--- 	m = gMarioStates[0]
-
--- 	if mod_storage_load("mario") == "1" and mod_storage_load("luigi") == "1" and mod_storage_load("toad") == "1" and mod_storage_load("wario") == "1" and mod_storage_load("waluigi") == "1" and mod_storage_load("star") ~= "1" then
--- 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(t)
--- 			t.oBehParams = 6 << 16 | 1
--- 		end)
--- 	end
-
--- end
-
--- hook_event(HOOK_ON_WARP, trophy_check)
-------------------------------------------------------------------------------------------------------------
 
 id_bhvTrophy = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophy_init, trophy_loop, "bhvTrophy")
 id_bhvTrophyPlate = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophyplate_init, trophyplate_loop, "bhvTrophyPlate")

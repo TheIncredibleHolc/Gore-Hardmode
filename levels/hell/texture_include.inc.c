@@ -18,11 +18,6 @@ u8 hell_dl_SUPER_MARIO_64_10E452C9_0_2_all_i8[] = {
 	#include "levels/hell/SUPER_MARIO_64_10E452C9_0_2_all.i8.inc.c"
 };
 
-Gfx hell_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 hell_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16[] = {
-	#include "levels/hell/SUPER_MARIO_64_184368CA_0_2_all.rgba16.inc.c"
-};
-
 Gfx hell_dl_Bowser_Logo_Platform_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 hell_dl_Bowser_Logo_Platform_rgba16[] = {
 	#include "levels/hell/Bowser_Logo_Platform.rgba16.inc.c"
@@ -73,8 +68,8 @@ u8 hell_dl__11ED1CF2_c_pal_rgba16[] = {
 	#include "levels/hell/_11ED1CF2_c.rgba16.pal"
 };
 
-Gfx hell_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_copy_aligner[] = {gsSPEndDisplayList()};
-u8 hell_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_copy[] = {
+Gfx hell_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 hell_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16[] = {
 	#include "levels/hell/SUPER_MARIO_64_184368CA_0_2_all.rgba16.inc.c"
 };
 
