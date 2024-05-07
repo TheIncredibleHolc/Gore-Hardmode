@@ -8,6 +8,7 @@ musicUnderground = audio_stream_load("underground.ogg")	audio_stream_set_looping
 musicbows2 = audio_stream_load("bows2loop.ogg")         audio_stream_set_looping(musicbows2, true)
 timeattack = audio_stream_load("timeattack.ogg")
 edils = audio_stream_load("edils.ogg")					audio_stream_set_looping(edils, true)
+sad = audio_stream_load("sad.ogg")
 
 currentlyPlaying = nil
 local fadeTimer = 0
@@ -39,6 +40,7 @@ function stream_stop_all()
 	audio_stream_stop(musicbows2)
 	audio_stream_stop(timeattack)
 	audio_stream_stop(edils)
+	audio_stream_stop(sad)
 	currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()

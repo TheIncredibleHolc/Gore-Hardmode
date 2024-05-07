@@ -89,8 +89,8 @@ function testing(m)
 
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		squishblood(m.marioObj)
-		gLakituState.mode = CAMERA_MODE_OUTWARD_RADIAL
+		spawn_non_sync_object(id_bhvBattleDorrie, E_MODEL_HELL_DORRIE, m.pos.x, m.pos.y, m.pos.z, nil)
+		
 
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
@@ -1055,7 +1055,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	--Lava bubbling at HMC
 	if np.currLevelNum == LEVEL_HMC and m.pos.y < -3900 then
 		set_override_envfx(ENVFX_LAVA_BUBBLES)
-	elseif np.currLevelNum == LEVEL_HMC and m.pos >= -3900 then
+	elseif np.currLevelNum == LEVEL_HMC and m.pos.y >= -3900 then
 		set_override_envfx(ENVFX_MODE_NONE)
 	end
 
@@ -3165,19 +3165,42 @@ function dorrie_dead(o)
 				end)
 			end
 			o.oAction = 9
+			o.oTimer = 0
 		end
-		if o.oAction == 9 then
+		if o.oAction == 9 then --Dorrie dies and sinks to the depths...
 			obj_set_model_extended(o, DORRIE_DEAD)
 			o.oDorrieVelY = -3
 			o.oPosY = o.oPosY - 25
 			o.oFaceAnglePitch = o.oFaceAnglePitch - 20
 			o.oMoveAnglePitch = o.oFaceAnglePitch
+			if o.oTimer == 1 then
+				play_secondary_music(0, 0, 0, 120)
+			end
+			if o.oTimer == 60 then
+				stream_play(sad)
+			end
+			if o.oTimer == 360 then
+				stop_secondary_music(0)
+			end
 		end
 
 	elseif np.currLevelNum == LEVEL_HELL then
-		o.oAction = 8
-		--o.oHomeX = o.oPosX + 800
-		--o.oHomeZ = o.oPosZ + 800
+		o.oAction = 8 -- Battle Dorrie behavior
+		djui_chat_message_create(tostring(o.oHomeX))
+
+		if oldX == nil then
+			oldX = o.oPosX
+		end
+		if oldZ == nil then
+			oldZ = o.oPosZ
+		end
+		--dist_between_object_and_point()
+		oldX = o.oPosX - oldX
+		oldX = o.oPosZ - oldZ
+		
+		o.oHomeX = oldX
+		o.oHomeZ = oldX
+
 		if o.oAction == 8 then
 			local dorriemounted = cur_obj_is_any_player_on_platform()
 			if dorriemounted == 1 then
@@ -3200,6 +3223,8 @@ function dorrie_dead(o)
 		end
 	end
 end
+
+
 -------Behavior Hooks-------
 hook_behavior(id_bhvDorrie, OBJ_LIST_SURFACE, false, nil, dorrie_dead)
 hook_behavior(id_bhvEyerokBoss, OBJ_LIST_GENACTOR, false, nil, eyerok_loop)
