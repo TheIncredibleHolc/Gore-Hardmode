@@ -3185,11 +3185,6 @@ function dorrie_dead(o)
 		end
 
 	elseif np.currLevelNum == LEVEL_HELL then
-		djui_chat_message_create(tostring(o.oHomeX))
-
-		djui_chat_message_create(""..nm.pos.x)
-		djui_chat_message_create(""..nm.pos.z)
-
 		local homeX = 78
 		local homeZ = 13706
 
