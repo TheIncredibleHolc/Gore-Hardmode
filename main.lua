@@ -3159,7 +3159,7 @@ function dorrie_dead(o)
 		if o.oAction == DORRIE_ACT_LOWER_HEAD then
 			local_play(sDorrie, m.pos, 1)
 			for i = 0, 60 do
-				local random = math.random()		
+				local random = math.random()
 				spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY + 50, o.oPosZ, function (gib)
 					obj_scale(gib, random/2)
 				end)
@@ -3185,42 +3185,21 @@ function dorrie_dead(o)
 		end
 
 	elseif np.currLevelNum == LEVEL_HELL then
-		o.oAction = 8 -- Battle Dorrie behavior
 		djui_chat_message_create(tostring(o.oHomeX))
 
-		if oldX == nil then
-			oldX = o.oPosX
-		end
-		if oldZ == nil then
-			oldZ = o.oPosZ
-		end
-		--dist_between_object_and_point()
-		oldX = o.oPosX - oldX
-		oldX = o.oPosZ - oldZ
-		
-		o.oHomeX = oldX
-		o.oHomeZ = oldX
+		djui_chat_message_create(""..nm.pos.x)
+		djui_chat_message_create(""..nm.pos.z)
 
-		if o.oAction == 8 then
-			local dorriemounted = cur_obj_is_any_player_on_platform()
-			if dorriemounted == 1 then
-				--o.oHomeX = 50
-				--o.oHomeZ = 13575
-				local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
-				local portalangle = obj_angle_to_object(o, netherportal)
-				obj_turn_toward_object(o, netherportal, 16, 256)
-				o.oForwardVel = 15
-			else
-				if mario_is_within_rectangle(o.oPosX - 1300, o.oPosX + 1300, o.oPosZ - 1300, o.oPosZ + 1300) ~= 0 then
-					local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
-					obj_turn_toward_object(o, netherportal, 16, 256)
-				else
-				local marioangle = obj_angle_to_object(o, nm.marioObj)
-				obj_turn_toward_object(o, nm.marioObj, 16, 256)
-				o.oForwardVel = 15
-				end
-			end
-		end
+		local homeX = 78
+		local homeZ = 13706
+
+		local oMinDist = 1650
+		local oMaxDist = 2300
+		local minDist = 0
+		local maxDist = 4300
+
+		o.oHomeX = (homeX - o.oPosX) * (oMaxDist - oMinDist)/(maxDist - minDist) - sins(o.oDorrieAngleToHome) * (minDist - oMinDist) + o.oPosX
+		o.oHomeZ = (homeZ - o.oPosZ) * (oMaxDist - oMinDist)/(maxDist - minDist) - coss(o.oDorrieAngleToHome) * (minDist - oMinDist) + o.oPosZ
 	end
 end
 
