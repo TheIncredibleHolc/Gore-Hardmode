@@ -89,7 +89,7 @@ function testing(m)
 
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvBattleDorrie, E_MODEL_HELL_DORRIE, m.pos.x, m.pos.y, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvGorrie, E_MODEL_HELL_DORRIE, m.pos.x, m.pos.y, m.pos.z, nil)
 		
 
 	end
@@ -3198,6 +3198,85 @@ function dorrie_dead(o)
 	end
 end
 
+function gorrie_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+    o.oAnimations = gObjectAnimations.dorrie_seg6_anims_0600F638
+    o.collisionData = gGlobalObjectCollisionData.dorrie_seg6_collision_0600F644
+    obj_init_animation(o, 2)
+end
+
+function gorrie_loop(o)
+    local np = gNetworkPlayers[0]
+    local nm = nearest_mario_state_to_object(o)
+    local dorriemounted = cur_obj_is_any_player_on_platform()
+    cur_obj_init_animation(2)
+    cur_obj_move_xz_using_fvel_and_yaw()
+    o.oAnimState = o.oTimer % 90
+    load_object_collision_model()
+	
+
+    --[[
+    --Dorrie Y offset bounce.
+    dorrieGroundPounded = cur_obj_is_mario_ground_pounding_platform() 
+    if cur_obj_is_any_player_on_platform() then
+        maxOffsetY = -17.0
+        if (DorrieOffsetY >= 0.0) then
+            if (dorrieGroundPounded) then
+                DorrieVelY = -15.0
+             else
+                DorrieVelY = -6.0
+            end
+         else
+            maxOffsetY = 0
+        end
+    end
+
+    DorrieOffsetY = DorrieOffsetY + DorrieVelY
+    approach_f32_ptr(DorrieVelY, 3.0, 1.0)
+    if (DorrieVelY > 0 and DorrieOffsetY > maxOffsetY) then
+        DorrieOffsetY = maxOffsetY
+    end
+
+    o.oPosY = o.oHomeY + DorrieOffsetY
+    ]]
+
+    if dorriemounted == 1 then
+        local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+        local netherportalangle = obj_angle_to_object(o, netherportal)
+        obj_face_yaw_approach(netherportalangle, 256)
+        obj_turn_toward_object(o, netherportal, 16, 256)
+        if dist_between_objects(o, netherportal) < 1300 then
+			o.oTimer = 0
+            o.oForwardVel = 0
+			local hellthwomp = obj_get_first_with_behavior_id(id_bhvThwomp)
+			local hellthwompangle = obj_angle_to_object(o, hellthwomp)
+            --obj_face_yaw_approach(hellthwompangle, 256)
+        else
+            o.oForwardVel = 15
+			--obj_init_animation(o, 1)
+        end
+		if dist_between_objects(o, netherportal) < 1300 and o.oTimer == 1 then
+			--obj_init_animation(o, 2)
+		end
+    else
+        if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 then
+            local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+            local netherportalangle = obj_angle_to_object(o, netherportal)
+            obj_turn_toward_object(o, netherportal, 16, 256)
+            obj_face_yaw_approach(netherportalangle, 256)
+            o.oForwardVel = 0
+        else
+        obj_turn_toward_object(o, nm.marioObj, 16, 256)
+        o.oForwardVel = 15 
+        local angletomario = obj_angle_to_object(o, nm.marioObj)
+        obj_face_yaw_approach(angletomario, 256)
+        o.oFaceAngleYaw = angletomario
+        o.oMoveAngleYaw = o.oFaceAngleYaw
+
+        end
+    end
+end
 
 -------Behavior Hooks-------
 hook_behavior(id_bhvDorrie, OBJ_LIST_SURFACE, false, nil, dorrie_dead)
@@ -3265,6 +3344,7 @@ id_bhvFlatStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, flatstar_init, flat
 id_bhvBouncy1up = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bouncy_init, bouncy_loop, "bhvBouncy1up")
 id_bhvGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, gib_init, gib_loop, "bhvGib")
 id_bhvFireRing = hook_behavior(nil, OBJ_LIST_GENACTOR, true, firering_init, firering_loop, "bhvFireRing")
+id_bhvGorrie = hook_behavior(nil, OBJ_LIST_SURFACE, true, gorrie_init, gorrie_loop)
 
 -- test function to warp to level, disable if necessary
 hook_chat_command("bow", "ser", function ()
@@ -3482,7 +3562,7 @@ hook_event(HOOK_ON_WARP, function ()
 		local dorrie = obj_get_first_with_behavior_id(id_bhvDorrie)
 		if not dorrie then
 			--spawn_non_sync_object(id_bhvDorrie, E_MODEL_HELL_DORRIE, 4807, 80, 1500, function(o)
-			spawn_non_sync_object(id_bhvDorrie, E_MODEL_HELL_DORRIE, -171, 80, 8206, function(o)
+			spawn_non_sync_object(id_bhvGorrie, E_MODEL_HELL_DORRIE, -171, 80, 8206, function(o)
 				obj_scale(o, .7)
 			end)
 		end
