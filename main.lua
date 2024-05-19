@@ -6,6 +6,9 @@
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+--Scrolling textures
+add_scroll_target(1, "hell_dl_cave_and_lava_mesh_layer_1_vtx_0", 0, 79)
+
 --TTC Speed Increase
 local realbhv = {
     [id_bhvTTC2DRotator] = bhv_ttc_2d_rotator_update,

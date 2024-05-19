@@ -82,7 +82,7 @@ const LevelScript level_hell_entry[] = {
 		OBJECT(MODEL_YELLOW_COIN, -344, 1331, 4402, 90, 10, 0, 0x00000000, bhvYellowCoin),
 		OBJECT(MODEL_YELLOW_COIN, -621, 1331, 4402, 90, 10, 0, 0x00000000, bhvYellowCoin),
 		OBJECT(MODEL_YELLOW_COIN, 989, 1331, 4402, 90, 10, 0, 0x00000000, bhvYellowCoin),
-		OBJECT(MODEL_YELLOW_COIN, 1146, 1331, 4402, 90, 10, 0, 0x00000000, bhvYellowCoin),
+		OBJECT_WITH_ACTS(/* model*/ 0, /*speed*/ -4, /*axis*/5, /*vtx count*/79, 0, /*scroll type*/ 0, /*cycle*/ 1, /*index*/ 1, RM_Scroll_Texture, 31),
 		TERRAIN(hell_area_1_collision),
 		MACRO_OBJECTS(hell_area_1_macro_objs),
 		STOP_MUSIC(0),
