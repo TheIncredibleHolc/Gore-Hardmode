@@ -309,7 +309,7 @@ end
 
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
 
-function bhv_custom_kingwhomp(obj) -- makes king whomp give you quicksand
+function bhv_custom_kingwhomp(obj)
 	local m = nearest_mario_state_to_object(obj)
 	if obj.oHealth == 3 then
 		cur_obj_scale(.2)
@@ -1059,7 +1059,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-
+	--djui_chat_message_create(tostring(m.marioObj.oFaceAngleYaw))
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -1262,7 +1262,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 				spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
 					obj_scale(gib, random)
 				end)
-				
 			end
 	    end
 	end
@@ -3207,6 +3206,8 @@ function gorrie_loop(o)
     local np = gNetworkPlayers[0]
     local nm = nearest_mario_state_to_object(o)
     local dorriemounted = cur_obj_is_any_player_on_platform()
+	local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+
     cur_obj_init_animation(1)
     cur_obj_move_xz_using_fvel_and_yaw()
     o.oAnimState = o.oTimer % 90
@@ -3239,34 +3240,35 @@ function gorrie_loop(o)
     ]]
 
     if dorriemounted == 1 then
-        local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
-        local netherportalangle = obj_angle_to_object(o, netherportal)
-        obj_face_yaw_approach(netherportalangle, 256)
-        obj_turn_toward_object(o, netherportal, 16, 256)
-        if dist_between_objects(o, netherportal) < 1600 then
+		if dist_between_objects(o, netherportal) < 1200 then
 			djui_chat_message_create("Waiting for player to disembark!")
 			o.oTimer = 0
             o.oForwardVel = 0
-
 			local warp = obj_get_nearest_object_with_behavior_id(o, id_bhvFadingWarp)
             local warpangle = obj_angle_to_object(o, warp)
+			djui_chat_message_create(tostring(warpangle))
             obj_turn_toward_object(o, warp, 16, 256)
             obj_face_yaw_approach(warpangle, 256)
-
+			
+			--o.oFaceAngleYaw = obj_face_yaw_approach(27085, 256)
+			--o.oMoveAngleYaw = o.oFaceAngleYaw
 			--[[
 			local angletohome = cur_obj_angle_to_home()
-			obj_face_yaw_approach(angletohome, 256)
-			o.oFaceAngleYaw = angletohome
+			o.oFaceAngleYaw = obj_face_yaw_approach(angletohome, 256)
 			o.oMoveAngleYaw = o.oFaceAngleYaw
 			]]
+		
 		else
+			local netherportalangle = obj_angle_to_object(o, netherportal)
+			obj_face_yaw_approach(netherportalangle, 256)
+			obj_turn_toward_object(o, netherportal, 16, 256)
+
 			djui_chat_message_create("Traveling to Netherportal!")
-            o.oForwardVel = 15
+            o.oForwardVel = 25
 			--obj_init_animation(o, 1)
         end
     else
-        if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 then
-            local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+        if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 and dist_between_objects(o, netherportal) > 1600 then
             local netherportalangle = obj_angle_to_object(o, netherportal)
             obj_turn_toward_object(o, netherportal, 16, 256)
             obj_face_yaw_approach(netherportalangle, 256)
@@ -3276,19 +3278,14 @@ function gorrie_loop(o)
 			--if cur_obj_outside_home_rectangle(o.oHomeX - 600, o.oHomeX + 600, o.oHomeZ - 600, o.oHomeZ + 600) then
 			if cur_obj_lateral_dist_from_obj_to_home(o) >= 500 then
 				djui_chat_message_create("Travelling to home!")
-				--obj_return_home_if_safe(o, o.oHomeX, o.oHomeY, o.oHomeZ, 1000)
 				local angletohome = cur_obj_angle_to_home()
-        		--obj_turn_toward_object(o, nm.marioObj, 16, 256)
         		o.oForwardVel = 15
-        		--local angletomario = obj_angle_to_object(o, nm.marioObj)
-        		--obj_face_yaw_approach(angletomario, 256)
 				obj_face_yaw_approach(angletohome, 256)
         		o.oFaceAngleYaw = angletohome
         		o.oMoveAngleYaw = o.oFaceAngleYaw
 			else
 				djui_chat_message_create("home!")
 				o.oForwardVel = 0
-				local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
 				local netherportalangle = obj_angle_to_object(o, netherportal)
 				local anglesmooth = obj_face_yaw_approach(netherportalangle, 256)
 				obj_turn_toward_object(o, netherportal, 16, 256)
