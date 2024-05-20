@@ -1541,7 +1541,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Hell entrance cutscene
-	if np.currLevelNum == LEVEL_HELL and not s.visitedhell then
+	if np.currLevelNum == LEVEL_HELL then
 		if not ia(m) then return end
 		
 		if m.marioObj.oTimer <= 60 then
@@ -1570,7 +1570,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		end
 
 
-		if m.marioObj.oTimer == 120 then
+		if m.marioObj.oTimer == 120 and not s.visitedhell then
 			if ia(m) then
 				cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_019)
 				s.visitedhell = true
