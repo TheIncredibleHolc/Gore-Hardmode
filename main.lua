@@ -822,7 +822,6 @@ function squishblood(o) -- Creates instant pool of impact-blood under mario.
 end
 
 
-
 --Mario reading a sign or trophy plate.
 ACT_READING_TROPHY = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_STATIONARY)
 function act_reading_trophy(m)
@@ -1018,7 +1017,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	if is_player_active(m) == 0 then return end
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
-
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -3207,13 +3205,16 @@ function gorrie_init(o)
     o.oAnimations = gObjectAnimations.dorrie_seg6_anims_0600F638
     o.collisionData = gGlobalObjectCollisionData.dorrie_seg6_collision_0600F644
     obj_init_animation(o, 2)
+	o.oHomeX = 5800
+	o.oHomeY = 80
+	o.oHomeZ = 280
 end
 
 function gorrie_loop(o)
     local np = gNetworkPlayers[0]
     local nm = nearest_mario_state_to_object(o)
     local dorriemounted = cur_obj_is_any_player_on_platform()
-    cur_obj_init_animation(2)
+    cur_obj_init_animation(1)
     cur_obj_move_xz_using_fvel_and_yaw()
     o.oAnimState = o.oTimer % 90
     load_object_collision_model()
@@ -3249,18 +3250,29 @@ function gorrie_loop(o)
         local netherportalangle = obj_angle_to_object(o, netherportal)
         obj_face_yaw_approach(netherportalangle, 256)
         obj_turn_toward_object(o, netherportal, 16, 256)
-        if dist_between_objects(o, netherportal) < 1300 then
+        if dist_between_objects(o, netherportal) < 1600 then
+			djui_chat_message_create("Waiting for player to disembark!")
 			o.oTimer = 0
             o.oForwardVel = 0
-			local hellthwomp = obj_get_first_with_behavior_id(id_bhvThwomp)
-			local hellthwompangle = obj_angle_to_object(o, hellthwomp)
-            --obj_face_yaw_approach(hellthwompangle, 256)
-        else
+
+			local warp = obj_get_nearest_object_with_behavior_id(o, id_bhvFadingWarp)
+            local warpangle = obj_angle_to_object(o, warp)
+            obj_turn_toward_object(o, warp, 16, 256)
+            obj_face_yaw_approach(warpangle, 256)
+
+			--[[
+			local angletohome = cur_obj_angle_to_home()
+			obj_face_yaw_approach(angletohome, 256)
+			o.oFaceAngleYaw = angletohome
+			o.oMoveAngleYaw = o.oFaceAngleYaw
+			]]
+		else
+			djui_chat_message_create("Traveling to Netherportal!")
             o.oForwardVel = 15
 			--obj_init_animation(o, 1)
         end
 		if dist_between_objects(o, netherportal) < 1300 and o.oTimer == 1 then
-			--obj_init_animation(o, 2)
+			--obj_init_animation(o, 2),,
 		end
     else
         if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 then
@@ -3269,14 +3281,29 @@ function gorrie_loop(o)
             obj_turn_toward_object(o, netherportal, 16, 256)
             obj_face_yaw_approach(netherportalangle, 256)
             o.oForwardVel = 0
+			djui_chat_message_create("Waiting for player to board!")
         else
-        obj_turn_toward_object(o, nm.marioObj, 16, 256)
-        o.oForwardVel = 15 
-        local angletomario = obj_angle_to_object(o, nm.marioObj)
-        obj_face_yaw_approach(angletomario, 256)
-        o.oFaceAngleYaw = angletomario
-        o.oMoveAngleYaw = o.oFaceAngleYaw
-
+			--if cur_obj_outside_home_rectangle(o.oHomeX - 600, o.oHomeX + 600, o.oHomeZ - 600, o.oHomeZ + 600) then
+			if cur_obj_lateral_dist_from_obj_to_home(o) >= 500 then
+				djui_chat_message_create("Travelling to home!")
+				--obj_return_home_if_safe(o, o.oHomeX, o.oHomeY, o.oHomeZ, 1000)
+				local angletohome = cur_obj_angle_to_home()
+        		--obj_turn_toward_object(o, nm.marioObj, 16, 256)
+        		o.oForwardVel = 15
+        		--local angletomario = obj_angle_to_object(o, nm.marioObj)
+        		--obj_face_yaw_approach(angletomario, 256)
+				obj_face_yaw_approach(angletohome, 256)
+        		o.oFaceAngleYaw = angletohome
+        		o.oMoveAngleYaw = o.oFaceAngleYaw
+			else
+				djui_chat_message_create("home!")
+				o.oForwardVel = 0
+				local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+				local netherportalangle = obj_angle_to_object(o, netherportal)
+				local anglesmooth = obj_face_yaw_approach(netherportalangle, 256)
+				obj_turn_toward_object(o, netherportal, 16, 256)
+				obj_face_yaw_approach(netherportalangle, 256)
+			end
         end
     end
 end
@@ -3495,6 +3522,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		set_lighting_color(1,127)
 		set_lighting_color(2,100)
 		set_lighting_dir(1,-128)
+		
 		stream_play(musicHell)
 	else
 		set_lighting_color(0, 255)
@@ -3562,7 +3590,7 @@ hook_event(HOOK_ON_WARP, function ()
 	local s = gStateExtras[m.playerIndex]
 
 	if np.currLevelNum == LEVEL_HELL then
-		local dorrie = obj_get_first_with_behavior_id(id_bhvDorrie)
+		local dorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
 		if not dorrie then
 			--spawn_non_sync_object(id_bhvDorrie, E_MODEL_HELL_DORRIE, 4807, 80, 1500, function(o)
 			spawn_non_sync_object(id_bhvGorrie, E_MODEL_HELL_DORRIE, -171, 80, 8206, function(o)
