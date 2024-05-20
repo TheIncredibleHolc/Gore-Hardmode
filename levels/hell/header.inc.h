@@ -72,7 +72,7 @@ extern Vtx hell_dl_BowserTeleporter_mesh_layer_5_vtx_0[4];
 extern Gfx hell_dl_BowserTeleporter_mesh_layer_5_tri_0[];
 extern Vtx hell_dl_BowserTeleporter_001_mesh_layer_5_vtx_0[4];
 extern Gfx hell_dl_BowserTeleporter_001_mesh_layer_5_tri_0[];
-extern Vtx hell_dl_cave_and_lava_mesh_layer_1_vtx_0[79];
+extern Vtx hell_dl_cave_and_lava_mesh_layer_1_vtx_0[89];
 extern Gfx hell_dl_cave_and_lava_mesh_layer_1_tri_0[];
 extern Vtx hell_dl_cave_and_lava_mesh_layer_1_vtx_1[686];
 extern Gfx hell_dl_cave_and_lava_mesh_layer_1_tri_1[];
