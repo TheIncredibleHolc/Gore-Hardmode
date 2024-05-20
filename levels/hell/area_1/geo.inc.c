@@ -49,7 +49,7 @@ const GeoLayout hell_area_1_geo[] = {
 		GEO_OPEN_NODE(),
 			GEO_DISPLAY_LIST(LAYER_OPAQUE, hell_dl_grate2_002_mesh_layer_1),
 		GEO_CLOSE_NODE(),
-		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 0, 24, 0, hell_dl_platforms_mesh_layer_1),
+		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 180, 450, -6837, hell_dl_platforms_mesh_layer_1),
 		GEO_OPEN_NODE(),
 			GEO_DISPLAY_LIST(LAYER_ALPHA, hell_dl_platforms_mesh_layer_4),
 		GEO_CLOSE_NODE(),
