@@ -6,6 +6,9 @@
 
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
+
+
 --Scrolling textures
 add_scroll_target(1, "hell_dl_cave_and_lava_mesh_layer_1_vtx_0", 0, 79)
 
@@ -60,7 +63,7 @@ gBehaviorValues.KoopaThiAgility = 14
 gBehaviorValues.KingBobombHealth = 6
 
 --Slide and Metal cap timers
-gLevelValues.pssSlideStarTime = 315 -- 10.5 Seconds
+gLevelValues.pssSlideStarTime = 420 -- 14 Seconds
 gLevelValues.metalCapDuration = 90 -- 3 seconds, LOL.
 
 local savedCollisionBugStatus
@@ -1067,6 +1070,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 	if mod_storage_load("file1coin") == "1" then
 		--DO NOTHING
+		--djui_chat_message_create("already collected")
 	else
 		local psstrophy = obj_get_first_with_behavior_id(id_bhvTrophy)
 
@@ -1957,7 +1961,11 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 				set_mario_action(m, ACT_RAGDOLL, 0)
 			end
 		else
-			m.squishTimer = 50
+			if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 then
+				--djui_chat_message_create("Doing nothing (you hit chain chomp and lost yer legs!!)")
+			else
+				m.squishTimer = 50
+			end
 		end
 	end
 
@@ -2152,13 +2160,16 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	if m.floor and m.floor.object and obj_has_behavior_id(m.floor.object, id_bhvBackroom) ~= 0 then return end
 
 	if s.timeattack then
+		--djui_hud_set_resolution(RESOLUTION)
 		local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvStopwatch)
 		if o then
 			local totalSeconds = math.ceil((gGlobalSyncTable.timerMax - o.oTimer) / 30)
 			local minutes = math.floor(totalSeconds / 60)
 			local seconds = totalSeconds % 60
 			local timerString = string.format("%02d :%02d", minutes, seconds)
-			djui_hud_print_text(timerString, 850, 100, 1)
+			--djui_hud_print_text(timerString, 850, 100, 5)
+			djui_hud_print_text(timerString, screenWidth / 2 - djui_hud_measure_text(timerString), screenHeight - 48, 1)
+
 		else
 			s.timeattack = false
 		end
@@ -2179,7 +2190,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 		djui_hud_set_color(255, 255, 0, lerp(0, 255, (math.max(0, toadguitimer))/150))
 
 		local toaddeathcount = "Server Toad death count: "..gGlobalSyncTable.toaddeathcounter
-		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), screenHeight - 48, 1)
+		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), 20, 1)
 	end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	djui_hud_set_resolution(RESOLUTION_N64)
@@ -3197,9 +3208,11 @@ function gorrie_init(o)
     o.oAnimations = gObjectAnimations.dorrie_seg6_anims_0600F638
     o.collisionData = gGlobalObjectCollisionData.dorrie_seg6_collision_0600F644
     obj_init_animation(o, 2)
+	obj_scale(o, .7)
 	o.oHomeX = 5800
 	o.oHomeY = 80
 	o.oHomeZ = 280
+	network_init_object(o, true, nil)
 end
 
 function gorrie_loop(o)
@@ -3207,84 +3220,47 @@ function gorrie_loop(o)
     local nm = nearest_mario_state_to_object(o)
     local dorriemounted = cur_obj_is_any_player_on_platform()
 	local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
-
     cur_obj_init_animation(1)
     cur_obj_move_xz_using_fvel_and_yaw()
     o.oAnimState = o.oTimer % 90
     load_object_collision_model()
-	
-
-    --[[
-    --Dorrie Y offset bounce.
-    dorrieGroundPounded = cur_obj_is_mario_ground_pounding_platform() 
-    if cur_obj_is_any_player_on_platform() then
-        maxOffsetY = -17.0
-        if (DorrieOffsetY >= 0.0) then
-            if (dorrieGroundPounded) then
-                DorrieVelY = -15.0
-             else
-                DorrieVelY = -6.0
-            end
-         else
-            maxOffsetY = 0
-        end
-    end
-
-    DorrieOffsetY = DorrieOffsetY + DorrieVelY
-    approach_f32_ptr(DorrieVelY, 3.0, 1.0)
-    if (DorrieVelY > 0 and DorrieOffsetY > maxOffsetY) then
-        DorrieOffsetY = maxOffsetY
-    end
-
-    o.oPosY = o.oHomeY + DorrieOffsetY
-    ]]
 
     if dorriemounted == 1 then
 		if dist_between_objects(o, netherportal) < 1200 then
-			djui_chat_message_create("Waiting for player to disembark!")
+			--djui_chat_message_create("Waiting for player to disembark!")
 			o.oTimer = 0
             o.oForwardVel = 0
 			local warp = obj_get_nearest_object_with_behavior_id(o, id_bhvFadingWarp)
             local warpangle = obj_angle_to_object(o, warp)
-			djui_chat_message_create(tostring(warpangle))
+			--djui_chat_message_create(tostring(warpangle))
             obj_turn_toward_object(o, warp, 16, 256)
             obj_face_yaw_approach(warpangle, 256)
-			
-			--o.oFaceAngleYaw = obj_face_yaw_approach(27085, 256)
-			--o.oMoveAngleYaw = o.oFaceAngleYaw
-			--[[
-			local angletohome = cur_obj_angle_to_home()
-			o.oFaceAngleYaw = obj_face_yaw_approach(angletohome, 256)
-			o.oMoveAngleYaw = o.oFaceAngleYaw
-			]]
-		
 		else
+			--djui_chat_message_create("Traveling to Netherportal!")
 			local netherportalangle = obj_angle_to_object(o, netherportal)
 			obj_face_yaw_approach(netherportalangle, 256)
 			obj_turn_toward_object(o, netherportal, 16, 256)
-
-			djui_chat_message_create("Traveling to Netherportal!")
             o.oForwardVel = 25
 			--obj_init_animation(o, 1)
         end
     else
         if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 and dist_between_objects(o, netherportal) > 1600 then
-            local netherportalangle = obj_angle_to_object(o, netherportal)
+			--djui_chat_message_create("Waiting for player to board!")
+			local netherportalangle = obj_angle_to_object(o, netherportal)
             obj_turn_toward_object(o, netherportal, 16, 256)
             obj_face_yaw_approach(netherportalangle, 256)
             o.oForwardVel = 0
-			djui_chat_message_create("Waiting for player to board!")
         else
 			--if cur_obj_outside_home_rectangle(o.oHomeX - 600, o.oHomeX + 600, o.oHomeZ - 600, o.oHomeZ + 600) then
 			if cur_obj_lateral_dist_from_obj_to_home(o) >= 500 then
-				djui_chat_message_create("Travelling to home!")
+				--djui_chat_message_create("Travelling to home!")
 				local angletohome = cur_obj_angle_to_home()
         		o.oForwardVel = 15
 				obj_face_yaw_approach(angletohome, 256)
         		o.oFaceAngleYaw = angletohome
         		o.oMoveAngleYaw = o.oFaceAngleYaw
 			else
-				djui_chat_message_create("home!")
+				--djui_chat_message_create("home!")
 				o.oForwardVel = 0
 				local netherportalangle = obj_angle_to_object(o, netherportal)
 				local anglesmooth = obj_face_yaw_approach(netherportalangle, 256)
@@ -3576,6 +3552,8 @@ hook_event(HOOK_ON_WARP, function ()
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
+	--MOVED TO BLENDER SPAWN FOR SYNCING PURPOSES
+	--[[
 	if np.currLevelNum == LEVEL_HELL then
 		local dorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
 		if not dorrie then
@@ -3585,6 +3563,7 @@ hook_event(HOOK_ON_WARP, function ()
 			end)
 		end
 	end
+	]]
 
 	if s.isgold then
 		--if m.playerIndex ~= 0 then return end
@@ -3672,10 +3651,15 @@ hook_event(HOOK_ON_WARP, function ()
 		end
 	end
 	if np.currLevelNum == LEVEL_CCM and gGlobalSyncTable.gameisbeat then
-		spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
-			goalpost.oFaceAngleYaw = goalpost.oFaceAngleYaw + 4000
-			goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
-		end)
+		local count = obj_count_objects_with_behavior_id(id_bhvGoalpost)
+		--djui_chat_message_create(tostring(count))
+		
+		if count < 1 then
+			spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
+				goalpost.oFaceAngleYaw = goalpost.oFaceAngleYaw + 4000
+				goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
+			end)
+		end
 	end
 	if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #12 (Mirror room)
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5514, 1613, 3159, function(t)
@@ -3704,3 +3688,5 @@ hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
 		return 0
 	end  
 end)
+
+

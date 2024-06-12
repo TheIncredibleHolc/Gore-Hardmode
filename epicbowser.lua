@@ -98,6 +98,7 @@ function grand_star_init(o)
     -- gCutsceneFocus = o
     -- gSecondCameraFocus = o
 
+	network_init_object(o, true, nil)
 
 
     o.oFlags = (OBJ_FLAG_MOVE_XZ_USING_FVEL | OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)

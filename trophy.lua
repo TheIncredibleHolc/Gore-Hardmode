@@ -218,7 +218,7 @@ function trophyplate_loop(o)
 		obj_set_model_extended(o, E_MODEL_GOLD_PLATE)
 		if obj_check_hitbox_overlap(o, m.marioObj) and (m.controller.buttonPressed & B_BUTTON) ~= 0 then
 			djui_chat_message_create(tostring(trophy.message))
-			m.faceAngle.y = -32768
+			m.faceAngle.y = -43691
 			set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
 			set_mario_action(m, ACT_IDLE, 0)
 			local_play(sSmwping, m.pos, 1)
@@ -227,9 +227,10 @@ function trophyplate_loop(o)
 		obj_set_model_extended(o, E_MODEL_SILVER_PLATE)
 		if obj_check_hitbox_overlap(o, m.marioObj) and (m.controller.buttonPressed & B_BUTTON) ~= 0 then
 			djui_chat_message_create(tostring(trophy.message))
-			m.faceAngle.y = -32768
+			m.faceAngle.y = -43691
 			set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
 			set_mario_action(m, ACT_IDLE, 0)
+			local_play(sSmwping, m.pos, 1)
 		end
 	end
 end
