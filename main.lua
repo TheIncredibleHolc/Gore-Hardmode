@@ -1482,6 +1482,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			audio_sample_stop(gSamples[sAgonyLuigi])
 			audio_sample_stop(gSamples[sAgonyWario])
 			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
+			audio_sample_stop(gSamples[sAgonyWaluigi])
 		end
 
         local touchingwater = m.pos.y <= m.waterLevel
@@ -1496,6 +1497,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			audio_sample_stop(gSamples[sToadburn]) --Stops Mario's super long scream
 			audio_sample_stop(gSamples[sAgonyLuigi])
 			audio_sample_stop(gSamples[sAgonyWario])
+			audio_sample_stop(gSamples[sAgonyWaluigi])
+
 			if m.usedObj then
 				obj_mark_for_deletion(m.usedObj)
 			end
@@ -2058,6 +2061,8 @@ function before_mario_action(m, action)
 				network_play(sToadburn, m.pos, 1, m.playerIndex)
 			elseif m.character.type == CT_WARIO then
 				network_play(sAgonyWario, m.pos, 1, m.playerIndex)
+			elseif m.character.type == CT_WALUIGI then
+				network_play(sAgonyWaluigi, m.pos, 1, m.playerIndex)
 			end
 		end
 	end
@@ -2092,6 +2097,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 	audio_sample_stop(gSamples[sAgonyWario]) --Stops Wario's super long scream
+	audio_sample_stop(gSamples[sAgonyWaluigi]) --Stops Waluigi's super long scream
 	s.bigthrowenabled = 0
 	s.timeattack = false
 	--set_override_envfx(ENVFX_MODE_NONE)
@@ -2110,6 +2116,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 	audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
 	audio_sample_stop(gSamples[sAgonyWario]) --Stops Wario's super long scream
+	audio_sample_stop(gSamples[sAgonyWaluigi]) --Stops Waluigi's super long scream
 
 	hud_show()
 
