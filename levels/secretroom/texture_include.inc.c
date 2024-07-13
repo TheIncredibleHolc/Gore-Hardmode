@@ -48,6 +48,11 @@ u8 secretroom_dl_frog_rgba16[] = {
 	#include "levels/secretroom/frog.rgba16.inc.c"
 };
 
+Gfx secretroom_dl_toadsmile_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_toadsmile_rgba16[] = {
+	#include "levels/secretroom/toadsmile.rgba16.inc.c"
+};
+
 Gfx secretroom_dl_toadhatblood_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_toadhatblood_rgba16[] = {
 	#include "levels/secretroom/toadhatblood.rgba16.inc.c"
@@ -56,6 +61,31 @@ u8 secretroom_dl_toadhatblood_rgba16[] = {
 Gfx secretroom_dl_bridgeblood_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_bridgeblood_rgba16[] = {
 	#include "levels/secretroom/bridgeblood.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_kinglow_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_kinglow_rgba16[] = {
+	#include "levels/secretroom/kinglow.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_koopurgerlow_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_koopurgerlow_rgba16[] = {
+	#include "levels/secretroom/koopurgerlow.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_trollslow_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_trollslow_rgba16[] = {
+	#include "levels/secretroom/trollslow.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_gorrielow_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_gorrielow_rgba16[] = {
+	#include "levels/secretroom/gorrielow.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_melvinlow_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_melvinlow_rgba16[] = {
+	#include "levels/secretroom/melvinlow.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_sanikyn_rgba16_aligner[] = {gsSPEndDisplayList()};

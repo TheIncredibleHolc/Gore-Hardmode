@@ -34,7 +34,11 @@ Lights1 secretroom_dl_f3dlite_material_025_lights = gdSPDefLights1(
 	0x7F, 0x7F, 0x7F,
 	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
 
-Lights1 secretroom_dl_f3dlite_material_lights = gdSPDefLights1(
+Lights1 secretroom_dl_f3dlite_material_030_lights = gdSPDefLights1(
+	0x7F, 0x7F, 0x7F,
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
+
+Lights1 secretroom_dl_f3dlite_material_051_lights = gdSPDefLights1(
 	0x7F, 0x7F, 0x7F,
 	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
 
@@ -43,6 +47,26 @@ Lights1 secretroom_dl_f3dlite_material_052_lights = gdSPDefLights1(
 	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
 
 Lights1 secretroom_dl_f3dlite_material_047_lights = gdSPDefLights1(
+	0x7F, 0x7F, 0x7F,
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
+
+Lights1 secretroom_dl_f3dlite_material_050_lights = gdSPDefLights1(
+	0x7F, 0x7F, 0x7F,
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
+
+Lights1 secretroom_dl_f3dlite_material_053_lights = gdSPDefLights1(
+	0x7F, 0x7F, 0x7F,
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
+
+Lights1 secretroom_dl_f3dlite_material_054_lights = gdSPDefLights1(
+	0x7F, 0x7F, 0x7F,
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
+
+Lights1 secretroom_dl_f3dlite_material_055_lights = gdSPDefLights1(
+	0x7F, 0x7F, 0x7F,
+	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
+
+Lights1 secretroom_dl_f3dlite_material_lights = gdSPDefLights1(
 	0x7F, 0x7F, 0x7F,
 	0xFF, 0xFF, 0xFF, 0x49, 0x49, 0x49);
 
@@ -924,11 +948,25 @@ Gfx secretroom_dl_Plane_002_mesh_layer_1_tri_0[] = {
 	gsSPEndDisplayList(),
 };
 
+Vtx secretroom_dl_Plane_003_mesh_layer_1_vtx_0[4] = {
+	{{ {-340, 0, 180}, 0, {-16, 8176}, {0, 127, 0, 255} }},
+	{{ {340, 0, 180}, 0, {16368, 8176}, {0, 127, 0, 255} }},
+	{{ {340, 0, -180}, 0, {16368, -16}, {0, 127, 0, 255} }},
+	{{ {-340, 0, -180}, 0, {-16, -16}, {0, 127, 0, 255} }},
+};
+
+Gfx secretroom_dl_Plane_003_mesh_layer_1_tri_0[] = {
+	gsSPVertex(secretroom_dl_Plane_003_mesh_layer_1_vtx_0 + 0, 4, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 2, 3, 0),
+	gsSPEndDisplayList(),
+};
+
 Vtx secretroom_dl_Plane_004_mesh_layer_1_vtx_0[4] = {
-	{{ {-112, 0, 111}, 0, {-16, 8176}, {0, 127, 0, 255} }},
-	{{ {112, 0, 111}, 0, {8176, 8176}, {0, 127, 0, 255} }},
-	{{ {112, 0, -111}, 0, {8176, -16}, {0, 127, 0, 255} }},
-	{{ {-112, 0, -111}, 0, {-16, -16}, {0, 127, 0, 255} }},
+	{{ {-222, 0, 220}, 0, {-16, 8176}, {0, 127, 0, 255} }},
+	{{ {222, 0, 220}, 0, {8176, 8176}, {0, 127, 0, 255} }},
+	{{ {222, 0, -220}, 0, {8176, -16}, {0, 127, 0, 255} }},
+	{{ {-222, 0, -220}, 0, {-16, -16}, {0, 127, 0, 255} }},
 };
 
 Gfx secretroom_dl_Plane_004_mesh_layer_1_tri_0[] = {
@@ -939,14 +977,84 @@ Gfx secretroom_dl_Plane_004_mesh_layer_1_tri_0[] = {
 };
 
 Vtx secretroom_dl_Plane_005_mesh_layer_1_vtx_0[4] = {
-	{{ {-340, 0, 180}, 0, {-16, 8176}, {0, 127, 0, 255} }},
-	{{ {340, 0, 180}, 0, {16368, 8176}, {0, 127, 0, 255} }},
-	{{ {340, 0, -180}, 0, {16368, -16}, {0, 127, 0, 255} }},
-	{{ {-340, 0, -180}, 0, {-16, -16}, {0, 127, 0, 255} }},
+	{{ {-444, 0, 235}, 0, {-16, 8176}, {0, 127, 0, 255} }},
+	{{ {444, 0, 235}, 0, {16368, 8176}, {0, 127, 0, 255} }},
+	{{ {444, 0, -235}, 0, {16368, -16}, {0, 127, 0, 255} }},
+	{{ {-444, 0, -235}, 0, {-16, -16}, {0, 127, 0, 255} }},
 };
 
 Gfx secretroom_dl_Plane_005_mesh_layer_1_tri_0[] = {
 	gsSPVertex(secretroom_dl_Plane_005_mesh_layer_1_vtx_0 + 0, 4, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 2, 3, 0),
+	gsSPEndDisplayList(),
+};
+
+Vtx secretroom_dl_Plane_006_mesh_layer_1_vtx_0[4] = {
+	{{ {144, 0, 218}, 0, {-16, 2032}, {0, 127, 0, 255} }},
+	{{ {592, 0, 218}, 0, {2032, 2032}, {0, 127, 0, 255} }},
+	{{ {592, 0, -225}, 0, {2032, -16}, {0, 127, 0, 255} }},
+	{{ {144, 0, -225}, 0, {-16, -16}, {0, 127, 0, 255} }},
+};
+
+Gfx secretroom_dl_Plane_006_mesh_layer_1_tri_0[] = {
+	gsSPVertex(secretroom_dl_Plane_006_mesh_layer_1_vtx_0 + 0, 4, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 2, 3, 0),
+	gsSPEndDisplayList(),
+};
+
+Vtx secretroom_dl_Plane_007_mesh_layer_1_vtx_0[4] = {
+	{{ {128, 0, 193}, 0, {-16, 2032}, {0, 127, 0, 255} }},
+	{{ {524, 0, 193}, 0, {2032, 2032}, {0, 127, 0, 255} }},
+	{{ {524, 0, -199}, 0, {2032, -16}, {0, 127, 0, 255} }},
+	{{ {128, 0, -199}, 0, {-16, -16}, {0, 127, 0, 255} }},
+};
+
+Gfx secretroom_dl_Plane_007_mesh_layer_1_tri_0[] = {
+	gsSPVertex(secretroom_dl_Plane_007_mesh_layer_1_vtx_0 + 0, 4, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 2, 3, 0),
+	gsSPEndDisplayList(),
+};
+
+Vtx secretroom_dl_Plane_008_mesh_layer_1_vtx_0[4] = {
+	{{ {-340, 0, 180}, 0, {-16, 1008}, {0, 127, 0, 255} }},
+	{{ {340, 0, 180}, 0, {2032, 1008}, {0, 127, 0, 255} }},
+	{{ {340, 0, -180}, 0, {2032, -16}, {0, 127, 0, 255} }},
+	{{ {-340, 0, -180}, 0, {-16, -16}, {0, 127, 0, 255} }},
+};
+
+Gfx secretroom_dl_Plane_008_mesh_layer_1_tri_0[] = {
+	gsSPVertex(secretroom_dl_Plane_008_mesh_layer_1_vtx_0 + 0, 4, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 2, 3, 0),
+	gsSPEndDisplayList(),
+};
+
+Vtx secretroom_dl_Plane_009_mesh_layer_1_vtx_0[4] = {
+	{{ {128, 0, 193}, 0, {-16, 2032}, {0, 127, 0, 255} }},
+	{{ {524, 0, 193}, 0, {2032, 2032}, {0, 127, 0, 255} }},
+	{{ {524, 0, -199}, 0, {2032, -16}, {0, 127, 0, 255} }},
+	{{ {128, 0, -199}, 0, {-16, -16}, {0, 127, 0, 255} }},
+};
+
+Gfx secretroom_dl_Plane_009_mesh_layer_1_tri_0[] = {
+	gsSPVertex(secretroom_dl_Plane_009_mesh_layer_1_vtx_0 + 0, 4, 0),
+	gsSP1Triangle(0, 1, 2, 0),
+	gsSP1Triangle(0, 2, 3, 0),
+	gsSPEndDisplayList(),
+};
+
+Vtx secretroom_dl_Plane_010_mesh_layer_1_vtx_0[4] = {
+	{{ {-222, 0, 220}, 0, {-16, 2032}, {0, 127, 0, 255} }},
+	{{ {222, 0, 220}, 0, {2032, 2032}, {0, 127, 0, 255} }},
+	{{ {222, 0, -220}, 0, {2032, -16}, {0, 127, 0, 255} }},
+	{{ {-222, 0, -220}, 0, {-16, -16}, {0, 127, 0, 255} }},
+};
+
+Gfx secretroom_dl_Plane_010_mesh_layer_1_tri_0[] = {
+	gsSPVertex(secretroom_dl_Plane_010_mesh_layer_1_vtx_0 + 0, 4, 0),
 	gsSP1Triangle(0, 1, 2, 0),
 	gsSP1Triangle(0, 2, 3, 0),
 	gsSPEndDisplayList(),
@@ -7055,16 +7163,29 @@ Gfx mat_secretroom_dl_f3dlite_material_025[] = {
 	gsSPEndDisplayList(),
 };
 
-Gfx mat_secretroom_dl_f3dlite_material[] = {
+Gfx mat_secretroom_dl_f3dlite_material_030[] = {
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsSPSetLights1(secretroom_dl_f3dlite_material_lights),
+	gsSPSetLights1(secretroom_dl_f3dlite_material_030_lights),
 	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, secretroom_dl_frog_rgba16),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadBlock(7, 0, 0, 65535, 32),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 64, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 8, 0, G_TX_WRAP | G_TX_NOMIRROR, 8, 0),
 	gsDPSetTileSize(0, 0, 0, 1020, 1020),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_secretroom_dl_f3dlite_material_051[] = {
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsSPSetLights1(secretroom_dl_f3dlite_material_051_lights),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, secretroom_dl_toadsmile_rgba16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 131071, 16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 128, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 8, 0, G_TX_WRAP | G_TX_NOMIRROR, 9, 0),
+	gsDPSetTileSize(0, 0, 0, 2044, 1020),
 	gsSPEndDisplayList(),
 };
 
@@ -7091,6 +7212,71 @@ Gfx mat_secretroom_dl_f3dlite_material_047[] = {
 	gsDPLoadBlock(7, 0, 0, 131071, 16),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 128, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 8, 0, G_TX_WRAP | G_TX_NOMIRROR, 9, 0),
 	gsDPSetTileSize(0, 0, 0, 2044, 1020),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_secretroom_dl_f3dlite_material_050[] = {
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsSPSetLights1(secretroom_dl_f3dlite_material_050_lights),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, secretroom_dl_kinglow_rgba16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 4095, 128),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 16, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0),
+	gsDPSetTileSize(0, 0, 0, 252, 252),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_secretroom_dl_f3dlite_material_053[] = {
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsSPSetLights1(secretroom_dl_f3dlite_material_053_lights),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, secretroom_dl_koopurgerlow_rgba16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 4095, 128),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 16, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0),
+	gsDPSetTileSize(0, 0, 0, 252, 252),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_secretroom_dl_f3dlite_material_054[] = {
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsSPSetLights1(secretroom_dl_f3dlite_material_054_lights),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, secretroom_dl_trollslow_rgba16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 2047, 128),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 16, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0),
+	gsDPSetTileSize(0, 0, 0, 252, 124),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_secretroom_dl_f3dlite_material_055[] = {
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsSPSetLights1(secretroom_dl_f3dlite_material_055_lights),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, secretroom_dl_gorrielow_rgba16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 4095, 128),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 16, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0),
+	gsDPSetTileSize(0, 0, 0, 252, 252),
+	gsSPEndDisplayList(),
+};
+
+Gfx mat_secretroom_dl_f3dlite_material[] = {
+	gsDPPipeSync(),
+	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
+	gsSPTexture(65535, 65535, 0, 0, 1),
+	gsSPSetLights1(secretroom_dl_f3dlite_material_lights),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, secretroom_dl_melvinlow_rgba16),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
+	gsDPLoadBlock(7, 0, 0, 4095, 128),
+	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 16, 0, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0, G_TX_WRAP | G_TX_NOMIRROR, 6, 0),
+	gsDPSetTileSize(0, 0, 0, 252, 252),
 	gsSPEndDisplayList(),
 };
 
@@ -7672,8 +7858,14 @@ Gfx secretroom_dl_imyourcat_mesh_layer_1[] = {
 };
 
 Gfx secretroom_dl_Plane_002_mesh_layer_1[] = {
-	gsSPDisplayList(mat_secretroom_dl_f3dlite_material),
+	gsSPDisplayList(mat_secretroom_dl_f3dlite_material_030),
 	gsSPDisplayList(secretroom_dl_Plane_002_mesh_layer_1_tri_0),
+	gsSPEndDisplayList(),
+};
+
+Gfx secretroom_dl_Plane_003_mesh_layer_1[] = {
+	gsSPDisplayList(mat_secretroom_dl_f3dlite_material_051),
+	gsSPDisplayList(secretroom_dl_Plane_003_mesh_layer_1_tri_0),
 	gsSPEndDisplayList(),
 };
 
@@ -7686,6 +7878,36 @@ Gfx secretroom_dl_Plane_004_mesh_layer_1[] = {
 Gfx secretroom_dl_Plane_005_mesh_layer_1[] = {
 	gsSPDisplayList(mat_secretroom_dl_f3dlite_material_047),
 	gsSPDisplayList(secretroom_dl_Plane_005_mesh_layer_1_tri_0),
+	gsSPEndDisplayList(),
+};
+
+Gfx secretroom_dl_Plane_006_mesh_layer_1[] = {
+	gsSPDisplayList(mat_secretroom_dl_f3dlite_material_050),
+	gsSPDisplayList(secretroom_dl_Plane_006_mesh_layer_1_tri_0),
+	gsSPEndDisplayList(),
+};
+
+Gfx secretroom_dl_Plane_007_mesh_layer_1[] = {
+	gsSPDisplayList(mat_secretroom_dl_f3dlite_material_053),
+	gsSPDisplayList(secretroom_dl_Plane_007_mesh_layer_1_tri_0),
+	gsSPEndDisplayList(),
+};
+
+Gfx secretroom_dl_Plane_008_mesh_layer_1[] = {
+	gsSPDisplayList(mat_secretroom_dl_f3dlite_material_054),
+	gsSPDisplayList(secretroom_dl_Plane_008_mesh_layer_1_tri_0),
+	gsSPEndDisplayList(),
+};
+
+Gfx secretroom_dl_Plane_009_mesh_layer_1[] = {
+	gsSPDisplayList(mat_secretroom_dl_f3dlite_material_055),
+	gsSPDisplayList(secretroom_dl_Plane_009_mesh_layer_1_tri_0),
+	gsSPEndDisplayList(),
+};
+
+Gfx secretroom_dl_Plane_010_mesh_layer_1[] = {
+	gsSPDisplayList(mat_secretroom_dl_f3dlite_material),
+	gsSPDisplayList(secretroom_dl_Plane_010_mesh_layer_1_tri_0),
 	gsSPEndDisplayList(),
 };
 

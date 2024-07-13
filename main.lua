@@ -2197,7 +2197,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 		djui_hud_set_color(255, 255, 0, lerp(0, 255, (math.max(0, toadguitimer))/150))
 
 		local toaddeathcount = "Server Toad death count: "..gGlobalSyncTable.toaddeathcounter
-		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), 20, 1)
+		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), screenHeight - 48, 1)
 	end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	djui_hud_set_resolution(RESOLUTION_N64)
@@ -2929,12 +2929,18 @@ function bhv_secretwarp_init(o)
 end
 
 function bhv_secretwarp_loop(o)
-	m = gMarioStates[0]
-	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 and m.action ~= ACT_UNLOCKING_STAR_DOOR then
-		set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
-		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-		m.pos.y = m.pos.y + 120
-		o.oTimer = 0
+	local m = gMarioStates[0]
+	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 and m.action ~= ACT_UNLOCKING_STAR_DOOR  then
+		if m.numStars > 80 or gGlobalSyncTable.gameisbeat then
+			set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
+			m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+			m.pos.y = m.pos.y + 120
+			o.oTimer = 0
+		else
+			djui_chat_message_create("You need at least 80 stars to enter. (Or beat the game)")
+			local_play(sWrong, m.pos, 1)
+		end
+
 		
 	end
 	if o.oTimer <= 200 and m.action == ACT_UNLOCKING_STAR_DOOR then
@@ -3482,7 +3488,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, -7135, -2764, -3, nil)
 	end
 
-	if np.currLevelNum == LEVEL_CASTLE_GROUNDS and gGlobalSyncTable.gameisbeat then
+	if np.currLevelNum == LEVEL_CASTLE_GROUNDS then
 		spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -37, 808, 545, nil)
 		spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -37, 811, 545, nil)
 	end
