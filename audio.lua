@@ -81,7 +81,7 @@ gSamples = {
 	audio_sample_load("portal_ambient.ogg"),
 	audio_sample_load("portal_enter.ogg"),
 	audio_sample_load("portal_travel.ogg"),
-	audio_sample_load("trophy.ogg"),
+	audio_sample_load("smwwrong.ogg"),
 	audio_sample_load("agonyluigi.ogg"),
 	audio_sample_load("burp.ogg"),
 	audio_sample_load("bows2intro.ogg"),
@@ -116,7 +116,7 @@ sGlass = 22
 sPortalAmbient = 23
 sPortalEnter = 24
 sPortalTravel = 25
-sTrophy = 26
+sWrong = 26
 sAgonyLuigi = 27
 sBurp = 28
 sBows2intro = 29

@@ -204,8 +204,8 @@ E_MODEL_HEADLESS_TOAD = smlua_model_util_get_id("toad_headless_geo")
 E_MODEL_TOPLESS_TOAD = smlua_model_util_get_id("toad_topless_geo")
 E_MODEL_HEADLESS_WARIO = smlua_model_util_get_id("wario_headless_geo")
 E_MODEL_TOPLESS_WARIO = smlua_model_util_get_id("wario_topless_geo")
-E_MODEL_HEADLESS_WALUIGI = smlua_model_util_get_id("waluigi_headless_geo")
-E_MODEL_TOPLESS_WALUIGI = smlua_model_util_get_id("waluigi_topless_geo")
+E_MODEL_HEADLESS_WALUIGI = smlua_model_util_get_id("waluigiheadless_geo")
+E_MODEL_TOPLESS_WALUIGI = smlua_model_util_get_id("waluigitopless_geo")
 
 
 E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
@@ -558,7 +558,7 @@ function bhv_custom_chain_chomp(obj)
 			spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 272, 975, 1914, function(t)
 				t.oBehParams = 7 << 16 | 1
 			end)
-			feedchomp = 6
+			feedchomp = 0
 		end
 
 
@@ -571,16 +571,9 @@ function bhv_custom_chain_chomp(obj)
 			set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 			local_play(sSplatter, m.pos, 1)
 			obj_mark_for_deletion(obj)
+			
 		end
 	end
-
-	--if obj.oChainChompHitGate then
-	--if obj.oChainChompReleaseStatus == CHAIN_CHOMP_RELEASED_JUMP_AWAY then
-		--if obj.oMoveFlags & OBJ_MOVE_HIT_WALL then
-		--obj_get_nearest_object_with_behavior_id(o, id_bhvChainChompGate)
-		--if obj_check_if_collided_with_object(obj, o) ~= 0 then
-		--if obj.oChainChompHitGate then
-
 
 end
 
@@ -968,8 +961,9 @@ function act_decapitated(m)
 		squishblood(m.marioObj)
 		m.actionTimer = m.actionTimer + 1
 	end
-    --common_death_handler(m, MARIO_ANIM_DYING_FALL_OVER, 80)
 	common_death_handler(m, MARIO_ANIM_ELECTROCUTION, 50)
+	--m.health = 0xff
+	--set_mario_action(m, ACT_DEATH_ON_BACK, 0)
 end
 hook_mario_action(ACT_DECAPITATED, act_decapitated)
 
@@ -2197,7 +2191,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 		djui_hud_set_color(255, 255, 0, lerp(0, 255, (math.max(0, toadguitimer))/150))
 
 		local toaddeathcount = "Server Toad death count: "..gGlobalSyncTable.toaddeathcounter
-		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), 20, 1)
+		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), screenHeight - 48, 1)
 	end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	djui_hud_set_resolution(RESOLUTION_N64)
@@ -2929,12 +2923,18 @@ function bhv_secretwarp_init(o)
 end
 
 function bhv_secretwarp_loop(o)
-	m = gMarioStates[0]
-	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 and m.action ~= ACT_UNLOCKING_STAR_DOOR then
-		set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
-		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-		m.pos.y = m.pos.y + 120
-		o.oTimer = 0
+	local m = gMarioStates[0]
+	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 and m.action ~= ACT_UNLOCKING_STAR_DOOR  then
+		if m.numStars > 80 or gGlobalSyncTable.gameisbeat then
+			set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
+			m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+			m.pos.y = m.pos.y + 120
+			o.oTimer = 0
+		else
+			djui_chat_message_create("You need at least 80 stars to enter. (Or beat the game)")
+			local_play(sWrong, m.pos, 1)
+		end
+
 		
 	end
 	if o.oTimer <= 200 and m.action == ACT_UNLOCKING_STAR_DOOR then
@@ -3210,30 +3210,45 @@ function dorrie_dead(o)
 end
 
 function gorrie_init(o)
+	local np = gNetworkPlayers[0]
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
     o.oAnimations = gObjectAnimations.dorrie_seg6_anims_0600F638
     o.collisionData = gGlobalObjectCollisionData.dorrie_seg6_collision_0600F644
     obj_init_animation(o, 2)
 	obj_scale(o, .7)
-	o.oHomeX = 5800
-	o.oHomeY = 80
-	o.oHomeZ = 280
+	if np.currLevelNum == LEVEL_JRB then
+		o.oHomeX = -5269
+		o.oHomeY = 1050
+		o.oHomeZ = 3750
+	else
+		o.oHomeX = 5800
+		o.oHomeY = 80
+		o.oHomeZ = 280
+	end
 	network_init_object(o, true, nil)
+	
 end
 
 function gorrie_loop(o)
     local np = gNetworkPlayers[0]
     local nm = nearest_mario_state_to_object(o)
     local dorriemounted = cur_obj_is_any_player_on_platform()
-	local netherportal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+	local goal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+	if goal == nil then
+		goal = obj_get_first_with_behavior_id(id_bhvStaticObject)
+	end
+
+	
+
+
     cur_obj_init_animation(1)
     cur_obj_move_xz_using_fvel_and_yaw()
     o.oAnimState = o.oTimer % 90
     load_object_collision_model()
 
     if dorriemounted == 1 then
-		if dist_between_objects(o, netherportal) < 1200 then
+		if dist_between_objects(o, goal) < 1200 then
 			--djui_chat_message_create("Waiting for player to disembark!")
 			o.oTimer = 0
             o.oForwardVel = 0
@@ -3244,18 +3259,18 @@ function gorrie_loop(o)
             obj_face_yaw_approach(warpangle, 256)
 		else
 			--djui_chat_message_create("Traveling to Netherportal!")
-			local netherportalangle = obj_angle_to_object(o, netherportal)
-			obj_face_yaw_approach(netherportalangle, 256)
-			obj_turn_toward_object(o, netherportal, 16, 256)
+			local goal_angle = obj_angle_to_object(o, goal)
+			obj_face_yaw_approach(goal_angle, 256)
+			obj_turn_toward_object(o, goal, 16, 256)
             o.oForwardVel = 25
 			--obj_init_animation(o, 1)
         end
     else
-        if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 and dist_between_objects(o, netherportal) > 1600 then
+        if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 and dist_between_objects(o, goal) > 1600 then
 			--djui_chat_message_create("Waiting for player to board!")
-			local netherportalangle = obj_angle_to_object(o, netherportal)
-            obj_turn_toward_object(o, netherportal, 16, 256)
-            obj_face_yaw_approach(netherportalangle, 256)
+			local goal_angle = obj_angle_to_object(o, goal)
+            obj_turn_toward_object(o, goal, 16, 256)
+            obj_face_yaw_approach(goal_angle, 256)
             o.oForwardVel = 0
         else
 			--if cur_obj_outside_home_rectangle(o.oHomeX - 600, o.oHomeX + 600, o.oHomeZ - 600, o.oHomeZ + 600) then
@@ -3269,10 +3284,10 @@ function gorrie_loop(o)
 			else
 				--djui_chat_message_create("home!")
 				o.oForwardVel = 0
-				local netherportalangle = obj_angle_to_object(o, netherportal)
-				local anglesmooth = obj_face_yaw_approach(netherportalangle, 256)
-				obj_turn_toward_object(o, netherportal, 16, 256)
-				obj_face_yaw_approach(netherportalangle, 256)
+				local goal_angle = obj_angle_to_object(o, goal)
+				local anglesmooth = obj_face_yaw_approach(goal_angle, 256)
+				obj_turn_toward_object(o, goal, 16, 256)
+				obj_face_yaw_approach(goal_angle, 256)
 			end
         end
     end
@@ -3345,6 +3360,13 @@ id_bhvBouncy1up = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bouncy_init, bounc
 id_bhvGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, gib_init, gib_loop, "bhvGib")
 id_bhvFireRing = hook_behavior(nil, OBJ_LIST_GENACTOR, true, firering_init, firering_loop, "bhvFireRing")
 id_bhvGorrie = hook_behavior(nil, OBJ_LIST_SURFACE, true, gorrie_init, gorrie_loop)
+
+--IWBTG MODE
+hook_chat_command("iwbtg", "iwbtm", function ()
+	local s = gStateExtras[0]
+	s.iwbtg = true
+	return true
+end)
 
 -- test function to warp to level, disable if necessary
 hook_chat_command("bow", "ser", function ()
@@ -3482,7 +3504,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, -7135, -2764, -3, nil)
 	end
 
-	if np.currLevelNum == LEVEL_CASTLE_GROUNDS and gGlobalSyncTable.gameisbeat then
+	if np.currLevelNum == LEVEL_CASTLE_GROUNDS then
 		spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -37, 808, 545, nil)
 		spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -37, 811, 545, nil)
 	end
@@ -3553,6 +3575,21 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 	end
 end)
 
+function level_init_spawns()
+	local m = gMarioStates[0]
+	local np = gNetworkPlayers[0]
+	local gorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
+	if np.currLevelNum == LEVEL_JRB then
+		if gorrie ~= nil then
+			--djui_chat_message_create('dorrie exists')
+		else
+			--djui_chat_message_create('spawning dorrie')
+			spawn_sync_object(id_bhvGorrie, E_MODEL_DORRIE, -5269, 1050, 3750, nil)
+		end
+	end
+end
+
+hook_event(HOOK_ON_SYNC_VALID, level_init_spawns)
 
 hook_event(HOOK_ON_WARP, function ()
 	local m = gMarioStates[0]
@@ -3631,6 +3668,7 @@ hook_event(HOOK_ON_WARP, function ()
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, 1050, m.pos.z, function (o)
 			--obj_scale(o, 4)
 		end)
+		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 5910, 1050, 4412, nil)
 		local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
 		o.oPosY = o.oPosY + 21
 	end
