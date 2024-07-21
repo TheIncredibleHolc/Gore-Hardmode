@@ -91,7 +91,8 @@ gSamples = {
 	audio_sample_load("smwping.ogg"),
 	audio_sample_load("agonywaluigi.ogg"),
 	audio_sample_load("iwbtgdeath.ogg"),
-	audio_sample_load("chicken.ogg")
+	audio_sample_load("chicken.ogg"),
+	audio_sample_load("ground.ogg")
 }
 
 sBoneBreak = 1
@@ -129,6 +130,7 @@ sSmwping = 32
 sAgonyWaluigi = 33
 sIwbtgDeath = 34
 sChicken = 35
+sGround = 36
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))

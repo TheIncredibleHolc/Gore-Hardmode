@@ -1,5 +1,5 @@
--- name: GORE / Hard-Mode! 
--- description: Gore and dismemberment! Made by IncredibleHolc and cooliokid956 (Great Kingdom Official), with additional help from Blocky.cmd and the community!
+-- name: GORE / Hard-Mode! [WIP]
+-- description: Gore and extreme challenges! Not for the faint of heart. Another awesome mod from the GORE Team!
 
 
 -------TESTING NOTES AND KNOWN BUGS-------------
@@ -136,7 +136,6 @@ end
 gGlobalSyncTable.deathcounter = 0
 gGlobalSyncTable.toaddeathcounter = 0
 
-
 -----------Locals-------------
 local TEX_MARIO_LESS_HIGH = get_texture_info('mariolesshigh')
 local TEX_BLOOD_OVERLAY = get_texture_info('bloodoverlay')
@@ -254,6 +253,7 @@ for i = 0, MAX_PLAYERS-1 do
 	}
 end
 
+
 toadguitimer = 0
 ukikiheldby = -1
 ukikiholding = 0
@@ -274,6 +274,7 @@ ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG
 function act_gone(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
+	gPlayerSyncTable[m.playerIndex].gold = false
     m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
 	m.actionTimer = m.actionTimer + 1
 	if m.actionTimer == m.actionArg then
@@ -293,7 +294,6 @@ function act_nothing(m)
 	if m.prevAction == ACT_LAVA_BOOST then
 		m.action = ACT_GONE
 	end
-	--s.isgold = false
     --m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
 	--m.actionTimer = m.actionTimer + 1
 end
@@ -869,6 +869,7 @@ function act_necksnap(m)
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 	end
 	s.isgold = false
+	gPlayerSyncTable[m.playerIndex].gold = false
 end
 hook_mario_action(ACT_NECKSNAP, act_necksnap)
 
@@ -898,6 +899,7 @@ local particleTiming = {
 function act_shocked(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
+	gPlayerSyncTable[m.playerIndex].gold = false
 	m.actionTimer = m.actionTimer + 1
 	set_mario_animation(m, MARIO_ANIM_SHOCKED)
 	if m.actionTimer % 2 == 0 then
@@ -982,6 +984,7 @@ local headlessModel = {
 function act_decapitated(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
+	gPlayerSyncTable[m.playerIndex].gold = false
 	--mario_blow_off_cap(m, 15) --Causes Mario to not decapitate??
 	obj_set_model_extended(m.marioObj, headlessModel[m.character.type])
 	if m.actionTimer == 0 then
@@ -1013,7 +1016,7 @@ local toplessModel = {
 function act_bitten_in_half(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
-
+	gPlayerSyncTable[m.playerIndex].gold = false
 	obj_set_model_extended(m.marioObj, toplessModel[m.character.type])
 	if not s.iwbtg then
 		common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
@@ -1111,6 +1114,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		if m.numLives > 1 then
 			m.numLives = 1
 		end
+		if m.numStars == 10 then
+			--djui_chat_message_create("trophy awarded!")
+		end
 	end
 
 	if s.death then
@@ -1125,7 +1131,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		end
 		--hud_hide()
 	else
-		stream_stop_all()
+		--stream_stop_all()
 	end
 
 	if s.iwbtg and m.health == 0xff and not s.death then
@@ -1136,6 +1142,43 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		--s.iwbtg = false
 		s.death = true
 	end
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+	--Turning Gold
+	if s.turningGold then
+		local m = gMarioStates[0]
+		if m.marioObj.oTimer == 30 then
+			set_mario_action(m, ACT_IDLE, 0)
+			cur_obj_disable_rendering_and_become_intangible(m.marioObj)
+		end
+
+		if m.marioObj.oTimer == 58 then
+			set_mario_action(m, ACT_EMERGE_FROM_PIPE, 0)
+
+		end
+
+		if m.marioObj.oTimer == 70 then
+			spawn_mist_particles()
+			network_play(sGround, m.pos, 1, m.playerIndex)
+			cur_obj_enable_rendering_and_become_tangible(m.marioObj)
+			soft_reset_camera(m.area.camera)
+			gPlayerSyncTable[m.playerIndex].gold = true
+			s.turningGold = false
+			--djui_chat_message_create("gold")
+		end
+	end
+
+
+----------------------------------------------------------------------------------------------------------------------------------
+	--IWBTG Trophy
+	gGlobalSyncTable.gameisbeat = true
+	if gGlobalSyncTable.gameisbeat and not trophy_unlocked(20) and s.iwbtg and m.numStars == 1 then
+		unlock_trophy(20)
+		play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
+		djui_chat_message_create("IWBTG Trophy earned!!")
+	end
+
 ----------------------------------------------------------------------------------------------------------------------------------
 	--PSS TROPHY
 
@@ -1231,6 +1274,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 	if m.health <= 120 and s.isgold then
 		s.isgold = false
+		gPlayerSyncTable[m.playerIndex].gold = false
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	if np.currLevelNum == LEVEL_BOB then
@@ -1975,6 +2019,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	--Custom bullet bill boom
 	if obj_has_behavior_id(o, id_bhvBulletBill) ~= 0 and (m.hurtCounter > 0) then
 		spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
+		obj_mark_for_deletion(o)
 	end
 
 	if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 and not s.headless then
@@ -2151,11 +2196,13 @@ function action_start(m)
 	if m.action == ACT_NECKSNAP then
 		local s = gStateExtras[m.playerIndex]
 		s.isgold = false
+		gPlayerSyncTable[m.playerIndex].gold = false
 		squishblood(m.marioObj)
 
 	elseif m.action == ACT_SHOCKED then -- play shock sounds
 		local s = gStateExtras[m.playerIndex]
 		s.isgold = false
+		gPlayerSyncTable[m.playerIndex].gold = false
 		print("playing shock for "..gNetworkPlayers[m.playerIndex].name)
 		network_play(sElectricScream, m.pos, 1, m.playerIndex)
 		network_play(sShock, m.pos, 1, m.playerIndex)
@@ -3027,17 +3074,27 @@ end
 
 function bhv_secretwarp_loop(o)
 	local m = gMarioStates[0]
+	local np = gNetworkPlayers[0]
+	local s = gStateExtras[0]
 	if obj_check_hitbox_overlap(m.marioObj, o) and (m.controller.buttonPressed & Z_TRIG) ~= 0 and m.action ~= ACT_UNLOCKING_STAR_DOOR  then
-		if m.numStars > 80 or gGlobalSyncTable.gameisbeat then
-			set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
-			m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-			m.pos.y = m.pos.y + 120
-			o.oTimer = 0
-		else
-			djui_chat_message_create("You need at least 80 stars to enter. (Or beat the game)")
-			local_play(sWrong, m.pos, 1)
-		end
+		
+		if np.currLevelNum == LEVEL_SECRETHUB then
+			s.turningGold = true
+			set_mario_action(m, ACT_QUICKSAND_DEATH, 0)
+			m.marioObj.oTimer = 0
+			--gPlayerSyncTable[m.playerIndex].gold = true
 
+		else
+			if m.numStars > 80 or gGlobalSyncTable.gameisbeat then
+				set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
+				m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+				m.pos.y = m.pos.y + 120
+				o.oTimer = 0
+			else
+				djui_chat_message_create("You need at least 80 stars to enter. (Or beat the game)")
+				local_play(sWrong, m.pos, 1)
+			end
+		end
 		
 	end
 	if o.oTimer <= 200 and m.action == ACT_UNLOCKING_STAR_DOOR then
@@ -3470,10 +3527,10 @@ hook_chat_command("iwbtg", "iwbtm", function ()
 	if not s.iwbtg then
 		save_file_set_using_backup_slot(true)
 		save_file_erase_current_backup_save()
+		play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
 		s.iwbtg = true
 		m.numLives = 1
 		play_character_sound(m, CHAR_SOUND_LETS_A_GO)
-		play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
 		play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
         play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
 		djui_chat_message_create("IWBTG MODE ENABLED!")
@@ -3735,7 +3792,9 @@ hook_event(HOOK_ON_WARP, function ()
 	end
 	]]
 
-	if s.isgold then
+	--I don't know why or how this got under HOOK_ON_WARP. Moving it to HOOK_UPDATE.
+	--[[
+	if gPlayerSyncTable[m.playerIndex].gold == true then
 		--if m.playerIndex ~= 0 then return end
 		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
 		m.marioObj.hookRender = 1
@@ -3751,6 +3810,7 @@ hook_event(HOOK_ON_WARP, function ()
 			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
 		end
 	end
+	]]
 
 	if s.timeattack then
 		s.timeattack = false

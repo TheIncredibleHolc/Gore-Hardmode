@@ -18,6 +18,7 @@ COL_GOALPOST = smlua_collision_util_get("goalpost_collision")
 E_MODEL_TOAD_HEAD = smlua_model_util_get_id("trophy_toad_head_geo")
 E_MODEL_TROPHY_YOSHI = smlua_model_util_get_id("trophy_yoshi_owie_geo")
 E_MODEL_3D_COIN = smlua_model_util_get_id("coin3d_geo")
+E_MODEL_IWBTG = smlua_model_util_get_id("iwbtg_geo")
 
 trophyinfo = {
 	{ name = "mario",      model = E_MODEL_TROPHY_MARIO,     scale = 0.1, y_offset = 20,  podium = E_MODEL_PLAT_TROPHY_PODIUM, message = "Trophy #1 - Beat the game as Mario."  },
@@ -62,7 +63,7 @@ trophyinfo = {
 	  end},
 
 	{ name = "deadtoad",   model = E_MODEL_TOAD_HEAD,        scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM, message = "Trophy #19 - Toadal Genocide (50x kills)"},
-	{ name = "trophy20",   model = E_MODEL_NONE,             scale = 0.2, y_offset = 0,   podium = E_MODEL_GORE_TROPHY_PODIUM, message = "Trophy #20 - ???????????" }
+	{ name = "iwbtg",      model = E_MODEL_IWBTG,            scale = 0.5, y_offset = -24,   podium = E_MODEL_GORE_TROPHY_PODIUM, message = "Trophy #20 - Collect 10 stars with IWBTG mode enabled!"}
 }
 
 
@@ -235,8 +236,57 @@ function trophyplate_loop(o)
 	end
 end
 
+function prize_spawner() -- Trophy Hunt Prize Spawner
+	local m = gMarioStates[0]
+	local np = gNetworkPlayers[0]
+	if np.currLevelNum == LEVEL_SECRETHUB then
+		local starplatform = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvSecretWarp)
+		if starplatform == nil then
+			if trophy_unlocked(1) and trophy_unlocked(2) and trophy_unlocked(3) and trophy_unlocked(4) and
+			trophy_unlocked(5) and trophy_unlocked(6) and trophy_unlocked(7) and trophy_unlocked(8) and
+			trophy_unlocked(9) and trophy_unlocked(10) and trophy_unlocked(11) and trophy_unlocked(12) and
+			trophy_unlocked(13) and trophy_unlocked(14) and trophy_unlocked(15) and trophy_unlocked(16) and
+			trophy_unlocked(17) and trophy_unlocked(18) and trophy_unlocked(19) and trophy_unlocked(20) then
+				--djui_chat_message_create("Spawning prize")
+				spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -980, 196, -2845, nil)
+				spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -980, 196, -2845, nil)
+			end
+		end
+	end
+end
+
+function gold_players()
+	local m = gMarioStates[0]
+	local s = gStateExtras[0]
+	
+	for i = 0, (MAX_PLAYERS - 1) do
+		if gPlayerSyncTable[i].gold then
+			local s = gStateExtras[i]
+			s.isgold = true
+		end
+	end
+
+	if s.isgold then
+		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+		m.marioObj.hookRender = 1
+		if m.character.type == CT_MARIO then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_MARIO)
+		elseif m.character.type == CT_LUIGI then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_LUIGI)
+		elseif m.character.type == CT_TOAD then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_TOAD)
+		elseif m.character.type == CT_WARIO then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WARIO)
+		elseif m.character.type == CT_WALUIGI then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
+		end
+	end
+end
+
+hook_event(HOOK_UPDATE, gold_players)
 
 
+hook_event(HOOK_UPDATE, prize_spawner)
 
 id_bhvTrophy = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophy_init, trophy_loop, "bhvTrophy")
 id_bhvTrophyPlate = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophyplate_init, trophyplate_loop, "bhvTrophyPlate")
