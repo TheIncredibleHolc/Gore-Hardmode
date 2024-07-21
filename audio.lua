@@ -9,6 +9,7 @@ musicbows2 = audio_stream_load("bows2loop.ogg")         audio_stream_set_looping
 timeattack = audio_stream_load("timeattack.ogg")
 edils = audio_stream_load("edils.ogg")					audio_stream_set_looping(edils, true)
 sad = audio_stream_load("sad.ogg")
+iwbtg = audio_stream_load("iwbtg.ogg")					audio_stream_set_looping(iwbtg, true)
 
 currentlyPlaying = nil
 local fadeTimer = 0
@@ -88,7 +89,10 @@ gSamples = {
 	audio_sample_load("agonywario.ogg"),
 	audio_sample_load("dorriebackbreak.ogg"),
 	audio_sample_load("smwping.ogg"),
-	audio_sample_load("agonywaluigi.ogg")
+	audio_sample_load("agonywaluigi.ogg"),
+	audio_sample_load("iwbtgdeath.ogg"),
+	audio_sample_load("chicken.ogg"),
+	audio_sample_load("ground.ogg")
 }
 
 sBoneBreak = 1
@@ -124,6 +128,9 @@ sAgonyWario = 30
 sDorrie = 31
 sSmwping = 32
 sAgonyWaluigi = 33
+sIwbtgDeath = 34
+sChicken = 35
+sGround = 36
 
 function local_play(id, pos, vol)
 	audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))
