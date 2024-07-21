@@ -2565,6 +2565,7 @@ function lava_init(o)
     o.collisionData = COL_LAVA
 	o.oCollisionDistance = 10000
     o.header.gfx.skipInViewCheck = true
+	bhv_init_room()
 end
 
 function lava_loop(o)
