@@ -95,9 +95,7 @@ function testing(m)
 
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvGorrie, E_MODEL_HELL_DORRIE, m.pos.x, m.pos.y, m.pos.z, nil)
-		
-
+		gGlobalSyncTable.gameisbeat = true
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
 		m.numLives = 1
@@ -1137,7 +1135,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	if s.iwbtg and m.health == 0xff and not s.death then
 		stream_stop_all()
 		save_file_erase_current_backup_save()
-		local_play(sIwbtgDeath, m.pos, 1)
+		local_play(sIwbtgDeath, gLakituState.pos, 1)
 		--set_mario_action(m, ACT_NOTHING, 0)
 		--s.iwbtg = false
 		s.death = true
@@ -1172,8 +1170,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--IWBTG Trophy
-	gGlobalSyncTable.gameisbeat = true
-	if gGlobalSyncTable.gameisbeat and not trophy_unlocked(20) and s.iwbtg and m.numStars == 1 then
+	if gGlobalSyncTable.gameisbeat and not trophy_unlocked(20) and s.iwbtg and m.numStars == 10 then
 		unlock_trophy(20)
 		play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
 		djui_chat_message_create("IWBTG Trophy earned!!")
