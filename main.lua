@@ -1559,11 +1559,16 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 		if s.ssldiethirst >= 300 then
 			m.health = m.health - 1
-			if m.action == ACT_WALKING or m.action == ACT_JUMP or m.action == ACT_JUMP_KICK then
-				m.forwardVel = clampf(m.forwardVel, -100, m.health / 64)
-			end
-			if m.action == ACT_LONG_JUMP then
-				set_mario_action(m, ACT_JUMP, 0)
+			if m.health < 1024 then
+				if m.action == ACT_IDLE then
+					m.action = ACT_PANTING
+				end
+				if m.action == ACT_WALKING or m.action == ACT_JUMP or m.action == ACT_JUMP_KICK then
+					m.forwardVel = clampf(m.forwardVel, -100, m.health / 64)
+				end
+				if m.action == ACT_LONG_JUMP then
+					set_mario_action(m, ACT_JUMP, 0)
+				end
 			end
 		end
 		m.forwardVel = m.forwardVel + 0.3
@@ -1893,18 +1898,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			s.penguintimer = 0
 	end
 
-----------------------------------------------------------------------------------------------------------------------------------
-	--Fast and Killable Klepto
-	klepto = obj_get_nearest_object_with_behavior_id(o, id_bhvKlepto)
-	if klepto ~= nil then
-		klepto.oKleptoSpeed = 120.0
-		if (klepto.oAction == KLEPTO_ACT_STRUCK_BY_MARIO) then
-			squishblood(klepto)
-			local_play(sSplatter, m.pos, 1)
-			play_sound(SOUND_OBJ_KLEPTO1, m.pos)
-			obj_mark_for_deletion(klepto)
-		end
-	end
+
 ----------------------------------------------------------------------------------------------------------------------------------
 end
 
@@ -3232,7 +3226,6 @@ function squishblood_init(o)
 		spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
 			obj_scale(gib, random/2)
 		end)
-		
 	end
 end
 
@@ -3451,6 +3444,99 @@ function gorrie_loop(o)
     end
 end
 
+function bhv_klepto_init(o)
+	local np = gNetworkPlayers[0]
+	if np.currActNum > 1 then
+		o.oAction = 10
+		o.oBehParams2ndByte = 0
+	end
+end
+
+function bhv_klepto_loop(o)
+	local m = gMarioStates[0]
+	local player = nearest_player_to_object(o)
+	local np = gNetworkPlayers[0]
+
+	--djui_chat_message_create(tostring(o.oTimer))
+
+	if (o.oAction == KLEPTO_ACT_STRUCK_BY_MARIO) then
+		for i = 0, 60 do
+			local random = math.random()		
+			spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
+				obj_scale(gib, random/2)
+			end)
+		end
+		network_play(sPunch, m.pos, 1, m.playerIndex)
+		o.oAction = 10
+		o.oTimer = 2
+	end
+
+	if o.oAction == 10 then --Klepto is pissed and hunts for nearest player.
+		if o.oTimer == 3 then
+			obj_spawn_yellow_coins(o, 2)
+		end
+		o.oFaceAngleRoll = 0
+		o.oMoveAngleRoll = 0
+		o.oKleptoSpeed = 8
+		cur_obj_update_floor()
+		if o.oPosY < o.oFloorHeight + 800 then
+			o.oPosY = o.oPosY + 10 --rises up high to look for players
+		end
+		
+		if o.oTimer >= 90 then
+			if is_point_within_radius_of_any_player(o.oPosX, o.oPosY, o.oPosZ, 8000) then
+				network_play(sAngryKlepto, m.pos, 1, m.playerIndex)
+				spawn_mist_particles()
+				o.oAction = 8
+			end
+		end
+	end
+
+	if o.oAction == 8 then --CHASING PLAYER
+		o.oKleptoSpeed = 35
+		obj_turn_toward_object(o, player, 16, 0x2000)
+		o.oFaceAngleYaw = obj_angle_to_object(o, m.marioObj)
+		o.oFaceAngleRoll = 0
+		o.oMoveAngleRoll = 0
+		o.oFaceAnglePitch = obj_pitch_to_object(o, player)
+		o.oMoveAnglePitch = obj_pitch_to_object(o, player)
+		if obj_check_hitbox_overlap(m.marioObj, o) then
+			if (m.action & ACT_FLAG_ATTACKING) ~= 0 then
+				o.oAction = 9
+				play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
+			else
+				o.oTimer = 3
+				o.oAction = 10 --Player is ded, Klepto resets to hunt for next player.
+				m.squishTimer = 50
+			end
+		end
+	end
+
+	if o.oAction == 9 then
+		cur_obj_update_floor()
+		if o.oPosY > o.oFloorHeight then
+			o.oFaceAnglePitch = o.oFaceAnglePitch - 9000
+			o.oFaceAngleRoll = o.oFaceAngleRoll + 4000
+			o.oMoveAnglePitch = o.oFaceAnglePitch
+			o.oMoveAngleRoll = o.oFaceAngleRoll
+			o.oPosY = o.oPosY - 45
+			
+		else
+			obj_unused_die()
+			squishblood(o)
+			network_play(sSplatter, m.pos, 1, m.playerIndex)
+		end
+	end
+
+	if o.oAction == KLEPTO_ACT_APPROACH_TARGET_HOLDING then
+		--o.oKleptoSpeed = 60
+		obj_turn_toward_object(o, player, 16, 0x800)
+	end
+		
+	
+end
+
+
 -------Behavior Hooks-------
 hook_behavior(id_bhvDorrie, OBJ_LIST_SURFACE, false, nil, dorrie_dead)
 hook_behavior(id_bhvEyerokBoss, OBJ_LIST_GENACTOR, false, nil, eyerok_loop)
@@ -3502,6 +3588,7 @@ hook_behavior(id_bhvBobBowlingBallSpawner, OBJ_LIST_GENACTOR, false, nil, bhv_cu
 hook_behavior(id_bhvExplosion, OBJ_LIST_DESTRUCTIVE, false, bhv_custom_explosion, nil)
 hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
 hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
+hook_behavior(id_bhvKlepto, OBJ_LIST_GENACTOR, false, bhv_klepto_init, bhv_klepto_loop)
 hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
 id_bhvSquishblood = hook_behavior(nil, OBJ_LIST_GENACTOR, true, squishblood_init, squishblood_loop, "bhvSquishblood")
 id_bhvStopwatch = hook_behavior(nil, OBJ_LIST_GENACTOR, true, stopwatch_init, stopwatch_loop, "bhvStopwatch")
@@ -3553,52 +3640,52 @@ hook_chat_command("bow", "ser", function ()
 end)
 
 hook_chat_command("wf", "whomp", function ()
-	warp_to_level(LEVEL_WF, 1, 0)
+	warp_to_level(LEVEL_WF, 1, 1)
 	return true
 end)
 
 hook_chat_command("hmc", "haz", function ()
-	warp_to_level(LEVEL_HMC, 1, 0)
+	warp_to_level(LEVEL_HMC, 1, 1)
 	return true
 end)
 
 hook_chat_command("lll", "lava", function ()
-	warp_to_level(LEVEL_LLL, 1, 0)
+	warp_to_level(LEVEL_LLL, 1, 1)
 	return true
 end)
 
 hook_chat_command("ssl", "shift", function ()
-	warp_to_level(LEVEL_SSL, 1, 0)
+	warp_to_level(LEVEL_SSL, 1, 1)
 	return true
 end)
 
 hook_chat_command("bob", "bobomb", function ()
-	warp_to_level(LEVEL_BOB, 1, 0)
+	warp_to_level(LEVEL_BOB, 1, 1)
 	return true
 end)
 
 hook_chat_command("jrb", "jolly", function ()
-	warp_to_level(LEVEL_JRB, 1, 0)
+	warp_to_level(LEVEL_JRB, 1, 1)
 	return true
 end)
 
 hook_chat_command("ttc", "tick", function ()
-	warp_to_level(LEVEL_TTC, 1, 0)
+	warp_to_level(LEVEL_TTC, 1, 1)
 	return true
 end)
 
 hook_chat_command("rr", "rainbow", function ()
-	warp_to_level(LEVEL_RR, 1, 0)
+	warp_to_level(LEVEL_RR, 1, 1)
 	return true
 end)
 
 hook_chat_command("ccm", "cool", function ()
-	warp_to_level(LEVEL_CCM, 1, 0)
+	warp_to_level(LEVEL_CCM, 1, 1)
 	return true
 end)
 
 hook_chat_command("wdw", "wet", function ()
-	warp_to_level(LEVEL_WDW, 1, 0)
+	warp_to_level(LEVEL_WDW, 1, 1)
 	return true
 end)
 
@@ -3613,7 +3700,7 @@ hook_chat_command("bow2", "bows2", function ()
 end)
 
 hook_chat_command("bbh", "boo", function ()
-	warp_to_level(LEVEL_BBH, 1, 0)
+	warp_to_level(LEVEL_BBH, 1, 1)
 	return true
 end)
 
