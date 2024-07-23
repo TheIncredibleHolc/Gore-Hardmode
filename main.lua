@@ -3280,7 +3280,6 @@ function gib_loop(o)
 
 end
 
-
 function firering_init(o)
 	obj_set_billboard(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
@@ -3304,7 +3303,6 @@ function wiggler_loop(o)
 	if o.oAction == WIGGLER_ACT_WALK then
 		o.oForwardVel = 80
 		cur_obj_rotate_yaw_toward(0, 0x400)
-
 	end
 end
 
@@ -3389,9 +3387,6 @@ function gorrie_loop(o)
 	if goal == nil then
 		goal = obj_get_first_with_behavior_id(id_bhvStaticObject)
 	end
-
-	
-
 
     cur_obj_init_animation(1)
     cur_obj_move_xz_using_fvel_and_yaw()
@@ -3482,7 +3477,6 @@ function bhv_klepto_loop(o)
 		if o.oPosY < o.oFloorHeight + 800 then
 			o.oPosY = o.oPosY + 10 --rises up high to look for players
 		end
-		
 		if o.oTimer >= 90 then
 			if is_point_within_radius_of_any_player(o.oPosX, o.oPosY, o.oPosZ, 8000) then
 				network_play(sAngryKlepto, m.pos, 1, m.playerIndex)
@@ -3532,8 +3526,6 @@ function bhv_klepto_loop(o)
 		--o.oKleptoSpeed = 60
 		obj_turn_toward_object(o, player, 16, 0x800)
 	end
-		
-	
 end
 
 
@@ -3798,21 +3790,11 @@ hook_event(HOOK_ON_LEVEL_INIT, function ()
 		end)
 	end
 
-	--[[ Moved to Mario Update
-	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #13
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 1356, -1055, -4816, function(t)
-			t.oBehParams = 13 << 16 | 1
-		end)
-	end
-	]]
-
 	if np.currLevelNum == LEVEL_HELL and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #14
 		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -4367, 1680, 4883, function(t)
 			t.oBehParams = 14 << 16 | 1
 		end)
 	end
-
-
 
 	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
 		set_override_envfx(ENVFX_LAVA_BUBBLES)
@@ -3864,39 +3846,6 @@ hook_event(HOOK_ON_WARP, function ()
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-	--MOVED TO BLENDER SPAWN FOR SYNCING PURPOSES
-	--[[
-	if np.currLevelNum == LEVEL_HELL then
-		local dorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
-		if not dorrie then
-			--spawn_non_sync_object(id_bhvDorrie, E_MODEL_HELL_DORRIE, 4807, 80, 1500, function(o)
-			spawn_non_sync_object(id_bhvGorrie, E_MODEL_HELL_DORRIE, -171, 80, 8206, function(o)
-				obj_scale(o, .7)
-			end)
-		end
-	end
-	]]
-
-	--I don't know why or how this got under HOOK_ON_WARP. Moving it to HOOK_UPDATE.
-	--[[
-	if gPlayerSyncTable[m.playerIndex].gold == true then
-		--if m.playerIndex ~= 0 then return end
-		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-		m.marioObj.hookRender = 1
-		if m.character.type == CT_MARIO then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_MARIO)
-		elseif m.character.type == CT_LUIGI then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_LUIGI)
-		elseif m.character.type == CT_TOAD then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_TOAD)
-		elseif m.character.type == CT_WARIO then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WARIO)
-		elseif m.character.type == CT_WALUIGI then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
-		end
-	end
-	]]
-
 	if s.timeattack then
 		s.timeattack = false
 	end
@@ -3916,17 +3865,11 @@ hook_event(HOOK_ON_WARP, function ()
 	end
 
 	if np.currLevelNum == LEVEL_HMC then
-
-
 		local dorrie = obj_get_nearest_object_with_behavior_id(o, id_bhvDorrie)
 		if dorrie ~= nil then
 			dorrie.oPosY = dorrie.oPosY - 200
 		end
-	
-		
-		set_environment_region(0, -10000)
-		set_environment_region(1, -10000)
-		set_environment_region(3, -10000)
+		set_water_level(0, -10000, false)
 		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, -5200, m.pos.z, nil)
 	end
 
@@ -3984,7 +3927,6 @@ hook_event(HOOK_ON_WARP, function ()
 		spawn_non_sync_object(id_bhvQuickWarp, E_MODEL_NONE, 3158, 1613, 3172, nil)
 	end
 end)
-
 
 --Disable mario's fire scream to make room for custom scream.
 hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
