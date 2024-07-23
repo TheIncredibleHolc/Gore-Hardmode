@@ -11,15 +11,8 @@
 
 #include "levels/scripts.h"
 
-
-/* Fast64 begin persistent block [includes] */
-/* Fast64 end persistent block [includes] */
-
 #include "make_const_nonconst.h"
 #include "levels/secretroom/header.h"
-
-/* Fast64 begin persistent block [scripts] */
-/* Fast64 end persistent block [scripts] */
 
 const LevelScript level_secretroom_entry[] = {
 	INIT_LEVEL(),
@@ -28,15 +21,12 @@ const LevelScript level_secretroom_entry[] = {
 	ALLOC_LEVEL_POOL(),
 	MARIO(MODEL_MARIO, 0x00000001, bhvMario),
 
-	/* Fast64 begin persistent block [level commands] */
-	/* Fast64 end persistent block [level commands] */
-
 	AREA(1, secretroom_area_1),
 		WARP_NODE(0xF0, 51, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		WARP_NODE(0xF1, 0x1A, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		WARP_NODE(0x01, 51, 0x02, 0x03, WARP_NO_CHECKPOINT),
 		OBJECT(E_MODEL_BITS_WARP_PIPE, 1098, 198, 11, 0, 0, 0, (0x01 << 16), id_bhvWarpPipe),
-		MARIO_POS(0x01, 0, -1009, 26, -725),
+		MARIO_POS(0x01, 0, -1009, 176, -725),
 		OBJECT(E_MODEL_NONE, 1020, 345, -1956, 0, -60, 0, (10 << 16), id_bhvTrophy),
 		OBJECT(E_MODEL_NONE, 1082, 345, -1850, 0, -60, 0, (11 << 16), id_bhvTrophy),
 		OBJECT(E_MODEL_NONE, 1142, 345, -1747, 0, -60, 0, (12 << 16), id_bhvTrophy),
