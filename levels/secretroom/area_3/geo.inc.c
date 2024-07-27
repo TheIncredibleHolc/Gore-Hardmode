@@ -3,7 +3,7 @@
 const GeoLayout secretroom_area_3_geo[] = {
 	GEO_NODE_START(),
 	GEO_OPEN_NODE(),
-		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 3808, -1004, -5, secretroom_dl_Cube_mesh_layer_1),
+		GEO_DISPLAY_LIST(LAYER_OPAQUE, secretroom_dl_Cube_mesh_layer_1),
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 3827, -1093, -5, secretroom_dl_Cube_001_mesh_layer_1),
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 3808, -1164, -5, secretroom_dl_Cube_002_mesh_layer_1),
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 3808, 1062, -5, secretroom_dl_Cube_003_mesh_layer_1),
@@ -11,7 +11,7 @@ const GeoLayout secretroom_area_3_geo[] = {
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, secretroom_dl_Cylinder_001_mesh_layer_1),
 		GEO_DISPLAY_LIST(LAYER_ALPHA, secretroom_dl_Cylinder_001_mesh_layer_4),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -42, -1594, -177, 0, -27, 0, secretroom_dl_Cylinder_005_mesh_layer_1),
-		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 1382, 5692, 600, secretroom_dl_Skybox_001_mesh_layer_1),
+		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, 40826, 0, 0, secretroom_dl_Skybox_001_mesh_layer_1),
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_TRANSPARENT, 709, -1638, -200, secretroom_dl_Water_Box_Mesh_mesh_layer_5),
 	GEO_CLOSE_NODE(),
 	GEO_RETURN(),
