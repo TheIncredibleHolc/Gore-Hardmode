@@ -10,6 +10,7 @@ timeattack = audio_stream_load("timeattack.ogg")
 edils = audio_stream_load("edils.ogg")					audio_stream_set_looping(edils, true)
 sad = audio_stream_load("sad.ogg")
 iwbtg = audio_stream_load("iwbtg.ogg")					audio_stream_set_looping(iwbtg, true)
+frijoleslobby = audio_stream_load("frijlobby.ogg")		audio_stream_set_looping(frijoleslobby, true)
 
 currentlyPlaying = nil
 local fadeTimer = 0
@@ -42,6 +43,7 @@ function stream_stop_all()
 	audio_stream_stop(timeattack)
 	audio_stream_stop(edils)
 	audio_stream_stop(sad)
+	audio_stream_stop(frijoleslobby)
 	currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()

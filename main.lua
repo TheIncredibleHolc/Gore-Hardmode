@@ -2311,6 +2311,8 @@ hook_event(HOOK_ON_WARP, function ()
 			stream_play(secret)
 		elseif np.currAreaIndex == 2 and currentlyPlaying ~= musicUnderground then
 			stream_play(musicUnderground)
+		elseif np.currAreaIndex == 3 and currentlyPlaying ~= frijoleslobby then
+			stream_play(frijoleslobby)
 		end
 	end
 	if np.currLevelNum == LEVEL_CCM and gGlobalSyncTable.gameisbeat then

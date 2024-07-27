@@ -11,15 +11,8 @@
 
 #include "levels/scripts.h"
 
-
-/* Fast64 begin persistent block [includes] */
-/* Fast64 end persistent block [includes] */
-
 #include "make_const_nonconst.h"
 #include "levels/secretroom/header.h"
-
-/* Fast64 begin persistent block [scripts] */
-/* Fast64 end persistent block [scripts] */
 
 const LevelScript level_secretroom_entry[] = {
 	INIT_LEVEL(),
@@ -28,15 +21,15 @@ const LevelScript level_secretroom_entry[] = {
 	ALLOC_LEVEL_POOL(),
 	MARIO(MODEL_MARIO, 0x00000001, bhvMario),
 
-	/* Fast64 begin persistent block [level commands] */
-	/* Fast64 end persistent block [level commands] */
-
 	AREA(1, secretroom_area_1),
 		WARP_NODE(0xF0, 51, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		WARP_NODE(0xF1, 0x1A, 0x01, 0x0A, WARP_NO_CHECKPOINT),
 		WARP_NODE(0x01, 51, 0x02, 0x03, WARP_NO_CHECKPOINT),
-		OBJECT(E_MODEL_BITS_WARP_PIPE, 1098, 198, 11, 0, 0, 0, (0x01 << 16), id_bhvWarpPipe),
+		WARP_NODE(0x02, 51, 0x03, 0x04, WARP_NO_CHECKPOINT),
+		OBJECT(E_MODEL_BITS_WARP_PIPE, 1287, 198, -247, 0, 0, 0, (0x01 << 16), id_bhvWarpPipe),
 		MARIO_POS(0x01, 0, -1009, 176, -725),
+		OBJECT(E_MODEL_BITS_WARP_PIPE, 956, 198, 335, 0, 0, 0, (0x02 << 16), id_bhvWarpPipe),
+		OBJECT(E_MODEL_BITS_WARP_PIPE, 540, 198, 1018, 0, 0, 0, (0x01 << 16), id_bhvWarpPipe),
 		OBJECT(E_MODEL_NONE, 1020, 345, -1956, 0, -60, 0, (10 << 16), id_bhvTrophy),
 		OBJECT(E_MODEL_NONE, 1082, 345, -1850, 0, -60, 0, (11 << 16), id_bhvTrophy),
 		OBJECT(E_MODEL_NONE, 1142, 345, -1747, 0, -60, 0, (12 << 16), id_bhvTrophy),
@@ -105,6 +98,20 @@ const LevelScript level_secretroom_entry[] = {
 		OBJECT(E_MODEL_BITS_WARP_PIPE, 1459, 218, -4, 0, -90, 0, (0x03 << 16), id_bhvWarpPipe),
 		TERRAIN(secretroom_area_2_collision),
 		MACRO_OBJECTS(secretroom_area_2_macro_objs),
+		STOP_MUSIC(0),
+		TERRAIN_TYPE(TERRAIN_GRASS),
+		/* Fast64 begin persistent block [area commands] */
+		/* Fast64 end persistent block [area commands] */
+	END_AREA(),
+
+	AREA(3, secretroom_area_3),
+		WARP_NODE(0x0A, 51, 0x03, 0x04, WARP_NO_CHECKPOINT),
+		WARP_NODE(0xF1, 51, 0x03, 0x04, WARP_NO_CHECKPOINT),
+		WARP_NODE(0xF0, 51, 0x03, 0x04, WARP_NO_CHECKPOINT),
+		WARP_NODE(0x04, 51, 0x01, 0x01, WARP_NO_CHECKPOINT),
+		OBJECT(E_MODEL_BITS_WARP_PIPE, 984, -1602, -52, 0, -90, 0, (0x04 << 16), id_bhvWarpPipe),
+		TERRAIN(secretroom_area_3_collision),
+		MACRO_OBJECTS(secretroom_area_3_macro_objs),
 		STOP_MUSIC(0),
 		TERRAIN_TYPE(TERRAIN_GRASS),
 		/* Fast64 begin persistent block [area commands] */

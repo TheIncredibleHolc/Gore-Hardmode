@@ -1,0 +1,1 @@
+python fix_fog.py C:\yourpathtogorefolder\levels\secretroom\model.inc.c
