@@ -706,7 +706,7 @@ worlds. If you hit a wall\
 while flying, you'll bounce\
 back."))
 
-smlua_text_utils_dialog_replace(DIALOG_070,1,2,30,200, ("Wowza! It's cold as balls!\
+smlua_text_utils_dialog_replace(DIALOG_070,1,2,30,200, ("Wowza! It's freezing!!\
 \
 You had go better find\
 a warm igloo quick!"))

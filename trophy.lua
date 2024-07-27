@@ -248,8 +248,8 @@ function prize_spawner() -- Trophy Hunt Prize Spawner
 			trophy_unlocked(13) and trophy_unlocked(14) and trophy_unlocked(15) and trophy_unlocked(16) and
 			trophy_unlocked(17) and trophy_unlocked(18) and trophy_unlocked(19) and trophy_unlocked(20) then
 				--djui_chat_message_create("Spawning prize")
-				spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -980, 196, -2845, nil)
-				spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -980, 196, -2845, nil)
+				spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, 723, 196, -1683, nil)
+				spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, 723, 196, -1683, nil)
 			end
 		end
 	end

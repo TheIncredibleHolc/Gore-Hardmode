@@ -1,11 +1,11 @@
-Gfx secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16[] = {
-	#include "levels/secretroom/SUPER_MARIO_64_184368CA_0_2_all.rgba16.inc.c"
-};
-
 Gfx secretroom_dl_birdekekn_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_birdekekn_rgba16[] = {
 	#include "levels/secretroom/birdekekn.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_SUPER_MARIO_64_184368CA_0_2_all_rgba16[] = {
+	#include "levels/secretroom/SUPER_MARIO_64_184368CA_0_2_all.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_Mariopng_rgba16_aligner[] = {gsSPEndDisplayList()};
@@ -23,6 +23,26 @@ u8 secretroom_dl_chillyn_rgba16[] = {
 	#include "levels/secretroom/chillyn.rgba16.inc.c"
 };
 
+Gfx secretroom_dl_castle_grounds_textures_01000_rgba16_ci8_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_castle_grounds_textures_01000_rgba16_ci8[] = {
+	#include "levels/secretroom/castle_grounds_textures.01000.rgba16.ci8.inc.c"
+};
+
+Gfx secretroom_dl_castle_grounds_textures_01000_rgba16_pal_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_castle_grounds_textures_01000_rgba16_pal_rgba16[] = {
+	#include "levels/secretroom/castle_grounds_textures.01000.rgba16.pal"
+};
+
+Gfx secretroom_dl_castle_grounds_textures_07800_rgba16_ci8_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_castle_grounds_textures_07800_rgba16_ci8[] = {
+	#include "levels/secretroom/castle_grounds_textures.07800.rgba16.ci8.inc.c"
+};
+
+Gfx secretroom_dl_castle_grounds_textures_07800_rgba16_pal_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_castle_grounds_textures_07800_rgba16_pal_rgba16[] = {
+	#include "levels/secretroom/castle_grounds_textures.07800.rgba16.pal"
+};
+
 Gfx secretroom_dl_tillyn_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_tillyn_rgba16[] = {
 	#include "levels/secretroom/tillyn.rgba16.inc.c"
@@ -33,44 +53,34 @@ u8 secretroom_dl_imyourcatn_rgba16[] = {
 	#include "levels/secretroom/imyourcatn.rgba16.inc.c"
 };
 
+Gfx secretroom_dl_white_i8_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_white_i8[] = {
+	#include "levels/secretroom/white.i8.inc.c"
+};
+
+Gfx secretroom_dl_white_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_white_rgba16[] = {
+	#include "levels/secretroom/white.rgba16.inc.c"
+};
+
 Gfx secretroom_dl_coolion_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_coolion_rgba16[] = {
 	#include "levels/secretroom/coolion.rgba16.inc.c"
 };
 
-Gfx secretroom_dl_inside_castle_textures_07000_rgba16_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_inside_castle_textures_07000_rgba16_rgba16[] = {
-	#include "levels/secretroom/inside_castle_textures_07000_rgba16.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_castle_grounds_textures_07800_rgba16_ci8_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_castle_grounds_textures_07800_rgba16_ci8[] = {
-	#include "levels/secretroom/castle_grounds_textures_07800_rgba16.ci8.inc.c"
-};
-
-Gfx secretroom_dl_castle_grounds_textures_07800_rgba16_pal_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_castle_grounds_textures_07800_rgba16_pal_rgba16[] = {
-	#include "levels/secretroom/castle_grounds_textures_07800_rgba16.rgba16.pal"
-};
-
-Gfx secretroom_dl_castle_grounds_textures_01000_rgba16_ci8_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_castle_grounds_textures_01000_rgba16_ci8[] = {
-	#include "levels/secretroom/castle_grounds_textures_01000_rgba16.ci8.inc.c"
-};
-
-Gfx secretroom_dl_castle_grounds_textures_01000_rgba16_pal_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_castle_grounds_textures_01000_rgba16_pal_rgba16[] = {
-	#include "levels/secretroom/castle_grounds_textures_01000_rgba16.rgba16.pal"
-};
-
 Gfx secretroom_dl_Intro_rgba32_rgba32_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_Intro_rgba32_rgba32[] = {
-	#include "levels/secretroom/Intro_rgba32.rgba32.inc.c"
+	#include "levels/secretroom/Intro.rgba32.inc.c"
 };
 
-Gfx secretroom_dl_brysonn_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_brysonn_rgba16[] = {
-	#include "levels/secretroom/brysonn.rgba16.inc.c"
+Gfx secretroom_dl_fritos_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_fritos_rgba16[] = {
+	#include "levels/secretroom/fritos.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_inside_castle_textures_07000_rgba16_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_inside_castle_textures_07000_rgba16_rgba16[] = {
+	#include "levels/secretroom/inside_castle_textures.07000.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_frog_rgba16_aligner[] = {gsSPEndDisplayList()};
@@ -118,44 +128,9 @@ u8 secretroom_dl_melvinlow_rgba16[] = {
 	#include "levels/secretroom/melvinlow.rgba16.inc.c"
 };
 
-Gfx secretroom_dl_cloud_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_cloud_rgba16[] = {
-	#include "levels/secretroom/cloud.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_lll_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_lll_rgba16[] = {
-	#include "levels/secretroom/lll.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_bob_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_bob_rgba16[] = {
-	#include "levels/secretroom/bob.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_ccm_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_ccm_rgba16[] = {
-	#include "levels/secretroom/ccm.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_wf_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_wf_rgba16[] = {
-	#include "levels/secretroom/wf.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_thi_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_thi_rgba16[] = {
-	#include "levels/secretroom/thi.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_wdw_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_wdw_rgba16[] = {
-	#include "levels/secretroom/wdw.rgba16.inc.c"
-};
-
-Gfx secretroom_dl_sanikyn_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_sanikyn_rgba16[] = {
-	#include "levels/secretroom/sanikyn.rgba16.inc.c"
+Gfx secretroom_dl_saniky2_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_saniky2_rgba16[] = {
+	#include "levels/secretroom/saniky2.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_skyboxsmallerer_rgba32_aligner[] = {gsSPEndDisplayList()};
@@ -190,12 +165,27 @@ u8 secretroom_dl_tile_rgba32[] = {
 
 Gfx secretroom_dl_inside_castle_textures_05000_rgba16_i4_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_inside_castle_textures_05000_rgba16_i4[] = {
-	#include "levels/secretroom/inside_castle_textures_05000_rgba16.i4.inc.c"
+	#include "levels/secretroom/inside_castle_textures.05000.rgba16.i4.inc.c"
 };
 
 Gfx secretroom_dl_shinywhite_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_shinywhite_rgba16[] = {
 	#include "levels/secretroom/shinywhite.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_brickedup_ci4_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_brickedup_ci4[] = {
+	#include "levels/secretroom/brickedup.ci4.inc.c"
+};
+
+Gfx secretroom_dl_brickedup_pal_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_brickedup_pal_rgba16[] = {
+	#include "levels/secretroom/brickedup.rgba16.pal"
+};
+
+Gfx secretroom_dl_retrotwhompbody_i8_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_retrotwhompbody_i8[] = {
+	#include "levels/secretroom/retrotwhompbody.i8.inc.c"
 };
 
 Gfx secretroom_dl_SUPER_MARIO_64_9B61A230_0_2_all_ci8_aligner[] = {gsSPEndDisplayList()};
@@ -206,11 +196,6 @@ u8 secretroom_dl_SUPER_MARIO_64_9B61A230_0_2_all_ci8[] = {
 Gfx secretroom_dl_SUPER_MARIO_64_9B61A230_0_2_all_pal_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_SUPER_MARIO_64_9B61A230_0_2_all_pal_rgba16[] = {
 	#include "levels/secretroom/SUPER_MARIO_64_9B61A230_0_2_all.rgba16.pal"
-};
-
-Gfx secretroom_dl_retrotwhompbody_i8_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_retrotwhompbody_i8[] = {
-	#include "levels/secretroom/retrotwhompbody.i8.inc.c"
 };
 
 Gfx secretroom_dl_SUPER_MARIO_64_7F832C86_0_2_all_ci8_aligner[] = {gsSPEndDisplayList()};
