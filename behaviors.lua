@@ -371,6 +371,7 @@ function bhv_custom_seesaw(obj) --SeeSaw Objects spin like windmills
 end
 
 function bhv_custom_sign(obj) --This is the single most evil addition to the game. Real proud of this one :')
+	--m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
 	local m = nearest_player_to_object(obj)
 	if dist_between_objects(m, obj) < 500 then
 		--evilsign =
@@ -963,8 +964,9 @@ function bhv_custom_ActivatedBackAndForthPlatform(o)
 
 	if np.currLevelNum == LEVEL_BITFS and m.pos.y >= o.oPosY -10 and mario_is_within_rectangle(o.oPosX - 500, o.oPosX + 500, o.oPosZ - 500, o.oPosZ + 500) ~= 0 then
 		spawn_triangle_break_particles(30, 138, 1, 4)
-		cur_obj_play_sound_1(SOUND_GENERAL_WALL_EXPLOSION)
-		cur_obj_play_sound_1(SOUND_GENERAL_EXPLOSION6)
+		play_sound(SOUND_GENERAL_WALL_EXPLOSION, m.marioObj.header.gfx.cameraToObject)
+		play_sound(SOUND_GENERAL_EXPLOSION6, m.marioObj.header.gfx.cameraToObject)
+
 		obj_mark_for_deletion(o)
 	end
 end

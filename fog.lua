@@ -87,7 +87,7 @@ local function mario_update(m)
         if not obj_get_first_with_behavior_id(id_bhvFog) then
             spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)
         end
-    elseif np.currLevelNum ~= LEVEL_HELL then
+    elseif np.currLevelNum ~= LEVEL_HELL and np.currLevelNum ~= LEVEL_JRB then
         set_lighting_color(0, 255)
         set_lighting_color(1, 255)
         set_lighting_color(2, 255)
