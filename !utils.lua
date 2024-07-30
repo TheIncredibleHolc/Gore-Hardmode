@@ -283,6 +283,170 @@ hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
 
+-- Table to map levels to their specific actions
+sOnWarpToFunc = {
+    [LEVEL_HMC] = function()
+        if gGlobalSyncTable.gameisbeat then
+            -- GRANT TROPHY #16
+            spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -5298, 2810, -7961, function(t)
+                t.oBehParams = 16 << 16 | 1
+            end)
+        end
+
+        -- Adjust Dorrie and set water level
+        local dorrie = obj_get_nearest_object_with_behavior_id(o, id_bhvDorrie)
+        if dorrie then
+            dorrie.oPosY = dorrie.oPosY - 200
+        end
+        set_water_level(0, -10000, false)
+        spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, -5200, gMarioStates[0].pos.z, nil)
+    end,
+
+    [LEVEL_LLL] = function()
+        if np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then
+            -- GRANT TROPHY #15
+            spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 1331, 4032, 1281, nil)
+            spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 493, 4532, 652, nil)
+            spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 493, 4640, 652, function(t)
+                t.oBehParams = 15 << 16 | 1
+            end)
+        end
+    end,
+
+    [LEVEL_SSL] = function()
+        if np.currAreaIndex == 2 and gMarioStates[0].playerIndex == 0 then
+            spawn_non_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 686, -1530, -2157, nil)
+        end
+    end,
+
+    [LEVEL_JRB] = function()
+        if np.currAreaIndex == 1 then
+            -- Spawns lava over water, unless inside the pirate ship.
+            spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1050, gMarioStates[0].pos.z, function(o)
+                -- obj_scale(o, 4)
+            end)
+            spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 5910, 1050, 4412, nil)
+            local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
+            o.oPosY = o.oPosY + 21
+        end
+    end,
+
+    [LEVEL_HELL] = function()
+        gMarioStates[0].health = gMarioStates[0].health + 2048
+        area_get_warp_node(0x01).node.destLevel = LEVEL_HELL
+        area_get_warp_node(0x02).node.destLevel = LEVEL_HELL
+    end,
+
+    [LEVEL_SECRETHUB] = function()
+        local m = gMarioStates[0]
+        if trophy_unlocked(1) and trophy_unlocked(2) and trophy_unlocked(3) and
+           trophy_unlocked(4) and trophy_unlocked(5) and not trophy_unlocked(6) then
+            play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
+            djui_chat_message_create("Game beat with all playable characters!")
+            djui_chat_message_create("Trophy earned!")
+            unlock_trophy(6)
+        end
+
+        if np.currAreaIndex == 1 then
+            stream_play(secret)
+        elseif np.currAreaIndex == 2 and currentlyPlaying ~= musicUnderground then
+            stream_play(musicUnderground)
+        elseif np.currAreaIndex == 3 and currentlyPlaying ~= frijoleslobby then
+            stream_play(frijoleslobby)
+        end
+    end,
+
+    [LEVEL_CCM] = function()
+        if gGlobalSyncTable.gameisbeat then
+            local count = obj_count_objects_with_behavior_id(id_bhvGoalpost)
+            if count < 1 then
+                spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
+                    goalpost.oFaceAngleYaw = goalpost.oFaceAngleYaw + 4000
+                    goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
+                end)
+            end
+        end
+    end,
+
+    [LEVEL_CASTLE] = function()
+        if np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then
+            -- GRANT TROPHY #12 (Mirror room)
+            spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5514, 1613, 3159, function(t)
+                t.oBehParams = 12 << 16 | 1
+            end)
+            spawn_non_sync_object(id_bhvQuickWarp, E_MODEL_NONE, 3158, 1613, 3172, nil)
+        end
+    end
+}
+
+sOnLvlInitToFunc = {
+    [LEVEL_HELL] = function()
+        set_lighting_color(0, 255)
+        set_lighting_color(1, 127)
+        set_lighting_color(2, 100)
+        set_lighting_dir(1, -128)
+        stream_play(musicHell)
+
+        if gGlobalSyncTable.gameisbeat then
+            -- GRANT TROPHY #14
+            spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -4367, 1680, 4883, function(t)
+                t.oBehParams = 14 << 16 | 1
+            end)
+        end
+
+        -- Apply environment effects and lighting settings
+        set_override_envfx(ENVFX_LAVA_BUBBLES)
+        set_override_skybox(BACKGROUND_FLAMING_SKY)
+        if savedCollisionBugStatus == nil then
+            savedCollisionBugStatus = gLevelValues.fixCollisionBugs
+            gLevelValues.fixCollisionBugs = true
+        end
+    end,
+
+    [LEVEL_BITFS] = function()
+        if gGlobalSyncTable.gameisbeat and not trophy_unlocked(10) then
+            spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, -7135, -2764, -3, nil)
+        end
+    end,
+
+    [LEVEL_CASTLE_GROUNDS] = function()
+        spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -37, 808, 545, nil)
+        spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -37, 811, 545, nil)
+    end,
+
+    [LEVEL_WF] = function()
+        if np.currActNum >= 2 and gGlobalSyncTable.gameisbeat then
+            -- GRANT TROPHY #17
+            spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -404, 3584, -4, function(t)
+                t.oFaceAngleYaw = -16303
+                t.oBehParams = 17 << 16 | 1
+            end)
+        end
+    end,
+
+    [LEVEL_JRB] = function()
+        -- Spawns lava and adjusts lighting
+        spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1050, gMarioStates[0].pos.z, function(o)
+            -- obj_scale(o, 4)
+        end)
+        spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 5910, 1050, 4412, nil)
+        local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
+        o.oPosY = o.oPosY + 21
+
+        -- Apply environment effects and lighting settings
+        set_override_envfx(ENVFX_LAVA_BUBBLES)
+        set_override_skybox(BACKGROUND_FLAMING_SKY)
+        set_lighting_color(0, 255)
+        set_lighting_color(1, 127)
+        set_lighting_color(2, 100)
+        set_lighting_dir(1, -128)
+        if savedCollisionBugStatus == nil then
+            savedCollisionBugStatus = gLevelValues.fixCollisionBugs
+            gLevelValues.fixCollisionBugs = true
+        end
+    end
+}
+
 --! actions
 
 ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)

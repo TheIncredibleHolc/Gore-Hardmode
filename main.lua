@@ -1692,86 +1692,45 @@ hook_chat_command("iwbtg", "iwbtm", function ()
 	return true
 end)
 
--- test function to warp to level, disable if necessary
-hook_chat_command("bow", "ser", function ()
-	warp_to_level(LEVEL_BOWSER_3, 1, 1)
-	return true
-end)
+msgToLevel = {
+    ["BOB"] = LEVEL_BOB,
+    ["WF"] = LEVEL_WF,
+    ["JRB"] = LEVEL_JRB,
+    ["CCM"] = LEVEL_CCM,
+    ["BBH"] = LEVEL_BBH,
+    ["HMC"] = LEVEL_HMC,
+    ["LLL"] = LEVEL_LLL,
+    ["SSL"] = LEVEL_SSL,
+    ["DDD"] = LEVEL_DDD,
+    ["SL"] = LEVEL_SL,
+    ["WDW"] = LEVEL_WDW,
+    ["TTM"] = LEVEL_TTM,
+    ["THI"] = LEVEL_THI,
+    ["TTC"] = LEVEL_TTC,
+    ["RR"] = LEVEL_RR,
+    ["PSS"] = LEVEL_PSS,
+    ["TOTWC"] = LEVEL_TOTWC,
+    ["VCUTM"] = LEVEL_VCUTM,
+    ["COTMC"] = LEVEL_COTMC,
+    ["WMOTR"] = LEVEL_WMOTR,
+    ["BITDW"] = LEVEL_BITDW,
+    ["BITFS"] = LEVEL_BITFS,
+    ["BITS"] = LEVEL_BITS,
+    ["HELL"] = LEVEL_HELL,
+    ["SECRET"] = LEVEL_SECRETHUB,
+}
 
-hook_chat_command("wf", "whomp", function ()
-	warp_to_level(LEVEL_WF, 1, 1)
-	return true
-end)
+function warp_command(msg)
+    msg = string.upper(msg)
+    if msgToLevel[msg] then
+        warp_to_level(msgToLevel[msg], 1, 1)
+    else
+        djui_chat_message_create("ERROR: Tried warping to an invalid level!")
+    end
+    return true
+end
 
-hook_chat_command("hmc", "haz", function ()
-	warp_to_level(LEVEL_HMC, 1, 1)
-	return true
-end)
-
-hook_chat_command("lll", "lava", function ()
-	warp_to_level(LEVEL_LLL, 1, 1)
-	return true
-end)
-
-hook_chat_command("ssl", "shift", function ()
-	warp_to_level(LEVEL_SSL, 1, 1)
-	return true
-end)
-
-hook_chat_command("bob", "bobomb", function ()
-	warp_to_level(LEVEL_BOB, 1, 1)
-	return true
-end)
-
-hook_chat_command("jrb", "jolly", function ()
-	warp_to_level(LEVEL_JRB, 1, 1)
-	return true
-end)
-
-hook_chat_command("ttc", "tick", function ()
-	warp_to_level(LEVEL_TTC, 1, 1)
-	return true
-end)
-
-hook_chat_command("rr", "rainbow", function ()
-	warp_to_level(LEVEL_RR, 1, 1)
-	return true
-end)
-
-hook_chat_command("ccm", "cool", function ()
-	warp_to_level(LEVEL_CCM, 1, 1)
-	return true
-end)
-
-hook_chat_command("wdw", "wet", function ()
-	warp_to_level(LEVEL_WDW, 1, 1)
-	return true
-end)
-
-hook_chat_command("bitfs", "firesea", function ()
-	warp_to_level(LEVEL_BITFS, 1, 0)
-	return true
-end)
-
-hook_chat_command("bow2", "bows2", function ()
-	warp_to_level(LEVEL_BOWSER_2, 1, 0)
-	return true
-end)
-
-hook_chat_command("bbh", "boo", function ()
-	warp_to_level(LEVEL_BBH, 1, 1)
-	return true
-end)
-
-hook_chat_command("hell", "hell", function ()
-	warp_to_level(LEVEL_HELL, 1, 0)
-	return true
-end)
-
-hook_chat_command("secret", "hub", function ()
-	warp_to_level(LEVEL_SECRETHUB, 1, 0)
-	return true
-end)
+hook_chat_command("warp", "level abreviation", warp_command)
 
 hook_chat_command("end", "credits", function ()
 	level_trigger_warp(gMarioStates[0], WARP_OP_CREDITS_START)
@@ -1803,88 +1762,43 @@ hook_chat_command("lock", "trophy", function (msg)
 	end
 end)
 
-hook_event(HOOK_ON_LEVEL_INIT, function ()
-	local s = gStateExtras[0]
-	--Stop music when exiting levels
-	if not s.iwbtg then
-		stream_stop_all()
-		stream_set_volume(1)
-	end
-	stop_all_samples()
-	local np = gNetworkPlayers[0]
+local function default_level_func()
+    set_lighting_color(0, 255)
+    set_lighting_color(1, 255)
+    set_lighting_color(2, 255)
+    set_lighting_dir(1, 0)
+    set_override_skybox(-1)
+    set_override_envfx(-1)
+    if savedCollisionBugStatus ~= nil then
+        gLevelValues.fixCollisionBugs = savedCollisionBugStatus
+        savedCollisionBugStatus = nil
+    end
+end
 
+hook_event(HOOK_ON_LEVEL_INIT, function()
+    local s = gStateExtras[0]
+    local np = gNetworkPlayers[0]
 
+    -- Stop music and samples when exiting levels
+    if not s.iwbtg then
+        stream_stop_all()
+        stream_set_volume(1)
+    end
+    stop_all_samples()
 
-	----------------------------------------------------------------------------------------------------------------------------------
-	--Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)
-	if gStateExtras[0].isinhell and np.currLevelNum ~= LEVEL_HELL then
-		gMarioStates[0].numLives = 0
-		warp_to_level(LEVEL_HELL, 1, 0)
-	end
+    -- Force Mario to Hell if needed
+    if s.isinhell and np.currLevelNum ~= LEVEL_HELL then
+        gMarioStates[0].numLives = 0
+        warp_to_level(LEVEL_HELL, 1, 0)
+    end
 
-	if gGlobalSyncTable.gameisbeat and not trophy_unlocked(10) and np.currLevelNum == LEVEL_BITFS then
-		spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, -7135, -2764, -3, nil)
-	end
-
-	if np.currLevelNum == LEVEL_CASTLE_GROUNDS then
-		spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -37, 808, 545, nil)
-		spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -37, 811, 545, nil)
-	end
-
-	if np.currLevelNum == LEVEL_HELL then
-		set_lighting_color(0,255)
-		set_lighting_color(1,127)
-		set_lighting_color(2,100)
-		set_lighting_dir(1,-128)
-		
-		stream_play(musicHell)
-	else
-		set_lighting_color(0, 255)
-		set_lighting_color(1, 255)
-		set_lighting_color(2, 255)
-		set_lighting_dir(1,0)
-	end
-
-	if np.currLevelNum == LEVEL_WF and np.currActNum >= 2 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #17
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -404, 3584, -4, function(t)
-			t.oFaceAngleYaw = -16303
-			t.oBehParams = 17 << 16 | 1
-		end)
-	end
-
-	if np.currLevelNum == LEVEL_HELL and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #14
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -4367, 1680, 4883, function(t)
-			t.oBehParams = 14 << 16 | 1
-		end)
-	end
-
-	if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HELL then
-		set_override_envfx(ENVFX_LAVA_BUBBLES)
-		set_override_skybox(BACKGROUND_FLAMING_SKY)
-		set_lighting_color(0,255)
-		set_lighting_color(1,127)
-		set_lighting_color(2,100)
-		set_lighting_dir(1,-128)
-		if savedCollisionBugStatus == nil then
-			savedCollisionBugStatus = gLevelValues.fixCollisionBugs
-			gLevelValues.fixCollisionBugs = true
-		end
-	else
-		set_lighting_color(0, 255)
-		set_lighting_color(1, 255)
-		set_lighting_color(2, 255)
-		set_lighting_dir(1,0)
-		set_override_skybox(-1)
-		set_override_envfx(-1)
-		if savedCollisionBugStatus ~= nil then
-			gLevelValues.fixCollisionBugs = savedCollisionBugStatus
-			savedCollisionBugStatus = nil
-		end
-	end
-
-	if np.currLevelNum == LEVEL_TTC then
-		--set_ttc_speed_setting(-5)
-	end
+    -- Execute level-specific actions
+    local level_func = sOnLvlInitToFunc[np.currLevelNum]
+    if level_func then
+        level_func()
+    else
+        default_level_func()
+    end
 end)
 
 function level_init_spawns()
@@ -1903,93 +1817,20 @@ end
 
 hook_event(HOOK_ON_SYNC_VALID, level_init_spawns)
 
-hook_event(HOOK_ON_WARP, function ()
-	local m = gMarioStates[0]
-	local np = gNetworkPlayers[0]
-	local s = gStateExtras[m.playerIndex]
+hook_event(HOOK_ON_WARP, function()
+    local m = gMarioStates[0]
+    local np = gNetworkPlayers[0]
+    local s = gStateExtras[m.playerIndex]
 
-	if s.timeattack then
-		s.timeattack = false
-	end
+    if s.timeattack then
+        s.timeattack = false
+    end
 
-	if np.currLevelNum == LEVEL_HMC and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #16
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -5298, 2810, -7961, function(t)
-			t.oBehParams = 16 << 16 | 1
-		end)
-	end
-
-	if np.currLevelNum == LEVEL_LLL and np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #15
-		spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 1331, 4032, 1281, nil)
-		spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 493, 4532, 652, nil)
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 493, 4640, 652, function(t)
-			t.oBehParams = 15 << 16 | 1
-		end)
-	end
-
-	if np.currLevelNum == LEVEL_HMC then
-		local dorrie = obj_get_nearest_object_with_behavior_id(o, id_bhvDorrie)
-		if dorrie ~= nil then
-			dorrie.oPosY = dorrie.oPosY - 200
-		end
-		set_water_level(0, -10000, false)
-		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, -5200, m.pos.z, nil)
-	end
-
-	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 2 then
-		if m.playerIndex ~= 0 then return end
-		spawn_non_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 686, -1530, -2157, nil)
-	end
-
-	if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then --Spawns lava over water, unless inside the pirate ship. 
-		spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, m.pos.x, 1050, m.pos.z, function (o)
-			--obj_scale(o, 4)
-		end)
-		spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 5910, 1050, 4412, nil)
-		local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
-		o.oPosY = o.oPosY + 21
-	end
-	if np.currLevelNum == LEVEL_HELL then
-		m.health = m.health + 2048
-		area_get_warp_node(0x01).node.destLevel = LEVEL_HELL
-		area_get_warp_node(0x02).node.destLevel = LEVEL_HELL
-	end
-
-	if np.currLevelNum == LEVEL_SECRETHUB then
-		if trophy_unlocked(1) and
-		trophy_unlocked(2) and
-		trophy_unlocked(3) and
-		trophy_unlocked(4) and
-		trophy_unlocked(5) and not trophy_unlocked(6) then
-			play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
-			djui_chat_message_create("Game beat with all playable characters!")
-			djui_chat_message_create("Trophy earned!")
-			unlock_trophy(6)
-	 end
-		if np.currAreaIndex == 1 then
-			stream_play(secret)
-		elseif np.currAreaIndex == 2 and currentlyPlaying ~= musicUnderground then
-			stream_play(musicUnderground)
-		elseif np.currAreaIndex == 3 and currentlyPlaying ~= frijoleslobby then
-			stream_play(frijoleslobby)
-		end
-	end
-	if np.currLevelNum == LEVEL_CCM and gGlobalSyncTable.gameisbeat then
-		local count = obj_count_objects_with_behavior_id(id_bhvGoalpost)
-		--djui_chat_message_create(tostring(count))
-		
-		if count < 1 then
-			spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
-				goalpost.oFaceAngleYaw = goalpost.oFaceAngleYaw + 4000
-				goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
-			end)
-		end
-	end
-	if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then --GRANT TROPHY #12 (Mirror room)
-		spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5514, 1613, 3159, function(t)
-			t.oBehParams = 12 << 16 | 1
-		end)
-		spawn_non_sync_object(id_bhvQuickWarp, E_MODEL_NONE, 3158, 1613, 3172, nil)
-	end
+    -- Execute the action based on the current level
+    local level_func = sOnWarpToFunc[np.currLevelNum]
+    if level_func then
+        level_func()
+    end
 end)
 
 --Disable mario's fire scream to make room for custom scream.
@@ -2008,7 +1849,5 @@ hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
 	local trophyplate = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophyPlate)
 	if np.currLevelNum == LEVEL_SECRETHUB and sound == CHAR_SOUND_PUNCH_YAH and obj_check_hitbox_overlap(m.marioObj, trophyplate) then
 		return 0
-	end  
+	end
 end)
-
-
