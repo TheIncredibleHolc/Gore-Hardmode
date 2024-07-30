@@ -104,44 +104,7 @@ local fadeTimer = 0
 local fadePeak = 0
 local volume = 1
 
-function adjust_slide_velocity(m, slide_speed)
-    m.slideVelX = m.slideVelX + slide_speed * sins(m.faceAngle.y)
-    m.slideVelZ = m.slideVelZ + slide_speed * coss(m.faceAngle.y)
-end
-
-function adjust_turn_speed(m, turn_speed_factor)
-    local turnSpeed = 0x600 * (m.forwardVel * 0.1)
-    m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, turnSpeed, turnSpeed)
-end
-
-PACKET_UNLOCK = 0
-
-function unlock_trophy(id)
-	if network_is_server() then
-		local trophy = trophyinfo[id]
-		if trophy then
-			mod_storage_save("file"..get_current_save_file_num()..trophy.name, "1")
-			gGlobalSyncTable.trophystatus[id] = true
-		end
-	else network_send_to(1, true, {type = PACKET_UNLOCK, id = id}) end
-end
-
-hook_event(HOOK_ON_PACKET_RECEIVE, function (data)
-	if data.type == PACKET_UNLOCK then
-		unlock_trophy(data.id)
-	end
-end)
-
-function delete_save(m)
-    for course = 0, 25 do
-        save_file_remove_star_flags(get_current_save_file_num() - 1, course - 1, 0xFF)
-    end
-
-    save_file_clear_flags(0xFFFFFFFF)
-    save_file_do_save(get_current_save_file_num() - 1, 1)
-
-    m.numStars = save_file_get_total_star_count(get_current_save_file_num() - 1, COURSE_NONE, COURSE_MAX - 1)
-end
+--! audio
 
 ---@param a BassAudio
 function stream_play(a)
@@ -202,3 +165,409 @@ hook_event(HOOK_ON_PACKET_RECEIVE, function (data)
 		local_play(data.id, {x=data.x, y=data.y, z=data.z}, data.vol)
 	end
 end)
+
+--! models
+
+LEVEL_HELL = level_register('level_hell_entry', COURSE_NONE, 'Hell', 'Hell', 28000, 0x28, 0x28, 0x28)
+LEVEL_SECRETHUB = level_register('level_secretroom_entry', COURSE_NONE, 'Secret Hub', 'Secret Hub', 28000, 0x28, 0x28, 0x28)
+
+E_MODEL_HIDDENFLAG = smlua_model_util_get_id("hiddenflag_geo")
+E_MODEL_BLOOD_SPLATTER = smlua_model_util_get_id("blood_splatter_geo")
+E_MODEL_BLOOD_SPLATTER2 = smlua_model_util_get_id("blood_splatter2_geo")
+E_MODEL_BLOOD_SPLATTER_WALL = smlua_model_util_get_id("blood_splatter_wall_geo")
+E_MODEL_GOLD_SPLAT = smlua_model_util_get_id("gold_splat_geo")
+E_MODEL_SMILER = smlua_model_util_get_id("smiler_geo") --My dumbass reused this function without changing the name. This is NOT the backroom smiler. 
+E_MODEL_SMILER2 = smlua_model_util_get_id("smiler2_geo") --This isn't it either.
+E_MODEL_SMILER3 = smlua_model_util_get_id("smiler3_geo") --Also not this one...
+E_MODEL_LAVA = smlua_model_util_get_id("lava_geo")
+COL_LAVA = smlua_collision_util_get("lava_collision")
+E_MODEL_SKYBOX = smlua_model_util_get_id("skybox_geo")
+E_MODEL_SKYBOX2 = smlua_model_util_get_id("skybox2_geo")
+E_MODEL_GSSHADOW = smlua_model_util_get_id("gsshadow_geo")
+COL_GSSHADOW = smlua_collision_util_get("gsshadowcol_collision")
+E_MODEL_LIGHTNING = smlua_model_util_get_id("lightning_geo")
+E_MODEL_LIGHTNING2 = smlua_model_util_get_id("lightning2_geo")
+E_MODEL_LIGHTNING3 = smlua_model_util_get_id("lightning3_geo")
+E_MODEL_RING = smlua_model_util_get_id("ring_geo")
+E_MODEL_GSCHARGE = smlua_model_util_get_id("gscharge_geo")
+E_MODEL_GSBEAM = smlua_model_util_get_id("gsbeam_geo")
+COL_GSBEAM = smlua_collision_util_get("gsbeamcol_collision")
+E_MODEL_HELLPLATFORM = smlua_model_util_get_id("hellplatform_geo")
+COL_HELLPLATFORM = smlua_collision_util_get("hellplatform_collision")
+E_MODEL_HELLTHWOMPER = smlua_model_util_get_id("hellthwomper_geo")
+E_MODEL_BACKROOM = smlua_model_util_get_id("backroom_geo")
+COL_BACKROOM = smlua_collision_util_get("backroom_collision")
+E_MODEL_BLACKROOM = smlua_model_util_get_id("blackroom_geo")
+COL_BLACKROOM = smlua_collision_util_get("blackroom_collision")
+E_MODEL_BACKROOM_SMILER = smlua_model_util_get_id("backroom_smiler_geo")
+COL_BACKROOM_SMILER = smlua_collision_util_get("backroom_smiler_collision") --The ACTUAL custom Smiler enemy in the backroom.
+E_MODEL_NETHERPORTAL = smlua_model_util_get_id("netherportal_geo")
+COL_NETHERPORTAL = smlua_collision_util_get("netherportal_collision")
+E_MODEL_GOLD_RING = smlua_model_util_get_id("gold_ring_geo")
+E_MODEL_SWING_BLADE = smlua_model_util_get_id("SwingBlade_geo")
+COL_MODEL_SWING_BLADE = smlua_collision_util_get("SwingBlade_collision")
+E_MODEL_GRINDER = smlua_model_util_get_id("Grinder_geo")
+E_MODEL_CHOMP = smlua_model_util_get_id("chomp_geo")
+E_MODEL_STOPWATCH = smlua_model_util_get_id("stopwatch_geo")
+E_MODEL_GIB = smlua_model_util_get_id("gib_geo")
+COL_GIB = smlua_collision_util_get("gib_collision")
+DORRIE_DEAD = smlua_model_util_get_id("dorrie_ded_lol_geo")
+E_MODEL_HELL_DORRIE = smlua_model_util_get_id("hell_dorrie_geo")
+
+E_MODEL_HEADLESS_MARIO = smlua_model_util_get_id("headlessmario_geo")
+E_MODEL_BOTTOMLESS_MARIO = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_HEADLESS_LUIGI = smlua_model_util_get_id("luigidead_geo")
+--E_MODEL_BOTTOMLESS_LUIGI = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_HEADLESS_TOAD = smlua_model_util_get_id("toad_headless_geo")
+E_MODEL_TOPLESS_TOAD = smlua_model_util_get_id("toad_topless_geo")
+E_MODEL_HEADLESS_WARIO = smlua_model_util_get_id("wario_headless_geo")
+E_MODEL_TOPLESS_WARIO = smlua_model_util_get_id("wario_topless_geo")
+E_MODEL_HEADLESS_WALUIGI = smlua_model_util_get_id("waluigiheadless_geo")
+E_MODEL_TOPLESS_WALUIGI = smlua_model_util_get_id("waluigitopless_geo")
+
+E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
+E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")
+E_MODEL_GOLD_TOAD = smlua_model_util_get_id("golden_toad_player_geo")
+E_MODEL_GOLD_WARIO = smlua_model_util_get_id("golden_wario_geo")
+E_MODEL_GOLD_WALUIGI = smlua_model_util_get_id("golden_waluigi_geo")
+
+--! music and course names
+
+smlua_audio_utils_replace_sequence(SEQ_EVENT_CUTSCENE_ENDING, 35, 76, "gorepeach") --Custom Audio for end cutscene
+
+smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry World')
+smlua_text_utils_course_name_replace(COURSE_JRB, 'Jolly Roger Hell')
+
+--! misc variables, state extras
+
+gStateExtras = {}
+for i = 0, MAX_PLAYERS-1 do
+	gStateExtras[i] = {
+		splatter = 1,
+		flyingVel = 0,
+		enablesplattimer = 0, --w
+		splattimer = 0,
+		jumpland = 0,
+		disappear = 0,
+		bigthrowenabled = 0, --w
+		isdead = false,
+		isinhell = false,
+		stomped = false,
+		headless = false,
+		bottomless = false,
+		disableuntilnextwarp = false,
+		penguinholding = 0,
+		penguintimer = 0,
+		objtimer = 0,
+		--isfalling = false,
+		ishigh = 0,
+		isgold = false,
+		outsidegastimer = 60,
+		highdeathtimer = 0,
+		ssldiethirst = 0,
+		splatterdeath = 0,
+		timeattack = false,
+		visitedhell = false,
+		iwbtg = false,
+		death = false
+	}
+end
+
+toadguitimer = 0
+ukikiheldby = -1
+ukikiholding = 0
+ukikitimer = 0
+highalpha = 0
+bloodalpha = 0
+hallucinate = 0
+portalalpha = 0
+loadingscreen = 0
+
+--! actions
+
+ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
+function act_gone(m)
+	local s = gStateExtras[m.playerIndex]
+	s.isgold = false
+	gPlayerSyncTable[m.playerIndex].gold = false
+    m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
+	m.actionTimer = m.actionTimer + 1
+	if m.actionTimer == m.actionArg then
+		local savedY = m.pos.y
+		if not s.iwbtg then
+			common_death_handler(m, 0, -1)
+		end
+		m.pos.y = savedY
+	end
+end
+hook_mario_action(ACT_GONE, act_gone)
+
+ACT_NOTHING = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
+
+function act_nothing(m)
+	local s = gStateExtras[m.playerIndex]
+	m.marioBodyState.eyeState = MARIO_EYES_DEAD
+	if m.prevAction == ACT_LAVA_BOOST then
+		m.action = ACT_GONE
+	end
+    --m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
+	--m.actionTimer = m.actionTimer + 1
+end
+
+hook_mario_action(ACT_NOTHING, act_nothing)
+
+--Mario's neck snapping action.
+ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+
+function act_necksnap(m)
+	local s = gStateExtras[m.playerIndex]
+	if not s.iwbtg then
+		common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
+	else
+		m.health = 0xff
+		--set_mario_action(m, ACT_NOTHING, 0)
+	end
+	smlua_anim_util_set_animation(m.marioObj, "MARIO_NECKSNAP")
+	m.actionTimer = m.actionTimer + 1
+	if m.actionTimer == 1 then
+		local_play(sBoneBreak, m.pos, 1)
+		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+	end
+	s.isgold = false
+	gPlayerSyncTable[m.playerIndex].gold = false
+end
+
+hook_mario_action(ACT_NECKSNAP, act_necksnap)
+
+ACT_READING_TROPHY = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_STATIONARY)
+
+function act_reading_trophy(m)
+	if m.actionTimer == 1 then
+		set_mario_animation(m, MARIO_ANIM_START_REACH_POCKET, 0)
+	end
+	if m.actionTimer == 30 then
+		set_mario_action(m, ACT_IDLE, 0)
+	end
+end
+
+hook_mario_action(ACT_READING_TROPHY, act_reading_trophy)
+
+--Electricutes the F out of Mario
+function act_shocked(m)
+	local s = gStateExtras[m.playerIndex]
+	s.isgold = false
+	gPlayerSyncTable[m.playerIndex].gold = false
+	m.actionTimer = m.actionTimer + 1
+	set_mario_animation(m, MARIO_ANIM_SHOCKED)
+	if m.actionTimer % 2 == 0 then
+		m.flags = m.flags | MARIO_METAL_SHOCK
+	else
+		m.flags = m.flags & ~(MARIO_METAL_SHOCK)
+	end
+	if m.actionTimer == 20 or m.actionTimer == 40 or m.actionTimer == 50 or m.actionTimer == 65 then
+		m.particleFlags = PARTICLE_MIST_CIRCLE
+	end
+	if m.actionTimer >= 50 then
+		m.marioBodyState.eyeState = MARIO_EYES_DEAD
+	end
+	if particleTiming[m.actionTimer] then
+		m.particleFlags = PARTICLE_TRIANGLE|PARTICLE_MIST_CIRCLE
+	end
+	if m.actionTimer == 140 then
+		m.particleFlags = PARTICLE_TRIANGLE
+		m.squishTimer = 50
+	end
+end
+hook_mario_action(ACT_SHOCKED, act_shocked)
+
+--If Mario takes damage mid-air, he will ragdoll down to his death.
+ACT_RAGDOLL = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
+
+function act_ragdoll(m)
+	local s = gStateExtras[0]
+	local stepResult = perform_air_step(m, 0)
+	if stepResult == AIR_STEP_LANDED then
+		if m.floor.type == SURFACE_BURNING then
+			set_mario_action(m, ACT_LAVA_BOOST, 0)
+		else
+			m.squishTimer = 50
+		end
+	elseif m.wall then
+		m.health = 0xff
+		network_play(sSplatter, m.pos, 1, m.playerIndex)
+		spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
+			local z, normal = vec3f(), m.wallNormal
+			o.oFaceAnglePitch = 16384
+			o.oFaceAngleYaw = calculate_yaw(z, normal)
+			o.oFaceAngleRoll = 0
+			o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
+			o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
+		end)
+		for i = 0, 50 do
+			local random = math.random()
+			spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
+				obj_scale(gib, random)
+			end)
+		end
+		if not s.iwbtg then
+			common_death_handler(m, 0, -1)
+		end
+
+		return set_mario_action(m, ACT_GONE, 0)
+	end
+	set_character_animation(m, CHAR_ANIM_AIRBORNE_ON_STOMACH)
+	m.marioBodyState.eyeState = MARIO_EYES_DEAD
+	if m.actionArg == 1 then
+		local l = gLakituState
+		l.posHSpeed, l.posVSpeed, l.focHSpeed, l.focVSpeed = 0, 0, 0, 0
+	end
+	vec3s_set(m.angleVel, 2000, 1000, 400)
+	vec3s_add(m.faceAngle, m.angleVel)
+	vec3s_copy(m.marioObj.header.gfx.angle, m.faceAngle)
+end
+
+hook_mario_action(ACT_RAGDOLL, act_ragdoll)
+
+--Mario is decapitated.
+ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+
+local headlessModel = {
+    [0] = E_MODEL_HEADLESS_MARIO,
+	E_MODEL_HEADLESS_LUIGI,
+	E_MODEL_HEADLESS_TOAD,
+	E_MODEL_HEADLESS_WALUIGI,
+	E_MODEL_HEADLESS_WARIO,
+}
+
+function act_decapitated(m)
+    local s = gStateExtras[m.playerIndex]
+    local player_sync = gPlayerSyncTable[m.playerIndex]
+
+    s.isgold = false
+    player_sync.gold = false
+
+    obj_set_model_extended(m.marioObj, headlessModel[m.character.type])
+
+    if m.actionTimer == 0 then
+        squishblood(m.marioObj)
+        m.actionTimer = 1
+    end
+
+    local death_duration = s.iwbtg and 9999999 or 50
+    common_death_handler(m, MARIO_ANIM_ELECTROCUTION, death_duration)
+end
+
+hook_mario_action(ACT_DECAPITATED, act_decapitated)
+
+--Mario is bitten in half.
+ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+
+local toplessModel = {
+[0]=E_MODEL_BOTTOMLESS_MARIO,
+	E_MODEL_TOPLESS_TOAD,
+	E_MODEL_TOPLESS_WALUIGI,
+	E_MODEL_TOPLESS_WARIO
+}
+
+function act_bitten_in_half(m)
+	local s = gStateExtras[m.playerIndex]
+	s.isgold = false
+	gPlayerSyncTable[m.playerIndex].gold = false
+	obj_set_model_extended(m.marioObj, toplessModel[m.character.type])
+	if not s.iwbtg then
+		common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
+	else
+		common_death_handler(m, MARIO_ANIM_SUFFOCATING, 99999999)
+	end
+end
+hook_mario_action(ACT_BITTEN_IN_HALF, act_bitten_in_half)
+
+--! helper functions
+
+function adjust_slide_velocity(m, slide_speed)
+    m.slideVelX = m.slideVelX + slide_speed * sins(m.faceAngle.y)
+    m.slideVelZ = m.slideVelZ + slide_speed * coss(m.faceAngle.y)
+end
+
+function adjust_turn_speed(m, turn_speed_factor)
+    local turnSpeed = 0x600 * (m.forwardVel * 0.1)
+    m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, turnSpeed, turnSpeed)
+end
+
+PACKET_UNLOCK = 0
+
+function unlock_trophy(id)
+	if network_is_server() then
+		local trophy = trophyinfo[id]
+		if trophy then
+			mod_storage_save("file"..get_current_save_file_num()..trophy.name, "1")
+			gGlobalSyncTable.trophystatus[id] = true
+		end
+	else network_send_to(1, true, {type = PACKET_UNLOCK, id = id}) end
+end
+
+hook_event(HOOK_ON_PACKET_RECEIVE, function (data)
+	if data.type == PACKET_UNLOCK then
+		unlock_trophy(data.id)
+	end
+end)
+
+function delete_save(m)
+    for course = 0, 25 do
+        save_file_remove_star_flags(get_current_save_file_num() - 1, course - 1, 0xFF)
+    end
+
+    save_file_clear_flags(0xFFFFFFFF)
+    save_file_do_save(get_current_save_file_num() - 1, 1)
+
+    m.numStars = save_file_get_total_star_count(get_current_save_file_num() - 1, COURSE_NONE, COURSE_MAX - 1)
+end
+
+local function has_any_behavior(obj, behaviors)
+    for _, behavior_id in ipairs(behaviors) do
+        if obj_has_behavior_id(obj, behavior_id) ~= 0 then
+            return true
+        end
+    end
+    return false
+end
+    
+function handle_object_interaction(m, o)
+    local behaviors = {
+        id_bhvBigBoulder,
+        id_bhvChainChomp,
+        id_bhvPitBowlingBall,
+        id_bhvBowlingBall,
+        id_bhvSpindrift,
+        id_bhvMrBlizzard,
+        id_bhvHauntedChair,
+        id_bhvWaterBomb
+    }
+
+    if m.hurtCounter > 0 and has_any_behavior(o, behaviors) then
+        if m.action & ACT_FLAG_AIR > 0 then
+            if m.action == ACT_DEATH_ON_STOMACH then return end
+
+            if m.pos.y > m.floorHeight then
+                local angle = obj_angle_to_object(m.marioObj, o)
+                m.vel.x = m.vel.x + sins(o.oMoveAngleYaw) * o.oForwardVel / 2
+                m.vel.z = m.vel.z + coss(o.oMoveAngleYaw) * o.oForwardVel / 2
+                m.vel.y = 65
+
+                m.marioObj.oFaceAngleYaw = angle
+                m.marioObj.oMoveAngleYaw = angle
+
+                spawn_mist_particles()
+                play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
+                set_mario_action(m, ACT_RAGDOLL, 0)
+            end
+        else
+            if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 then
+                -- Optionally handle Chain Chomp interaction here
+                -- djui_chat_message_create("Doing nothing (you hit chain chomp and lost yer legs!!)")
+            else
+                m.squishTimer = 50
+            end
+        end
+    end
+end
