@@ -585,7 +585,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 	if s.iwbtg and m.health == 0xff and not s.death then
 		stream_stop_all()
-		save_file_erase_current_backup_save()
+		delete_save(m)
 		local_play(sIwbtgDeath, gLakituState.pos, 1)
 		--set_mario_action(m, ACT_NOTHING, 0)
 		--s.iwbtg = false
@@ -596,23 +596,23 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Turning Gold
 	if s.turningGold then
-		local m = gMarioStates[0]
-		if m.marioObj.oTimer == 30 then
-			set_mario_action(m, ACT_IDLE, 0)
-			cur_obj_disable_rendering_and_become_intangible(m.marioObj)
+		local m0 = gMarioStates[0]
+		if m0.marioObj.oTimer == 30 then
+			set_mario_action(m0, ACT_IDLE, 0)
+			cur_obj_disable_rendering_and_become_intangible(m0.marioObj)
 		end
 
-		if m.marioObj.oTimer == 58 then
-			set_mario_action(m, ACT_EMERGE_FROM_PIPE, 0)
+		if m0.marioObj.oTimer == 58 then
+			set_mario_action(m0, ACT_EMERGE_FROM_PIPE, 0)
 
 		end
 
-		if m.marioObj.oTimer == 70 then
+		if m0.marioObj.oTimer == 70 then
 			spawn_mist_particles()
-			network_play(sGround, m.pos, 1, m.playerIndex)
-			cur_obj_enable_rendering_and_become_tangible(m.marioObj)
-			soft_reset_camera(m.area.camera)
-			gPlayerSyncTable[m.playerIndex].gold = true
+			network_play(sGround, m0.pos, 1, m0.playerIndex)
+			cur_obj_enable_rendering_and_become_tangible(m0.marioObj)
+			soft_reset_camera(m0.area.camera)
+			gPlayerSyncTable[m0.playerIndex].gold = true
 			s.turningGold = false
 			--djui_chat_message_create("gold")
 		end
@@ -2006,8 +2006,9 @@ end)
 hook_chat_command("iwbtg", "iwbtm", function ()
 	local s = gStateExtras[0]
 	if not s.iwbtg then
-		save_file_set_using_backup_slot(true)
-		save_file_erase_current_backup_save()
+
+        delete_save(m)
+
 		play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
 		s.iwbtg = true
 		m.numLives = 1

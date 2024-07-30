@@ -85,6 +85,25 @@ sChicken = 35
 sGround = 36
 sAngryKlepto = 37
 
+highmusic = audio_stream_load("high.ogg")
+smwbonusmusic = audio_stream_load("smwbonusloop.ogg")   audio_stream_set_looping(smwbonusmusic, true)
+boss = audio_stream_load("croppedcastle.ogg")
+backroomMusic = audio_stream_load("backroom.ogg")		audio_stream_set_looping(backroomMusic, true)
+musicHell = audio_stream_load("hell.ogg") 				audio_stream_set_looping(musicHell, true)
+secret = audio_stream_load("secret.ogg") 				audio_stream_set_looping(secret, true)
+musicUnderground = audio_stream_load("underground.ogg")	audio_stream_set_looping(musicUnderground, true)
+musicbows2 = audio_stream_load("bows2loop.ogg")         audio_stream_set_looping(musicbows2, true)
+timeattack = audio_stream_load("timeattack.ogg")
+edils = audio_stream_load("edils.ogg")					audio_stream_set_looping(edils, true)
+sad = audio_stream_load("sad.ogg")
+iwbtg = audio_stream_load("iwbtg.ogg")					audio_stream_set_looping(iwbtg, true)
+frijoleslobby = audio_stream_load("frijlobby.ogg")		audio_stream_set_looping(frijoleslobby, true)
+
+currentlyPlaying = nil
+local fadeTimer = 0
+local fadePeak = 0
+local volume = 1
+
 function adjust_slide_velocity(m, slide_speed)
     m.slideVelX = m.slideVelX + slide_speed * sins(m.faceAngle.y)
     m.slideVelZ = m.slideVelZ + slide_speed * coss(m.faceAngle.y)
@@ -113,24 +132,16 @@ hook_event(HOOK_ON_PACKET_RECEIVE, function (data)
 	end
 end)
 
-highmusic = audio_stream_load("high.ogg")
-smwbonusmusic = audio_stream_load("smwbonusloop.ogg")   audio_stream_set_looping(smwbonusmusic, true)
-boss = audio_stream_load("croppedcastle.ogg")
-backroomMusic = audio_stream_load("backroom.ogg")		audio_stream_set_looping(backroomMusic, true)
-musicHell = audio_stream_load("hell.ogg") 				audio_stream_set_looping(musicHell, true)
-secret = audio_stream_load("secret.ogg") 				audio_stream_set_looping(secret, true)
-musicUnderground = audio_stream_load("underground.ogg")	audio_stream_set_looping(musicUnderground, true)
-musicbows2 = audio_stream_load("bows2loop.ogg")         audio_stream_set_looping(musicbows2, true)
-timeattack = audio_stream_load("timeattack.ogg")
-edils = audio_stream_load("edils.ogg")					audio_stream_set_looping(edils, true)
-sad = audio_stream_load("sad.ogg")
-iwbtg = audio_stream_load("iwbtg.ogg")					audio_stream_set_looping(iwbtg, true)
-frijoleslobby = audio_stream_load("frijlobby.ogg")		audio_stream_set_looping(frijoleslobby, true)
+function delete_save(m)
+    for course = 0, 25 do
+        save_file_remove_star_flags(get_current_save_file_num() - 1, course - 1, 0xFF)
+    end
 
-currentlyPlaying = nil
-local fadeTimer = 0
-local fadePeak = 0
-local volume = 1
+    save_file_clear_flags(0xFFFFFFFF)
+    save_file_do_save(get_current_save_file_num() - 1, 1)
+
+    m.numStars = save_file_get_total_star_count(get_current_save_file_num() - 1, COURSE_NONE, COURSE_MAX - 1)
+end
 
 ---@param a BassAudio
 function stream_play(a)
