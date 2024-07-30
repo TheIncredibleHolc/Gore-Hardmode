@@ -1835,20 +1835,17 @@ hook_event(HOOK_ON_WARP, function()
 end)
 
 --Disable mario's fire scream to make room for custom scream.
-hook_event(HOOK_CHARACTER_SOUND, function (m, sound)
-	local s = gStateExtras[m.playerIndex]
-	local np = gNetworkPlayers[0]
-	if sound == CHAR_SOUND_ON_FIRE then return 0 end
+hook_event(HOOK_CHARACTER_SOUND, function(m, sound)
+    local s = gStateExtras[m.playerIndex]
+    local np = gNetworkPlayers[0]
 
-	local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvPiranhaPlant)
-	if sound == CHAR_SOUND_ATTACKED and obj_check_hitbox_overlap(m.marioObj, o) then return 0 end
+    if sound == CHAR_SOUND_ON_FIRE then return 0 end
 
-	if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then return 0 end
+    local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvPiranhaPlant)
+    local in_hitbox = obj_check_hitbox_overlap(m.marioObj, o)
 
-	if sound == CHAR_SOUND_WAAAOOOW and m.action == ACT_THROWN_FORWARD or m.action == ACT_THROWN_BACKWARD then return 0 end --and (s.flyingVel > 60)
-
-	local trophyplate = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophyPlate)
-	if np.currLevelNum == LEVEL_SECRETHUB and sound == CHAR_SOUND_PUNCH_YAH and obj_check_hitbox_overlap(m.marioObj, trophyplate) then
-		return 0
-	end
+    if sound == CHAR_SOUND_ATTACKED and in_hitbox then return 0 end
+    if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then return 0 end
+    if sound == CHAR_SOUND_WAAAOOOW and (m.action == ACT_THROWN_FORWARD or m.action == ACT_THROWN_BACKWARD) then return 0 end
+    if check_trophyplate(sound) then return 0 end
 end)

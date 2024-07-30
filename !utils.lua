@@ -687,6 +687,11 @@ function delete_save(m)
     m.numStars = save_file_get_total_star_count(get_current_save_file_num() - 1, COURSE_NONE, COURSE_MAX - 1)
 end
 
+function check_trophyplate(sound)
+    local trophyplate = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophyPlate)
+    return np.currLevelNum == LEVEL_SECRETHUB and sound == CHAR_SOUND_PUNCH_YAH and obj_check_hitbox_overlap(m.marioObj, trophyplate)
+end
+
 local function has_any_behavior(obj, behaviors)
     for _, behavior_id in ipairs(behaviors) do
         if obj_has_behavior_id(obj, behavior_id) ~= 0 then
