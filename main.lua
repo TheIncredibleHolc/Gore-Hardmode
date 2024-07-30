@@ -1718,6 +1718,7 @@ msgToLevel = {
     ["BITS"] = LEVEL_BITS,
     ["HELL"] = LEVEL_HELL,
     ["SECRET"] = LEVEL_SECRETHUB,
+    ["HUB"] = LEVEL_SECRETHUB,
 }
 
 function warp_command(msg)
