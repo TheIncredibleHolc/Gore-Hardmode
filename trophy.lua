@@ -211,81 +211,77 @@ function trophyplate_init(o)
 end
 
 function trophyplate_loop(o)
-	local m = gMarioStates[0]
-	local trophy = trophyinfo[o.oBehParams >> 16]
+    local m = gMarioStates[0]
+    local trophy = trophyinfo[o.oBehParams >> 16]
+    local save_file_num = get_current_save_file_num()
+    local trophy_state = mod_storage_load("file" .. save_file_num .. trophy.name)
+    
+    if trophy_state == "1" then
+        obj_set_model_extended(o, E_MODEL_GOLD_PLATE)
+    else
+        obj_set_model_extended(o, E_MODEL_SILVER_PLATE)
+    end
 
-
-	if mod_storage_load("file"..get_current_save_file_num()..trophy.name) == "1" then
-		obj_set_model_extended(o, E_MODEL_GOLD_PLATE)
-		if obj_check_hitbox_overlap(o, m.marioObj) and (m.controller.buttonPressed & B_BUTTON) ~= 0 then
-			djui_chat_message_create(tostring(trophy.message))
-			m.faceAngle.y = -43691
-			set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
-			set_mario_action(m, ACT_IDLE, 0)
-			local_play(sSmwping, m.pos, 1)
-		end
-	else
-		obj_set_model_extended(o, E_MODEL_SILVER_PLATE)
-		if obj_check_hitbox_overlap(o, m.marioObj) and (m.controller.buttonPressed & B_BUTTON) ~= 0 then
-			djui_chat_message_create(tostring(trophy.message))
-			m.faceAngle.y = -43691
-			set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
-			set_mario_action(m, ACT_IDLE, 0)
-			local_play(sSmwping, m.pos, 1)
-		end
-	end
+    if obj_check_hitbox_overlap(o, m.marioObj) and (m.controller.buttonPressed & B_BUTTON) ~= 0 then
+        djui_chat_message_create(tostring(trophy.message))
+        m.faceAngle.y = -43691
+        set_mario_action(m, ACT_WAITING_FOR_DIALOG, 0)
+        set_mario_action(m, ACT_IDLE, 0)
+        local_play(sSmwping, m.pos, 1)
+    end
 end
 
 function prize_spawner() -- Trophy Hunt Prize Spawner
-	local m = gMarioStates[0]
-	local np = gNetworkPlayers[0]
-	if np.currLevelNum == LEVEL_SECRETHUB then
-		local starplatform = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvSecretWarp)
-		if starplatform == nil then
-			if trophy_unlocked(1) and trophy_unlocked(2) and trophy_unlocked(3) and trophy_unlocked(4) and
-			trophy_unlocked(5) and trophy_unlocked(6) and trophy_unlocked(7) and trophy_unlocked(8) and
-			trophy_unlocked(9) and trophy_unlocked(10) and trophy_unlocked(11) and trophy_unlocked(12) and
-			trophy_unlocked(13) and trophy_unlocked(14) and trophy_unlocked(15) and trophy_unlocked(16) and
-			trophy_unlocked(17) and trophy_unlocked(18) and trophy_unlocked(19) and trophy_unlocked(20) then
-				--djui_chat_message_create("Spawning prize")
-				spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, 723, 196, -1683, nil)
-				spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, 723, 196, -1683, nil)
-			end
-		end
-	end
+    local m = gMarioStates[0]
+    local np = gNetworkPlayers[0]
+
+    if np.currLevelNum == LEVEL_SECRETHUB then
+        local starplatform = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvSecretWarp)
+        if not starplatform then
+            local allTrophiesUnlocked = true
+            for i = 1, 20 do
+                if not trophy_unlocked(i) then
+                    allTrophiesUnlocked = false
+                end
+            end
+
+            if allTrophiesUnlocked then
+                spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, 723, 196, -1683, nil)
+                spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, 723, 196, -1683, nil)
+            end
+        end
+    end
 end
 
-function gold_players()
-	local m = gMarioStates[0]
-	local s = gStateExtras[0]
-	
-	for i = 0, (MAX_PLAYERS - 1) do
-		if gPlayerSyncTable[i].gold then
-			local s = gStateExtras[i]
-			s.isgold = true
-		end
-	end
+local gold_models = {
+    [CT_MARIO] = E_MODEL_GOLD_MARIO,
+    [CT_LUIGI] = E_MODEL_GOLD_LUIGI,
+    [CT_TOAD] = E_MODEL_GOLD_TOAD,
+    [CT_WARIO] = E_MODEL_GOLD_WARIO,
+    [CT_WALUIGI] = E_MODEL_GOLD_WALUIGI,
+}
 
-	if s.isgold then
-		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-		m.marioObj.hookRender = 1
-		if m.character.type == CT_MARIO then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_MARIO)
-		elseif m.character.type == CT_LUIGI then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_LUIGI)
-		elseif m.character.type == CT_TOAD then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_TOAD)
-		elseif m.character.type == CT_WARIO then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WARIO)
-		elseif m.character.type == CT_WALUIGI then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
-		end
-	end
+function gold_players()
+    local m = gMarioStates[0]
+    local s = gStateExtras[0]
+
+    for i = 0, (MAX_PLAYERS - 1) do
+        if gPlayerSyncTable[i].gold then
+            gStateExtras[i].isgold = true
+        end
+    end
+
+    if s.isgold then
+        m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+        m.marioObj.hookRender = 1
+        local gold_model = gold_models[m.character.type]
+        if gold_model then
+            obj_set_model_extended(m.marioObj, gold_model)
+        end
+    end
 end
 
 hook_event(HOOK_UPDATE, gold_players)
-
-
 hook_event(HOOK_UPDATE, prize_spawner)
 
 id_bhvTrophy = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophy_init, trophy_loop, "bhvTrophy")
