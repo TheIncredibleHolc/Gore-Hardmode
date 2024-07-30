@@ -641,30 +641,31 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		--DO NOTHING
 		--djui_chat_message_create("already collected")
 	else
-		local psstrophy = obj_get_first_with_behavior_id(id_bhvTrophy)
 
-		if np.currLevelNum == LEVEL_PSS and m.pos.y <= -4587 and gGlobalSyncTable.gameisbeat and m.numCoins < 81 and not psstrophy then
-			m.pos.x = -6401
-			m.pos.y = -4162
-			m.pos.z = 148
-			m.faceAngle.y = 32768
-			m.intendedYaw = 32768
-			set_mario_action(m, ACT_BUTT_SLIDE, 0)
-			m.forwardVel = 120
-			play_secondary_music(0, 0, 0, 20)
-			stream_play(edils)
-		end
+        local psstrophy = obj_get_first_with_behavior_id(id_bhvTrophy)
 
-		if m.numCoins == 81 and np.currLevelNum == LEVEL_PSS and gGlobalSyncTable.gameisbeat and not psstrophy then
-			play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
-			stream_stop_all()
-			stop_secondary_music(0)
-			djui_chat_message_create("Trophy spawned!")
-			spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, -6386, -4484, 5416, function(t)
-				t.oFaceAngleYaw = 32768
-				t.oBehParams = 11 << 16 | 1
-			end)
-		end
+        if  np.currLevelNum == LEVEL_PSS and gGlobalSyncTable.gameisbeat and not psstrophy then
+            if m.pos.y <= -4587 and m.numCoins < 81 then
+                m.pos.x = -6401
+                m.pos.y = -4162
+                m.pos.z = 148
+                m.faceAngle.y = 32768
+                m.intendedYaw = 32768
+                set_mario_action(m, ACT_BUTT_SLIDE, 0)
+                m.forwardVel = 120
+                play_secondary_music(0, 0, 0, 20)
+                stream_play(edils)
+            elseif m.numCoins == 81 then
+                play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
+                stream_stop_all()
+                stop_secondary_music(0)
+                djui_chat_message_create("Trophy spawned!")
+                spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, -6386, -4484, 5416, function(t)
+                    t.oFaceAngleYaw = 32768
+                    t.oBehParams = 11 << 16 | 1
+                end)
+            end
+        end
 	end
 
 
@@ -692,40 +693,34 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 ----------------------------------------------------------------------------------------------------------------------------------
 
-	--(PSS/TTM Only) Faster sliding.
+-- (PSS/TTM Only) Faster sliding.
+    
+    local is_pss = np.currLevelNum == LEVEL_PSS
+    local is_ttm = np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2
+    local is_butt_or_dive_slide = m.action == ACT_BUTT_SLIDE or m.action == ACT_DIVE_SLIDE
+    
+    if is_pss and is_butt_or_dive_slide then
+        adjust_slide_velocity(m, 50)
+    elseif is_ttm and is_butt_or_dive_slide then
+        adjust_slide_velocity(m, 40)
+    end
+    
+    if (is_pss or is_ttm) and m.action == ACT_BUTT_SLIDE then
+        adjust_turn_speed(m)
+    end
 
-	if np.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_PSS and m.action == ACT_DIVE_SLIDE then
-		m.slideVelX = m.slideVelX + 50 * sins(m.faceAngle.y)
-		m.slideVelZ = m.slideVelZ + 50 * coss(m.faceAngle.y)
-	end
-
-	if np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_DIVE_SLIDE then
-		m.slideVelX = m.slideVelX + 40 * sins(m.faceAngle.y)
-		m.slideVelZ = m.slideVelZ + 40 * coss(m.faceAngle.y)
-	end
-
-	if np.currLevelNum == LEVEL_PSS and m.action == ACT_BUTT_SLIDE or np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2 and m.action == ACT_BUTT_SLIDE then
-		local turnSpeed = (0x600)*(m.forwardVel*0.1)
-		m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, turnSpeed, turnSpeed)
-	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	if s.isgold then
-		--if m.playerIndex ~= 0 then return end
-		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-		m.marioObj.hookRender = 1
-		if m.character.type == CT_MARIO then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_MARIO)
-		elseif m.character.type == CT_LUIGI then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_LUIGI)
-		elseif m.character.type == CT_TOAD then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_TOAD)
-		elseif m.character.type == CT_WARIO then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WARIO)
-		elseif m.character.type == CT_WALUIGI then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
-		end
-	end
+    if s.isgold then
+        -- if m.playerIndex ~= 0 then return end
+        m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+        m.marioObj.hookRender = 1
+
+        local gold_model = gold_models[m.character.type]
+        if gold_model then
+            obj_set_model_extended(m.marioObj, gold_model)
+        end
+    end
 
 	if m.health <= 120 and s.isgold then
 		s.isgold = false

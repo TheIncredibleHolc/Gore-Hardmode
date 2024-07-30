@@ -66,24 +66,6 @@ trophyinfo = {
 	{ name = "iwbtg",      model = E_MODEL_IWBTG,            scale = 0.5, y_offset = -24,   podium = E_MODEL_GORE_TROPHY_PODIUM, message = "Trophy #20 - Collect 10 stars with IWBTG mode enabled!"}
 }
 
-
-
-PACKET_UNLOCK = 0
-function unlock_trophy(id)
-	if network_is_server() then
-		local trophy = trophyinfo[id]
-		if trophy then
-			mod_storage_save("file"..get_current_save_file_num()..trophy.name, "1")
-			gGlobalSyncTable.trophystatus[id] = true
-		end
-	else network_send_to(1, true, {type = PACKET_UNLOCK, id = id}) end
-end
-hook_event(HOOK_ON_PACKET_RECEIVE, function (data)
-	if data.type == PACKET_UNLOCK then
-		unlock_trophy(data.id)
-	end
-end)
-
 function trophy_unlocked(id)
 	if not trophyinfo[id] then return false end
 	if network_is_server() then
@@ -252,14 +234,6 @@ function prize_spawner() -- Trophy Hunt Prize Spawner
         end
     end
 end
-
-local gold_models = {
-    [CT_MARIO] = E_MODEL_GOLD_MARIO,
-    [CT_LUIGI] = E_MODEL_GOLD_LUIGI,
-    [CT_TOAD] = E_MODEL_GOLD_TOAD,
-    [CT_WARIO] = E_MODEL_GOLD_WARIO,
-    [CT_WALUIGI] = E_MODEL_GOLD_WALUIGI,
-}
 
 function gold_players()
     local m = gMarioStates[0]
