@@ -214,6 +214,8 @@ COL_GIB = smlua_collision_util_get("gib_collision")
 DORRIE_DEAD = smlua_model_util_get_id("dorrie_ded_lol_geo")
 E_MODEL_HELL_DORRIE = smlua_model_util_get_id("hell_dorrie_geo")
 
+E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
+
 E_MODEL_HEADLESS_MARIO = smlua_model_util_get_id("headlessmario_geo")
 E_MODEL_BOTTOMLESS_MARIO = smlua_model_util_get_id("bottomlessmario_geo")
 E_MODEL_HEADLESS_LUIGI = smlua_model_util_get_id("luigidead_geo")
@@ -687,7 +689,7 @@ function delete_save(m)
     m.numStars = save_file_get_total_star_count(get_current_save_file_num() - 1, COURSE_NONE, COURSE_MAX - 1)
 end
 
-function check_trophyplate(sound)
+function check_trophyplate(m, np, sound)
     local trophyplate = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophyPlate)
     return np.currLevelNum == LEVEL_SECRETHUB and sound == CHAR_SOUND_PUNCH_YAH and obj_check_hitbox_overlap(m.marioObj, trophyplate)
 end
