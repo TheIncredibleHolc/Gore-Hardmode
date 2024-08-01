@@ -128,6 +128,7 @@ end
 ------Globals--------
 gGlobalSyncTable.deathcounter = 0
 gGlobalSyncTable.toaddeathcounter = 0
+gGlobalSyncTable.hellenabled = true
 
 -----------Locals-------------
 local TEX_MARIO_LESS_HIGH = get_texture_info('mariolesshigh')
@@ -1358,7 +1359,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 		m.pos.y = m.pos.y + 920
 	end
 
-	if m.numLives <= 0 and not s.isinhell and not s.iwbtg then
+	if m.numLives <= 0 and not s.isinhell and not s.iwbtg and gGlobalSyncTable.hellenabled then
 		s.isinhell = true
 		warp_to_level(LEVEL_HELL, 1, 0)
 	else 
@@ -1716,7 +1717,7 @@ msgToLevel = {
     ["BITDW"] = LEVEL_BITDW,
     ["BITFS"] = LEVEL_BITFS,
     ["BITS"] = LEVEL_BITS,
-    ["HELL"] = LEVEL_HELL,
+    --["HELL"] = LEVEL_HELL,
     ["SECRET"] = LEVEL_SECRETHUB,
     ["HUB"] = LEVEL_SECRETHUB,
 }
@@ -1763,6 +1764,18 @@ hook_chat_command("lock", "trophy", function (msg)
 	end
 end)
 
+hook_chat_command("hell", "HELL", function ()
+	if network_is_server() and gGlobalSyncTable.hellenabled then
+		djui_chat_message_create("Hell disabled.")
+		gGlobalSyncTable.hellenabled = false
+	elseif network_is_server() and gGlobalSyncTable.hellenabled == false then
+		djui_chat_message_create("Hell enabled.")
+		gGlobalSyncTable.hellenabled = true
+	end
+	--warp_to_level(LEVEL_HELL, 1, 0)
+	return true
+end)
+
 local function default_level_func()
     set_lighting_color(0, 255)
     set_lighting_color(1, 255)
@@ -1787,11 +1800,12 @@ hook_event(HOOK_ON_LEVEL_INIT, function()
     end
     stop_all_samples()
 
-    -- Force Mario to Hell if needed
-    if s.isinhell and np.currLevelNum ~= LEVEL_HELL then
-        gMarioStates[0].numLives = 0
-        warp_to_level(LEVEL_HELL, 1, 0)
-    end
+	----------------------------------------------------------------------------------------------------------------------------------
+	--Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)
+	if gStateExtras[0].isinhell and np.currLevelNum ~= LEVEL_HELL and gGlobalSyncTable.hellenabled then
+		gMarioStates[0].numLives = 0
+		warp_to_level(LEVEL_HELL, 1, 0)
+	end
 
     -- Execute level-specific actions
     local level_func = sOnLvlInitToFunc[np.currLevelNum]
