@@ -592,10 +592,10 @@ function bhv_custom_grindel(o)
 end
 
 function bhv_custom_spindel(o)
-	sp18 = 20 - o.oSpindelUnkF4
+	secondDoor = 20 - o.oSpindelUnkF4
 	sp1C = sins(o.oMoveAnglePitch * 32) * 46.0
 	o.oPosZ = o.oPosZ + o.oVelZ
-	if (o.oTimer < sp18 * 1) then
+	if (o.oTimer < secondDoor * 1) then
         if (o.oSpindelUnkF8 == 0) then
             o.oVelZ = 500
             o.oAngleVelPitch = 128
@@ -1486,8 +1486,165 @@ function bhv_klepto_loop(o)
 	end
 end
 
+function star_door_init(o)
+    o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oInteractType = INTERACT_DOOR
+    o.collisionData = gGlobalObjectCollisionData.inside_castle_seg7_collision_star_door
+    o.oInteractionSubtype = INT_SUBTYPE_STAR_DOOR
+
+    o.oDrawingDistance = 20000
+
+    local hitbox = get_temp_object_hitbox()
+    hitbox.interactType = INTERACT_DOOR
+    hitbox.height = 100
+    hitbox.radius = 80
+    obj_set_hitbox(o, hitbox)
+    cur_obj_set_home_once()
+    bhv_door_init()
+end
+
+function star_door_update_pos(o)
+    o.oVelX = o.oBehParams2ndByte * coss(o.oMoveAngleYaw)
+    o.oVelZ = o.oBehParams2ndByte * -sins(o.oMoveAngleYaw)
+    o.oPosX = o.oPosX + o.oVelX
+    o.oPosZ = o.oPosZ + o.oVelZ
+end
+
+STAR_DOOR_ACT_CLOSED = 0
+STAR_DOOR_ACT_OPENING = 1
+STAR_DOOR_ACT_OPENED = 2
+STAR_DOOR_ACT_CLOSING = 3
+STAR_DOOR_HAS_CLOSED = 4
+
+function is_mario_in_center_of_doors(firstDoor, secondDoor, m, threshold)
+    if m ~= nil and secondDoor ~= nil then
+        local centerX = (firstDoor.oPosX + secondDoor.oPosX) / 2
+        local centerZ = (firstDoor.oPosZ + secondDoor.oPosZ) / 2
+        local distance = math.sqrt((m.pos.x - centerX) ^ 2 + (m.pos.z - centerZ) ^ 2)
+        return distance < threshold -- You can adjust this threshold as needed
+    end
+    return false
+end
+
+function star_door_loop_1(o)
+    local pad = {0, 0, 0, 0}
+    local secondDoor = cur_obj_nearest_object_with_behavior(get_behavior_from_id(id_bhvStarDoor))
+    local m = nearest_interacting_mario_state_to_object(o)
+    if o.oAction == STAR_DOOR_ACT_CLOSED then
+        cur_obj_become_tangible()
+        if (0x30000 & o.oInteractStatus) ~= 0 then
+            o.oAction = 1
+        end
+        if secondDoor ~= nil and secondDoor.oAction ~= 0 then
+            o.oAction = 1
+        end
+    elseif o.oAction == STAR_DOOR_ACT_OPENING then
+        camera_freeze()
+        if o.oTimer == 0 and o.oMoveAngleYaw >= 0 then
+            cur_obj_play_sound_2(SOUND_GENERAL_STAR_DOOR_OPEN)
+            queue_rumble_data_object(o, 35, 30)
+        end
+        cur_obj_become_intangible()
+        o.oBehParams2ndByte = -8.0
+        star_door_update_pos(o)
+        if o.oTimer >= 16 then
+            o.oAction = o.oAction + 1
+        end
+    elseif o.oAction == STAR_DOOR_ACT_OPENED then
+        if is_mario_in_center_of_doors(o, secondDoor, m, 60) then
+            o.oAction = o.oAction + 1
+        end
+
+        if o.oTimer >= 31 then
+            o.oAction = o.oAction + 1
+        end
+    elseif o.oAction == STAR_DOOR_ACT_CLOSING then
+
+        if o.oTimer == 0 and o.oMoveAngleYaw >= 0 then
+            cur_obj_play_sound_2(SOUND_GENERAL_STAR_DOOR_CLOSE)
+            queue_rumble_data_object(o, 35, 30)
+        end
+        o.oBehParams2ndByte = 25
+        star_door_update_pos(o)
+        if o.oTimer >= 4 then
+            o.oAction = o.oAction + 1
+        end
+    elseif o.oAction == STAR_DOOR_HAS_CLOSED then
+        local marioInCenter = is_mario_in_center_of_doors(o, secondDoor, m, 100)
+        local marioActive = m.action ~= ACT_DISAPPEARED
+        
+        if marioInCenter then
+            if marioActive then
+                obj_set_model_extended(o, E_MODEL_BLOODY_STAR_DOOR)
+                obj_set_model_extended(secondDoor, E_MODEL_BLOODY_STAR_DOOR)
+                play_sound(SOUND_MARIO_ATTACKED, {x=0,y=0,z=0})
+                local_play(sSplatter, m.pos, 0.5)
+                spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+                squishblood(m.marioObj)
+                set_mario_action(m, ACT_DISAPPEARED, 0)
+                set_camera_shake_from_hit(3)
+            end
+            
+            if o.oTimer >= 35 then
+                level_trigger_warp(m, WARP_OP_DEATH)
+                camera_unfreeze()
+            end
+        else
+            o.oInteractStatus = 0
+            o.oAction = 0
+            camera_unfreeze()
+        end
+        
+        cur_obj_set_pos_to_home()
+    end
+    
+    if m.controller.stickMag > 0 and o.oAction >= STAR_DOOR_ACT_OPENED and o.oAction <= STAR_DOOR_ACT_CLOSING then
+        m.pos.x = m.pos.x + m.marioObj.oMarioReadingSignDPosX
+        m.pos.z = m.pos.z + m.marioObj.oMarioReadingSignDPosZ
+    end
+end
+
+gDoorAdjacentRooms = {}
+
+for i = 1, 60 do
+    gDoorAdjacentRooms[i] = {0, 0}
+end
+
+function star_door_loop_2(o)
+    local sp4 = 0
+    if gMarioStates[0].currentRoom ~= 0 then
+        if o.oDoorUnkF8 == gMarioStates[0].currentRoom or
+           gMarioStates[0].currentRoom == o.oDoorUnkFC or
+           gMarioStates[0].currentRoom == o.oDoorUnk100 or
+           gDoorAdjacentRooms[gMarioStates[0].currentRoom][0] == o.oDoorUnkFC or
+           gDoorAdjacentRooms[gMarioStates[0].currentRoom][0] == o.oDoorUnk100 or
+           gDoorAdjacentRooms[gMarioStates[0].currentRoom][1] == o.oDoorUnkFC or
+           gDoorAdjacentRooms[gMarioStates[0].currentRoom][1] == o.oDoorUnk100 then
+            sp4 = 1
+        end
+    else
+        sp4 = 1
+    end
+
+    if sp4 == 1 then
+        o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_ACTIVE
+    elseif sp4 == 0 then
+        o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
+    end
+
+    o.oDoorUnk88 = sp4
+end
+
+function star_door_loop(o)
+    star_door_loop_1(o)
+    star_door_loop_2(o)
+    load_object_collision_model()
+end
+
 -------Behavior Hooks-------
+
 hook_event(HOOK_MARIO_UPDATE, killer_exclamation_boxes)
+hook_behavior(id_bhvStarDoor, OBJ_LIST_SURFACE, true, star_door_init, star_door_loop)
 hook_behavior(id_bhvDorrie, OBJ_LIST_SURFACE, false, nil, dorrie_dead)
 hook_behavior(id_bhvEyerokBoss, OBJ_LIST_GENACTOR, false, nil, eyerok_loop)
 hook_behavior(id_bhvWigglerHead, OBJ_LIST_GENACTOR, false, nil, wiggler_loop)

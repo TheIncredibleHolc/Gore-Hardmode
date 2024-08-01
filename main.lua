@@ -8,7 +8,7 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
---gLevelValues.entryLevel = LEVEL_SECRETHUB
+gLevelValues.entryLevel = LEVEL_CASTLE
 
 --Turns off bubble death.
 gServerSettings.bubbleDeath = false
@@ -1847,5 +1847,5 @@ hook_event(HOOK_CHARACTER_SOUND, function(m, sound)
     if sound == CHAR_SOUND_ATTACKED and in_hitbox then return 0 end
     if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then return 0 end
     if sound == CHAR_SOUND_WAAAOOOW and (m.action == ACT_THROWN_FORWARD or m.action == ACT_THROWN_BACKWARD) then return 0 end
-    if check_trophyplate(sound) then return 0 end
+    if check_trophyplate(m, np, sound) then return 0 end
 end)
