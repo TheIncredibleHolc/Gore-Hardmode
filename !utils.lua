@@ -175,6 +175,7 @@ E_MODEL_HIDDENFLAG = smlua_model_util_get_id("hiddenflag_geo")
 E_MODEL_BLOOD_SPLATTER = smlua_model_util_get_id("blood_splatter_geo")
 E_MODEL_BLOOD_SPLATTER2 = smlua_model_util_get_id("blood_splatter2_geo")
 E_MODEL_BLOOD_SPLATTER_WALL = smlua_model_util_get_id("blood_splatter_wall_geo")
+E_MODEL_BLOOD_MIST = smlua_model_util_get_id("blood_mist_geo")
 E_MODEL_GOLD_SPLAT = smlua_model_util_get_id("gold_splat_geo")
 E_MODEL_SMILER = smlua_model_util_get_id("smiler_geo") --My dumbass reused this function without changing the name. This is NOT the backroom smiler. 
 E_MODEL_SMILER2 = smlua_model_util_get_id("smiler2_geo") --This isn't it either.
@@ -559,6 +560,7 @@ function act_ragdoll(m)
 			m.squishTimer = 50
 		end
 	elseif m.wall then
+		bloodmist(m.marioObj)
 		m.health = 0xff
 		network_play(sSplatter, m.pos, 1, m.playerIndex)
 		spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)

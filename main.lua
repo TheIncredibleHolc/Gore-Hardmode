@@ -144,6 +144,11 @@ local TEX_DIRT = get_texture_info("grass_09004800")
 
 function squishblood(o) -- Creates instant pool of impact-blood under mario.
 	spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil, 0)
+	bloodmist(o)
+end
+
+function bloodmist(o) -- Creates instant pool of impact-blood under mario.
+	spawn_non_sync_object(id_bhvBloodMist, E_MODEL_BLOOD_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 end
 
 local particleTiming = {

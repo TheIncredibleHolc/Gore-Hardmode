@@ -1622,6 +1622,24 @@ local function star_door_loop(o)
     load_object_collision_model()
 end
 
+function blood_mist_init(o)
+	-- someone more experienced than me can probably do the init and loop better
+	--local s = gStateExtras[0]
+    o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
+	o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+	o.header.gfx.skipInViewCheck = true
+	o.oGraphYOffset = 40
+	obj_scale(o, 1)
+end
+
+function blood_mist_loop(o)
+	o.oOpacity = (-clampf(math.floor(o.oTimer * 8), 0, 255) + 255)
+	o.oGraphYOffset = o.oGraphYOffset + -2.5
+	if o.oTimer > 30 then -- 2 second timer before deleting. 
+		obj_mark_for_deletion(o)
+	end
+end
+
 -------Behavior Hooks-------
 
 local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
@@ -1692,7 +1710,7 @@ hook_gore_behavior(id_bhvBobomb, false, nil, bobomb_loop)
 hook_gore_behavior(id_bhvGoomba, false, nil, bhv_custom_goomba_loop)
 hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
 hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
-
+id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
 id_bhvSquishblood = hook_behavior(nil, OBJ_LIST_GENACTOR, true, squishblood_init, squishblood_loop, "bhvSquishblood")
 id_bhvStopwatch = hook_behavior(nil, OBJ_LIST_GENACTOR, true, stopwatch_init, stopwatch_loop, "bhvStopwatch")
