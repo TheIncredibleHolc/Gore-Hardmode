@@ -235,27 +235,36 @@ function prize_spawner() -- Trophy Hunt Prize Spawner
     end
 end
 
-function gold_players()
-    local m = gMarioStates[0]
-    local s = gStateExtras[0]
+function gold_players(m)
+	--local m = gMarioStates[0]
+	local s = gStateExtras[0]
+	
+	for i = 0, (MAX_PLAYERS - 1) do
+		if gPlayerSyncTable[i].gold then
+			local s = gStateExtras[i]
+			s.isgold = true
+		end
+	end
 
-    for i = 0, (MAX_PLAYERS - 1) do
-        if gPlayerSyncTable[i].gold then
-            gStateExtras[i].isgold = true
-        end
-    end
-
-    if s.isgold then
-        m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-        m.marioObj.hookRender = 1
-        local gold_model = gold_models[m.character.type]
-        if gold_model then
-            obj_set_model_extended(m.marioObj, gold_model)
-        end
-    end
+	if s.isgold then
+		--djui_chat_message_create("player is gold")
+		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+		m.marioObj.hookRender = 1
+		if m.character.type == CT_MARIO then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_MARIO)
+		elseif m.character.type == CT_LUIGI then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_LUIGI)
+		elseif m.character.type == CT_TOAD then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_TOAD)
+		elseif m.character.type == CT_WARIO then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WARIO)
+		elseif m.character.type == CT_WALUIGI then
+			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
+		end
+	end
 end
 
-hook_event(HOOK_UPDATE, gold_players)
+hook_event(HOOK_MARIO_UPDATE, gold_players)
 hook_event(HOOK_UPDATE, prize_spawner)
 
 id_bhvTrophy = hook_behavior(nil, OBJ_LIST_GENACTOR, true, trophy_init, trophy_loop, "bhvTrophy")

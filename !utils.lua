@@ -679,14 +679,17 @@ hook_event(HOOK_ON_PACKET_RECEIVE, function (data)
 end)
 
 function delete_save(m)
+	--[[
     for course = 0, 25 do
         save_file_remove_star_flags(get_current_save_file_num() - 1, course - 1, 0xFF)
     end
-
     save_file_clear_flags(0xFFFFFFFF)
     save_file_do_save(get_current_save_file_num() - 1, 1)
-
     m.numStars = save_file_get_total_star_count(get_current_save_file_num() - 1, COURSE_NONE, COURSE_MAX - 1)
+	]]
+	save_file_erase_current_backup_save()
+
+
 end
 
 function check_trophyplate(m, np, sound)

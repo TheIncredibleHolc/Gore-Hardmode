@@ -8,7 +8,7 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
-gLevelValues.entryLevel = LEVEL_CASTLE
+--gLevelValues.entryLevel = LEVEL_CASTLE
 
 --Turns off bubble death.
 gServerSettings.bubbleDeath = false
@@ -91,19 +91,20 @@ function testing(m)
 
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		--gGlobalSyncTable.gameisbeat = true
+		gGlobalSyncTable.toaddeathcounter = 49
+		gGlobalSyncTable.gameisbeat = true
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		--m.numLives = 1
-		--squishblood(m.marioObj)
-		--set_mario_action(m, ACT_NECKSNAP, 0)
+		m.numLives = 1
+		squishblood(m.marioObj)
+		set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 		--local yaw = 0
 		--for i = 0, 16 do
 		--	yaw = yaw + 4096	
 		--	spawn_sync_if_main(id_bhvFireRing, E_MODEL_RED_FLAME, m.pos.x, m.pos.y + 26, m.pos.z, function (o)
-				o.oFaceAngleYaw = yaw
+				--o.oFaceAngleYaw = yaw
 				o.oMoveAngleYaw = o.oFaceAngleYaw
 		--	end, 0)
 		--end
@@ -258,6 +259,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		if m.numStars == 10 then
 			--djui_chat_message_create("trophy awarded!")
 		end
+		save_file_set_using_backup_slot(true)
 	end
 
 	if s.death then
@@ -403,22 +405,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-    if s.isgold then
-        -- if m.playerIndex ~= 0 then return end
-        m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-        m.marioObj.hookRender = 1
-
-        local gold_model = gold_models[m.character.type]
-        if gold_model then
-            obj_set_model_extended(m.marioObj, gold_model)
-        end
-    end
-
+	--If dead, gold go bye bye
 	if m.health <= 120 and s.isgold then
 		s.isgold = false
 		gPlayerSyncTable[m.playerIndex].gold = false
 	end
+	
 ----------------------------------------------------------------------------------------------------------------------------------
+	--Koopa the QUICC
 	if np.currLevelNum == LEVEL_BOB then
 		gBehaviorValues.KoopaCatchupAgility = 60
 	else
@@ -432,6 +426,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		obj_mark_for_deletion(wallsigns)
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
+	--Spooky BBH
 	if np.currLevelNum == LEVEL_BBH then
 		set_lighting_color(0,50)
 		set_lighting_color(1,50)
@@ -448,7 +443,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	if np.currLevelNum == LEVEL_WDW then --Wet/Dry world is now just dry world... LOL...
+	--Wet/Dry world is now just dry world... LOL...
+	if np.currLevelNum == LEVEL_WDW then 
 		set_environment_region(0, -10000)
 		set_environment_region(1, -10000)
 		set_environment_region(2, -10000)
@@ -1318,9 +1314,7 @@ end
 function mariodeath() -- If mario is dead, this will pause the counter to prevent false positive 2nd deaths, like getting neck snapped (death 1) and then falling into lava. (death 2) 
 	--Will also reset other functions as well.
 	local s = gStateExtras[0]
-	if s.iwbtg and m.action ~= ACT_GONE then
-		--set_mario_action(m, ACT_NOTHING, 0)
-	end
+
 	s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
 	audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
 	audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
@@ -1585,7 +1579,8 @@ hook_event(HOOK_MARIO_UPDATE, testing)
 hook_event(HOOK_MARIO_UPDATE, mariohitbyenemy)
 hook_event(HOOK_MARIO_UPDATE, splattertimer)
 hook_event(HOOK_BEFORE_MARIO_UPDATE, function (m) -- mario high
-local s = gStateExtras[m.playerIndex]
+--local s = gStateExtras[m.playerIndex]
+local s = gStateExtras[0]
 if (s.ishigh) == 1 then
     if m.input & INPUT_NONZERO_ANALOG ~= 0 then
 		local range = 12288
@@ -1667,6 +1662,7 @@ end)
 
 --IWBTG MODE
 hook_chat_command("iwbtg", "iwbtm", function ()
+	local m = gMarioStates[0]
 	local s = gStateExtras[0]
 	if not s.iwbtg then
 
@@ -1717,7 +1713,7 @@ msgToLevel = {
     ["BITDW"] = LEVEL_BITDW,
     ["BITFS"] = LEVEL_BITFS,
     ["BITS"] = LEVEL_BITS,
-    --["HELL"] = LEVEL_HELL,
+    ["HELL"] = LEVEL_HELL,
     ["SECRET"] = LEVEL_SECRETHUB,
     ["HUB"] = LEVEL_SECRETHUB,
 }
@@ -1857,6 +1853,12 @@ hook_event(HOOK_CHARACTER_SOUND, function(m, sound)
 
     local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvPiranhaPlant)
     local in_hitbox = obj_check_hitbox_overlap(m.marioObj, o)
+
+	if m.action == ACT_BURNING_JUMP or m.action == ACT_BURNING_GROUND or m.action == ACT_BURNING_FALL then
+		if sound == CHAR_SOUND_PUNCH_YAH or sound == CHAR_SOUND_YAH_WAH_HOO then
+			return 0
+		end
+	end
 
     if sound == CHAR_SOUND_ATTACKED and in_hitbox then return 0 end
     if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then return 0 end
