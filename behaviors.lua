@@ -1,6 +1,6 @@
 --All custom behaviors.
 
-function killer_exclamation_boxes(m) -- Makes exclamation boxes drop on top of you! (squishes)
+local function killer_exclamation_boxes(m) -- Makes exclamation boxes drop on top of you! (squishes)
 	box = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvExclamationBox)
 
 	if box ~= nil then
@@ -24,7 +24,7 @@ local function bhv_red_flood_flag_loop(o)
     bhv_pole_base_loop()
 end
 
-function bhv_custom_kingwhomp(obj)
+local function bhv_custom_kingwhomp(obj)
 	local m = nearest_mario_state_to_object(obj)
 	if obj.oHealth == 3 then
 		cur_obj_scale(.2)
@@ -42,86 +42,67 @@ function bhv_custom_kingwhomp(obj)
 		spawn_sync_object(id_bhvBowserShockWave, E_MODEL_BOWSER_WAVE, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
 	end
 	obj.oForwardVel = 30
-	if lateral_dist_between_objects(m.marioObj, obj) < 700 then
-		--m.floor.type = surface_ --SURFACE_QUICKSAND
-	end
+	--if lateral_dist_between_objects(m.marioObj, obj) < 700 then
+	--	--m.floor.type = surface_ --SURFACE_QUICKSAND
+	--end
 end
 
-function bhv_custom_kingbobomb(obj) -- Funny boss battle
-	local m = nearest_mario_state_to_object(obj)
+local function bhv_custom_kingbobomb(obj)
+    local m = nearest_mario_state_to_object(obj)
+    
+    obj.oHomeX, obj.oHomeY, obj.oHomeZ = obj.oPosX, obj.oPosY, obj.oPosZ
 
-	obj.oHomeX, obj.oHomeY, obj.oHomeZ = obj.oPosX, obj.oPosY, obj.oPosZ
-	
+    local healthScales = {1.6, 1.1, 0.7, 0.5, 0.25}
+    local fVelocities = {3, 6.0, 12.0, 24.0, 26}
+    local yawVelocities = {160, 320, 640, 1280, 1400}
+    if obj.oHealth <= 6 and obj.oHealth >= 2 then
+        local index = 7 - obj.oHealth
+        cur_obj_scale(healthScales[index])
+        gBehaviorValues.KingBobombFVel = fVelocities[index]
+        gBehaviorValues.KingBobombYawVel = yawVelocities[index]
+    elseif obj.oHealth == 1 then
+        local bobsplat = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, obj.oPosX, obj.oPosY + 1, obj.oPosZ, nil)
+        obj_scale(bobsplat, .4)
+        local_play(sSplatter, m.pos, 1)
+        spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
+        spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
+        obj.oTimer = 0
+        cur_obj_disable_rendering_and_become_intangible(obj)
+        obj.oHealth = 8
+    elseif obj.oHealth == 8 then
+        cur_obj_disable_rendering_and_become_intangible(obj)
+    end
 
-	if obj.oMoveFlags & OBJ_MOVE_LANDED ~= 0 then
-		--obj.oHealth = obj.oHealth - 1
-	end
-	if obj.oHealth == 6 then
-		cur_obj_scale(1.6)
-		gBehaviorValues.KingBobombFVel = 3
-		gBehaviorValues.KingBobombYawVel = 160
-	elseif obj.oHealth == 5 then
-		cur_obj_scale(1.1)
-		gBehaviorValues.KingBobombFVel = 6.0
-		gBehaviorValues.KingBobombYawVel = 320
-	elseif obj.oHealth == 4 then
-		cur_obj_scale(.7)
-		gBehaviorValues.KingBobombFVel = 12.0
-		gBehaviorValues.KingBobombYawVel = 640
-	elseif obj.oHealth == 3 then
-		cur_obj_scale(.5)
-		gBehaviorValues.KingBobombFVel = 24.0
-		gBehaviorValues.KingBobombYawVel = 1280
-	elseif obj.oHealth == 2 then
-		cur_obj_scale(.25)
-		gBehaviorValues.KingBobombFVel = 26
-		gBehaviorValues.KingBobombYawVel = 1400
-		
+    if obj.oTimer == 60 and obj.oHealth == 8 then
+        obj.oHealth = 0
+        obj_mark_for_deletion(obj)
+        stop_background_music(SEQ_EVENT_BOSS)
+        spawn_default_star(m.pos.x, m.pos.y + 200, m.pos.z)
+    end
 
-	elseif obj.oHealth == 1 then
-		local bobsplat = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, obj.oPosX, obj.oPosY + 1, obj.oPosZ, nil)
-		obj_scale(bobsplat, .4)
-		local_play(sSplatter, m.pos, 1)
-		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
-		spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
-		obj.oTimer = 0
-		
-		cur_obj_disable_rendering_and_become_intangible(obj)
-		obj.oHealth = 8
-	end
-	if obj.oHealth == 8 then
-		cur_obj_disable_rendering_and_become_intangible(obj)
-	end
-	if obj.oTimer == 60 and obj.oHealth == 8 then
-		obj.oHealth = 0
-		--obj.oAction = 8
-		obj_mark_for_deletion(obj)
-		stop_background_music(SEQ_EVENT_BOSS)
-		spawn_default_star(m.pos.x, m.pos.y + 200, m.pos.z)
-	end
-	if obj.oHealth == 2 and obj.oMoveFlags == 128 then
-		obj.oForwardVel = obj.oForwardVel + 5
-		obj.oFaceAnglePitch = obj.oFaceAnglePitch + 4000
-	else
-		obj.oFaceAnglePitch = 0
-	end
-	if obj.oAction == 3 then
-		if obj.oTimer == 0 and gMarioStates[0].marioObj == obj.usingObj then
-			cutscene_object_with_dialog(CUTSCENE_DIALOG, obj, DIALOG_116)
-		elseif obj.oTimer == 40 then
-			obj.oSubAction = 3
-		end
-		cur_obj_rotate_yaw_toward(0, 0x400)
-	end
-	-- djui_chat_message_create(""..obj.oAction.."\n"..obj.oSubAction.."\n"..obj.oTimer)
-	--[[
-	if obj.oHealth < 5 then
-		djui_chat_message_create(tostring(obj.oMoveFlags))
-	end
-	]]
+    if obj.oHealth == 2 and obj.oMoveFlags == 128 then
+        obj.oForwardVel = obj.oForwardVel + 5
+        obj.oFaceAnglePitch = obj.oFaceAnglePitch + 4000
+    else
+        obj.oFaceAnglePitch = 0
+    end
+
+    if obj.oAction == 3 then
+        if obj.oTimer == 0 and gMarioStates[0].marioObj == obj.usingObj then
+            cutscene_object_with_dialog(CUTSCENE_DIALOG, obj, DIALOG_116)
+        elseif obj.oTimer == 40 then
+            obj.oSubAction = 3
+        end
+        cur_obj_rotate_yaw_toward(0, 0x400)
+    end
+
+    -- djui_chat_message_create(""..obj.oAction.."\n"..obj.oSubAction.."\n"..obj.oTimer)
+    -- if obj.oHealth < 5 then
+    --     djui_chat_message_create(tostring(obj.oMoveFlags))
+    -- end
 end
 
-function bobomb_loop(o) -- makes bobombs SCARY fast (Thanks blocky.cmd!!)
+local function bobomb_loop(o) -- makes bobombs SCARY fast (Thanks blocky.cmd!!)
 	local player = nearest_player_to_object(o)
 	if o.oAction == 0 then
 		if player ~= nil and
@@ -140,12 +121,12 @@ function bobomb_loop(o) -- makes bobombs SCARY fast (Thanks blocky.cmd!!)
 	end
 end
 
-function bhv_custom_boulder(obj) --Locks onto mario and homes-in on him.
+local function bhv_custom_boulder(obj) --Locks onto mario and homes-in on him.
 	local m = nearest_player_to_object(obj)
 	obj_turn_toward_object(obj, m, 16, 0x800)
 end
 
-function bhv_custom_bowserbomb(bowsbomb) --Oscillates up and down
+local function bhv_custom_bowserbomb(bowsbomb) --Oscillates up and down
 	local m = nearest_mario_state_to_object(bowsbomb)
 	if bowsbomb.oTimer >= 10 then
 		bowsbomb.oHomeY = math.random(-1500, 1500)
@@ -155,12 +136,12 @@ function bhv_custom_bowserbomb(bowsbomb) --Oscillates up and down
 	object_step()
 end
 
-function bhv_custom_bouncing_fireball(obj) --Locks onto mario and homes-in on him.
+local function bhv_custom_bouncing_fireball(obj) --Locks onto mario and homes-in on him.
 	local m = nearest_player_to_object(obj)
 	obj_turn_toward_object(obj, m, 16, 0x800)
 end
 
-function bhv_custom_flyguy(obj)
+local function bhv_custom_flyguy(obj)
 	obj.oForwardVel = 100
 	obj.oFlyGuyIdleTimer = 0
 	if (is_within_100_units_of_mario(obj.oPosX, obj.oPosY, obj.oPosZ) == 1) then
@@ -185,7 +166,7 @@ function bhv_custom_coins(obj)
 end
 ]]
 
-function bhv_custom_bully(obj)
+local function bhv_custom_bully(obj)
 	local np = gNetworkPlayers[0]
 	local m = nearest_mario_state_to_object(obj)
 	if np.currLevelNum == LEVEL_SECRETHUB then
@@ -201,7 +182,7 @@ function bhv_custom_bully(obj)
 	end
 end
 
-function bhv_custom_explosion(obj) -- replaces generic explosions with NUKES! (Bigger radius, bigger explosion, louder)
+local function bhv_custom_explosion(obj) -- replaces generic explosions with NUKES! (Bigger radius, bigger explosion, louder)
 	local m = nearest_mario_state_to_object(obj)
 	local_play(sBigExplosion, m.pos, 1)
 	cur_obj_shake_screen(SHAKE_POS_LARGE)
@@ -211,7 +192,7 @@ function bhv_custom_explosion(obj) -- replaces generic explosions with NUKES! (B
 	end
 end
 
-function bhv_custom_chain_chomp(obj)
+local function bhv_custom_chain_chomp(obj)
 	if (obj.oChainChompReleaseStatus == CHAIN_CHOMP_NOT_RELEASED) then
 		obj.oMoveAngleYaw = obj.oMoveAngleYaw * 5
 		obj.oForwardVel = obj.oForwardVel * 3
@@ -287,7 +268,7 @@ function bhv_custom_chain_chomp(obj)
 
 end
 
-function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable. Will lunge at Mario
+local function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable. Will lunge at Mario
 	local m = nearest_mario_state_to_object(obj)
 	local np = gNetworkPlayers[0]
 	if obj.oGoombaJumpCooldown >= 9 then
@@ -316,7 +297,7 @@ function bhv_custom_goomba_loop(obj) -- make goombas faster, more unpredictable.
 	end
 end
 
-function bhv_custom_thwomp(obj)
+local function bhv_custom_thwomp(obj)
 	local m = nearest_player_to_object(obj)
 	local np = gNetworkPlayers[0]
 	if np.currLevelNum ~= LEVEL_TTC then --TTC is excluded for flood as its nearly unbeatable. Giving the player mercy by turning it off in regular game mode too.	
@@ -347,18 +328,18 @@ function bhv_custom_thwomp(obj)
 	end
 end
 
-function bhv_custom_pitbowlball(obj)
+local function bhv_custom_pitbowlball(obj)
 	local m = nearest_player_to_object(obj)
 	if lateral_dist_between_objects(m, obj) < 350 then
 		obj.oForwardVel = 200
 	end
 end
 
-function bhv_custom_whomp_slidingpltf(obj) --WF Sliding platforms after the weird rock eye guys.
+local function bhv_custom_whomp_slidingpltf(obj) --WF Sliding platforms after the weird rock eye guys.
 	obj.oWFSlidBrickPtfmMovVel = 100
 end
 
-function bhv_custom_whomp(obj) --Whomps jump FAR now!
+local function bhv_custom_whomp(obj) --Whomps jump FAR now!
 	cur_obj_scale(2)
 	--obj.oForwardVel = 9.0
 	obj.oTimer = 101
@@ -366,11 +347,11 @@ function bhv_custom_whomp(obj) --Whomps jump FAR now!
 	--obj.oForwardVel = 40
 end
 
-function bhv_custom_seesaw(obj) --SeeSaw Objects spin like windmills
+local function bhv_custom_seesaw(obj) --SeeSaw Objects spin like windmills
 	obj.oSeesawPlatformPitchVel = -400
 end
 
-function bhv_custom_sign(obj) --This is the single most evil addition to the game. Real proud of this one :')
+local function bhv_custom_sign(obj) --This is the single most evil addition to the game. Real proud of this one :')
 	--m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
 	local m = nearest_player_to_object(obj)
 	if dist_between_objects(m, obj) < 500 then
@@ -384,21 +365,21 @@ function bhv_custom_sign(obj) --This is the single most evil addition to the gam
 	end
 end
 
-function bhv_custom_toxbox(obj) -- Yeah this isn't doing anything. These guys move in a stupid way that I can't understand.
+local function bhv_custom_toxbox(obj) -- Yeah this isn't doing anything. These guys move in a stupid way that I can't understand.
 	if obj ~= nil then
 		--obj.oTimer = obj.oTimer + 1
 		--tox_box_move(0, 1, 1, 0)
 	end
 end
 
-function bhv_custom_tree(obj) -- Trees fall down through the map when approached.
+local function bhv_custom_tree(obj) -- Trees fall down through the map when approached.
 	local m = nearest_player_to_object(obj)
 	if lateral_dist_between_objects(m, obj) < 150 then
 		obj.oPosY = obj.oPosY - 500
 	end
 end
 
-function bhv_custom_bowlball(bowlball) -- I've got big balls, oh I've got big balls. They're such BIG balls, fancy big balls! And he's got big balls, and she's got big balls!
+local function bhv_custom_bowlball(bowlball) -- I've got big balls, oh I've got big balls. They're such BIG balls, fancy big balls! And he's got big balls, and she's got big balls!
 	obj_scale(bowlball, 1.8)
 	bowlball.oForwardVel = bowlball.oForwardVel + 1
 	bowlball.oFriction = 1
@@ -407,12 +388,12 @@ function bhv_custom_bowlball(bowlball) -- I've got big balls, oh I've got big ba
 	end
 end
 
-function bhv_custom_bowlballspawner(obj) -- Idk if this actually does anything, but maybe?
+local function bhv_custom_bowlballspawner(obj) -- Idk if this actually does anything, but maybe?
 	obj.oBBallSpawnerSpawnOdds = 1
 
 end
 
-function bhv_bowser_key_spawn_ukiki(obj) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
+local function bhv_bowser_key_spawn_ukiki(obj) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 	if np.currLevelNum == LEVEL_BOWSER_1 then
@@ -433,7 +414,7 @@ function bhv_bowser_key_spawn_ukiki(obj) --Bow1 spawns Ukiki minigame, Bow2 spaw
 	end
 end
 
-function bhv_bowser_key_ukiki_loop(obj) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
+local function bhv_bowser_key_ukiki_loop(obj) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
 	--djui_chat_message_create(tostring(obj.oTimer))
 	--djui_chat_message_create(tostring(obj.oAction))
 	local np = gNetworkPlayers[0]
@@ -525,7 +506,7 @@ hook_behavior(id_bhvUkiki, OBJ_LIST_GENACTOR, false, function (obj)
 	obj.oPosY = obj.oHomeY
 end, nil)
 
-function lava_init(o)
+local function lava_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.collisionData = COL_LAVA
 	o.oCollisionDistance = 10000
@@ -533,11 +514,11 @@ function lava_init(o)
 	bhv_init_room()
 end
 
-function lava_loop(o)
+local function lava_loop(o)
     load_object_collision_model()
 end
 
-function bhv_checkerboard_platform(o)
+local function bhv_checkerboard_platform(o)
 	if o.oBehParams2ndByte == 0 then
 		if o.oAction == 3 then o.oAction = 2 end
 	elseif o.oAction == 1 then
@@ -551,11 +532,11 @@ function bhv_checkerboard_platform(o)
 	end
 end
 
-function bhv_ferris_wheel_axle(o)
+local function bhv_ferris_wheel_axle(o)
 	o.oFaceAngleRoll = o.oFaceAngleRoll + 400
 end
 
-function get_pressure_point(o)
+local function get_pressure_point(o)
 	local avg = vec3f()
 	local obj = vec3f()
 	object_pos_to_vec3f(obj, o)
@@ -573,7 +554,7 @@ function get_pressure_point(o)
 	return avg
 end
 
-function bhv_ferris_wheel(o)
+local function bhv_ferris_wheel(o)
 	local pressure = get_pressure_point(o)
 	o.oAngleVelRoll = (o.oAngleVelRoll + (-pressure.x*30 - o.oFaceAngleRoll)*0.1)*0.95
 	if cur_obj_is_mario_ground_pounding_platform() ~= 0 then
@@ -586,12 +567,12 @@ function bhv_ferris_wheel(o)
 	cur_obj_rotate_face_angle_using_vel()
 end
 
-function bhv_custom_grindel(o)
+local function bhv_custom_grindel(o)
 	o.oTimer = 60
     cur_obj_move_standard(2)
 end
 
-function bhv_custom_spindel(o)
+local function bhv_custom_spindel(o)
 	secondDoor = 20 - o.oSpindelUnkF4
 	sp1C = sins(o.oMoveAnglePitch * 32) * 46.0
 	o.oPosZ = o.oPosZ + o.oVelZ
@@ -606,11 +587,11 @@ function bhv_custom_spindel(o)
 	end	
 end
 
-function bhv_custom_firebars(o)
+local function bhv_custom_firebars(o)
 	o.oMoveAngleYaw = -2048
 end
 
-function bhv_custom_hex_platform(o)
+local function bhv_custom_hex_platform(o)
 	o.oAngleVelYaw = 5000
 	o.oMoveAngleYaw = o.oMoveAngleYaw + 4744
 	load_object_collision_model()
@@ -629,7 +610,7 @@ local function bhv_hellplatform_loop(o)
     o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
 end
 
-function bhv_backroom_init(o)
+local function bhv_backroom_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.oCollisionDistance = 10000
     o.collisionData = COL_BACKROOM
@@ -637,7 +618,7 @@ function bhv_backroom_init(o)
 	hud_hide()
 end
 
-function bhv_backroom_loop(o)
+local function bhv_backroom_loop(o)
 	load_object_collision_model()
 	if o.oTimer == 600 then
 		stream_stop_all()
@@ -666,7 +647,7 @@ function bhv_backroom_loop(o)
 	end
 end
 
-function bhv_backroom_smiler_init(o)
+local function bhv_backroom_smiler_init(o)
 	m = gMarioStates[0]
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
@@ -675,7 +656,7 @@ function bhv_backroom_smiler_init(o)
     o.oWallHitboxRadius = 30
 end
 
-function bhv_backroom_smiler_loop(o)
+local function bhv_backroom_smiler_loop(o)
 	local s = gStateExtras[0]
 	local player = nearest_player_to_object(o)
 	local angletomario = obj_angle_to_object(o, m.marioObj)
@@ -711,7 +692,7 @@ function bhv_backroom_smiler_loop(o)
 	end
 end
 
-function bhv_custom_crushtrap(o)
+local function bhv_custom_crushtrap(o)
 	if mario_is_within_rectangle(o.oPosX -100, o.oPosX + 100, o.oPosX -100, o.oPosX + 100) then
 		if o.oAction == 1 then
 			o.oRollingLogUnkF4 = o.oRollingLogUnkF4 + 8
@@ -734,7 +715,7 @@ function bhv_custom_crushtrap(o)
 	end
 end
 
-function bhv_custom_swing(o) -- Mostly in RR, might be other maps too. Is fun!
+local function bhv_custom_swing(o) -- Mostly in RR, might be other maps too. Is fun!
 	if (o.oFaceAngleRoll < 0) then
 		o.oSwingPlatformSpeed = o.oSwingPlatformSpeed + 64.0
 	else 
@@ -742,13 +723,13 @@ function bhv_custom_swing(o) -- Mostly in RR, might be other maps too. Is fun!
 	end
 end
 
-function bhv_custom_rotating_platform(o) --Spinning platform high up on RR. (Plus other maps??)
+local function bhv_custom_rotating_platform(o) --Spinning platform high up on RR. (Plus other maps??)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
 	o.oAngleVelYaw = o.oAngleVelYaw + 1600
 	o.oFaceAngleYaw = o.oFaceAngleYaw + o.oAngleVelYaw
 end
 
-function bhv_custom_heart(o)
+local function bhv_custom_heart(o)
 	m = nearest_mario_state_to_object(o)
 	--if is_point_within_radius_of_any_player(200, 50, 200, 200) ~= 0 then
 	if mario_is_within_rectangle(o.oPosX - 200, o.oPosX + 200, o.oPosZ - 200, o.oPosZ + 200) ~= 0 then
@@ -758,7 +739,7 @@ function bhv_custom_heart(o)
 	end
 end
 
-function bhv_custom_moving_plats(o)
+local function bhv_custom_moving_plats(o)
 	if o.oAction == PLATFORM_ON_TRACK_ACT_MOVE_ALONG_TRACK then
 		bhv_platform_on_track_update()
 		bhv_platform_on_track_update()
@@ -769,7 +750,7 @@ function bhv_custom_moving_plats(o)
 	end
 end
 
-function bhv_custom_tuxie(o)
+local function bhv_custom_tuxie(o)
 	if o.oAction == 6 then
 		if o.oTimer == 0 then
 			o.oGravity = -2
@@ -801,7 +782,7 @@ function bhv_custom_tuxie(o)
 	end
 end
 
-function bhv_netherportal_init(o)
+local function bhv_netherportal_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
 	o.oCollisionDistance = 800
 	obj_set_model_extended(o, E_MODEL_NETHERPORTAL)
@@ -809,7 +790,7 @@ function bhv_netherportal_init(o)
 	o.header.gfx.skipInViewCheck = true
 end
 
-function bhv_netherportal_loop(o)
+local function bhv_netherportal_loop(o)
 	load_object_collision_model()
 	local m = gMarioStates[0]
 
@@ -835,7 +816,7 @@ function bhv_netherportal_loop(o)
 	end
 end
 
-function bhv_custom_merry_go_round(o)
+local function bhv_custom_merry_go_round(o)
 	if o.oMerryGoRoundStopped == 0 then
 		o.oAngleVelYaw = o.oAngleVelYaw + 2048
 		o.oMoveAngleYaw = o.oMoveAngleYaw + o.oAngleVelYaw
@@ -843,7 +824,7 @@ function bhv_custom_merry_go_round(o)
 	end
 end
 
-function bhv_custom_piano(o)
+local function bhv_custom_piano(o)
 	m = nearest_mario_state_to_object(o)
 	if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 then
 		local angleToPlayer = obj_angle_to_object(o, m.marioObj)
@@ -856,7 +837,7 @@ function bhv_custom_piano(o)
 	end
 end
 
-function bhv_custom_chairs(o)
+local function bhv_custom_chairs(o)
 	if (o.oHauntedChairUnkF4 ~= 0) then
 		if (o.oHauntedChairUnkF4 == 0) then
 			obj_compute_vel_from_move_pitch(90.0)
@@ -864,7 +845,7 @@ function bhv_custom_chairs(o)
 	end
 end
 
-function bhv_goalpost_init(o)
+local function bhv_goalpost_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
 	o.collisionData = COL_GOALPOST
 	-- o.oCollisionDistance = 8000
@@ -875,7 +856,7 @@ function bhv_goalpost_init(o)
 	o.hitboxDownOffset = -507
 end
 
-function bhv_goalpost_loop(o)
+local function bhv_goalpost_loop(o)
 	--o.header.gfx.scale.z = o.hitboxRadius / 100
 	--o.header.gfx.scale.y = o.hitboxHeight / 100
 	local mp = nearest_player_to_object(o)
@@ -900,12 +881,12 @@ function bhv_goalpost_loop(o)
 	load_object_collision_model()
 end
 
-function warp_init(o)
+local function warp_init(o)
 	o.hitboxHeight = 100
 	o.hitboxRadius = 100
 end
 
-function warp_loop(o)
+local function warp_loop(o)
 	local m = gMarioStates[0]
 	if obj_check_hitbox_overlap(o, m.marioObj) and m.action == ACT_IDLE then
 		play_sound(SOUND_GENERAL_VANISH_SFX, m.marioObj.header.gfx.cameraToObject)
@@ -915,20 +896,20 @@ function warp_loop(o)
 	end
 end
 
-function bhv_custom_spindrift(o)
+local function bhv_custom_spindrift(o)
 	if mario_is_within_rectangle(o.oPosX - 500, o.oPosX + 500, o.oPosZ - 500, o.oPosZ + 500) ~= 0 then
 		o.oForwardVel = 30
 	end
 end
 
-function bhv_custom_slidingplatform2(o)
+local function bhv_custom_slidingplatform2(o)
 	local np = gNetworkPlayers[0]
 	if np.currLevelNum == LEVEL_BITDW or np.currLevelNum == LEVEL_BITFS then
 		obj_mark_for_deletion(o)
 	end
 end
 
-function bhv_custom_circlingamp(o)
+local function bhv_custom_circlingamp(o)
 	--local random = math.random(1,2)
 	if o.oTimer < 30 then
 		o.oPosX = o.oHomeX + sins(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 1
@@ -945,7 +926,7 @@ function bhv_custom_circlingamp(o)
 	end
 end
 
-function bhv_custom_squarishPathMoving(o)
+local function bhv_custom_squarishPathMoving(o)
 	local np = gNetworkPlayers[0]
 
 	if np.currLevelNum == LEVEL_BITDW and o.oPosY <= -2959 then
@@ -958,7 +939,7 @@ function bhv_custom_squarishPathMoving(o)
 
 end
 
-function bhv_custom_ActivatedBackAndForthPlatform(o)
+local function bhv_custom_ActivatedBackAndForthPlatform(o)
 	local m = nearest_mario_state_to_object(o)
 	local np = gNetworkPlayers[0]
 
@@ -971,7 +952,7 @@ function bhv_custom_ActivatedBackAndForthPlatform(o)
 	end
 end
 
-function bhv_custom_yoshi(o)
+local function bhv_custom_yoshi(o)
 	local m = gMarioStates[0]
 	if o.oAction == 6 then
 
@@ -1008,7 +989,7 @@ function bhv_custom_yoshi(o)
 	end
 end
 
-function bhv_secretwarp_init(o)
+local function bhv_secretwarp_init(o)
 	o.hitboxHeight = 125
 	o.hitboxRadius = 125
     o.oFaceAnglePitch = 0
@@ -1021,7 +1002,7 @@ function bhv_secretwarp_init(o)
     o.header.gfx.skipInViewCheck = true
 end
 
-function bhv_secretwarp_loop(o)
+local function bhv_secretwarp_loop(o)
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[0]
@@ -1066,13 +1047,13 @@ function bhv_secretwarp_loop(o)
 	end
 end
 
-function flatstar_init(o)
+local function flatstar_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
 	o.oFaceAnglePitch = o.oFaceAnglePitch - 16384
 end
 
-function flatstar_loop(o)
+local function flatstar_loop(o)
 	m = gMarioStates[0]
 	o.oFaceAngleRoll = o.oFaceAngleRoll + 1000
 	obj_scale_xyz(o, 1, 1, 0.1)
@@ -1080,7 +1061,7 @@ function flatstar_loop(o)
 	
 end
 
-function bouncy_init(o)
+local function bouncy_init(o)
 	o.oAction = 9
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
@@ -1095,7 +1076,7 @@ function bouncy_init(o)
 	o.oMoveAngleYaw = o.oFaceAngleYaw
 end
 
-function bouncy_loop(o)
+local function bouncy_loop(o)
 	load_object_collision_model()
 	obj_set_billboard(o)
 	m = gMarioStates[0]
@@ -1113,11 +1094,11 @@ function bouncy_loop(o)
 
 end
 
-function bhv_squishable_platform_loop(o)
+local function bhv_squishable_platform_loop(o)
     o.oPlatformTimer = o.oPlatformTimer + 768
 end
 
-function stopwatch_init(o)
+local function stopwatch_init(o)
 	o.hitboxHeight = 75
 	o.hitboxRadius = 75
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
@@ -1126,7 +1107,7 @@ function stopwatch_init(o)
 	o.oAction = 0
 end
 
-function stopwatch_loop(o)
+local function stopwatch_loop(o)
 	local m = gMarioStates[0]
 	local s = gStateExtras[m.playerIndex]
 	o.oFaceAngleYaw = o.oFaceAngleYaw + 1500
@@ -1171,7 +1152,7 @@ function stopwatch_loop(o)
 	end
 end
 
-function squishblood_init(o)
+local function squishblood_init(o)
 	local m = gMarioStates[0]
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true	
@@ -1187,7 +1168,7 @@ function squishblood_init(o)
 	end
 end
 
-function squishblood_loop(o)
+local function squishblood_loop(o)
 	cur_obj_update_floor()
 	local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
 	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
@@ -1201,7 +1182,7 @@ function squishblood_loop(o)
 	end
 end
 
-function gib_init(o)
+local function gib_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
 	local randomfvel = math.random(1,20) --Perhaps we can partially add Mario's velocity into this equation?
@@ -1218,7 +1199,7 @@ function gib_init(o)
 
 end
 
-function gib_loop(o)
+local function gib_loop(o)
 	local random = math.random(1,1500)
 	cur_obj_update_floor_height_and_get_floor()
 	if o.oPosY > o.oFloorHeight then
@@ -1238,7 +1219,7 @@ function gib_loop(o)
 
 end
 
-function firering_init(o)
+local function firering_init(o)
 	obj_set_billboard(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
@@ -1249,7 +1230,7 @@ function firering_init(o)
 	obj_scale(o, 4)
 end
 
-function firering_loop(o)
+local function firering_loop(o)
 	o.oAnimState = o.oTimer % 4
 	cur_obj_move_using_fvel_and_gravity()
 	if o.oTimer > 20 then
@@ -1257,20 +1238,20 @@ function firering_loop(o)
 	end
 end
 
-function wiggler_loop(o)
+local function wiggler_loop(o)
 	if o.oAction == WIGGLER_ACT_WALK then
 		o.oForwardVel = 80
 		cur_obj_rotate_yaw_toward(0, 0x400)
 	end
 end
 
-function eyerok_loop(o)
+local function eyerok_loop(o)
 	if o.oAction == EYEROK_BOSS_ACT_WAKE_UP then
 		o.oEyerokBossNumHands = o.parentObj.oEyerokBossNumHands + 4
 	end
 end
 
-function dorrie_dead(o)
+local function dorrie_dead(o)
 	local np = gNetworkPlayers[0]
 	local nm = nearest_mario_state_to_object(o)
 	if np.currLevelNum ~= LEVEL_HELL then
@@ -1316,7 +1297,7 @@ function dorrie_dead(o)
 	end
 end
 
-function gorrie_init(o)
+local function gorrie_init(o)
 	local np = gNetworkPlayers[0]
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
@@ -1337,7 +1318,7 @@ function gorrie_init(o)
 	
 end
 
-function gorrie_loop(o)
+local function gorrie_loop(o)
     local np = gNetworkPlayers[0]
     local nm = nearest_mario_state_to_object(o)
     local dorriemounted = cur_obj_is_any_player_on_platform()
@@ -1397,7 +1378,7 @@ function gorrie_loop(o)
     end
 end
 
-function bhv_klepto_init(o)
+local function bhv_klepto_init(o)
 	local np = gNetworkPlayers[0]
 	if np.currActNum > 1 then
 		o.oAction = 10
@@ -1405,7 +1386,7 @@ function bhv_klepto_init(o)
 	end
 end
 
-function bhv_klepto_loop(o)
+local function bhv_klepto_loop(o)
 	local m = gMarioStates[0]
 	local player = nearest_player_to_object(o)
 	local np = gNetworkPlayers[0]
@@ -1486,7 +1467,7 @@ function bhv_klepto_loop(o)
 	end
 end
 
-function star_door_init(o)
+local function star_door_init(o)
     o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.oInteractType = INTERACT_DOOR
     o.collisionData = gGlobalObjectCollisionData.inside_castle_seg7_collision_star_door
@@ -1503,30 +1484,30 @@ function star_door_init(o)
     bhv_door_init()
 end
 
-function star_door_update_pos(o)
+local function star_door_update_pos(o)
     o.oVelX = o.oBehParams2ndByte * coss(o.oMoveAngleYaw)
     o.oVelZ = o.oBehParams2ndByte * -sins(o.oMoveAngleYaw)
     o.oPosX = o.oPosX + o.oVelX
     o.oPosZ = o.oPosZ + o.oVelZ
 end
 
-STAR_DOOR_ACT_CLOSED = 0
-STAR_DOOR_ACT_OPENING = 1
-STAR_DOOR_ACT_OPENED = 2
-STAR_DOOR_ACT_CLOSING = 3
-STAR_DOOR_HAS_CLOSED = 4
+local STAR_DOOR_ACT_CLOSED = 0
+local STAR_DOOR_ACT_OPENING = 1
+local STAR_DOOR_ACT_OPENED = 2
+local STAR_DOOR_ACT_CLOSING = 3
+local STAR_DOOR_HAS_CLOSED = 4
 
-function is_mario_in_center_of_doors(firstDoor, secondDoor, m, threshold)
+local function is_mario_in_center_of_doors(firstDoor, secondDoor, m, threshold)
     if m ~= nil and secondDoor ~= nil then
         local centerX = (firstDoor.oPosX + secondDoor.oPosX) / 2
         local centerZ = (firstDoor.oPosZ + secondDoor.oPosZ) / 2
         local distance = math.sqrt((m.pos.x - centerX) ^ 2 + (m.pos.z - centerZ) ^ 2)
-        return distance < threshold -- You can adjust this threshold as needed
+        return distance < threshold
     end
     return false
 end
 
-function star_door_loop_1(o)
+local function star_door_loop_1(o)
     local pad = {0, 0, 0, 0}
     local secondDoor = cur_obj_nearest_object_with_behavior(get_behavior_from_id(id_bhvStarDoor))
     local m = nearest_interacting_mario_state_to_object(o)
@@ -1604,13 +1585,13 @@ function star_door_loop_1(o)
     end
 end
 
-gDoorAdjacentRooms = {}
+local gDoorAdjacentRooms = {}
 
 for i = 1, 60 do
     gDoorAdjacentRooms[i] = {0, 0}
 end
 
-function star_door_loop_2(o)
+local function star_door_loop_2(o)
     local sp4 = 0
     if gMarioStates[0].currentRoom ~= 0 then
         if o.oDoorUnkF8 == gMarioStates[0].currentRoom or
@@ -1635,7 +1616,7 @@ function star_door_loop_2(o)
     o.oDoorUnk88 = sp4
 end
 
-function star_door_loop(o)
+local function star_door_loop(o)
     star_door_loop_1(o)
     star_door_loop_2(o)
     load_object_collision_model()
@@ -1643,60 +1624,75 @@ end
 
 -------Behavior Hooks-------
 
+local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
+hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior
+
+local function hook_gore_behavior(id, override, init, loop)
+    if not id then return end
+
+    local behavior = get_behavior_from_id(id)
+    local name = get_behavior_name_from_id(id) or ("bhvUnk" .. id)
+    local objectList = get_object_list_from_behavior(behavior)
+    local newBehaviorName = "bhvGore" .. name:sub(4)
+
+    return hook_behavior(id, objectList, override, init, loop, newBehaviorName)
+end
+
 hook_event(HOOK_MARIO_UPDATE, killer_exclamation_boxes)
-hook_behavior(id_bhvStarDoor, OBJ_LIST_SURFACE, true, star_door_init, star_door_loop)
-hook_behavior(id_bhvDorrie, OBJ_LIST_SURFACE, false, nil, dorrie_dead)
-hook_behavior(id_bhvEyerokBoss, OBJ_LIST_GENACTOR, false, nil, eyerok_loop)
-hook_behavior(id_bhvWigglerHead, OBJ_LIST_GENACTOR, false, nil, wiggler_loop)
-hook_behavior(id_bhvSquishablePlatform, OBJ_LIST_SURFACE, false, nil, bhv_squishable_platform_loop)
-hook_behavior(id_bhvYoshi, OBJ_LIST_GENACTOR, false, nil, bhv_custom_yoshi)
-hook_behavior(id_bhvActivatedBackAndForthPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_ActivatedBackAndForthPlatform)
-hook_behavior(id_bhvCirclingAmp, OBJ_LIST_GENACTOR, false, nil, bhv_custom_circlingamp)
-hook_behavior(id_bhvSquarishPathMoving, OBJ_LIST_SURFACE, false, nil, bhv_custom_squarishPathMoving)
-hook_behavior(id_bhvSlidingPlatform2, OBJ_LIST_SURFACE, false, nil, bhv_custom_slidingplatform2)
-hook_behavior(id_bhvSpindrift, OBJ_LIST_GENACTOR, false, nil, bhv_custom_spindrift)
-hook_behavior(id_bhvHauntedChair, OBJ_LIST_GENACTOR, false, nil, bhv_custom_chairs)
-hook_behavior(id_bhvMadPiano, OBJ_LIST_GENACTOR, false, nil, bhv_custom_piano)
-hook_behavior(id_bhvMerryGoRound, OBJ_LIST_SURFACE, false, nil, bhv_custom_merry_go_round)
-hook_behavior(id_bhvSmallPenguin, OBJ_LIST_GENACTOR, false, nil, bhv_custom_tuxie)
-hook_behavior(id_bhvPlatformOnTrack, OBJ_LIST_SURFACE, false, nil, bhv_custom_moving_plats)
-hook_behavior(id_bhvRecoveryHeart, OBJ_LIST_GENACTOR, false, nil, bhv_custom_heart)
-hook_behavior(id_bhvRrRotatingBridgePlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_rotating_platform)
-hook_behavior(id_bhvSwingPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_swing)
---hook_behavior(id_bhv1Up, OBJ_LIST_GENACTOR, false, nil, bhv_custom_1up)
---hook_behavior(id_bhvHidden1upInPole, OBJ_LIST_GENACTOR, false, nil, bhv_custom_1up)
-hook_behavior(id_bhvFlyGuy, OBJ_LIST_GENACTOR, false, nil, bhv_custom_flyguy)
-hook_behavior(id_bhvBigBoulder, OBJ_LIST_GENACTOR, false, nil, bhv_custom_boulder)
-hook_behavior(id_bhvBouncingFireball, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bouncing_fireball)
-hook_behavior(id_bhvChainChomp, OBJ_LIST_GENACTOR, false, nil, bhv_custom_chain_chomp)
-hook_behavior(id_bhvBowserBomb, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bowserbomb)
-hook_behavior(id_bhvCheckerboardPlatformSub, OBJ_LIST_SURFACE, false, nil, bhv_checkerboard_platform)
-hook_behavior(id_bhvFerrisWheelAxle, OBJ_LIST_SURFACE, false, nil, bhv_ferris_wheel_axle)
-hook_behavior(id_bhvFerrisWheelPlatform, OBJ_LIST_SURFACE, false, nil, bhv_ferris_wheel)
-hook_behavior(id_bhvHorizontalGrindel, OBJ_LIST_SURFACE, false, nil, bhv_custom_grindel)
-hook_behavior(id_bhvSpindel, OBJ_LIST_SURFACE, false, nil, bhv_custom_spindel)
-hook_behavior(id_bhvLllRotatingHexFlame, OBJ_LIST_SURFACE, false, nil, bhv_custom_firebars)
-hook_behavior(id_bhvLllRotatingHexagonalPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_hex_platform)
-hook_behavior(id_bhvLllVolcanoFallingTrap, OBJ_LIST_SURFACE, false, nil, bhv_custom_crushtrap)
-hook_behavior(id_bhvSmallBully, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bully)
-hook_behavior(id_bhvToxBox, OBJ_LIST_SURFACE, false, nil, bhv_custom_toxbox)
-hook_behavior(id_bhvWfSlidingPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_whomp_slidingpltf)
-hook_behavior(id_bhvSeesawPlatform, OBJ_LIST_SURFACE, false, nil, bhv_custom_seesaw)
-hook_behavior(id_bhvMessagePanel, OBJ_LIST_SURFACE, false, nil, bhv_custom_sign)
-hook_behavior(id_bhvTree, OBJ_LIST_POLELIKE, false, nil, bhv_custom_tree)
-hook_behavior(id_bhvWhompKingBoss, OBJ_LIST_SURFACE, false, nil, bhv_custom_kingwhomp)
-hook_behavior(id_bhvKingBobomb, OBJ_LIST_GENACTOR, false, nil, bhv_custom_kingbobomb)
-hook_behavior(id_bhvSmallWhomp, OBJ_LIST_SURFACE, false, nil, bhv_custom_whomp)
-hook_behavior(id_bhvThwomp, OBJ_LIST_SURFACE, false, nil, bhv_custom_thwomp)
-hook_behavior(id_bhvThwomp2, OBJ_LIST_SURFACE, false, nil, bhv_custom_thwomp)
-hook_behavior(id_bhvPitBowlingBall, OBJ_LIST_GENACTOR, false, nil, bhv_custom_pitbowlball)
-hook_behavior(id_bhvBowlingBall, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bowlball)
-hook_behavior(id_bhvBobBowlingBallSpawner, OBJ_LIST_GENACTOR, false, nil, bhv_custom_bowlballspawner)
-hook_behavior(id_bhvExplosion, OBJ_LIST_DESTRUCTIVE, false, bhv_custom_explosion, nil)
-hook_behavior(id_bhvBobomb, OBJ_LIST_DESTRUCTIVE, false, nil, bobomb_loop)
-hook_behavior(id_bhvGoomba, OBJ_LIST_PUSHABLE, false, nil, bhv_custom_goomba_loop)
-hook_behavior(id_bhvKlepto, OBJ_LIST_GENACTOR, false, bhv_klepto_init, bhv_klepto_loop)
-hook_behavior(id_bhvBowserKey, OBJ_LIST_LEVEL, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
+hook_gore_behavior(id_bhvStarDoor, true, star_door_init, star_door_loop)
+hook_gore_behavior(id_bhvDorrie, false, nil, dorrie_dead)
+hook_gore_behavior(id_bhvEyerokBoss, false, nil, eyerok_loop)
+hook_gore_behavior(id_bhvWigglerHead, false, nil, wiggler_loop)
+hook_gore_behavior(id_bhvSquishablePlatform, false, nil, bhv_squishable_platform_loop)
+hook_gore_behavior(id_bhvYoshi, false, nil, bhv_custom_yoshi)
+hook_gore_behavior(id_bhvActivatedBackAndForthPlatform, false, nil, bhv_custom_ActivatedBackAndForthPlatform)
+hook_gore_behavior(id_bhvCirclingAmp, false, nil, bhv_custom_circlingamp)
+hook_gore_behavior(id_bhvSquarishPathMoving, false, nil, bhv_custom_squarishPathMoving)
+hook_gore_behavior(id_bhvSlidingPlatform2, false, nil, bhv_custom_slidingplatform2)
+hook_gore_behavior(id_bhvSpindrift, false, nil, bhv_custom_spindrift)
+hook_gore_behavior(id_bhvHauntedChair, false, nil, bhv_custom_chairs)
+hook_gore_behavior(id_bhvMadPiano, false, nil, bhv_custom_piano)
+hook_gore_behavior(id_bhvMerryGoRound, false, nil, bhv_custom_merry_go_round)
+hook_gore_behavior(id_bhvSmallPenguin, false, nil, bhv_custom_tuxie)
+hook_gore_behavior(id_bhvPlatformOnTrack, false, nil, bhv_custom_moving_plats)
+hook_gore_behavior(id_bhvRecoveryHeart, false, nil, bhv_custom_heart)
+hook_gore_behavior(id_bhvRrRotatingBridgePlatform, false, nil, bhv_custom_rotating_platform)
+hook_gore_behavior(id_bhvSwingPlatform, false, nil, bhv_custom_swing)
+--hook_gore_behavior(id_bhv1Up, false, nil, bhv_custom_1up)
+--hook_gore_behavior(id_bhvHidden1upInPole, false, nil, bhv_custom_1up)
+hook_gore_behavior(id_bhvFlyGuy, false, nil, bhv_custom_flyguy)
+hook_gore_behavior(id_bhvBigBoulder, false, nil, bhv_custom_boulder)
+hook_gore_behavior(id_bhvBouncingFireball, false, nil, bhv_custom_bouncing_fireball)
+hook_gore_behavior(id_bhvChainChomp, false, nil, bhv_custom_chain_chomp)
+hook_gore_behavior(id_bhvBowserBomb, false, nil, bhv_custom_bowserbomb)
+hook_gore_behavior(id_bhvCheckerboardPlatformSub, false, nil, bhv_checkerboard_platform)
+hook_gore_behavior(id_bhvFerrisWheelAxle, false, nil, bhv_ferris_wheel_axle)
+hook_gore_behavior(id_bhvFerrisWheelPlatform, false, nil, bhv_ferris_wheel)
+hook_gore_behavior(id_bhvHorizontalGrindel, false, nil, bhv_custom_grindel)
+hook_gore_behavior(id_bhvSpindel, false, nil, bhv_custom_spindel)
+hook_gore_behavior(id_bhvLllRotatingHexFlame, false, nil, bhv_custom_firebars)
+hook_gore_behavior(id_bhvLllRotatingHexagonalPlatform, false, nil, bhv_custom_hex_platform)
+hook_gore_behavior(id_bhvLllVolcanoFallingTrap, false, nil, bhv_custom_crushtrap)
+hook_gore_behavior(id_bhvSmallBully, false, nil, bhv_custom_bully)
+hook_gore_behavior(id_bhvToxBox, false, nil, bhv_custom_toxbox)
+hook_gore_behavior(id_bhvWfSlidingPlatform, false, nil, bhv_custom_whomp_slidingpltf)
+hook_gore_behavior(id_bhvSeesawPlatform, false, nil, bhv_custom_seesaw)
+hook_gore_behavior(id_bhvMessagePanel, false, nil, bhv_custom_sign)
+hook_gore_behavior(id_bhvTree, false, nil, bhv_custom_tree)
+hook_gore_behavior(id_bhvWhompKingBoss, false, nil, bhv_custom_kingwhomp)
+hook_gore_behavior(id_bhvKingBobomb, false, nil, bhv_custom_kingbobomb)
+hook_gore_behavior(id_bhvSmallWhomp, false, nil, bhv_custom_whomp)
+hook_gore_behavior(id_bhvThwomp, false, nil, bhv_custom_thwomp)
+hook_gore_behavior(id_bhvThwomp2, false, nil, bhv_custom_thwomp)
+hook_gore_behavior(id_bhvPitBowlingBall, false, nil, bhv_custom_pitbowlball)
+hook_gore_behavior(id_bhvBowlingBall, false, nil, bhv_custom_bowlball)
+hook_gore_behavior(id_bhvBobBowlingBallSpawner, false, nil, bhv_custom_bowlballspawner)
+hook_gore_behavior(id_bhvExplosion, false, bhv_custom_explosion, nil)
+hook_gore_behavior(id_bhvBobomb, false, nil, bobomb_loop)
+hook_gore_behavior(id_bhvGoomba, false, nil, bhv_custom_goomba_loop)
+hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
+hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
+
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
 id_bhvSquishblood = hook_behavior(nil, OBJ_LIST_GENACTOR, true, squishblood_init, squishblood_loop, "bhvSquishblood")
 id_bhvStopwatch = hook_behavior(nil, OBJ_LIST_GENACTOR, true, stopwatch_init, stopwatch_loop, "bhvStopwatch")
