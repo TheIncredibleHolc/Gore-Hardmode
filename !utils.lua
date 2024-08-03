@@ -338,10 +338,27 @@ sOnWarpToFunc = {
         gMarioStates[0].health = gMarioStates[0].health + 2048
         area_get_warp_node(0x01).node.destLevel = LEVEL_HELL
         area_get_warp_node(0x02).node.destLevel = LEVEL_HELL
+		local goal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
+		local netherportalvec = {
+			goal.oPosX,
+			goal.oPosY,
+			goal.oPosZ
+		}
+		--gLakituState.curFocus = netherportalvec
+		--gLakituState.yaw = 0
+		--soft_reset_camera(m.area.camera)
     end,
 
     [LEVEL_SECRETHUB] = function()
         local m = gMarioStates[0]
+
+		--Entrance fix. If the player visits Hell first then goes to secret room, they will spawn out of the map.
+		m.pos.x = -975
+		m.pos.y = 850
+		m.pos.z = -721
+		soft_reset_camera(m.area.camera)
+
+
         if trophy_unlocked(1) and trophy_unlocked(2) and trophy_unlocked(3) and
            trophy_unlocked(4) and trophy_unlocked(5) and not trophy_unlocked(6) then
             play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
@@ -415,6 +432,12 @@ sOnLvlInitToFunc = {
     [LEVEL_CASTLE_GROUNDS] = function()
         spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -37, 808, 545, nil)
         spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -37, 811, 545, nil)
+		set_lighting_color(0, 255)
+		set_lighting_color(1, 255)
+		set_lighting_color(2, 255)
+		set_lighting_dir(1,0)
+		set_override_skybox(-1)
+		set_override_envfx(-1)
     end,
 
     [LEVEL_WF] = function()
