@@ -1,6 +1,6 @@
 -- name: GORE / Hard-Mode! [WIP]
 -- description: Gore and extreme challenges! Not for the faint of heart. Another awesome mod from the GORE Team!
-
+-- incompatible: gore
 
 -------TESTING NOTES AND KNOWN BUGS-------------
 
@@ -150,28 +150,6 @@ end
 function bloodmist(o) -- Creates instant pool of impact-blood under mario.
 	spawn_non_sync_object(id_bhvBloodMist, E_MODEL_BLOOD_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 end
-
-local particleTiming = {
-	[75]=1,
-	[82]=1,
-	[90]=1,
-	[95]=1,
-	[100]=1,
-	[105]=1,
-	[108]=1,
-	[114]=1,
-	[118]=1,
-	[121]=1,
-	[124]=1,
-	[127]=1,
-	[130]=1,
-	[132]=1,
-	[134]=1,
-	[136]=1,
-	[138]=1
-}
-
-
 
 function splattertimer(m) --This timer is needed to prevent mario from immediately splatting again right after respawning. Adds some fluff to his death too.
 	local s = gStateExtras[m.playerIndex]

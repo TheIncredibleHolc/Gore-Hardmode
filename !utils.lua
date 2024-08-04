@@ -85,19 +85,21 @@ sChicken = 35
 sGround = 36
 sAngryKlepto = 37
 
+function loop(music) audio_stream_set_looping(music, true) end
+
 highmusic = audio_stream_load("high.ogg")
-smwbonusmusic = audio_stream_load("smwbonusloop.ogg")   audio_stream_set_looping(smwbonusmusic, true)
+smwbonusmusic = audio_stream_load("smwbonusloop.ogg")   loop(smwbonusmusic)
 boss = audio_stream_load("croppedcastle.ogg")
-backroomMusic = audio_stream_load("backroom.ogg")		audio_stream_set_looping(backroomMusic, true)
-musicHell = audio_stream_load("hell.ogg") 				audio_stream_set_looping(musicHell, true)
-secret = audio_stream_load("secret.ogg") 				audio_stream_set_looping(secret, true)
-musicUnderground = audio_stream_load("underground.ogg")	audio_stream_set_looping(musicUnderground, true)
-musicbows2 = audio_stream_load("bows2loop.ogg")         audio_stream_set_looping(musicbows2, true)
+backroomMusic = audio_stream_load("backroom.ogg")		loop(backroomMusic)
+musicHell = audio_stream_load("hell.ogg") 				loop(musicHell)
+secret = audio_stream_load("secret.ogg") 				loop(secret)
+musicUnderground = audio_stream_load("underground.ogg")	loop(musicUnderground)
+musicbows2 = audio_stream_load("bows2loop.ogg")         loop(musicbows2)
 timeattack = audio_stream_load("timeattack.ogg")
-edils = audio_stream_load("edils.ogg")					audio_stream_set_looping(edils, true)
+edils = audio_stream_load("edils.ogg")					loop(edils)
 sad = audio_stream_load("sad.ogg")
-iwbtg = audio_stream_load("iwbtg.ogg")					audio_stream_set_looping(iwbtg, true)
-frijoleslobby = audio_stream_load("frijlobby.ogg")		audio_stream_set_looping(frijoleslobby, true)
+iwbtg = audio_stream_load("iwbtg.ogg")					loop(iwbtg)
+frijoleslobby = audio_stream_load("frijlobby.ogg")		loop(frijoleslobby)
 
 currentlyPlaying = nil
 local fadeTimer = 0
@@ -106,7 +108,7 @@ local volume = 1
 
 --! audio
 
----@param a BassAudio
+---@param a ModAudio
 function stream_play(a)
 	if currentlyPlaying then audio_stream_stop(currentlyPlaying) end
 	audio_stream_play(a, true, 1)
@@ -475,7 +477,7 @@ sOnLvlInitToFunc = {
 
 --! actions
 
-ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
+_G.ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_gone(m)
 	local s = gStateExtras[m.playerIndex]
 	s.isgold = false
@@ -492,8 +494,7 @@ function act_gone(m)
 end
 hook_mario_action(ACT_GONE, act_gone)
 
-ACT_NOTHING = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
-
+_G.ACT_NOTHING = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_nothing(m)
 	local s = gStateExtras[m.playerIndex]
 	m.marioBodyState.eyeState = MARIO_EYES_DEAD
@@ -503,12 +504,10 @@ function act_nothing(m)
     --m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
 	--m.actionTimer = m.actionTimer + 1
 end
-
 hook_mario_action(ACT_NOTHING, act_nothing)
 
 --Mario's neck snapping action.
-ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
-
+_G.ACT_NECKSNAP = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 function act_necksnap(m)
 	local s = gStateExtras[m.playerIndex]
 	if not s.iwbtg then
@@ -526,11 +525,9 @@ function act_necksnap(m)
 	s.isgold = false
 	gPlayerSyncTable[m.playerIndex].gold = false
 end
-
 hook_mario_action(ACT_NECKSNAP, act_necksnap)
 
-ACT_READING_TROPHY = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_STATIONARY)
-
+_G.ACT_READING_TROPHY = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_STATIONARY)
 function act_reading_trophy(m)
 	if m.actionTimer == 1 then
 		set_mario_animation(m, MARIO_ANIM_START_REACH_POCKET, 0)
@@ -539,8 +536,34 @@ function act_reading_trophy(m)
 		set_mario_action(m, ACT_IDLE, 0)
 	end
 end
-
 hook_mario_action(ACT_READING_TROPHY, act_reading_trophy)
+
+local MC = PARTICLE_MIST_CIRCLE
+local T  = PARTICLE_TRIANGLE
+local particleTimings = {
+	[20] = MC,
+	[40] = MC,
+	[50] = MC,
+	[65] = MC,
+	[75] = MC|T,
+	[82] = MC|T,
+	[90] = MC|T,
+	[95] = MC|T,
+	[100]= MC|T,
+	[105]= MC|T,
+	[108]= MC|T,
+	[114]= MC|T,
+	[118]= MC|T,
+	[121]= MC|T,
+	[124]= MC|T,
+	[127]= MC|T,
+	[130]= MC|T,
+	[132]= MC|T,
+	[134]= MC|T,
+	[136]= MC|T,
+	[138]= MC|T,
+	[140]= T
+}
 
 --Electricutes the F out of Mario
 function act_shocked(m)
@@ -554,25 +577,20 @@ function act_shocked(m)
 	else
 		m.flags = m.flags & ~(MARIO_METAL_SHOCK)
 	end
-	if m.actionTimer == 20 or m.actionTimer == 40 or m.actionTimer == 50 or m.actionTimer == 65 then
-		m.particleFlags = PARTICLE_MIST_CIRCLE
-	end
-	if m.actionTimer >= 50 then
+	if m.actionTimer > 50 then
 		m.marioBodyState.eyeState = MARIO_EYES_DEAD
 	end
-	if particleTiming[m.actionTimer] then
-		m.particleFlags = PARTICLE_TRIANGLE|PARTICLE_MIST_CIRCLE
+	if particleTimings[m.actionTimer] then
+		m.particleFlags = particleTimings[m.actionTimer]
 	end
 	if m.actionTimer == 140 then
-		m.particleFlags = PARTICLE_TRIANGLE
 		m.squishTimer = 50
 	end
 end
 hook_mario_action(ACT_SHOCKED, act_shocked)
 
 --If Mario takes damage mid-air, he will ragdoll down to his death.
-ACT_RAGDOLL = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
-
+_G.ACT_RAGDOLL = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_ragdoll(m)
 	local s = gStateExtras[0]
 	local stepResult = perform_air_step(m, 0)
@@ -616,11 +634,10 @@ function act_ragdoll(m)
 	vec3s_add(m.faceAngle, m.angleVel)
 	vec3s_copy(m.marioObj.header.gfx.angle, m.faceAngle)
 end
-
 hook_mario_action(ACT_RAGDOLL, act_ragdoll)
 
 --Mario is decapitated.
-ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+_G.ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 
 local headlessModel = {
     [0] = E_MODEL_HEADLESS_MARIO,
@@ -651,7 +668,7 @@ end
 hook_mario_action(ACT_DECAPITATED, act_decapitated)
 
 --Mario is bitten in half.
-ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+_G.ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 
 local toplessModel = {
 [0]=E_MODEL_BOTTOMLESS_MARIO,
@@ -668,7 +685,7 @@ function act_bitten_in_half(m)
 	if not s.iwbtg then
 		common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
 	else
-		common_death_handler(m, MARIO_ANIM_SUFFOCATING, 99999999)
+		set_character_animation(m, CHAR_ANIM_SUFFOCATING)
 	end
 end
 hook_mario_action(ACT_BITTEN_IN_HALF, act_bitten_in_half)
@@ -713,8 +730,6 @@ function delete_save(m)
     m.numStars = save_file_get_total_star_count(get_current_save_file_num() - 1, COURSE_NONE, COURSE_MAX - 1)
 	]]
 	save_file_erase_current_backup_save()
-
-
 end
 
 function check_trophyplate(m, np, sound)
