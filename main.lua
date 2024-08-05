@@ -32,7 +32,46 @@ gLevelValues.metalCapDuration = 90 -- 3 seconds, LOL.
 
 local savedCollisionBugStatus
 
-
+local
+add_scroll_target, save_file_set_star_flags, get_current_save_file_num, bhv_ttc_2d_rotator_update, bhv_ttc_cog_update,
+bhv_ttc_elevator_update, bhv_ttc_moving_bar_update, bhv_ttc_pendulum_update, bhv_ttc_pit_block_update,
+bhv_ttc_rotating_solid_update, bhv_ttc_spinner_update, bhv_ttc_treadmill_update, get_id_from_behavior, hook_behavior,
+get_object_list_from_behavior, get_behavior_from_id, get_behavior_name_from_id, get_network_player_smallest_global,
+set_mario_action, print, spawn_sync_object, get_texture_info, mario_blow_off_cap, find_floor_height,
+cur_obj_update_floor_height_and_get_floor, calculate_pitch, play_secondary_music, save_file_set_using_backup_slot,
+audio_stream_stop, cur_obj_disable_rendering_and_become_intangible, cur_obj_enable_rendering_and_become_tangible, soft_reset_camera,
+set_override_envfx, cur_obj_play_sound_1, spawn_mist_particles, play_sound, djui_chat_message_create, mod_storage_load, mod_storage_save,
+obj_get_first_with_behavior_id, stop_secondary_music, obj_get_nearest_object_with_behavior_id, spawn_non_sync_object, obj_mark_for_deletion,
+set_lighting_color, set_lighting_dir, obj_get_next_with_same_behavior_id, set_environment_region, fadeout_music, set_mario_anim_with_accel,
+set_camera_shake_from_hit, obj_resolve_collisions_and_turn, sins, coss, math_random, obj_scale, mario_is_within_rectangle, set_background_music,
+get_current_background_music, set_override_fov, set_handheld_shake, fadeout_level_music, play_character_sound, cutscene_object_with_dialog,
+cur_obj_shake_screen, obj_copy_pos, audio_sample_stop, obj_has_behavior_id, smlua_anim_util_set_animation, cur_obj_disable_rendering,
+cur_obj_enable_rendering, set_camera_shake_from_point, cur_obj_play_sound_2, save_file_clear_flags, spawn_triangle_break_particles,
+mario_drop_held_object, play_sound_with_freq_scale, obj_angle_to_object, hud_show, warp_to_level, bhv_spawn_star_no_level_exit,
+djui_hud_render_texture, djui_hud_print_text, hud_set_value, hud_get_value, math_ceil, math_floor, string_format, djui_hud_measure_text,
+djui_hud_get_screen_height, djui_hud_get_screen_width, djui_hud_set_resolution, djui_hud_set_color, math_max, clamp, djui_hud_render_texture_tile,
+sound_banks_disable, sound_banks_enable, warp_to_start_level, hook_event, nearest_interacting_mario_state_to_object, is_within_100_units_of_mario,
+hook_chat_command, play_transition, network_is_server, set_override_skybox, obj_check_hitbox_overlap
+=
+add_scroll_target, save_file_set_star_flags, get_current_save_file_num, bhv_ttc_2d_rotator_update, bhv_ttc_cog_update,
+bhv_ttc_elevator_update, bhv_ttc_moving_bar_update, bhv_ttc_pendulum_update, bhv_ttc_pit_block_update,
+bhv_ttc_rotating_solid_update, bhv_ttc_spinner_update, bhv_ttc_treadmill_update, get_id_from_behavior, hook_behavior,
+get_object_list_from_behavior, get_behavior_from_id, get_behavior_name_from_id, get_network_player_smallest_global,
+set_mario_action, print, spawn_sync_object, get_texture_info, mario_blow_off_cap, find_floor_height,
+cur_obj_update_floor_height_and_get_floor, calculate_pitch, play_secondary_music, save_file_set_using_backup_slot,
+audio_stream_stop, cur_obj_disable_rendering_and_become_intangible, cur_obj_enable_rendering_and_become_tangible, soft_reset_camera,
+set_override_envfx, cur_obj_play_sound_1, spawn_mist_particles, play_sound, djui_chat_message_create, mod_storage_load, mod_storage_save,
+obj_get_first_with_behavior_id, stop_secondary_music, obj_get_nearest_object_with_behavior_id, spawn_non_sync_object, obj_mark_for_deletion,
+set_lighting_color, set_lighting_dir, obj_get_next_with_same_behavior_id, set_environment_region, fadeout_music, set_mario_anim_with_accel,
+set_camera_shake_from_hit, obj_resolve_collisions_and_turn, sins, coss, math.random, obj_scale, mario_is_within_rectangle, set_background_music,
+get_current_background_music, set_override_fov, set_handheld_shake, fadeout_level_music, play_character_sound, cutscene_object_with_dialog,
+cur_obj_shake_screen, obj_copy_pos, audio_sample_stop, obj_has_behavior_id, smlua_anim_util_set_animation, cur_obj_disable_rendering,
+cur_obj_enable_rendering, set_camera_shake_from_point, cur_obj_play_sound_2, save_file_clear_flags, spawn_triangle_break_particles,
+mario_drop_held_object, play_sound_with_freq_scale, obj_angle_to_object, hud_show, warp_to_level, bhv_spawn_star_no_level_exit,
+djui_hud_render_texture, djui_hud_print_text, hud_set_value, hud_get_value, math.ceil, math.floor, string.format, djui_hud_measure_text,
+djui_hud_get_screen_height, djui_hud_get_screen_width, djui_hud_set_resolution, djui_hud_set_color, math.max, clamp, djui_hud_render_texture_tile,
+sound_banks_disable, sound_banks_enable, warp_to_start_level, hook_event, nearest_interacting_mario_state_to_object, is_within_100_units_of_mario,
+hook_chat_command, play_transition, network_is_server, set_override_skybox, obj_check_hitbox_overlap
 
 -------------------helpers------------------------------
 
@@ -44,20 +83,20 @@ save_file_set_star_flags(get_current_save_file_num() - 1, COURSE_JRB, 0x80)
 
 --TTC Speed Increase
 local realbhv = {
-    [id_bhvTTC2DRotator] = bhv_ttc_2d_rotator_update,
-    [id_bhvTTCCog]       = bhv_ttc_cog_update,
-    [id_bhvTTCElevator]  = bhv_ttc_elevator_update,
-    [id_bhvTTCMovingBar] = bhv_ttc_moving_bar_update,
-    [id_bhvTTCPendulum]  = bhv_ttc_pendulum_update,
-    [id_bhvTTCPitBlock]  = bhv_ttc_pit_block_update,
+    [id_bhvTTC2DRotator]     = bhv_ttc_2d_rotator_update,
+    [id_bhvTTCCog]           = bhv_ttc_cog_update,
+    [id_bhvTTCElevator]      = bhv_ttc_elevator_update,
+    [id_bhvTTCMovingBar]     = bhv_ttc_moving_bar_update,
+    [id_bhvTTCPendulum]      = bhv_ttc_pendulum_update,
+    [id_bhvTTCPitBlock]      = bhv_ttc_pit_block_update,
     [id_bhvTTCRotatingSolid] = bhv_ttc_rotating_solid_update,
-    [id_bhvTTCSpinner]   = bhv_ttc_spinner_update,
-    [id_bhvTTCTreadmill] = bhv_ttc_treadmill_update,
+    [id_bhvTTCSpinner]       = bhv_ttc_spinner_update,
+    [id_bhvTTCTreadmill]     = bhv_ttc_treadmill_update,
 }
 
 local fastbhv = {}
 
-function speed_objs(o)
+local function speed_objs(o)
     if true then
         fastbhv[get_id_from_behavior(o.behavior)]()
     end
@@ -66,7 +105,6 @@ end
 for bhv, func in pairs(realbhv) do
     fastbhv[hook_behavior(bhv, get_object_list_from_behavior(get_behavior_from_id(bhv)), false, nil, speed_objs, get_behavior_name_from_id(bhv))] = func
 end
-
 
 function is_lowest_active_player()
 	return get_network_player_smallest_global().localIndex == 0
@@ -357,7 +395,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	if gGlobalSyncTable.gameisbeat and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3  and not trophy_unlocked(13) then --GRANT TROPHY #13
-		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
+		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy) 
 		if trophy then
 			--djui_chat_message_create("trophy exists")
 		else
@@ -427,11 +465,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Wet/Dry world is now just dry world... LOL...
-	if np.currLevelNum == LEVEL_WDW then 
-		set_environment_region(0, -10000)
-		set_environment_region(1, -10000)
-		set_environment_region(2, -10000)
-		set_environment_region(3, -10000)
+	if np.currLevelNum == LEVEL_WDW then
+        for i = 0, 3 do
+		    set_environment_region(i, -10000)
+        end
 		local watercontrol = obj_get_first_with_behavior_id(id_bhvWaterLevelDiamond)
 		while watercontrol do
 			obj_mark_for_deletion(watercontrol)
@@ -498,7 +535,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 				o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
 			end)
 			for i = 0, 50 do
-				local random = math.random()	
+				local random = math_random()
 				spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
 					obj_scale(gib, random)
 				end)
@@ -607,10 +644,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		end
 	end
 	if (s.highdeathtimer) == 1 and ia(m) then --initiates the 'high' music
-		fadeout_level_music(30*30)
+		fadeout_level_music(900)
 		stream_play(highmusic)
 		spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
 	end
+
+    --* need to rewrite this later
 	if ia(m) then
 		if s.highdeathtimer == 200 or --Some butterflies start spawning around Mario.
 		   s.highdeathtimer == 400 or
@@ -631,7 +670,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		   s.highdeathtimer == 900 or
 		   s.highdeathtimer == 1100 or
 		   s.highdeathtimer == 1200 then
-			local randommodel = math.random(3)
+			local randommodel = math_random(3)
 			if randommodel == 1 then
 				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER, m.pos.x, m.pos.y, m.pos.z, nil)
 			elseif randommodel == 2 then
@@ -668,8 +707,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		s.highdeathtimer = 0
 		s.isdead = true
 	end
-
-
 
 	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
 		if m.marioObj.oTimer == 30 then
@@ -709,6 +746,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mario Disintegrates when on fire
 	if m.action == ACT_BURNING_JUMP or m.action == ACT_BURNING_GROUND or m.action == ACT_BURNING_FALL then
+        --* for the love of god please use for loops holc!!!!!!.......
 		if m.usedObj then
 			cur_obj_shake_screen(SHAKE_POS_SMALL)
 			obj_scale(m.usedObj, 6)
@@ -824,20 +862,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			end
 		end
 
-
-
-
 	elseif np.currLevelNum == LEVEL_HELL and m.marioObj.oTimer == 1 then
 		m.pos.x = 69
 		m.pos.y = 1690
 		m.pos.z = -11771
 		m.faceAngle.y = 0
-		
-		
 	end
-
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mips is a pain to catch
@@ -856,7 +886,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			else
 				racepen.oForwardVel = 180
 			end
-			
 		end
 
 		if (racepen.oRacingPenguinMarioWon ~= 0) then
@@ -973,7 +1002,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 	----This makes the chain chomp gate disappear.
 	o = obj_get_nearest_object_with_behavior_id(o, id_bhvChainChompGate)
-	if (o) ~= nil then
+	if o ~= nil then
 		if mario_is_within_rectangle(o.oPosX - 150, o.oPosX + 150, o.oPosZ - 150, o.oPosZ + 150) ~= 0 then
 			spawn_triangle_break_particles(30, 138, 1, 4)
 			play_sound(SOUND_ACTION_HIT_2, m.marioObj.header.gfx.cameraToObject)
@@ -986,7 +1015,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 	----The Drawbridge by the eye across from spawn.
 	o = obj_get_nearest_object_with_behavior_id(o, id_bhvLllDrawbridge)
-	if (o) ~= nil then
+	if o ~= nil then
 		if mario_is_within_rectangle(o.oPosX - 250, o.oPosX + 250, o.oPosZ - 250, o.oPosZ + 250) ~= 0 then
 			obj_mark_for_deletion(o)
 		end
@@ -994,7 +1023,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 	----This is a 2x2 (4-square) type platform that sinks, not the individual tiles.
 	o = obj_get_nearest_object_with_behavior_id(o, id_bhvLllSinkingSquarePlatforms)
-	if (o) ~= nil then
+	if o ~= nil then
 		o.oMoveAngleYaw = o.oMoveAngleYaw + 500
 	end
 
@@ -1013,18 +1042,17 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		local_play(sAngryMario, m.pos, 1)
 	end
 	if (s.penguintimer) == 280 then
-			m.heldObj.oAction = 6
-			mario_drop_held_object(m)
-			set_mario_action(m, ACT_JUMP_KICK, 0)
-			m.particleFlags = PARTICLE_MIST_CIRCLE|PARTICLE_TRIANGLE
-			play_sound(SOUND_ACTION_BONK, m.marioObj.header.gfx.cameraToObject)
-			s.penguinholding = 0
-			s.penguintimer = 0
+		m.heldObj.oAction = 6
+		mario_drop_held_object(m)
+		set_mario_action(m, ACT_JUMP_KICK, 0)
+		m.particleFlags = PARTICLE_MIST_CIRCLE|PARTICLE_TRIANGLE
+		play_sound(SOUND_ACTION_BONK, m.marioObj.header.gfx.cameraToObject)
+		s.penguinholding = 0
+		s.penguintimer = 0
 	end
-
+end
 
 ----------------------------------------------------------------------------------------------------------------------------------
-end
 
 function mariohitbyenemy(m) -- Default and generic 1-hit death commands.
 if (m.hurtCounter > 0) then
@@ -1396,10 +1424,10 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 		--djui_hud_set_resolution(RESOLUTION)
 		local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvStopwatch)
 		if o then
-			local totalSeconds = math.ceil((gGlobalSyncTable.timerMax - o.oTimer) / 30)
-			local minutes = math.floor(totalSeconds / 60)
+			local totalSeconds = math_ceil((gGlobalSyncTable.timerMax - o.oTimer) / 30)
+			local minutes = math_floor(totalSeconds / 60)
 			local seconds = totalSeconds % 60
-			local timerString = string.format("%02d :%02d", minutes, seconds)
+			local timerString = string_format("%02d :%02d", minutes, seconds)
 			--djui_hud_print_text(timerString, 850, 100, 5)
 			djui_hud_print_text(timerString, screenWidth / 2 - djui_hud_measure_text(timerString), screenHeight - 48, 1)
 
@@ -1420,7 +1448,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 
 	if (toadguitimer) ~= 0 then
 		toadguitimer = toadguitimer - 1
-		djui_hud_set_color(255, 255, 0, lerp(0, 255, (math.max(0, toadguitimer))/150))
+		djui_hud_set_color(255, 255, 0, lerp(0, 255, (math_max(0, toadguitimer))/150))
 
 		local toaddeathcount = "Server Toad death count: "..gGlobalSyncTable.toaddeathcounter
 		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), screenHeight - 48, 1)
@@ -1489,12 +1517,11 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 		sound_banks_disable(2, SOUND_BANKS_ALL)
 		djui_hud_set_color(255, 255, 255, 255)
 
-		for i=0, math.ceil(djui_hud_get_screen_width()/32) do
+		for i=0, math_ceil(djui_hud_get_screen_width()/32) do
 			for j=0, 7 do
 				djui_hud_render_texture(TEX_DIRT, i*32, j*32, 1, 1)
 			end
 		end
-
 		if loadingscreen == 2 then
 			s.isinhell = false
 			warp_to_start_level()
@@ -1569,7 +1596,7 @@ if (s.ishigh) == 1 then
 		local range = 12288
         local t = m.marioObj.oTimer/50
         local angle = atan2s(m.controller.stickY, m.controller.stickX)
-        local woowoo = math.sin(2 * t) + math.sin(math.pi * t)
+        local woowoo = sins(2 * t) + sins(math.pi * t)
 
 		if (s.highdeathtimer) < 1100 then m.controller.stickMag = m.controller.stickMag*.25 end
         m.intendedYaw = m.intendedYaw + woowoo*range
@@ -1672,7 +1699,7 @@ hook_chat_command("iwbtg", "iwbtm", function ()
 	return true
 end)
 
-msgToLevel = {
+local msgToLevel = {
     ["BOB"] = LEVEL_BOB,
     ["WF"] = LEVEL_WF,
     ["JRB"] = LEVEL_JRB,
@@ -1795,7 +1822,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function()
     end
 end)
 
-function level_init_spawns()
+local function level_init_spawns()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 	local gorrie = obj_get_first_with_behavior_id(id_bhvGorrie)

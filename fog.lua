@@ -19,7 +19,7 @@ local skyboxInfo = {
     [BACKGROUND_UNDERWATER_CITY] = {anim = STATE_NORMAL , color = {r = 100, g = 147, b = 200}},
     [BACKGROUND_FLAMING_SKY]     = {anim = STATE_FIRE   , color = {r = 235, g = 080, b = 080}},
     [BACKGROUND_GREEN_SKY]       = {anim = STATE_GREEN  , color = {r = 104, g = 200, b = 148}},
-    [BACKGROUND_HAUNTED]         = {anim = STATE_HAUNTED, color = {r = 113, g = 103, b = 238}},
+    [BACKGROUND_HAUNTED]         = {anim = STATE_HAUNTED, color = {r = 50,  g = 50,  b = 65 }},
     [BACKGROUND_DESERT]          = {anim = STATE_SAND   , color = {r = 171, g = 171, b = 116}},
     [BACKGROUND_PURPLE_SKY]      = {anim = STATE_PURPLE , color = {r = 147, g = 004, b = 199}},
     [BACKGROUND_CUSTOM]          = {anim = STATE_NORMAL , color = {r = 100, g = 100, b = 100}},
