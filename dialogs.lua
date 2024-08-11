@@ -433,7 +433,7 @@ That's it for now. Press\
 bye byyyyyyeeee!"))
 
 smlua_text_utils_dialog_replace(DIALOG_046,1,3,30,200, ("\
-Wowza, it's hot as balls!\
+Wowza, it's sweltering!!\
 \
 You better find water\
 quick or you'll get a heat-\

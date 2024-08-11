@@ -383,7 +383,7 @@ sOnWarpToFunc = {
             local count = obj_count_objects_with_behavior_id(id_bhvGoalpost)
             if count < 1 then
                 spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
-                    goalpost.oFaceAngleYaw = goalpost.oFaceAngleYaw + 4000
+                    goalpost.oFaceAngleYaw = -36768
                     goalpost.oMoveAngleYaw = goalpost.oFaceAngleYaw
                 end)
             end
