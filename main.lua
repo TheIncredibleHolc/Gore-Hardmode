@@ -523,6 +523,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 				o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
 			end)
 			for i = 0, 50 do
+				if m.playerIndex ~= 0 then return end
 				local random = math.random()
 				spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
 					obj_scale(gib, random)
@@ -697,8 +698,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 
 	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
-		if m.marioObj.oTimer == 30 then
+		if m.marioObj.oTimer == 30 and not s.sslIntro then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
+			s.sslIntro = true
 		end
 		if (m.action & ACT_FLAG_WATER_OR_TEXT) == 0 then
 			s.ssldiethirst = s.ssldiethirst + 1
@@ -726,8 +728,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 
 	if np.currLevelNum == LEVEL_SL and np.currAreaIndex == 1 then
-		if m.marioObj.oTimer == 30 then
+		if m.marioObj.oTimer == 30 and not s.slIntro then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
+			s.slIntro = true
 		end
 		m.health = m.health - 1
 	end

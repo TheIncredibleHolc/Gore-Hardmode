@@ -274,7 +274,9 @@ for i = 0, MAX_PLAYERS-1 do
 		timeattack = false,
 		visitedhell = false,
 		iwbtg = false,
-		death = false
+		death = false,
+		sslIntro = false,
+		slIntro = false
 	}
 end
 

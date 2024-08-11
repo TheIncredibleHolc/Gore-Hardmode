@@ -1161,6 +1161,7 @@ local function squishblood_init(o)
 	o.oFaceAngleYaw = calculate_yaw(z, normal)
 	o.oFaceAngleRoll = 0
 	for i = 0, 60 do
+		if m.playerIndex ~= 0 then return end
 		local random = math.random()		
 		spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
 			obj_scale(gib, random/2)
@@ -1259,6 +1260,7 @@ local function dorrie_dead(o)
 			local_play(sDorrie, m.pos, 1)
 			for i = 0, 60 do
 				local random = math.random()
+				if m.playerIndex ~= 0 then return end
 				spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY + 50, o.oPosZ, function (gib)
 					obj_scale(gib, random/2)
 				end)
@@ -1395,6 +1397,7 @@ local function bhv_klepto_loop(o)
 
 	if (o.oAction == KLEPTO_ACT_STRUCK_BY_MARIO) then
 		for i = 0, 60 do
+			if m.playerIndex ~= 0 then return end
 			local random = math.random()		
 			spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
 				obj_scale(gib, random/2)
