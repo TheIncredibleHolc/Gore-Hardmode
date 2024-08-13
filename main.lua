@@ -835,11 +835,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			cur_obj_enable_rendering()
 			local yaw = 0 --Creates a flame ring portal for Mario to spawn from.
 			for i = 0, 16 do
-				yaw = yaw + 4096	
-				spawn_sync_if_main(id_bhvFireRing, E_MODEL_RED_FLAME, m.pos.x, m.pos.y + 26, m.pos.z, function (o)
+				if m.playerIndex ~= 0 then return end
+				yaw = yaw + 4096
+				spawn_non_sync_object(id_bhvFireRing, E_MODEL_RED_FLAME, m.pos.x, m.pos.y + 26, m.pos.z, function (o)
 					o.oFaceAngleYaw = yaw
 					o.oMoveAngleYaw = o.oFaceAngleYaw
-				end, 0)
+				end)
 			end
 			m.forwardVel = 65
 			set_mario_action(m, ACT_HARD_FORWARD_AIR_KB, 0)

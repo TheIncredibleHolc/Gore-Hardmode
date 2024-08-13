@@ -859,20 +859,24 @@ end
 local function bhv_goalpost_loop(o)
 	--o.header.gfx.scale.z = o.hitboxRadius / 100
 	--o.header.gfx.scale.y = o.hitboxHeight / 100
+	local m = gMarioStates[0]
 	local mp = nearest_player_to_object(o)
 	local tuxie = obj_get_nearest_object_with_behavior_id(mp, id_bhvSmallPenguin)
 	
 	if tuxie and o.oTimer > 60 and obj_check_hitbox_overlap(o, tuxie) then --GRANT TROPHY #9
-		spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, nil)
-		spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
-			t.oBehParams = 9 << 16 | 1
-			if mod_storage_load("fieldgoal") == "1" then
-				djui_chat_message_create("Field goal successful! Trophy awarded.")
-			else
-				djui_chat_message_create("IT'S GOOD!!!")
-			end
-			o.oTimer = 0
-		end)
+		local troph = obj_get_first_with_behavior_id(id_bhvTrophy)
+		if troph == nil then
+			spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, nil)
+			spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
+				t.oBehParams = 9 << 16 | 1
+				if mod_storage_load("fieldgoal") == "1" then
+					djui_chat_message_create("Field goal successful! Trophy awarded.")
+				else
+					djui_chat_message_create("IT'S GOOD!!!")
+				end
+				o.oTimer = 0
+			end)
+		end
 
 		--play_secondary_music(SEQ_EVENT_SOLVE_PUZZLE, 1, 1, 1)
 		play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
@@ -1360,7 +1364,6 @@ local function gorrie_loop(o)
             obj_face_yaw_approach(goal_angle, 256)
             o.oForwardVel = 0
         else
-			--if cur_obj_outside_home_rectangle(o.oHomeX - 600, o.oHomeX + 600, o.oHomeZ - 600, o.oHomeZ + 600) then
 			if cur_obj_lateral_dist_from_obj_to_home(o) >= 500 then
 				--djui_chat_message_create("Travelling to home!")
 				local angletohome = cur_obj_angle_to_home()
