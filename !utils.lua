@@ -290,6 +290,12 @@ hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
 
+GORRIE_WAITING_FOR_DISEMBARK = 0
+GORRIE_TRAVEL_TO_GOAL = 1
+GORRIE_WAITING_FOR_PLAYERS_TO_BOARD = 2
+GORRIE_TRAVEL_TO_HOME = 3
+GORRIE_HOME_IDLE = 4
+
 -- Table to map levels to their specific actions
 sOnWarpToFunc = {
     [LEVEL_HMC] = function()

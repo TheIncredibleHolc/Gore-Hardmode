@@ -1320,11 +1320,16 @@ local function gorrie_init(o)
 		o.oHomeY = 80
 		o.oHomeZ = 280
 	end
+
 	network_init_object(o, true, nil)
-	
+
 end
 
 local function gorrie_loop(o)
+	load_object_collision_model()
+	cur_obj_init_animation(1)
+    cur_obj_move_xz_using_fvel_and_yaw()
+
     local np = gNetworkPlayers[0]
     local nm = nearest_mario_state_to_object(o)
     local dorriemounted = cur_obj_is_any_player_on_platform()
@@ -1333,51 +1338,83 @@ local function gorrie_loop(o)
 		goal = obj_get_first_with_behavior_id(id_bhvStaticObject)
 	end
 
-    cur_obj_init_animation(1)
-    cur_obj_move_xz_using_fvel_and_yaw()
     o.oAnimState = o.oTimer % 90
-    load_object_collision_model()
 
+	if o.oAction == GORRIE_WAITING_FOR_DISEMBARK then
+		--djui_chat_message_create("Waiting for player to disembark!")
+		o.oTimer = 0
+		o.oForwardVel = 0
+		local warp = obj_get_nearest_object_with_behavior_id(o, id_bhvFadingWarp)
+		local warpangle = obj_angle_to_object(o, warp)
+		obj_turn_toward_object(o, warp, 16, 256)
+		obj_face_yaw_approach(warpangle, 256)
+	end
+
+	if o.oAction == GORRIE_TRAVEL_TO_GOAL then
+		--djui_chat_message_create("Traveling to Netherportal!")
+		local goal_angle = obj_angle_to_object(o, goal)
+		obj_face_yaw_approach(goal_angle, 256)
+		obj_turn_toward_object(o, goal, 16, 256)
+		o.oForwardVel = 25
+		--obj_init_animation(o, 1)
+	end
+
+	if o.oAction == GORRIE_WAITING_FOR_PLAYERS_TO_BOARD then
+		--djui_chat_message_create("Waiting for player to board!")
+		local goal_angle = obj_angle_to_object(o, goal)
+		obj_turn_toward_object(o, goal, 16, 256)
+		obj_face_yaw_approach(goal_angle, 256)
+		o.oForwardVel = 0
+	end
+
+	if o.oAction == GORRIE_TRAVEL_TO_HOME then
+		--djui_chat_message_create("Travelling to home!")
+		local angletohome = cur_obj_angle_to_home()
+		o.oForwardVel = 15
+		obj_face_yaw_approach(angletohome, 256)
+		o.oFaceAngleYaw = angletohome
+		o.oMoveAngleYaw = o.oFaceAngleYaw
+	end
+
+	if o.oAction == GORRIE_HOME_IDLE then
+		--djui_chat_message_create("home!")
+		o.oForwardVel = 0
+		local goal_angle = obj_angle_to_object(o, goal)
+		local anglesmooth = obj_face_yaw_approach(goal_angle, 256)
+		obj_turn_toward_object(o, goal, 16, 256)
+		obj_face_yaw_approach(goal_angle, 256)
+	end
+
+	--Actual Gorrie Code
     if dorriemounted == 1 then
 		if dist_between_objects(o, goal) < 1200 then
-			--djui_chat_message_create("Waiting for player to disembark!")
-			o.oTimer = 0
-            o.oForwardVel = 0
-			local warp = obj_get_nearest_object_with_behavior_id(o, id_bhvFadingWarp)
-            local warpangle = obj_angle_to_object(o, warp)
-			--djui_chat_message_create(tostring(warpangle))
-            obj_turn_toward_object(o, warp, 16, 256)
-            obj_face_yaw_approach(warpangle, 256)
+			if o.oAction ~= GORRIE_WAITING_FOR_DISEMBARK then
+				o.oAction = GORRIE_WAITING_FOR_DISEMBARK
+				network_send_object(o, true)
+			end
 		else
-			--djui_chat_message_create("Traveling to Netherportal!")
-			local goal_angle = obj_angle_to_object(o, goal)
-			obj_face_yaw_approach(goal_angle, 256)
-			obj_turn_toward_object(o, goal, 16, 256)
-            o.oForwardVel = 25
-			--obj_init_animation(o, 1)
+			if o.oAction ~= GORRIE_TRAVEL_TO_GOAL then
+				o.oAction = GORRIE_TRAVEL_TO_GOAL
+				network_send_object(o, true)
+			end
         end
     else
         if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 and dist_between_objects(o, goal) > 1600 then
-			--djui_chat_message_create("Waiting for player to board!")
-			local goal_angle = obj_angle_to_object(o, goal)
-            obj_turn_toward_object(o, goal, 16, 256)
-            obj_face_yaw_approach(goal_angle, 256)
-            o.oForwardVel = 0
+			if o.oAction ~= GORRIE_WAITING_FOR_PLAYERS_TO_BOARD then
+				o.oAction = GORRIE_WAITING_FOR_PLAYERS_TO_BOARD
+				network_send_object(o, true)
+			end
         else
 			if cur_obj_lateral_dist_from_obj_to_home(o) >= 500 then
-				--djui_chat_message_create("Travelling to home!")
-				local angletohome = cur_obj_angle_to_home()
-        		o.oForwardVel = 15
-				obj_face_yaw_approach(angletohome, 256)
-        		o.oFaceAngleYaw = angletohome
-        		o.oMoveAngleYaw = o.oFaceAngleYaw
+				if o.oAction ~= GORRIE_TRAVEL_TO_HOME then
+					o.oAction = GORRIE_TRAVEL_TO_HOME
+					network_send_object(o, true)
+				end
 			else
-				--djui_chat_message_create("home!")
-				o.oForwardVel = 0
-				local goal_angle = obj_angle_to_object(o, goal)
-				local anglesmooth = obj_face_yaw_approach(goal_angle, 256)
-				obj_turn_toward_object(o, goal, 16, 256)
-				obj_face_yaw_approach(goal_angle, 256)
+				if o.oAction ~= GORRIE_HOME_IDLE then
+					o.oAction = GORRIE_HOME_IDLE
+					network_send_object(o, true)
+				end
 			end
         end
     end
