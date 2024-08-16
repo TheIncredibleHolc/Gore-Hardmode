@@ -1626,24 +1626,24 @@ local function star_door_loop_1(o)
         local marioInCenter = is_mario_in_center_of_doors(o, secondDoor, m, 100)
         local marioActive = m.action ~= ACT_GONE
         
-        if marioInCenter then
-            if marioActive then
-                gGlobalSyncTable.FirstStarDoor = true
-                --play_sound(SOUND_MARIO_ATTACKED, {x=0,y=0,z=0})
-                --local_play(sSplatter, m.pos, 0.5)
-                --spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
-                --squishblood(m.marioObj)
-                --set_mario_action(m, ACT_DISAPPEARED, 0)
-				m.squishTimer = 50
-				cur_obj_shake_screen(SHAKE_POS_SMALL)
-                --set_camera_shake_from_hit(3)
-				o.oInteractStatus = 0
-				o.oAction = 0
-				--network_send_object(o, true)
-            end
+        if marioInCenter and marioActive then
+			gGlobalSyncTable.FirstStarDoor = true
+			--play_sound(SOUND_MARIO_ATTACKED, {x=0,y=0,z=0})
+			--local_play(sSplatter, m.pos, 0.5)
+			--spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+			--squishblood(m.marioObj)
+			--set_mario_action(m, ACT_DISAPPEARED, 0)
+			m.squishTimer = 50
+			cur_obj_shake_screen(SHAKE_POS_SMALL)
+			--set_camera_shake_from_hit(3)
+			o.oInteractStatus = 0
+			o.oAction = 0
+			o.oTimer = 0
+			--network_send_object(o, true)
         else
             o.oInteractStatus = 0
             o.oAction = 0
+			o.oTimer = 0
 			--network_send_object(o, true)
             --camera_unfreeze()
         end
