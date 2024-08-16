@@ -1531,7 +1531,7 @@ local function star_door_init(o)
     o.oInteractType = INTERACT_DOOR
     o.collisionData = gGlobalObjectCollisionData.inside_castle_seg7_collision_star_door
     o.oInteractionSubtype = INT_SUBTYPE_STAR_DOOR
-	network_init_object(o, true, nil)
+	network_init_object(o, true, {'oBloody'})
     o.oDrawingDistance = 20000
 
     local hitbox = get_temp_object_hitbox()
@@ -1571,23 +1571,24 @@ local function star_door_loop_1(o)
     local secondDoor = cur_obj_nearest_object_with_behavior(get_behavior_from_id(id_bhvStarDoor))
     local m = nearest_interacting_mario_state_to_object(o)
 	djui_chat_message_create(tostring(o.oAction))
-	if gGlobalSyncTable.FirstStarDoor then
+
+	if o.oBloody ~= 0 then
 		obj_set_model_extended(o, E_MODEL_BLOODY_STAR_DOOR)
 		obj_set_model_extended(secondDoor, E_MODEL_BLOODY_STAR_DOOR)
 	end
 
-    if o.oAction == STAR_DOOR_ACT_CLOSED then
+    if o.oAction == STAR_DOOR_ACT_CLOSED then --oAction 0
         cur_obj_become_tangible()
         if (0x30000 & o.oInteractStatus) ~= 0 then
             o.oAction = 1
 			--network_send_object(o, true)
-
         end
         if secondDoor ~= nil and secondDoor.oAction ~= 0 then
             o.oAction = 1
 			--network_send_object(secondDoor, true)
         end
-    elseif o.oAction == STAR_DOOR_ACT_OPENING then
+
+    elseif o.oAction == STAR_DOOR_ACT_OPENING then --oAction 1
         --camera_freeze()
         if o.oTimer == 0 and o.oMoveAngleYaw >= 0 then
             cur_obj_play_sound_2(SOUND_GENERAL_STAR_DOOR_OPEN)
@@ -1600,18 +1601,18 @@ local function star_door_loop_1(o)
             o.oAction = 2
 			--network_send_object(o, true)
         end
-    elseif o.oAction == STAR_DOOR_ACT_OPENED then
+
+    elseif o.oAction == STAR_DOOR_ACT_OPENED then --oAction 2
         if is_mario_in_center_of_doors(o, secondDoor, m, 60) then
             o.oAction = 3
 			--network_send_object(o, true)
         end
-
         if o.oTimer >= 31 then
             o.oAction = 3
 			--network_send_object(o, true)
         end
-    elseif o.oAction == STAR_DOOR_ACT_CLOSING then
 
+    elseif o.oAction == STAR_DOOR_ACT_CLOSING then --oAction 3
         if o.oTimer == 0 and o.oMoveAngleYaw >= 0 then
             cur_obj_play_sound_2(SOUND_GENERAL_STAR_DOOR_CLOSE)
             queue_rumble_data_object(o, 35, 30)
@@ -1622,12 +1623,12 @@ local function star_door_loop_1(o)
             o.oAction = 4
 			--network_send_object(o, true)
         end
-    elseif o.oAction == STAR_DOOR_HAS_CLOSED then
+		
+    elseif o.oAction == STAR_DOOR_HAS_CLOSED then --oAction 4
         local marioInCenter = is_mario_in_center_of_doors(o, secondDoor, m, 100)
         local marioActive = m.action ~= ACT_GONE
-        
         if marioInCenter and marioActive then
-			gGlobalSyncTable.FirstStarDoor = true
+			o.oBloody = 1
 			--play_sound(SOUND_MARIO_ATTACKED, {x=0,y=0,z=0})
 			--local_play(sSplatter, m.pos, 0.5)
 			--spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
@@ -1639,7 +1640,7 @@ local function star_door_loop_1(o)
 			o.oInteractStatus = 0
 			o.oAction = 0
 			o.oTimer = 0
-			--network_send_object(o, true)
+			network_send_object(o, true)
         else
             o.oInteractStatus = 0
             o.oAction = 0
