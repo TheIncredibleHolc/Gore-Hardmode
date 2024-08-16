@@ -86,7 +86,21 @@ local function mario_update(m)
     if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
         if not obj_get_first_with_behavior_id(id_bhvFog) then
             spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)
+            spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, function(morefog)
+                obj_scale(morefog, 1.8)
+            end)
         end
+    elseif np.currLevelNum == LEVEL_HELL then
+        set_lighting_color(0, 255)
+        set_lighting_color(1, 127)
+        set_lighting_color(2, 100)
+        set_lighting_dir(1, -128)
+        set_vertex_color(0, 255)
+        set_vertex_color(1, 255)
+        set_vertex_color(2, 255)
+        set_fog_color(0, 255)
+        set_fog_color(1, 255)
+        set_fog_color(2, 255)
     elseif np.currLevelNum ~= LEVEL_HELL and np.currLevelNum ~= LEVEL_JRB and m.marioObj.oTimer < 30 then
         set_lighting_color(0, 255)
         set_lighting_color(1, 255)
