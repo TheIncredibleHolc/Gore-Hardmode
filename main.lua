@@ -247,7 +247,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-	--djui_chat_message_create(tostring(m.faceAngle.y))
+	--djui_chat_message_create(tostring(np.currAreaIndex))
 
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
 		m.action = ACT_NOTHING

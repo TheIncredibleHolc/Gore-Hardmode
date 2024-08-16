@@ -1321,6 +1321,8 @@ local function gorrie_init(o)
 		o.oHomeZ = 280
 	end
 
+	o.oAction = GORRIE_TRAVEL_TO_GOAL
+
 	network_init_object(o, true, nil)
 
 end
@@ -1329,13 +1331,17 @@ local function gorrie_loop(o)
 	load_object_collision_model()
 	cur_obj_init_animation(1)
     cur_obj_move_xz_using_fvel_and_yaw()
-
+	local m = gMarioStates[0]
     local np = gNetworkPlayers[0]
     local nm = nearest_mario_state_to_object(o)
     local dorriemounted = cur_obj_is_any_player_on_platform()
 	local goal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
 	if goal == nil then
 		goal = obj_get_first_with_behavior_id(id_bhvStaticObject)
+	end
+
+	if dist_between_objects(o, m.marioObj) < 1200 and o.oTimer % 60 then
+		network_send_object(o, true)
 	end
 
     o.oAnimState = o.oTimer % 90
@@ -1390,30 +1396,40 @@ local function gorrie_loop(o)
 		if dist_between_objects(o, goal) < 1200 then
 			if o.oAction ~= GORRIE_WAITING_FOR_DISEMBARK then
 				o.oAction = GORRIE_WAITING_FOR_DISEMBARK
-				network_send_object(o, true)
+				if dist_between_objects(o, m.marioObj) < 1200 then
+					network_send_object(o, true)
+				end
 			end
 		else
 			if o.oAction ~= GORRIE_TRAVEL_TO_GOAL then
 				o.oAction = GORRIE_TRAVEL_TO_GOAL
-				network_send_object(o, true)
+				if dist_between_objects(o, m.marioObj) < 1200 then
+					network_send_object(o, true)
+				end
 			end
         end
     else
         if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 and dist_between_objects(o, goal) > 1600 then
 			if o.oAction ~= GORRIE_WAITING_FOR_PLAYERS_TO_BOARD then
 				o.oAction = GORRIE_WAITING_FOR_PLAYERS_TO_BOARD
-				network_send_object(o, true)
+				if dist_between_objects(o, m.marioObj) < 1200 then
+					network_send_object(o, true)
+				end
 			end
         else
 			if cur_obj_lateral_dist_from_obj_to_home(o) >= 500 then
 				if o.oAction ~= GORRIE_TRAVEL_TO_HOME then
 					o.oAction = GORRIE_TRAVEL_TO_HOME
-					network_send_object(o, true)
+					if dist_between_objects(o, m.marioObj) < 1200 then
+						network_send_object(o, true)
+					end
 				end
 			else
 				if o.oAction ~= GORRIE_HOME_IDLE then
 					o.oAction = GORRIE_HOME_IDLE
-					network_send_object(o, true)
+					if dist_between_objects(o, m.marioObj) < 1200 then
+						network_send_object(o, true)
+					end
 				end
 			end
         end
@@ -1554,16 +1570,25 @@ local function star_door_loop_1(o)
     local pad = {0, 0, 0, 0}
     local secondDoor = cur_obj_nearest_object_with_behavior(get_behavior_from_id(id_bhvStarDoor))
     local m = nearest_interacting_mario_state_to_object(o)
+
+	if gGlobalSyncTable.FirstStarDoor then
+		obj_set_model_extended(o, E_MODEL_BLOODY_STAR_DOOR)
+		obj_set_model_extended(secondDoor, E_MODEL_BLOODY_STAR_DOOR)
+	end
+
     if o.oAction == STAR_DOOR_ACT_CLOSED then
         cur_obj_become_tangible()
         if (0x30000 & o.oInteractStatus) ~= 0 then
             o.oAction = 1
+			network_send_object(o, true)
+
         end
         if secondDoor ~= nil and secondDoor.oAction ~= 0 then
             o.oAction = 1
+			network_send_object(secondDoor, true)
         end
     elseif o.oAction == STAR_DOOR_ACT_OPENING then
-        camera_freeze()
+        --camera_freeze()
         if o.oTimer == 0 and o.oMoveAngleYaw >= 0 then
             cur_obj_play_sound_2(SOUND_GENERAL_STAR_DOOR_OPEN)
             queue_rumble_data_object(o, 35, 30)
@@ -1573,14 +1598,17 @@ local function star_door_loop_1(o)
         star_door_update_pos(o)
         if o.oTimer >= 16 then
             o.oAction = o.oAction + 1
+			network_send_object(o, true)
         end
     elseif o.oAction == STAR_DOOR_ACT_OPENED then
         if is_mario_in_center_of_doors(o, secondDoor, m, 60) then
             o.oAction = o.oAction + 1
+			network_send_object(o, true)
         end
 
         if o.oTimer >= 31 then
             o.oAction = o.oAction + 1
+			network_send_object(o, true)
         end
     elseif o.oAction == STAR_DOOR_ACT_CLOSING then
 
@@ -1592,31 +1620,32 @@ local function star_door_loop_1(o)
         star_door_update_pos(o)
         if o.oTimer >= 4 then
             o.oAction = o.oAction + 1
+			network_send_object(o, true)
         end
     elseif o.oAction == STAR_DOOR_HAS_CLOSED then
         local marioInCenter = is_mario_in_center_of_doors(o, secondDoor, m, 100)
-        local marioActive = m.action ~= ACT_DISAPPEARED
+        local marioActive = m.action ~= ACT_GONE
         
         if marioInCenter then
             if marioActive then
-                obj_set_model_extended(o, E_MODEL_BLOODY_STAR_DOOR)
-                obj_set_model_extended(secondDoor, E_MODEL_BLOODY_STAR_DOOR)
-                play_sound(SOUND_MARIO_ATTACKED, {x=0,y=0,z=0})
-                local_play(sSplatter, m.pos, 0.5)
-                spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
-                squishblood(m.marioObj)
-                set_mario_action(m, ACT_DISAPPEARED, 0)
-                set_camera_shake_from_hit(3)
-            end
-            
-            if o.oTimer >= 35 then
-                level_trigger_warp(m, WARP_OP_DEATH)
-                camera_unfreeze()
+                gGlobalSyncTable.FirstStarDoor = true
+                --play_sound(SOUND_MARIO_ATTACKED, {x=0,y=0,z=0})
+                --local_play(sSplatter, m.pos, 0.5)
+                --spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+                --squishblood(m.marioObj)
+                --set_mario_action(m, ACT_DISAPPEARED, 0)
+				m.squishTimer = 50
+				cur_obj_shake_screen(SHAKE_POS_SMALL)
+                --set_camera_shake_from_hit(3)
+				o.oInteractStatus = 0
+				o.oAction = 0
+				network_send_object(o, true)
             end
         else
             o.oInteractStatus = 0
             o.oAction = 0
-            camera_unfreeze()
+			network_send_object(o, true)
+            --camera_unfreeze()
         end
         
         cur_obj_set_pos_to_home()

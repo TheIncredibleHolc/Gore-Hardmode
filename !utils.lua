@@ -290,6 +290,8 @@ hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
 
+--gGlobalSyncTable.FirstStarDoor = false
+
 GORRIE_WAITING_FOR_DISEMBARK = 0
 GORRIE_TRAVEL_TO_GOAL = 1
 GORRIE_WAITING_FOR_PLAYERS_TO_BOARD = 2
@@ -398,7 +400,17 @@ sOnWarpToFunc = {
         end
     end,
 
+	
+
     [LEVEL_CASTLE] = function()
+
+		--[[
+		if np.currAreaIndex == 1 and gGlobalSyncTable.FirstStarDoor then
+			local o = obj_get_first_with_behavior_id(id_bhvStarDoor)
+			obj_set_model_extended(o, E_MODEL_BLOODY_STAR_DOOR)
+			obj_set_model_extended(secondDoor, E_MODEL_BLOODY_STAR_DOOR)
+		end]]
+
         if np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then
             -- GRANT TROPHY #12 (Mirror room)
             spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5514, 1613, 3159, function(t)
