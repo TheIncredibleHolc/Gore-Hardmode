@@ -1531,6 +1531,7 @@ local function star_door_init(o)
     o.oInteractType = INTERACT_DOOR
     o.collisionData = gGlobalObjectCollisionData.inside_castle_seg7_collision_star_door
     o.oInteractionSubtype = INT_SUBTYPE_STAR_DOOR
+	network_init_object(o, true, {'oBloody','oInteractStatus'})
     o.oDrawingDistance = 20000
 
     local hitbox = get_temp_object_hitbox()
