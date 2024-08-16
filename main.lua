@@ -339,8 +339,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--PSS TROPHY
-
-	if mod_storage_load("file1coin") == "1" then
+	if trophy_unlocked(11) then
+	--if mod_storage_load("file1coin") == "1" then
 		--DO NOTHING
 		--djui_chat_message_create("already collected")
 	else
@@ -382,7 +382,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	if gGlobalSyncTable.gameisbeat and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3  and not trophy_unlocked(13) then --GRANT TROPHY #13
+	if gGlobalSyncTable.gameisbeat and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3 and not trophy_unlocked(13) then --GRANT TROPHY #13
 		local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy) 
 		if trophy then
 			--djui_chat_message_create("trophy exists")

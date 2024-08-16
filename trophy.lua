@@ -196,9 +196,11 @@ function trophyplate_loop(o)
     local m = gMarioStates[0]
     local trophy = trophyinfo[o.oBehParams >> 16]
     local save_file_num = get_current_save_file_num()
-    local trophy_state = mod_storage_load("file" .. save_file_num .. trophy.name)
-    
-    if trophy_state == "1" then
+    --local trophy_state = mod_storage_load("file" .. save_file_num .. trophy.name)
+    trophy_unlocked(o.oBehParams >> 16)
+
+    --if trophy_state == "1" then
+	if trophy_unlocked(o.oBehParams >> 16) then
         obj_set_model_extended(o, E_MODEL_GOLD_PLATE)
     else
         obj_set_model_extended(o, E_MODEL_SILVER_PLATE)

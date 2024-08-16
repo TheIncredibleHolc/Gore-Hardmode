@@ -467,7 +467,8 @@ function act_vulnerable(o)
 
                 unlock_trophy(m.character.type+1)
                 gGlobalSyncTable.gameisbeat = true
-                mod_storage_save("gameisbeat", "true")
+                mod_storage_save("file"..get_current_save_file_num().."gameisbeat", "true")
+                --mod_storage_save("gameisbeat", "true")
 
                 set_mario_action(m, ACT_STAR_DANCE_NO_EXIT, 0)
 

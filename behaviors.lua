@@ -1570,7 +1570,7 @@ local function star_door_loop_1(o)
     local pad = {0, 0, 0, 0}
     local secondDoor = cur_obj_nearest_object_with_behavior(get_behavior_from_id(id_bhvStarDoor))
     local m = nearest_interacting_mario_state_to_object(o)
-	djui_chat_message_create(tostring(o.oAction))
+	--djui_chat_message_create(tostring(o.oAction))
 
 	if o.oBloody ~= 0 then
 		obj_set_model_extended(o, E_MODEL_BLOODY_STAR_DOOR)

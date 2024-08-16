@@ -1,11 +1,4 @@
 
-gold_models = {
-    [CT_MARIO] = E_MODEL_GOLD_MARIO,
-    [CT_LUIGI] = E_MODEL_GOLD_LUIGI,
-    [CT_TOAD] = E_MODEL_GOLD_TOAD,
-    [CT_WARIO] = E_MODEL_GOLD_WARIO,
-    [CT_WALUIGI] = E_MODEL_GOLD_WALUIGI
-}
 
 gSamples = {
 	audio_sample_load("bonebreak.ogg"),
@@ -236,6 +229,14 @@ E_MODEL_GOLD_TOAD = smlua_model_util_get_id("golden_toad_player_geo")
 E_MODEL_GOLD_WARIO = smlua_model_util_get_id("golden_wario_geo")
 E_MODEL_GOLD_WALUIGI = smlua_model_util_get_id("golden_waluigi_geo")
 
+gold_models = {
+    [CT_MARIO] = E_MODEL_GOLD_MARIO,
+    [CT_LUIGI] = E_MODEL_GOLD_LUIGI,
+    [CT_TOAD] = E_MODEL_GOLD_TOAD,
+    [CT_WARIO] = E_MODEL_GOLD_WARIO,
+    [CT_WALUIGI] = E_MODEL_GOLD_WALUIGI
+}
+
 --! music and course names
 
 smlua_audio_utils_replace_sequence(SEQ_EVENT_CUTSCENE_ENDING, 35, 76, "gorepeach") --Custom Audio for end cutscene
@@ -290,6 +291,12 @@ hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
 
+if network_is_server() and mod_storage_load("file"..get_current_save_file_num().."gameisbeat") then
+	djui_chat_message_create("game is beat!")
+	gGlobalSyncTable.gameisbeat = true
+else
+	djui_chat_message_create("game NOT beat")
+end
 
 define_custom_obj_fields({
     oBloody = "u32"
