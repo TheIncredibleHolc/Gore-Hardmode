@@ -339,15 +339,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--PSS TROPHY
-	if trophy_unlocked(11) then
+	if np.currLevelNum == LEVEL_PSS and not trophy_unlocked(11) then
 	--if mod_storage_load("file1coin") == "1" then
 		--DO NOTHING
 		--djui_chat_message_create("already collected")
-	else
-
         local psstrophy = obj_get_first_with_behavior_id(id_bhvTrophy)
-
-        if  np.currLevelNum == LEVEL_PSS and gGlobalSyncTable.gameisbeat and not psstrophy then
+        if gGlobalSyncTable.gameisbeat and not psstrophy then
             if m.pos.y <= -4587 and m.numCoins < 81 then
                 m.pos.x = -6401
                 m.pos.y = -4162
