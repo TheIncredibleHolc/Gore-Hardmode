@@ -1531,7 +1531,7 @@ local function star_door_init(o)
     o.oInteractType = INTERACT_DOOR
     o.collisionData = gGlobalObjectCollisionData.inside_castle_seg7_collision_star_door
     o.oInteractionSubtype = INT_SUBTYPE_STAR_DOOR
-
+	network_init_object(o, true, nil)
     o.oDrawingDistance = 20000
 
     local hitbox = get_temp_object_hitbox()
@@ -1570,7 +1570,7 @@ local function star_door_loop_1(o)
     local pad = {0, 0, 0, 0}
     local secondDoor = cur_obj_nearest_object_with_behavior(get_behavior_from_id(id_bhvStarDoor))
     local m = nearest_interacting_mario_state_to_object(o)
-
+	djui_chat_message_create(tostring(o.oAction))
 	if gGlobalSyncTable.FirstStarDoor then
 		obj_set_model_extended(o, E_MODEL_BLOODY_STAR_DOOR)
 		obj_set_model_extended(secondDoor, E_MODEL_BLOODY_STAR_DOOR)
@@ -1580,12 +1580,12 @@ local function star_door_loop_1(o)
         cur_obj_become_tangible()
         if (0x30000 & o.oInteractStatus) ~= 0 then
             o.oAction = 1
-			network_send_object(o, true)
+			--network_send_object(o, true)
 
         end
         if secondDoor ~= nil and secondDoor.oAction ~= 0 then
             o.oAction = 1
-			network_send_object(secondDoor, true)
+			--network_send_object(secondDoor, true)
         end
     elseif o.oAction == STAR_DOOR_ACT_OPENING then
         --camera_freeze()
@@ -1597,18 +1597,18 @@ local function star_door_loop_1(o)
         o.oBehParams2ndByte = -8.0
         star_door_update_pos(o)
         if o.oTimer >= 16 then
-            o.oAction = o.oAction + 1
-			network_send_object(o, true)
+            o.oAction = 2
+			--network_send_object(o, true)
         end
     elseif o.oAction == STAR_DOOR_ACT_OPENED then
         if is_mario_in_center_of_doors(o, secondDoor, m, 60) then
-            o.oAction = o.oAction + 1
-			network_send_object(o, true)
+            o.oAction = 3
+			--network_send_object(o, true)
         end
 
         if o.oTimer >= 31 then
-            o.oAction = o.oAction + 1
-			network_send_object(o, true)
+            o.oAction = 3
+			--network_send_object(o, true)
         end
     elseif o.oAction == STAR_DOOR_ACT_CLOSING then
 
@@ -1619,8 +1619,8 @@ local function star_door_loop_1(o)
         o.oBehParams2ndByte = 25
         star_door_update_pos(o)
         if o.oTimer >= 4 then
-            o.oAction = o.oAction + 1
-			network_send_object(o, true)
+            o.oAction = 4
+			--network_send_object(o, true)
         end
     elseif o.oAction == STAR_DOOR_HAS_CLOSED then
         local marioInCenter = is_mario_in_center_of_doors(o, secondDoor, m, 100)
@@ -1639,12 +1639,12 @@ local function star_door_loop_1(o)
                 --set_camera_shake_from_hit(3)
 				o.oInteractStatus = 0
 				o.oAction = 0
-				network_send_object(o, true)
+				--network_send_object(o, true)
             end
         else
             o.oInteractStatus = 0
             o.oAction = 0
-			network_send_object(o, true)
+			--network_send_object(o, true)
             --camera_unfreeze()
         end
         
