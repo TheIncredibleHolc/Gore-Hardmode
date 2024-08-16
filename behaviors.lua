@@ -1531,7 +1531,6 @@ local function star_door_init(o)
     o.oInteractType = INTERACT_DOOR
     o.collisionData = gGlobalObjectCollisionData.inside_castle_seg7_collision_star_door
     o.oInteractionSubtype = INT_SUBTYPE_STAR_DOOR
-	network_init_object(o, true, {'oBloody'})
     o.oDrawingDistance = 20000
 
     local hitbox = get_temp_object_hitbox()
@@ -1579,14 +1578,13 @@ local function star_door_loop_1(o)
 
     if o.oAction == STAR_DOOR_ACT_CLOSED then --oAction 0
         cur_obj_become_tangible()
-        if (0x30000 & o.oInteractStatus) ~= 0 then
+        if (0x30000 & o.oInteractStatus) ~= 0 and m.action ~= ACT_GONE then
             o.oAction = 1
-			--network_send_object(o, true)
+			if secondDoor ~= nil then
+				secondDoor.oAction = 1
+			end
         end
-        if secondDoor ~= nil and secondDoor.oAction ~= 0 then
-            o.oAction = 1
-			--network_send_object(secondDoor, true)
-        end
+        
 
     elseif o.oAction == STAR_DOOR_ACT_OPENING then --oAction 1
         --camera_freeze()
@@ -1603,11 +1601,13 @@ local function star_door_loop_1(o)
         end
 
     elseif o.oAction == STAR_DOOR_ACT_OPENED then --oAction 2
-        if is_mario_in_center_of_doors(o, secondDoor, m, 60) then
-            o.oAction = 3
+        --if is_mario_in_center_of_doors(o, secondDoor, m, 60) then
+        --    o.oAction = 3
 			--network_send_object(o, true)
-        end
-        if o.oTimer >= 31 then
+        --end
+
+        --if o.oTimer >= 31 then --THIS IS THE ORIGINAL SPEED
+		if o.oTimer >= 1 then
             o.oAction = 3
 			--network_send_object(o, true)
         end
@@ -1645,7 +1645,7 @@ local function star_door_loop_1(o)
             o.oInteractStatus = 0
             o.oAction = 0
 			o.oTimer = 0
-			--network_send_object(o, true)
+			network_send_object(o, true)
             --camera_unfreeze()
         end
         
