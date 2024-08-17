@@ -32,7 +32,14 @@ local function fog_init(o)
     o.oFaceAnglePitch = 0
     o.oFaceAngleRoll = 0
     o.oOpacity = 75
-    obj_scale(o, 3.5)
+    if o.oBehParams == 2 then
+        obj_scale(o, 1.6)
+    elseif o.oBehParams == 1 then
+        obj_scale(o, 6)
+    else
+        obj_scale(o, 3.5)
+    end
+    
     set_override_far(1000000)
 end
 
@@ -49,8 +56,10 @@ local function fog_loop(o)
 
     local r, g, b = 100, 100, 100
 
-    if skybox >= 0 then
+    if skybox >= 0 and np.currLevelNum ~= LEVEL_TTM then
         r, g, b = skyboxInfo[skybox].color.r, skyboxInfo[skybox].color.g, skyboxInfo[skybox].color.b
+    else
+        r, g, b = 0, 0, 0
     end
 
     -- check skybox to determine the color of the fog
@@ -65,9 +74,11 @@ local function fog_loop(o)
         end
     end
 
-    set_lighting_color(0, r)
-    set_lighting_color(1, g)
-    set_lighting_color(2, b)
+    if not np.currLevelNum == LEVEL_TTM then
+        set_lighting_color(0, r)
+        set_lighting_color(1, g)
+        set_lighting_color(2, b)
+    end
     set_vertex_color(0, r)
     set_vertex_color(1, g)
     set_vertex_color(2, b)
@@ -86,8 +97,15 @@ local function mario_update(m)
     if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
         if not obj_get_first_with_behavior_id(id_bhvFog) then
             spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)
+        end
+    elseif np.currLevelNum == LEVEL_TTM then
+        if not obj_get_first_with_behavior_id(id_bhvFog) then
+            spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)
             spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, function(morefog)
-                obj_scale(morefog, 1.8)
+                morefog.oBehParams = 2
+            end)
+            spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, function(bigfog)
+                bigfog.oBehParams = 1
             end)
         end
     elseif np.currLevelNum == LEVEL_HELL then
@@ -101,6 +119,17 @@ local function mario_update(m)
         set_fog_color(0, 255)
         set_fog_color(1, 255)
         set_fog_color(2, 255)
+    elseif np.currLevelNum == LEVEL_TTM then
+        set_lighting_color(0, 255)
+        set_lighting_color(1, 255)
+        set_lighting_color(2, 255)
+        set_lighting_dir(1, 0)
+        set_vertex_color(0, 255)
+        set_vertex_color(1, 255)
+        set_vertex_color(2, 255)
+        set_fog_color(0, 0)
+        set_fog_color(1, 0)
+        set_fog_color(2, 0)
     elseif np.currLevelNum ~= LEVEL_HELL and np.currLevelNum ~= LEVEL_JRB and m.marioObj.oTimer < 30 then
         set_lighting_color(0, 255)
         set_lighting_color(1, 255)
