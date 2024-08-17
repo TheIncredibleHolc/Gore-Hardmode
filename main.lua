@@ -111,10 +111,9 @@ function testing(m)
 	local s = gStateExtras[m.playerIndex]
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-
-		--s.isgold = true
-		--warp_to_level(LEVEL_SECRETHUB, 1, 0)
-
+		local_play(sNightvision, gLakituState.pos, 1)
+		set_mario_action(m, ACT_PUTTING_ON_CAP, 0)
+		s.hasNightvision = true
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 		gGlobalSyncTable.toaddeathcounter = 49
@@ -126,14 +125,11 @@ function testing(m)
 		set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-		--local yaw = 0
-		--for i = 0, 16 do
-		--	yaw = yaw + 4096	
-		--	spawn_sync_if_main(id_bhvFireRing, E_MODEL_RED_FLAME, m.pos.x, m.pos.y + 26, m.pos.z, function (o)
-				--o.oFaceAngleYaw = yaw
-				o.oMoveAngleYaw = o.oFaceAngleYaw
-		--	end, 0)
-		--end
+		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, m.pos.x, m.pos.y, m.pos.z, function(bob)
+			bob.oBehParams = 20
+		end)
+
 	end
 end
 
@@ -164,6 +160,7 @@ local TEX_TRIPPY_OVERLAY = get_texture_info('trippy')
 local TEX_PORTAL = get_texture_info("portal")
 local TEX_GAMEOVER = get_texture_info("gameover")
 local TEX_DIRT = get_texture_info("grass_09004800")
+local TEX_NIGHTVISION = get_texture_info("nightvision")
 
 -----------------------------------------------------------------------------------------------------------------------------
 -------ACT_FUNCTIONS------------
@@ -695,7 +692,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 
 	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
-		if m.marioObj.oTimer == 30 and not s.sslIntro then
+		if ia(m) and m.marioObj.oTimer == 30 and not s.sslIntro then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
 			s.sslIntro = true
 		end
@@ -725,7 +722,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 
 	if np.currLevelNum == LEVEL_SL and np.currAreaIndex == 1 then
-		if m.marioObj.oTimer == 30 and not s.slIntro then
+		if ia(m) and m.marioObj.oTimer == 30 and not s.slIntro then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
 			s.slIntro = true
 		end
@@ -1067,7 +1064,7 @@ end
 
 function on_interact(m, o, intType, interacted) --Best place to switch enemy behaviors to have mario insta-die.
 	local s = gStateExtras[m.playerIndex]
-	np = gNetworkPlayers[0]
+	local np = gNetworkPlayers[0]
 	print(get_behavior_name_from_id(get_id_from_behavior(o.behavior)))
 
 	--KILLABLE TOAD 
@@ -1112,7 +1109,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 	end
 
 	--Custom bobomb buddy explosions
-	if obj_has_behavior_id(o, id_bhvBobombBuddy) ~= 0 then
+	if obj_has_behavior_id(o, id_bhvBobombBuddy) ~= 0 and np.currLevelNum ~= LEVEL_TTM then
 		spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
 		obj_mark_for_deletion(o)
 	end
@@ -1323,6 +1320,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	audio_sample_stop(gSamples[sAgonyWaluigi]) --Stops Waluigi's super long scream
 	s.bigthrowenabled = 0
 	s.timeattack = false
+	s.hasNightvision = false
 	--set_override_envfx(ENVFX_MODE_NONE)
 	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then
@@ -1393,6 +1391,18 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	local m = gMarioStates[0]
 	local n = gNetworkPlayers[0]
 	if m.floor and m.floor.object and obj_has_behavior_id(m.floor.object, id_bhvBackroom) ~= 0 then return end
+
+	if s.hasNightvision then
+		local width = (djui_hud_get_screen_width()+1)/512
+		local height = 240/512
+
+		djui_hud_set_color(255, 255, 255, 255)
+		djui_hud_render_texture(TEX_NIGHTVISION, 0, 0, 5, 5)
+
+		set_lighting_color(0, 20)
+        set_lighting_color(1, 255)
+        set_lighting_color(2, 20)
+	end
 
 	if s.death and s.iwbtg then
 		djui_hud_render_texture(TEX_GAMEOVER, (screenWidth/2) - 256, (screenHeight/2) - 128, 1, 1)
@@ -1823,6 +1833,17 @@ local function level_init_spawns()
 			spawn_sync_object(id_bhvGorrie, E_MODEL_DORRIE, -5269, 1050, 3750, nil)
 		end
 	end
+	--[[
+	if np.currLevelNum == LEVEL_TTM then
+		local buddy = obj_get_first_with_behavior_id(id_bhvBobombBuddy)
+		if buddy ~= nil then
+			--djui_chat_message_create('dorrie exists')
+		else
+			--djui_chat_message_create('spawning dorrie')
+			spawn_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
+		end
+	end
+	]]
 end
 
 hook_event(HOOK_ON_SYNC_VALID, level_init_spawns)

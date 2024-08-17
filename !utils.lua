@@ -37,7 +37,8 @@ gSamples = {
 	audio_sample_load("iwbtgdeath.ogg"),
 	audio_sample_load("chicken.ogg"),
 	audio_sample_load("ground.ogg"),
-	audio_sample_load("klepto.ogg")
+	audio_sample_load("klepto.ogg"),
+	audio_sample_load("nightvision.ogg")
 }
 
 sBoneBreak = 1
@@ -77,6 +78,7 @@ sIwbtgDeath = 34
 sChicken = 35
 sGround = 36
 sAngryKlepto = 37
+sNightvision = 38
 
 function loop(music) audio_stream_set_looping(music, true) end
 
@@ -209,6 +211,8 @@ E_MODEL_GIB = smlua_model_util_get_id("gib_geo")
 COL_GIB = smlua_collision_util_get("gib_collision")
 DORRIE_DEAD = smlua_model_util_get_id("dorrie_ded_lol_geo")
 E_MODEL_HELL_DORRIE = smlua_model_util_get_id("hell_dorrie_geo")
+E_MODEL_LANTERN = smlua_model_util_get_id("lantern_geo")
+COL_LANTERN = smlua_collision_util_get("lantern_collision")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -277,7 +281,8 @@ for i = 0, MAX_PLAYERS-1 do
 		iwbtg = false,
 		death = false,
 		sslIntro = false,
-		slIntro = false
+		slIntro = false,
+		hasNightvision = false
 	}
 end
 
@@ -292,10 +297,10 @@ portalalpha = 0
 loadingscreen = 0
 
 if network_is_server() and mod_storage_load("file"..get_current_save_file_num().."gameisbeat") then
-	djui_chat_message_create("game is beat!")
+	--djui_chat_message_create("game is beat!")
 	gGlobalSyncTable.gameisbeat = true
 else
-	djui_chat_message_create("game NOT beat")
+	--djui_chat_message_create("game NOT beat")
 end
 
 define_custom_obj_fields({
@@ -445,6 +450,10 @@ sOnLvlInitToFunc = {
             savedCollisionBugStatus = gLevelValues.fixCollisionBugs
             gLevelValues.fixCollisionBugs = true
         end
+    end,
+
+	[LEVEL_TTM] = function()
+		spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
     end,
 
     [LEVEL_BITFS] = function()

@@ -33,7 +33,7 @@ local function fog_init(o)
     o.oFaceAngleRoll = 0
     o.oOpacity = 75
     if o.oBehParams == 2 then
-        obj_scale(o, 1.6)
+        obj_scale(o, 2)
     elseif o.oBehParams == 1 then
         obj_scale(o, 6)
     else
@@ -46,7 +46,7 @@ end
 ---@param o Object
 local function fog_loop(o)
     local m = gMarioStates[0]
-
+    local s = gStateExtras[0]
     local skybox = get_skybox() --* in loop function in case mods change the skybox
     if skyboxInfo[skybox] then
         o.oAnimState = skyboxInfo[skybox].anim
@@ -86,8 +86,31 @@ local function fog_loop(o)
     set_fog_color(1, g)
     set_fog_color(2, b)
 
-    o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
-    o.oFaceAngleYaw = m.faceAngle.y
+    if np.currLevelNum ~= LEVEL_TTM then
+        o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
+        o.oFaceAngleYaw = m.faceAngle.y
+    else
+        local lantern = obj_get_first_with_behavior_id(id_bhvBobombBuddy)
+        local distance = dist_between_objects (lantern, m.marioObj)
+        if distance > 800 and m.heldObj ~= lantern then
+            o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
+            if o.oBehParams ~= 1 then
+                cur_obj_disable_rendering_and_become_intangible(o)
+            end
+        else
+            if m.heldObj == lantern then
+                o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
+            else
+                o.oPosX, o.oPosY, o.oPosZ = lantern.oPosX, lantern.oPosY, lantern.oPosZ
+                cur_obj_enable_rendering_and_become_tangible(o)
+            end
+        end
+        o.oFaceAngleYaw = m.faceAngle.y
+
+        if s.hasNightvision and o.oBehParams ~= 1 then
+            cur_obj_disable_rendering_and_become_intangible(o)
+        end
+    end
 end
 
 ---@param m MarioState
@@ -120,9 +143,7 @@ local function mario_update(m)
         set_fog_color(1, 255)
         set_fog_color(2, 255)
     elseif np.currLevelNum == LEVEL_TTM then
-        set_lighting_color(0, 255)
-        set_lighting_color(1, 255)
-        set_lighting_color(2, 255)
+
         set_lighting_dir(1, 0)
         set_vertex_color(0, 255)
         set_vertex_color(1, 255)

@@ -1,0 +1,11 @@
+extern const GeoLayout lantern_geo[];
+extern u8 lantern_dark_i8[];
+extern u8 lantern_some_shine_rgba16[];
+extern Vtx lantern_Cube_mesh_layer_1_vtx_0[100];
+extern Gfx lantern_Cube_mesh_layer_1_tri_0[];
+extern Vtx lantern_Cube_mesh_layer_1_vtx_1[20];
+extern Gfx lantern_Cube_mesh_layer_1_tri_1[];
+extern Gfx mat_lantern_f3dlite_material_072[];
+extern Gfx mat_revert_lantern_f3dlite_material_072[];
+extern Gfx mat_lantern_f3dlite_material[];
+extern Gfx lantern_Cube_mesh_layer_1[];

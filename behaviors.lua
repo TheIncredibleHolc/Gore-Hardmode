@@ -1714,6 +1714,98 @@ function blood_mist_loop(o)
 	end
 end
 
+function lantern_init(o)
+    o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_HOLDABLE | OBJ_COL_FLAG_GROUNDED | OBJ_FLAG_HOLDABLE
+    o.oInteractType = INTERACT_GRABBABLE
+	o.header.gfx.skipInViewCheck = true
+	o.hitboxRadius = 100
+    o.hitboxHeight = 100
+	o.oWallHitboxRadius = 60
+	o.oGravity = -2
+	o.collisionData = COL_LANTERN
+	o.oCollisionDistance = 10000
+end
+
+function lantern_loop(o)
+	local m = gMarioStates[0]
+	local distance = dist_between_objects (o, m.marioObj)
+	local worldlighting = 1000 - distance
+	--cur_obj_move_standard(-78)
+
+	load_object_collision_model()
+	djui_chat_message_create(tostring(o.oPosY))
+	
+	cur_obj_update_floor_and_walls()
+	cur_obj_update_floor_height()
+	--cur_obj_update_floor()
+	--cur_obj_update_floor_height_and_get_floor()
+
+	--cur_obj_move_update_ground_air_flags(-2, 2)
+	cur_obj_move_using_fvel_and_gravity()
+	set_lighting_color(0, worldlighting)
+	set_lighting_color(1, worldlighting)
+	set_lighting_color(2, worldlighting)
+
+end
+
+
+function bobomb_lantern_init(o)
+	if o.oBehParams == 20 then
+		o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_HOLDABLE | OBJ_COL_FLAG_GROUNDED | OBJ_FLAG_HOLDABLE
+    	o.oInteractType = INTERACT_GRABBABLE
+	end
+end
+
+
+function bobomb_lantern_loop(o)
+	if o.oBehParams == 20 then
+		local s = gStateExtras[0]
+		local player = nearest_player_to_object(o)
+		local angletomario = obj_angle_to_object(o, m.marioObj)
+		local distance = dist_between_objects (o, m.marioObj)
+		local worldlighting = 255
+
+		if m.heldObj == o and m.action == ACT_AIR_THROW then
+			o.oForwardVel = 30
+			cur_obj_move_using_fvel_and_gravity()
+			djui_chat_message_create("yeet")
+		end
+
+		if o.oPosY > o.oFloorHeight then
+			limit_angle(o.oFaceAngleYaw)
+		end
+
+		if m.heldObj == o then
+			cur_obj_disable_rendering_and_become_intangible(o)
+		else
+			cur_obj_enable_rendering_and_become_tangible(o)
+		end
+
+		if distance < 300  or m.heldObj == o then
+			worldlighting = 255
+		elseif distance < 900 and distance > 300 then
+			worldlighting = 255 - ((distance - 300)/2)
+		elseif distance > 900 then
+			worldlighting = 0
+		end
+
+		if worldlighting < 0 then
+			worldlighting = 0
+		end
+
+		set_lighting_color(0, worldlighting)
+		set_lighting_color(1, worldlighting)
+		set_lighting_color(2, worldlighting)
+
+		o.oFaceAngleYaw = angletomario
+		obj_turn_toward_object(o, player, 16, 0x800)
+		o.oForwardVel = 2
+		object_step()
+
+
+	end
+end
+
 -------Behavior Hooks-------
 
 local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
@@ -1784,6 +1876,7 @@ hook_gore_behavior(id_bhvBobomb, false, nil, bobomb_loop)
 hook_gore_behavior(id_bhvGoomba, false, nil, bhv_custom_goomba_loop)
 hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
 hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
+hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
 id_bhvSquishblood = hook_behavior(nil, OBJ_LIST_GENACTOR, true, squishblood_init, squishblood_loop, "bhvSquishblood")
@@ -1801,4 +1894,5 @@ id_bhvBouncy1up = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bouncy_init, bounc
 id_bhvGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, gib_init, gib_loop, "bhvGib")
 id_bhvFireRing = hook_behavior(nil, OBJ_LIST_GENACTOR, true, firering_init, firering_loop, "bhvFireRing")
 id_bhvGorrie = hook_behavior(nil, OBJ_LIST_SURFACE, true, gorrie_init, gorrie_loop)
-id_bhvLantern = hook_behavior(nil, OBJ_LIST_GENACTOR, true, lantern_init, lantern_loop)
+id_bhvLantern = hook_behavior(nil, OBJ_LIST_SURFACE, true, lantern_init, lantern_loop)
+
