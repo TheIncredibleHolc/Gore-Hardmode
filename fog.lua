@@ -45,10 +45,11 @@ end
 
 ---@param o Object
 local function fog_loop(o)
+    local np = gNetworkPlayers[0]
     local m = gMarioStates[0]
     local s = gStateExtras[0]
     local skybox = get_skybox() --* in loop function in case mods change the skybox
-    if skyboxInfo[skybox] then
+    if skyboxInfo[skybox] and np.currLevelNum ~= LEVEL_TTM then
         o.oAnimState = skyboxInfo[skybox].anim
     else
         o.oAnimState = STATE_BLACK
@@ -78,21 +79,23 @@ local function fog_loop(o)
         set_lighting_color(0, r)
         set_lighting_color(1, g)
         set_lighting_color(2, b)
+        set_vertex_color(0, r)
+        set_vertex_color(1, g)
+        set_vertex_color(2, b)
+        set_fog_color(0, r)
+        set_fog_color(1, g)
+        set_fog_color(2, b)
     end
-    set_vertex_color(0, r)
-    set_vertex_color(1, g)
-    set_vertex_color(2, b)
-    set_fog_color(0, r)
-    set_fog_color(1, g)
-    set_fog_color(2, b)
 
     if np.currLevelNum ~= LEVEL_TTM then
         o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
         o.oFaceAngleYaw = m.faceAngle.y
     else
-        local lantern = obj_get_first_with_behavior_id(id_bhvBobombBuddy)
+        local lantern = obj_get_first_with_behavior_id(id_bhvBobombBuddy) or obj_get_first_with_behavior_id(id_bhvLantern)
         local distance = dist_between_objects (lantern, m.marioObj)
-        if distance > 800 and m.heldObj ~= lantern then
+        --if distance > 800 and m.heldObj ~= lantern then
+        if distance > 1100 and m.heldObj ~= lantern then
+
             o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
             if o.oBehParams ~= 1 then
                 cur_obj_disable_rendering_and_become_intangible(o)
@@ -143,14 +146,14 @@ local function mario_update(m)
         set_fog_color(1, 255)
         set_fog_color(2, 255)
     elseif np.currLevelNum == LEVEL_TTM then
-
+        o.oAnimState = STATE_BLACK
         set_lighting_dir(1, 0)
-        set_vertex_color(0, 255)
-        set_vertex_color(1, 255)
-        set_vertex_color(2, 255)
-        set_fog_color(0, 0)
-        set_fog_color(1, 0)
-        set_fog_color(2, 0)
+        --set_vertex_color(0, 255)
+        --set_vertex_color(1, 255)
+        --set_vertex_color(2, 255)
+        --set_fog_color(0, 0)
+        --set_fog_color(1, 0)
+        --set_fog_color(2, 0)
     elseif np.currLevelNum ~= LEVEL_HELL and np.currLevelNum ~= LEVEL_JRB and m.marioObj.oTimer < 30 then
         set_lighting_color(0, 255)
         set_lighting_color(1, 255)

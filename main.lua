@@ -116,8 +116,8 @@ function testing(m)
 		s.hasNightvision = true
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		gGlobalSyncTable.toaddeathcounter = 49
-		gGlobalSyncTable.gameisbeat = true
+		--spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, m.pos.x, m.pos.y, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
 		m.numLives = 1
@@ -161,7 +161,10 @@ local TEX_PORTAL = get_texture_info("portal")
 local TEX_GAMEOVER = get_texture_info("gameover")
 local TEX_DIRT = get_texture_info("grass_09004800")
 local TEX_NIGHTVISION = get_texture_info("nightvision")
-
+local TEX_NIGHTVISION2 = get_texture_info("nightvision2")
+local TEX_NIGHTVISION3 = get_texture_info("nightvision3")
+local TEX_NIGHTVISION4 = get_texture_info("nightvision4")
+local TEX_NIGHTVISION5 = get_texture_info("nightvision5")
 -----------------------------------------------------------------------------------------------------------------------------
 -------ACT_FUNCTIONS------------
 
@@ -244,6 +247,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
+	if m.action == ACT_THROWING then
+		--djui_chat_message_create(tostring())
+	end
 	--djui_chat_message_create(tostring(np.currAreaIndex))
 
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
@@ -1397,7 +1403,33 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 		local height = 240/512
 
 		djui_hud_set_color(255, 255, 255, 255)
-		djui_hud_render_texture(TEX_NIGHTVISION, 0, 0, 5, 5)
+		
+		--[[ 
+		local nightvisionnoise = {
+			TEX_NIGHTVISION,
+			TEX_NIGHTVISION2,
+			TEX_NIGHTVISION3,
+			TEX_NIGHTVISION4,
+			TEX_NIGHTVISION5
+		}
+		local nightvision = math.random(nightvisionnoise)
+		]]
+		nightvisionnoise = nightvisionnoise + 1
+		if nightvisionnoise >= 6 then
+			nightvisionnoise = 1
+		end
+		if nightvisionnoise == 1 then --DON'T YELL AT ME I TRIED YOUR DAMN TABLE AND IT DIDNT WORK
+			nightvision = TEX_NIGHTVISION
+		elseif nightvisionnoise == 2 then
+			nightvision = TEX_NIGHTVISION2
+		elseif nightvisionnoise == 3 then
+			nightvision = TEX_NIGHTVISION3
+		elseif nightvisionnoise == 4 then
+			nightvision = TEX_NIGHTVISION4
+		elseif nightvisionnoise == 5 then
+			nightvision = TEX_NIGHTVISION5
+		end
+		djui_hud_render_texture(nightvision, 0, 0, 5, 5)
 
 		set_lighting_color(0, 20)
         set_lighting_color(1, 255)

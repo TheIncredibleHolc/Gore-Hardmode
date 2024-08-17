@@ -296,6 +296,8 @@ bloodalpha = 0
 hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
+nightvisionnoise = 0
+
 
 if network_is_server() and mod_storage_load("file"..get_current_save_file_num().."gameisbeat") then
 	--djui_chat_message_create("game is beat!")
@@ -454,7 +456,9 @@ sOnLvlInitToFunc = {
     end,
 
 	[LEVEL_TTM] = function()
-		spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
+		--spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
+		--spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_LANTERN, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
+		spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)
     end,
 
     [LEVEL_BITFS] = function()

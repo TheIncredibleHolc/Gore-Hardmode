@@ -1715,37 +1715,71 @@ function blood_mist_loop(o)
 end
 
 function lantern_init(o)
-    o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_HOLDABLE | OBJ_COL_FLAG_GROUNDED | OBJ_FLAG_HOLDABLE
+    o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_HOLDABLE | OBJ_COL_FLAG_GROUNDED
     o.oInteractType = INTERACT_GRABBABLE
 	o.header.gfx.skipInViewCheck = true
-	o.hitboxRadius = 100
-    o.hitboxHeight = 100
-	o.oWallHitboxRadius = 60
-	o.oGravity = -2
+	--o.hitboxRadius = 100
+    --o.hitboxHeight = 100
+	--o.oWallHitboxRadius = 20
+	o.oGravity = -1
 	o.collisionData = COL_LANTERN
 	o.oCollisionDistance = 10000
+	o.oFriction = 0.8
+	o.oBounciness = 1
+	o.oBuoyancy = 1.4
+	spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, nil)
 end
 
 function lantern_loop(o)
-	local m = gMarioStates[0]
 	local distance = dist_between_objects (o, m.marioObj)
-	local worldlighting = 1000 - distance
-	--cur_obj_move_standard(-78)
+	local worldlighting = 255
+	o.oGraphYOffset = 30
+	o.oInteractStatus = 0
+	cur_obj_update_floor_height_and_get_floor()
+	if m.action == ACT_AIR_THROW and m.actionTimer < 10 and o.oPosY > o.oFloorHeight then
+		o.oForwardVel = 20
+		o.oVelY = 7
+	end
+	if m.action == ACT_THROWING and m.actionTimer < 13 and o.oPosY > o.oFloorHeight then
+		o.oForwardVel = 18
+		o.oVelY = 9
+	end
 
-	load_object_collision_model()
-	djui_chat_message_create(tostring(o.oPosY))
-	
-	cur_obj_update_floor_and_walls()
-	cur_obj_update_floor_height()
-	--cur_obj_update_floor()
-	--cur_obj_update_floor_height_and_get_floor()
-
-	--cur_obj_move_update_ground_air_flags(-2, 2)
+	cur_obj_move_standard(-78)
 	cur_obj_move_using_fvel_and_gravity()
+
+	if m.heldObj == o then
+		cur_obj_disable_rendering_and_become_intangible(o)
+	else
+		cur_obj_enable_rendering_and_become_tangible(o)
+	end
+
+	if distance < 300  or m.heldObj == o then
+		worldlighting = 255
+	--elseif distance < 900 and distance > 300 then
+	elseif distance < 1100 and distance > 300 then
+
+		--worldlighting = 255 - ((distance - 300)/2)
+		worldlighting = 255 - ((distance - 300)/3)
+	--elseif distance > 900 then
+	elseif distance > 1100 then
+		worldlighting = 0
+	end
+
+	if worldlighting < 0 then
+		worldlighting = 0
+	end
+
 	set_lighting_color(0, worldlighting)
 	set_lighting_color(1, worldlighting)
 	set_lighting_color(2, worldlighting)
-
+	set_vertex_color(0, worldlighting)
+	set_vertex_color(1, worldlighting)
+	set_vertex_color(2, worldlighting)
+	set_fog_color(0, 0)
+	set_fog_color(1, 0)
+	set_fog_color(2, 0)
+	object_step()
 end
 
 
@@ -1753,6 +1787,7 @@ function bobomb_lantern_init(o)
 	if o.oBehParams == 20 then
 		o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_HOLDABLE | OBJ_COL_FLAG_GROUNDED | OBJ_FLAG_HOLDABLE
     	o.oInteractType = INTERACT_GRABBABLE
+		spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, nil)
 	end
 end
 
@@ -1767,9 +1802,9 @@ function bobomb_lantern_loop(o)
 
 		if m.heldObj == o and m.action == ACT_AIR_THROW then
 			o.oForwardVel = 30
-			cur_obj_move_using_fvel_and_gravity()
 			djui_chat_message_create("yeet")
 		end
+		cur_obj_move_using_fvel_and_gravity()
 
 		if o.oPosY > o.oFloorHeight then
 			limit_angle(o.oFaceAngleYaw)
@@ -1796,6 +1831,12 @@ function bobomb_lantern_loop(o)
 		set_lighting_color(0, worldlighting)
 		set_lighting_color(1, worldlighting)
 		set_lighting_color(2, worldlighting)
+		set_vertex_color(0, worldlighting)
+		set_vertex_color(1, worldlighting)
+		set_vertex_color(2, worldlighting)
+		set_fog_color(0, 0)
+		set_fog_color(1, 0)
+		set_fog_color(2, 0)
 
 		o.oFaceAngleYaw = angletomario
 		obj_turn_toward_object(o, player, 16, 0x800)
@@ -1804,6 +1845,34 @@ function bobomb_lantern_loop(o)
 
 
 	end
+end
+
+function glow_init(o)
+	o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
+	o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+	o.header.gfx.skipInViewCheck = true
+	obj_set_billboard(o)
+	obj_scale(o, 2)
+	o.oOpacity = 255
+
+end
+
+function glow_loop(o)
+	local m = gMarioStates[0]
+	--local target = obj_get_nearest_object_with_behavior_id(o, id_bhvBobombBuddy)
+	local target = obj_get_nearest_object_with_behavior_id(o, id_bhvLantern)
+	local scale = 1.8+math.sin(get_global_timer()/12)*0.2
+	local opacity = 105+math.sin(get_global_timer()/12)*20
+	o.oGraphYOffset = 20
+	o.oOpacity = opacity
+	--o.oOpacity = 255
+	obj_scale(o, scale)
+	if m.heldObj == target then
+		o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y + 90, m.pos.z
+	else
+		o.oPosX, o.oPosY, o.oPosZ = target.oPosX, target.oPosY, target.oPosZ
+	end
+
 end
 
 -------Behavior Hooks-------
@@ -1895,4 +1964,5 @@ id_bhvGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, gib_init, gib_loop, "
 id_bhvFireRing = hook_behavior(nil, OBJ_LIST_GENACTOR, true, firering_init, firering_loop, "bhvFireRing")
 id_bhvGorrie = hook_behavior(nil, OBJ_LIST_SURFACE, true, gorrie_init, gorrie_loop)
 id_bhvLantern = hook_behavior(nil, OBJ_LIST_SURFACE, true, lantern_init, lantern_loop)
+id_bhvGlow = hook_behavior(nil, OBJ_LIST_GENACTOR, true, glow_init, glow_loop)
 
