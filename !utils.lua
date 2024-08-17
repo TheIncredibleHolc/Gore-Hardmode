@@ -247,6 +247,7 @@ smlua_audio_utils_replace_sequence(SEQ_EVENT_CUTSCENE_ENDING, 35, 76, "gorepeach
 
 smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry World')
 smlua_text_utils_course_name_replace(COURSE_JRB, 'Jolly Roger Hell')
+smlua_text_utils_course_name_replace(COURSE_TTM, 'Dark Dark Mountain')
 
 --! misc variables, state extras
 
