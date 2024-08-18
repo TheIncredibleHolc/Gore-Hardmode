@@ -409,15 +409,13 @@ to some objects overhead.\
 It's the same as grabbing\
 a flying bird!"))
 
-smlua_text_utils_dialog_replace(DIALOG_044,1,5,95,200, ("Whooo's there? Whooo\
-woke me up? It's still\
-daylight--I should be\
-sleeping!\
+smlua_text_utils_dialog_replace(DIALOG_044,1,2,95,200, ("What...?! ...MY TREE!!\
 \
-You just go around\
-waking everyone up at\
-your own convenience?\
-Bah! You'll regret it!"))
+What the hell did you\
+just do to my HOME??\
+My family... My KIDS...\
+\
+You're gonna pay for that!"))
 
 smlua_text_utils_dialog_replace(DIALOG_045,1,6,95,200, ("Whew! I'm just about\
 flapped out. You should\

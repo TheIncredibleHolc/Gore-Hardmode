@@ -187,11 +187,13 @@ end
 
 local function bhv_custom_explosion(obj) -- replaces generic explosions with NUKES! (Bigger radius, bigger explosion, louder)
 	local m = nearest_mario_state_to_object(obj)
-	local_play(sBigExplosion, m.pos, 1)
-	cur_obj_shake_screen(SHAKE_POS_LARGE)
-	spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, obj.oPosX, obj.oPosY, obj.oPosZ, nil, 0)
-	if dist_between_objects(obj, m.marioObj) <= 850 then
-		m.squishTimer = 50
+	if obj.oBehParams ~= 20 then
+		local_play(sBigExplosion, m.pos, 1)
+		cur_obj_shake_screen(SHAKE_POS_LARGE)
+		spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, obj.oPosX, obj.oPosY, obj.oPosZ, nil, 0)
+		if dist_between_objects(obj, m.marioObj) <= 850 then
+			m.squishTimer = 50
+		end
 	end
 end
 
@@ -375,10 +377,20 @@ local function bhv_custom_toxbox(obj) -- Yeah this isn't doing anything. These g
 	end
 end
 
-local function bhv_custom_tree(obj) -- Trees fall down through the map when approached.
-	local m = nearest_player_to_object(obj)
-	if lateral_dist_between_objects(m, obj) < 150 then
-		obj.oPosY = obj.oPosY - 500
+local function bhv_custom_tree(o) -- Trees fall down through the map when approached.
+	local m = gMarioStates[0]
+	local np = gNetworkPlayers[0]
+	if lateral_dist_between_objects(m.marioObj, o) < 150 then
+		o.oPosY = o.oPosY - 500
+		if np.currLevelNum == LEVEL_WF then
+			local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
+			if hoot ~= nil and hoot.oHootAvailability ~= HOOT_AVAIL_WANTS_TO_TALK then
+				spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY + 200, o.oPosZ, function (x) x.oBehParams = 20 end)
+				hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
+				play_secondary_music(0,0,0,0)
+				obj_mark_for_deletion(o)
+			end
+		end
 	end
 end
 
@@ -1903,8 +1915,64 @@ function goggles_loop(o)
 		s.hasNightvision = true
 		obj_mark_for_deletion(o)
 	end
+end
 
+function hoot_loop(o)
+	local m = gMarioStates[0]
+	local player = nearest_player_to_object(o)
+	local np = gNetworkPlayers[0]
+	if o.oHootAvailability == HOOT_AVAIL_READY_TO_FLY and o.oAction ~= 10 then
+		o.oHootAvailability = false
+		--network_play(sAngryKlepto, m.pos, 1, m.playerIndex)
+		stop_secondary_music(0)
+		approach_vec3f_asymptotic(gLakituState.focus, o.header.gfx.pos, 3,3,3)
+		approach_vec3f_asymptotic(gLakituState.curFocus, o.header.gfx.pos, 3,3,3)
+		play_music(0, SEQ_EVENT_BOSS, 0)
+		o.oAction = 10
+		o.oTimer = 0
+	end
 
+	if o.oAction == 10 then --hoot is pissed and hunts for nearest player.
+		o.oFaceAngleRoll = 0
+		o.oMoveAngleRoll = 0
+		cur_obj_update_floor()
+		if o.oPosY < o.oFloorHeight + 800 then
+			o.oPosY = o.oPosY + 10 --rises up high to look for players
+		end
+		if o.oTimer >= 90 then
+			if is_point_within_radius_of_any_player(o.oPosX, o.oPosY, o.oPosZ, 8000) then
+				network_play(sAngryKlepto, m.pos, 1, m.playerIndex)
+				spawn_mist_particles()
+				o.oAction = 8
+			end
+		end
+	end
+
+	if o.oAction == 8 then --CHASING PLAYER
+		o.oForwardVel = 35
+		--cur_obj_move_xz_using_fvel_and_yaw()
+		--obj_move(o)
+		obj_turn_toward_object(o, player, 16, 0x2000)
+		--o.oFaceAngleYaw = obj_angle_to_object(o, m.marioObj)
+		o.oFaceAngleRoll = 0
+		o.oMoveAngleRoll = 0
+		o.oFaceAnglePitch = obj_pitch_to_object(o, player)
+		o.oMoveAnglePitch = obj_pitch_to_object(o, player)
+		obj_move_xyz_using_fvel_and_yaw(o)
+		
+		if obj_check_hitbox_overlap(m.marioObj, o) then
+			if (m.action & ACT_FLAG_ATTACKING) ~= 0 then
+				obj_unused_die()
+				squishblood(o)
+				network_play(sSplatter, m.pos, 1, m.playerIndex)
+				stop_background_music(SEQ_EVENT_BOSS)
+			else
+				o.oTimer = 0
+				o.oAction = 10 --Player is ded, hoot resets to hunt for next player.
+				m.squishTimer = 50
+			end
+		end
+	end
 end
 
 -------Behavior Hooks-------
@@ -1978,6 +2046,7 @@ hook_gore_behavior(id_bhvGoomba, false, nil, bhv_custom_goomba_loop)
 hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
 hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
 hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
+hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
 id_bhvSquishblood = hook_behavior(nil, OBJ_LIST_GENACTOR, true, squishblood_init, squishblood_loop, "bhvSquishblood")

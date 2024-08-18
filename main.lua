@@ -124,10 +124,11 @@ function testing(m)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
-		spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, m.pos.x, m.pos.y, m.pos.z, function(bob)
-			bob.oBehParams = 20
-		end)
-
+		local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
+		if hoot ~= nil then
+			hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
+			play_secondary_music(0,0,0,0)
+		end
 	end
 end
 
