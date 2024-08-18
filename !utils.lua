@@ -460,6 +460,11 @@ sOnLvlInitToFunc = {
 		--spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
 		--spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_LANTERN, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
 		spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)
+		spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 434, -2000, 3704, function (nvg) 
+			nvg.oFaceAngleYaw = -1600
+			nvg.oMoveAngleYaw = nvg.oFaceAngleYaw
+		end)
+		spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, -3492, -4100, 3705, nil)
     end,
 
     [LEVEL_BITFS] = function()

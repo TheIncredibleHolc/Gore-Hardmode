@@ -249,7 +249,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	if m.action == ACT_THROWING then
 		--djui_chat_message_create(tostring())
 	end
-	--djui_chat_message_create(tostring(np.currAreaIndex))
+	--djui_chat_message_create(tostring(m.marioObj.oFaceAngleYaw))
 
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
 		m.action = ACT_NOTHING
