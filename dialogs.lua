@@ -414,16 +414,10 @@ woke me up? It's still\
 daylight--I should be\
 sleeping!\
 \
-Hey, as long as I'm\
-awake, why not take a\
-short flight with me?\
-Press and hold [A] to grab\
-on. Release [A] to let go.\
-I'll take you wherever\
-you want to go, as long\
-as my wings hold out.\
-Watch my shadow, and\
-grab on."))
+You just go around\
+waking everyone up at\
+your own convenience?\
+Bah! You'll regret it!"))
 
 smlua_text_utils_dialog_replace(DIALOG_045,1,6,95,200, ("Whew! I'm just about\
 flapped out. You should\

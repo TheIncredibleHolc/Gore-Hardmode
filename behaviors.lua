@@ -170,9 +170,12 @@ local function bhv_custom_bully(obj)
 	local np = gNetworkPlayers[0]
 	local m = nearest_mario_state_to_object(obj)
 	if np.currLevelNum == LEVEL_SECRETHUB then
-		cur_obj_scale(0.5)
+		
 	end
-
+	if obj.oBehParams == 20 then
+		cur_obj_scale(0.02)
+		obj.oFlags = GRAPH_RENDER_INVISIBLE
+	end
 	obj.oHomeX = m.pos.x
 	obj.oHomeY = m.pos.y
 	obj.oHomeZ = m.pos.z
@@ -1872,6 +1875,35 @@ function glow_loop(o)
 	else
 		o.oPosX, o.oPosY, o.oPosZ = target.oPosX, target.oPosY, target.oPosZ
 	end
+end
+
+function goggles_init(o)
+	o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
+	o.header.gfx.skipInViewCheck = true
+	o.hitboxRadius = 50
+    o.hitboxHeight = 50
+	o.oFaceAnglePitch = -2000
+	o.oMoveAnglePitch = o.oFaceAnglePitch
+	obj_scale(o, 1.3)
+end
+
+function goggles_loop(o)
+	local s = gStateExtras[0]
+	local m = gMarioStates[0]
+	o.oGraphYOffset = 20
+	cur_obj_update_floor_height_and_get_floor()
+	if o.oPosY > o.oFloorHeight then
+		o.oPosY = o.oFloorHeight
+	end
+
+	if obj_check_hitbox_overlap(o, m.marioObj) and m.action ~= ACT_PUTTING_ON_CAP then
+		set_mario_action(m, ACT_PUTTING_ON_CAP, 0)
+		cur_obj_disable_rendering_and_become_intangible(o)
+		local_play(sNightvision, gLakituState.pos, 1)
+		s.hasNightvision = true
+		obj_mark_for_deletion(o)
+	end
+
 
 end
 
@@ -1965,4 +1997,5 @@ id_bhvFireRing = hook_behavior(nil, OBJ_LIST_GENACTOR, true, firering_init, fire
 id_bhvGorrie = hook_behavior(nil, OBJ_LIST_SURFACE, true, gorrie_init, gorrie_loop)
 id_bhvLantern = hook_behavior(nil, OBJ_LIST_SURFACE, true, lantern_init, lantern_loop)
 id_bhvGlow = hook_behavior(nil, OBJ_LIST_GENACTOR, true, glow_init, glow_loop)
+id_bhvGoggles = hook_behavior(nil, OBJ_LIST_GENACTOR, true, goggles_init, goggles_loop)
 

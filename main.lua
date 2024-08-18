@@ -111,9 +111,7 @@ function testing(m)
 	local s = gStateExtras[m.playerIndex]
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		local_play(sNightvision, gLakituState.pos, 1)
-		set_mario_action(m, ACT_PUTTING_ON_CAP, 0)
-		s.hasNightvision = true
+		spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, m.pos.x + 200, m.pos.y, m.pos.z, nil)
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -1252,11 +1250,15 @@ function before_mario_action(m, action)
 -------------------------------------------------------------------------------------------------------------------------------------------------
 	--Disables LAVA_BOOST and replaces with a splash and insta-death... KERPLUNK!!
 	if (action == ACT_LAVA_BOOST) and np.currLevelNum ~= LEVEL_SL then
-		
+		spawn_non_sync_object(id_bhvSmallBully, E_MODEL_NONE, m.pos.x, m.pos.y, m.pos.z, function(bully) 
+			cur_obj_disable_rendering()
+			bully.oBehParams = 20
+		 end)
 		set_mario_action(m, ACT_GONE, 1)
 		local_play(sSplash, m.pos, 1)
 		spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
 		--m.health = 120
+		--common_death_handler(m, 0, 60)
 		m.health = 0xff
 		
 		return 1
@@ -1326,7 +1328,6 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	audio_sample_stop(gSamples[sAgonyWaluigi]) --Stops Waluigi's super long scream
 	s.bigthrowenabled = 0
 	s.timeattack = false
-	s.hasNightvision = false
 	--set_override_envfx(ENVFX_MODE_NONE)
 	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then
@@ -1346,7 +1347,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	audio_sample_stop(gSamples[sAgonyWaluigi]) --Stops Waluigi's super long scream
 
 	hud_show()
-
+	s.hasNightvision = false
 	s.death = false
 	s.isdead = false --Mario is alive
 	s.disableuntilnextwarp = false --Enables death counter

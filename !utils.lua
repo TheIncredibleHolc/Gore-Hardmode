@@ -213,6 +213,7 @@ DORRIE_DEAD = smlua_model_util_get_id("dorrie_ded_lol_geo")
 E_MODEL_HELL_DORRIE = smlua_model_util_get_id("hell_dorrie_geo")
 E_MODEL_LANTERN = smlua_model_util_get_id("lantern_geo")
 COL_LANTERN = smlua_collision_util_get("lantern_collision")
+E_MODEL_GOGGLES = smlua_model_util_get_id("goggles_geo")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -522,11 +523,15 @@ function act_gone(m)
 	m.actionTimer = m.actionTimer + 1
 	if m.actionTimer == m.actionArg then
 		local savedY = m.pos.y
-		if not s.iwbtg then
-			common_death_handler(m, 0, -1)
-		end
 		m.pos.y = savedY
 	end
+	if m.actionTimer == 45 then
+		if not s.iwbtg then
+			--djui_chat_message_create(tostring(m.actionTimer))
+			common_death_handler(m, 0, -1)
+		end
+	end
+
 end
 hook_mario_action(ACT_GONE, act_gone)
 

@@ -1,0 +1,12 @@
+extern const GeoLayout goggles_geo[];
+extern Lights1 goggles_f3dlite_material_060_lights;
+extern u8 goggles_nightvision_ci8[];
+extern u8 goggles_nightvision_pal_rgba16[];
+extern Vtx goggles_Cylinder_001_mesh_layer_1_vtx_0[719];
+extern Gfx goggles_Cylinder_001_mesh_layer_1_tri_0[];
+extern Vtx goggles_Cylinder_001_mesh_layer_1_vtx_1[41];
+extern Gfx goggles_Cylinder_001_mesh_layer_1_tri_1[];
+extern Gfx mat_goggles_f3dlite_material_060[];
+extern Gfx mat_goggles_f3dlite_material[];
+extern Gfx mat_revert_goggles_f3dlite_material[];
+extern Gfx goggles_Cylinder_001_mesh_layer_1[];
