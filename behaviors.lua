@@ -385,9 +385,10 @@ local function bhv_custom_tree(o) -- Trees fall down through the map when approa
 		if np.currLevelNum == LEVEL_WF then
 			local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
 			if hoot ~= nil and hoot.oHootAvailability ~= HOOT_AVAIL_WANTS_TO_TALK then
-				spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY + 200, o.oPosZ, function (x) x.oBehParams = 20 end)
+				--spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY + 200, o.oPosZ, function (x) x.oBehParams = 20 end)
 				hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
 				play_secondary_music(0,0,0,0)
+				m.action = ACT_IDLE
 				obj_mark_for_deletion(o)
 			end
 		end
@@ -1179,12 +1180,9 @@ local function squishblood_init(o)
 	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
 	o.oFaceAngleYaw = calculate_yaw(z, normal)
 	o.oFaceAngleRoll = 0
-	for i = 0, 60 do
-		if m.playerIndex ~= 0 then return end
-		local random = math.random()		
-		spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
-			obj_scale(gib, random/2)
-		end)
+	--djui_chat_message_create(tostring(o.oBehParams))
+	if o.oBehParams ~= 1 then --This is to stop blood from gibs shooting out of the ground if you kill an airborn enemy.
+		gibs(o)
 	end
 end
 
@@ -1277,13 +1275,7 @@ local function dorrie_dead(o)
 	if np.currLevelNum ~= LEVEL_HELL then
 		if o.oAction == DORRIE_ACT_LOWER_HEAD then
 			local_play(sDorrie, m.pos, 1)
-			for i = 0, 60 do
-				local random = math.random()
-				if m.playerIndex ~= 0 then return end
-				spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY + 50, o.oPosZ, function (gib)
-					obj_scale(gib, random/2)
-				end)
-			end
+			gibs(o)
 			o.oAction = 9
 			o.oTimer = 0
 		end
@@ -1467,13 +1459,7 @@ local function bhv_klepto_loop(o)
 	--djui_chat_message_create(tostring(o.oTimer))
 
 	if (o.oAction == KLEPTO_ACT_STRUCK_BY_MARIO) then
-		for i = 0, 60 do
-			if m.playerIndex ~= 0 then return end
-			local random = math.random()		
-			spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
-				obj_scale(gib, random/2)
-			end)
-		end
+		gibs(o)
 		network_play(sPunch, m.pos, 1, m.playerIndex)
 		o.oAction = 10
 		o.oTimer = 2
@@ -1920,11 +1906,14 @@ end
 function hoot_loop(o)
 	local m = gMarioStates[0]
 	local player = nearest_player_to_object(o)
+	local nearmario = nearest_mario_state_to_object(o)
 	local np = gNetworkPlayers[0]
+
 	if o.oHootAvailability == HOOT_AVAIL_READY_TO_FLY and o.oAction ~= 10 then
 		o.oHootAvailability = false
 		--network_play(sAngryKlepto, m.pos, 1, m.playerIndex)
 		stop_secondary_music(0)
+		m.action = ACT_IDLE
 		approach_vec3f_asymptotic(gLakituState.focus, o.header.gfx.pos, 3,3,3)
 		approach_vec3f_asymptotic(gLakituState.curFocus, o.header.gfx.pos, 3,3,3)
 		play_music(0, SEQ_EVENT_BOSS, 0)
@@ -1949,11 +1938,17 @@ function hoot_loop(o)
 	end
 
 	if o.oAction == 8 then --CHASING PLAYER
+		local nearest = nearest_mario_state_to_object(o)
+		cur_obj_update_floor_height_and_get_floor()
 		o.oForwardVel = 35
-		--cur_obj_move_xz_using_fvel_and_yaw()
-		--obj_move(o)
+		if o.oPosY > nearest.pos.y + 30 then
+			if o.oFloorHeight > 25 then
+				o.oPosY = o.oPosY - 15
+			end
+		elseif o.oPosY < nearest.pos.y - 30 then
+			o.oPosY = o.oPosY + 15
+		end
 		obj_turn_toward_object(o, player, 16, 0x2000)
-		--o.oFaceAngleYaw = obj_angle_to_object(o, m.marioObj)
 		o.oFaceAngleRoll = 0
 		o.oMoveAngleRoll = 0
 		o.oFaceAnglePitch = obj_pitch_to_object(o, player)
@@ -1962,16 +1957,33 @@ function hoot_loop(o)
 		
 		if obj_check_hitbox_overlap(m.marioObj, o) then
 			if (m.action & ACT_FLAG_ATTACKING) ~= 0 then
-				obj_unused_die()
-				squishblood(o)
-				network_play(sSplatter, m.pos, 1, m.playerIndex)
-				stop_background_music(SEQ_EVENT_BOSS)
+				local angletomario = obj_angle_to_object(o, m.marioObj)
+				o.oMoveAngleYaw = angletomario + 32768
+				cur_obj_play_sound_2(SOUND_ACTION_BONK) -- this is the small wall-kick sound.
+				m.forwardVel = -45
+				play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
+				spawn_mist_particles()				
+				o.oAction = 9
+				o.oVelY = 40
+				o.oTimer = 0
+				o.oPosY = o.oPosY + 60
 			else
 				o.oTimer = 0
 				o.oAction = 10 --Player is ded, hoot resets to hunt for next player.
 				m.squishTimer = 50
 			end
 		end
+	end
+
+	if o.oAction == 9 then --falling to death
+
+		--this is where "falling out of the air" code would be... but I deleted it, cause the Hoot models anchor point is stupid and rotating him as he falls out of the sky looks awful. 
+		gibs(o)
+		obj_unused_die()
+		squishblood_nogibs(o)
+
+		network_play(sSplatter, m.pos, 1, m.playerIndex)
+		stop_background_music(SEQ_EVENT_BOSS)
 	end
 end
 

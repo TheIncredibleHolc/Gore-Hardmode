@@ -504,7 +504,6 @@ function act_attacked(o)
             local star_angletomario = obj_angle_to_object(o, m.marioObj)
             o.oMoveAngleYaw = star_angletomario + 32768
             cur_obj_play_sound_2(SOUND_OBJ2_KING_BOBOMB_DAMAGE) --King bobomb yell, no impact sound
-            --cur_obj_play_sound_2(SOUND_OBJ_BOWSER_WALK)
             cur_obj_play_sound_2(SOUND_ACTION_BONK) -- LOL this is the small wall-kick sound. Literally sounds like M kicking the star with his foot. Keeping it.
             cur_obj_play_sound_2(SOUND_ACTION_BOUNCE_OFF_OBJECT)
             cur_obj_play_sound_2(SOUND_ACTION_BOUNCE_OFF_OBJECT) --Doubling for volume

@@ -172,6 +172,21 @@ function squishblood(o) -- Creates instant pool of impact-blood under mario.
 	bloodmist(o)
 end
 
+function squishblood_nogibs(o) -- Creates instant pool of impact-blood under mario.
+	spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, function (gibs) gibs.oBehParams = 1 end, 0)
+	bloodmist(o)
+end
+
+function gibs(o)
+	for i = 0, 60 do
+		if m.playerIndex ~= 0 then return end
+		local random = math.random()		
+		spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
+			obj_scale(gib, random/2)
+		end)
+	end
+end
+
 function bloodmist(o) -- Creates instant pool of impact-blood under mario.
 	spawn_non_sync_object(id_bhvBloodMist, E_MODEL_BLOOD_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
 end
