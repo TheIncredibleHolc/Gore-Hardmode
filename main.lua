@@ -111,24 +111,26 @@ function testing(m)
 	local s = gStateExtras[m.playerIndex]
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, m.pos.x + 200, m.pos.y, m.pos.z, nil)
+		--spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, m.pos.x, m.pos.y, m.pos.z, nil)
+		--spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, m.pos.x + 200, m.pos.y + 300, m.pos.z, nil)
+
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, m.pos.x, m.pos.y, m.pos.z, nil)
-		spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
+		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		m.numLives = 1
-		squishblood(m.marioObj)
-		set_mario_action(m, ACT_NECKSNAP, 0)
+		--m.numLives = 1
+		--squishblood(m.marioObj)
+		--set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
-		local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
-		if hoot ~= nil then
-			hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
-			play_secondary_music(0,0,0,0)
-		end
+		--local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
+		--if hoot ~= nil then
+		--	hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
+		--	play_secondary_music(0,0,0,0)
+		--end
 	end
 end
 
@@ -139,15 +141,23 @@ function spawn_sync_if_main(behaviorId, modelId, x, y, z, objSetupFunction, i)
 	if get_network_player_smallest_global().localIndex + i == 0 then print("passed!") return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction) end
 end
 
+
+------Globals--------
 local function modsupport()
 	for key,value in pairs(gActiveMods) do
-		if (value.name == "Flood") then
-			floodenabled = true
+		if (value.name == "Flood") or (value.name == "Flood \\#00ffd5\\Expanded v1.5.0") then
+			if network_is_server() then
+				gGlobalSyncTable.floodenabled = true
+				gGlobalSyncTable.gameisbeat = false
+			end
+		else
+			if network_is_server() then
+				gGlobalSyncTable.floodenabled = false
+			end
 		end
 	end
 end
 
-------Globals--------
 gGlobalSyncTable.deathcounter = 0
 gGlobalSyncTable.toaddeathcounter = 0
 gGlobalSyncTable.hellenabled = true
@@ -264,7 +274,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	if m.action == ACT_THROWING then
 		--djui_chat_message_create(tostring())
 	end
-	--djui_chat_message_create(tostring(m.marioObj.oFaceAngleYaw))
+	--djui_chat_message_create(tostring(gGlobalSyncTable.gameisbeat))
 
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
 		m.action = ACT_NOTHING
@@ -341,9 +351,16 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	--if in Snowman Land...
 	if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
 		set_override_envfx(ENVFX_SNOW_BLIZZARD)
-		--play_sound(SOUND_ENV_WIND1, m.pos)
-		--play_sound(SOUND_ENV_WIND2, m.pos)
 		cur_obj_play_sound_1(SOUND_ENV_WIND1)
+		set_lighting_color(0, 100)
+        set_lighting_color(1, 147)
+        set_lighting_color(2, 200)
+		set_vertex_color(0, 100)
+        set_vertex_color(1, 147)
+        set_vertex_color(2, 200)
+        set_fog_color(0, 100)
+        set_fog_color(1, 147)
+        set_fog_color(2, 200)
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -585,12 +602,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			local_play(sSplatter, m.pos, 1)
 			s.splatterdeath = 1
 			s.splatter = 0
+			s.bigthrowenabled = 0
 		end
 		if s.jumpland == 0 and m.squishTimer >= 1 then --Checks if Mario was squished from NON-FALL damage. Objects/enemies that squish Mario will smoosh his corpse to invisible. 
 			local_play(sSplatter, m.pos, 1)
 			s.splatterdeath = 1
 			s.splatter = 0
 			s.disappear = 1 -- No corpse mode.  
+			s.bigthrowenabled = 0
 		end
 	end
 	if (s.splatterdeath) == 1 then
@@ -919,18 +938,19 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     elseif m.bounceSquishTimer == 0 then s.stomped = false end
 
 ----------------------------------------------------------------------------------------------------------------------------------
-	--Enables King Bobombs RIDICULOUS cannon-arm mario launch.
+	--Enables King Bobombs RIDICULOUS cannon-arm mario launch and chuckyas..
 	if (m.action == ACT_GRABBED) then
 		s.bigthrowenabled = 1
 	end
-	if (s.bigthrowenabled) == 1 then
-		m.forwardVel = 280 --Was 150
+	if (s.bigthrowenabled) == 1 and m.action & ACT_FLAG_AIR > 0 then
+		set_mario_action(m, ACT_RAGDOLL, 0)
+		m.forwardVel = 280
 	end
-	if (s.bigthrowenabled) == 1 and m.hurtCounter > 0 then --  m.flags & ACT_AIR_THROW_LAND ~= 0 and m.action == 132193  both didnt work!
+	if (s.bigthrowenabled) == 1 and m.hurtCounter > 0 then
 		m.squishTimer = 30
 		s.bigthrowenabled = 0
 	end
-	if m.action == ACT_THROWN_FORWARD then
+	if m.action ~= ACT_GRABBED then
 		s.bigthrowenabled = 0
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -1363,7 +1383,9 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	audio_sample_stop(gSamples[sAgonyWaluigi]) --Stops Waluigi's super long scream
 
 	hud_show()
-	s.hasNightvision = false
+	if np.currLevelNum ~= LEVEL_TTM then
+		s.hasNightvision = false
+	end
 	s.death = false
 	s.isdead = false --Mario is alive
 	s.disableuntilnextwarp = false --Enables death counter
@@ -1779,7 +1801,8 @@ local msgToLevel = {
 function warp_command(msg)
     msg = string.upper(msg)
     if msgToLevel[msg] then
-        warp_to_level(msgToLevel[msg], 1, 1)
+        --warp_to_level(msgToLevel[msg], 1, 1)
+		djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
     else
         djui_chat_message_create("ERROR: Tried warping to an invalid level!")
     end
@@ -1788,6 +1811,7 @@ end
 
 hook_chat_command("warp", "level abreviation", warp_command)
 
+--[[
 hook_chat_command("end", "credits", function ()
 	level_trigger_warp(gMarioStates[0], WARP_OP_CREDITS_START)
 	return true
@@ -1817,6 +1841,7 @@ hook_chat_command("lock", "trophy", function (msg)
 		end
 	end
 end)
+]]
 
 hook_chat_command("hell", "HELL", function ()
 	if network_is_server() and gGlobalSyncTable.hellenabled then
@@ -1884,12 +1909,13 @@ local function level_init_spawns()
 	end
 	--[[
 	if np.currLevelNum == LEVEL_TTM then
-		local buddy = obj_get_first_with_behavior_id(id_bhvBobombBuddy)
-		if buddy ~= nil then
-			--djui_chat_message_create('dorrie exists')
+		local lantern = obj_get_first_with_behavior_id(id_bhvLantern)
+		if lantern ~= nil then
+			--djui_chat_message_create('exists')
 		else
-			--djui_chat_message_create('spawning dorrie')
-			spawn_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
+			--djui_chat_message_create('spawning')
+			spawn_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)	
+			--spawn_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
 		end
 	end
 	]]
@@ -1913,13 +1939,12 @@ hook_event(HOOK_ON_WARP, function()
     end
 end)
 
---Disable mario's fire scream to make room for custom scream.
+--Custom character sound changes, like disabling mario's fire scream to make room for custom scream.
 hook_event(HOOK_CHARACTER_SOUND, function(m, sound)
     local s = gStateExtras[m.playerIndex]
     local np = gNetworkPlayers[0]
 
     if sound == CHAR_SOUND_ON_FIRE then return 0 end
-
     local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvPiranhaPlant)
     local in_hitbox = obj_check_hitbox_overlap(m.marioObj, o)
 
@@ -1933,4 +1958,10 @@ hook_event(HOOK_CHARACTER_SOUND, function(m, sound)
     if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then return 0 end
     if sound == CHAR_SOUND_WAAAOOOW and (m.action == ACT_THROWN_FORWARD or m.action == ACT_THROWN_BACKWARD) then return 0 end
     if check_trophyplate(m, np, sound) then return 0 end
+end)
+
+--Custom sound changes, like replacing King Bobomb with Chuckster sounds.
+hook_event(HOOK_ON_PLAY_SOUND, function(sound)
+	local m = gMarioStates[0]
+	if sound == SOUND_OBJ_KING_BOBOMB_TALK and m.action == ACT_GRABBED then return 0 end
 end)

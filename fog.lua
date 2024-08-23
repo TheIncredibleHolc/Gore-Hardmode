@@ -75,7 +75,8 @@ local function fog_loop(o)
         end
     end
 
-    if not np.currLevelNum == LEVEL_TTM then
+    --[[
+    if not np.currLevelNum == LEVEL_TTM or not np.currLevelNum == LEVEL_SL then
         set_lighting_color(0, r)
         set_lighting_color(1, g)
         set_lighting_color(2, b)
@@ -85,7 +86,7 @@ local function fog_loop(o)
         set_fog_color(0, r)
         set_fog_color(1, g)
         set_fog_color(2, b)
-    end
+    end]]
 
     if np.currLevelNum ~= LEVEL_TTM then
         o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
@@ -124,6 +125,8 @@ local function mario_update(m)
         if not obj_get_first_with_behavior_id(id_bhvFog) then
             spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)
         end
+    elseif np.currLevelNum == LEVEL_SL and np.currAreaIndex ~= 1 then
+        set_override_envfx(-1)
     elseif np.currLevelNum == LEVEL_TTM then
         if not obj_get_first_with_behavior_id(id_bhvFog) then
             spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)

@@ -38,7 +38,8 @@ gSamples = {
 	audio_sample_load("chicken.ogg"),
 	audio_sample_load("ground.ogg"),
 	audio_sample_load("klepto.ogg"),
-	audio_sample_load("nightvision.ogg")
+	audio_sample_load("nightvision.ogg"),
+	audio_sample_load("chuckster.ogg")
 }
 
 sBoneBreak = 1
@@ -79,6 +80,7 @@ sChicken = 35
 sGround = 36
 sAngryKlepto = 37
 sNightvision = 38
+sChuckster = 39
 
 function loop(music) audio_stream_set_looping(music, true) end
 
@@ -302,7 +304,9 @@ nightvisionnoise = 0
 
 if network_is_server() and mod_storage_load("file"..get_current_save_file_num().."gameisbeat") then
 	--djui_chat_message_create("game is beat!")
-	gGlobalSyncTable.gameisbeat = true
+	if not gGlobalSyncTable.floodenabled then
+		gGlobalSyncTable.gameisbeat = true
+	end
 else
 	--djui_chat_message_create("game NOT beat")
 end
@@ -408,7 +412,8 @@ sOnWarpToFunc = {
     end,
 
     [LEVEL_CCM] = function()
-        if gGlobalSyncTable.gameisbeat then
+		local np = gNetworkPlayers[0]
+        if gGlobalSyncTable.gameisbeat and np.currAreaIndex == 1 then
             local count = obj_count_objects_with_behavior_id(id_bhvGoalpost)
             if count < 1 then
                 spawn_non_sync_object(id_bhvGoalpost, E_MODEL_GOALPOST, 5254, -4607, 1047, function(goalpost)
@@ -459,12 +464,21 @@ sOnLvlInitToFunc = {
 	[LEVEL_TTM] = function()
 		--spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
 		--spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_LANTERN, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
-		spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)
+		
+		--Lantern spawns with Mario. If you were to disable this spawn, light bubble will naturally follow Mario.
+		if not gGlobalSyncTable.floodenabled then
+			spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)
+		end
+
+		if np.currActNum == 6 then --Secret lantern spawns near beginning of level
+			--spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 342, -2556, 5712, nil)
+		end
+
 		spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 434, -2000, 3704, function (nvg) 
-			nvg.oFaceAngleYaw = -1600
+			nvg.oFaceAngleYaw = -2600
 			nvg.oMoveAngleYaw = nvg.oFaceAngleYaw
 		end)
-		spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, -3492, -4100, 3705, nil)
+		--spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, -3492, -4100, 3705, nil)
     end,
 
     [LEVEL_BITFS] = function()
@@ -640,6 +654,7 @@ _G.ACT_RAGDOLL = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|AC
 function act_ragdoll(m)
 	local s = gStateExtras[0]
 	local stepResult = perform_air_step(m, 0)
+
 	if stepResult == AIR_STEP_LANDED then
 		if m.floor.type == SURFACE_BURNING then
 			set_mario_action(m, ACT_LAVA_BOOST, 0)

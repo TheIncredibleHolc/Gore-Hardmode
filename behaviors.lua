@@ -87,9 +87,11 @@ local function bhv_custom_kingbobomb(obj)
         obj.oFaceAnglePitch = 0
     end
 
-    if obj.oAction == 3 then
+    if obj.oAction == 3 then --I'M A CHUCKSTER
         if obj.oTimer == 0 and gMarioStates[0].marioObj == obj.usingObj then
-            cutscene_object_with_dialog(CUTSCENE_DIALOG, obj, DIALOG_116)
+            --cutscene_object_with_dialog(CUTSCENE_DIALOG, obj, DIALOG_116)
+			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_116)
+			network_play(sChuckster, m.pos, 1, m.playerIndex)
         elseif obj.oTimer == 40 then
             obj.oSubAction = 3
         end
@@ -388,7 +390,6 @@ local function bhv_custom_tree(o) -- Trees fall down through the map when approa
 				--spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY + 200, o.oPosZ, function (x) x.oBehParams = 20 end)
 				hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
 				play_secondary_music(0,0,0,0)
-				m.action = ACT_IDLE
 				obj_mark_for_deletion(o)
 			end
 		end
@@ -670,19 +671,38 @@ local function bhv_backroom_smiler_init(o)
     o.hitboxRadius = 160
     o.hitboxHeight = 100
     o.oWallHitboxRadius = 30
+	o.oGravity = 1
 end
 
 local function bhv_backroom_smiler_loop(o)
+	local m = gMarioStates[0]
 	local s = gStateExtras[0]
 	local player = nearest_player_to_object(o)
 	local angletomario = obj_angle_to_object(o, m.marioObj)
+	local np = gNetworkPlayers[0]
+
+	if np.currLevelNum == LEVEL_TTM then
+		local lantern = obj_get_nearest_object_with_behavior_id(o, id_bhvLantern)
+		local distance = dist_between_objects(m.marioObj, lantern)
+		if distance < 1100 or s.hasNightvision then
+			obj_unused_die()
+			stop_secondary_music(0)
+		end
+	end
+
+	cur_obj_update_floor_height_and_get_floor()
+	--if o.oPosY > o.oFloorheight + 200 or o.oPosY < m.pos.y then
+		o.oPosY = o.oFloorHeight + 200
+	--end
+
+
 
     o.oFaceAngleYaw = angletomario - 16384
 	--load_object_collision_model()
 	obj_turn_toward_object(o, player, 16, 0x800)
 	o.oForwardVel = 20
 	object_step()
-	if o.oTimer % 280 == 1 then
+	if o.oTimer % 280 == 1 and np.currLevelNum ~= LEVEL_TTM then
 		local_play(sSmiler, o.header.gfx.pos, 1)
 	end
 	if obj_check_hitbox_overlap(o, m.marioObj) and not s.isdead then
@@ -1728,10 +1748,12 @@ function lantern_init(o)
 	o.oFriction = 0.8
 	o.oBounciness = 1
 	o.oBuoyancy = 1.4
+	--network_init_object(o, true, nil)
 	spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, nil)
 end
 
 function lantern_loop(o)
+	local s = gStateExtras[0]
 	local distance = dist_between_objects (o, m.marioObj)
 	local worldlighting = 255
 	o.oGraphYOffset = 30
@@ -1781,9 +1803,21 @@ function lantern_loop(o)
 	set_fog_color(1, 0)
 	set_fog_color(2, 0)
 	object_step()
+
+
+	if distance > 2200 and not gGlobalSyncTable.floodenabled then
+		local smiler = obj_get_nearest_object_with_behavior_id(o, id_bhvBackroomSmiler)
+		if smiler == nil and not s.hasNightvision and m.action ~= ACT_BITTEN_IN_HALF then
+			play_secondary_music(0,0,0,60)
+			spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, o.oPosX, o.oPosY, o.oPosZ, nil)
+		end
+	end
+
+
+
 end
 
-
+--[[
 function bobomb_lantern_init(o)
 	if o.oBehParams == 20 then
 		o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_HOLDABLE | OBJ_COL_FLAG_GROUNDED | OBJ_FLAG_HOLDABLE
@@ -1843,10 +1877,9 @@ function bobomb_lantern_loop(o)
 		obj_turn_toward_object(o, player, 16, 0x800)
 		o.oForwardVel = 2
 		object_step()
-
-
 	end
 end
+]]
 
 function glow_init(o)
 	o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
@@ -1913,7 +1946,7 @@ function hoot_loop(o)
 		o.oHootAvailability = false
 		--network_play(sAngryKlepto, m.pos, 1, m.playerIndex)
 		stop_secondary_music(0)
-		m.action = ACT_IDLE
+		--m.action = ACT_IDLE
 		approach_vec3f_asymptotic(gLakituState.focus, o.header.gfx.pos, 3,3,3)
 		approach_vec3f_asymptotic(gLakituState.curFocus, o.header.gfx.pos, 3,3,3)
 		play_music(0, SEQ_EVENT_BOSS, 0)
@@ -2057,7 +2090,7 @@ hook_gore_behavior(id_bhvBobomb, false, nil, bobomb_loop)
 hook_gore_behavior(id_bhvGoomba, false, nil, bhv_custom_goomba_loop)
 hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
 hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
-hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
+--hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
 hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
