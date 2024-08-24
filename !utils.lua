@@ -263,7 +263,6 @@ for i = 0, MAX_PLAYERS-1 do
 		splattimer = 0,
 		jumpland = 0,
 		disappear = 0,
-		bigthrowenabled = 0, --w
 		isdead = false,
 		isinhell = false,
 		stomped = false,
@@ -273,7 +272,6 @@ for i = 0, MAX_PLAYERS-1 do
 		penguinholding = 0,
 		penguintimer = 0,
 		objtimer = 0,
-		--isfalling = false,
 		ishigh = 0,
 		isgold = false,
 		outsidegastimer = 60,
@@ -659,7 +657,13 @@ function act_ragdoll(m)
 		if m.floor.type == SURFACE_BURNING then
 			set_mario_action(m, ACT_LAVA_BOOST, 0)
 		else
-			m.squishTimer = 50
+			if m.vel.y < -70 then
+				s.disappear = 1
+				m.squishTimer = 50
+				set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+			else
+				m.squishTimer = 50
+			end
 		end
 	elseif m.wall then
 		bloodmist(m.marioObj)

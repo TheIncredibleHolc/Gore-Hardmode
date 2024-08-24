@@ -92,6 +92,7 @@ local function bhv_custom_kingbobomb(obj)
             --cutscene_object_with_dialog(CUTSCENE_DIALOG, obj, DIALOG_116)
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_116)
 			network_play(sChuckster, m.pos, 1, m.playerIndex)
+			m.forwardVel = 280
         elseif obj.oTimer == 40 then
             obj.oSubAction = 3
         end
@@ -1805,7 +1806,7 @@ function lantern_loop(o)
 	object_step()
 
 
-	if distance > 2200 and not gGlobalSyncTable.floodenabled then
+	if distance > 2200 and m.heldObj ~= o then
 		local smiler = obj_get_nearest_object_with_behavior_id(o, id_bhvBackroomSmiler)
 		if smiler == nil and not s.hasNightvision and m.action ~= ACT_BITTEN_IN_HALF then
 			play_secondary_music(0,0,0,60)
@@ -2020,6 +2021,14 @@ function hoot_loop(o)
 	end
 end
 
+function chuckya(o)
+	local m = gMarioStates[0]
+	if o.oTimer == 10 and o.oAction == 1 then
+		network_play(sChuckster, m.pos, 1, m.playerIndex)
+		cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_116)
+	end
+end
+
 -------Behavior Hooks-------
 
 local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
@@ -2092,6 +2101,7 @@ hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
 hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_spawn_ukiki, bhv_bowser_key_ukiki_loop)
 --hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
 hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
+hook_gore_behavior(id_bhvChuckya, false, nil, chuckya)
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
 id_bhvSquishblood = hook_behavior(nil, OBJ_LIST_GENACTOR, true, squishblood_init, squishblood_loop, "bhvSquishblood")

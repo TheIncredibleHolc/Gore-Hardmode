@@ -271,10 +271,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-	if m.action == ACT_THROWING then
-		--djui_chat_message_create(tostring())
-	end
-	--djui_chat_message_create(tostring(gGlobalSyncTable.gameisbeat))
+	--djui_chat_message_create(tostring(m.vel.y))
 
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
 		m.action = ACT_NOTHING
@@ -602,14 +599,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			local_play(sSplatter, m.pos, 1)
 			s.splatterdeath = 1
 			s.splatter = 0
-			s.bigthrowenabled = 0
 		end
 		if s.jumpland == 0 and m.squishTimer >= 1 then --Checks if Mario was squished from NON-FALL damage. Objects/enemies that squish Mario will smoosh his corpse to invisible. 
 			local_play(sSplatter, m.pos, 1)
 			s.splatterdeath = 1
 			s.splatter = 0
 			s.disappear = 1 -- No corpse mode.  
-			s.bigthrowenabled = 0
 		end
 	end
 	if (s.splatterdeath) == 1 then
@@ -617,7 +612,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		squishblood(m.marioObj)
 		s.splatterdeath = 0
 		s.enablesplattimer = 1
-		s.bigthrowenabled = 0
 	end
 	----------------------------------------------------------------------------------------------------------------------------------
 	--(Hazy Maze Cave) Mario get high when walking in gas. 
@@ -939,20 +933,19 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Enables King Bobombs RIDICULOUS cannon-arm mario launch and chuckyas..
-	if (m.action == ACT_GRABBED) then
-		s.bigthrowenabled = 1
+	if m.prevAction == ACT_GRABBED and m.action == ACT_THROWN_FORWARD then
+		local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvKingBobomb)
+		if o == nil then
+			o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvChuckya)
+		end
+		if o ~= nil then
+			m.vel.x = m.vel.x + sins(o.oMoveAngleYaw) * 85
+			m.vel.z = m.vel.z + coss(o.oMoveAngleYaw) * 85
+			m.vel.y = 65
+			set_mario_action(m, ACT_RAGDOLL, 0)
+		end
 	end
-	if (s.bigthrowenabled) == 1 and m.action & ACT_FLAG_AIR > 0 then
-		set_mario_action(m, ACT_RAGDOLL, 0)
-		m.forwardVel = 280
-	end
-	if (s.bigthrowenabled) == 1 and m.hurtCounter > 0 then
-		m.squishTimer = 30
-		s.bigthrowenabled = 0
-	end
-	if m.action ~= ACT_GRABBED then
-		s.bigthrowenabled = 0
-	end
+	
 ----------------------------------------------------------------------------------------------------------------------------------
 	--When getting the 100 coin star, a bobomb nuke spawns on Mario.
 	if (m.numCoins) == 100 then 
@@ -1362,7 +1355,6 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	audio_sample_stop(gSamples[sToadburn]) --Stops Toad's super long scream
 	audio_sample_stop(gSamples[sAgonyWario]) --Stops Wario's super long scream
 	audio_sample_stop(gSamples[sAgonyWaluigi]) --Stops Waluigi's super long scream
-	s.bigthrowenabled = 0
 	s.timeattack = false
 	--set_override_envfx(ENVFX_MODE_NONE)
 	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
@@ -1801,8 +1793,8 @@ local msgToLevel = {
 function warp_command(msg)
     msg = string.upper(msg)
     if msgToLevel[msg] then
-        --warp_to_level(msgToLevel[msg], 1, 1)
-		djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
+        warp_to_level(msgToLevel[msg], 1, 1)
+		--djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
     else
         djui_chat_message_create("ERROR: Tried warping to an invalid level!")
     end

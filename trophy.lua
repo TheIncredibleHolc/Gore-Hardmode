@@ -39,10 +39,11 @@ trophyinfo = {
 		o.parentObj.oAnimState = o.oTimer % 32
 	  end},
 
-	{ name = "bully",      model = E_MODEL_BULLY,            scale = 0.5, y_offset = -20,  podium = E_MODEL_FIND_TROPHY_PODIUM, message = "Trophy #15 - When you're at the top of the volcano, go higher.",
+	{ name = "bully",      model = E_MODEL_HELL_DORRIE,      scale = 0.07, y_offset = -20,  podium = E_MODEL_FIND_TROPHY_PODIUM, message = "Trophy #15 - When you're at the top of the volcano, go higher.",
 	  loop = function (o)
-		o.oAnimations = gObjectAnimations.bully_seg5_anims_0500470C
-		obj_init_animation(o.parentObj, 0)
+		o.oAnimations = gObjectAnimations.dorrie_seg6_anims_0600F638
+		obj_init_animation(o.parentObj, 1)
+
 	  end},
 
 	{ name = "boulder",    model = E_MODEL_HMC_ROLLING_ROCK, scale = 0.2, y_offset = -30, podium = E_MODEL_FIND_TROPHY_PODIUM, message = "Trophy #16 - Surely you've found the way around those boulders..",
