@@ -111,7 +111,11 @@ function testing(m)
 	local s = gStateExtras[m.playerIndex]
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		--spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, m.pos.x, m.pos.y, m.pos.z, nil)
+		spawn_non_sync_object(id_bhvStonewall, E_MODEL_STONEWALL, m.pos.x, m.pos.y, m.pos.z, nil)
+		djui_chat_message_create(tostring(m.pos.x))
+		djui_chat_message_create(tostring(m.pos.y))
+		djui_chat_message_create(tostring(m.pos.z))
+
 		--spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, m.pos.x + 200, m.pos.y + 300, m.pos.z, nil)
 
 	end
@@ -1891,12 +1895,23 @@ local function level_init_spawns()
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 	local gorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
+	local stonewall = obj_get_first_with_behavior_id(id_bhvStonewall)
 	if np.currLevelNum == LEVEL_JRB then
 		if gorrie ~= nil then
 			--djui_chat_message_create('dorrie exists')
 		else
 			--djui_chat_message_create('spawning dorrie')
-			spawn_sync_object(id_bhvGorrie, E_MODEL_DORRIE, -5269, 1050, 3750, nil)
+			spawn_sync_object(id_bhvGorrie, E_MODEL_RED_DORRIE, -5269, 1050, 3750, nil)
+		end
+		if stonewall ~= nil then
+			--djui_chat_message_create('stonewall exists')
+		else
+			--djui_chat_message_create('spawning stonewall')
+			spawn_sync_object(id_bhvStonewall, E_MODEL_STONEWALL, 6307, 1090, 2600, function (wall) 
+				wall.oFaceAngleYaw = 0
+				wall.oMoveAngleYaw = wall.oFaceAngleYaw
+				obj_scale(wall, 1.4)
+			end)
 		end
 	end
 	--[[

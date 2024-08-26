@@ -2029,6 +2029,18 @@ function chuckya(o)
 	end
 end
 
+function stonewall_init(o)
+	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+	o.collisionData = COL_STONEWALL
+	o.oCollisionDistance = 10000
+	o.header.gfx.skipInViewCheck = true
+end
+
+function stonewall_loop(o)
+	load_object_collision_model()
+end
+
+
 -------Behavior Hooks-------
 
 local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
@@ -2122,4 +2134,4 @@ id_bhvGorrie = hook_behavior(nil, OBJ_LIST_SURFACE, true, gorrie_init, gorrie_lo
 id_bhvLantern = hook_behavior(nil, OBJ_LIST_SURFACE, true, lantern_init, lantern_loop)
 id_bhvGlow = hook_behavior(nil, OBJ_LIST_GENACTOR, true, glow_init, glow_loop)
 id_bhvGoggles = hook_behavior(nil, OBJ_LIST_GENACTOR, true, goggles_init, goggles_loop)
-
+id_bhvStonewall = hook_behavior(nil, OBJ_LIST_SURFACE, true, stonewall_init, stonewall_loop)

@@ -213,9 +213,12 @@ E_MODEL_GIB = smlua_model_util_get_id("gib_geo")
 COL_GIB = smlua_collision_util_get("gib_collision")
 DORRIE_DEAD = smlua_model_util_get_id("dorrie_ded_lol_geo")
 E_MODEL_HELL_DORRIE = smlua_model_util_get_id("hell_dorrie_geo")
+E_MODEL_RED_DORRIE = smlua_model_util_get_id("red_dorrie_geo")
 E_MODEL_LANTERN = smlua_model_util_get_id("lantern_geo")
 COL_LANTERN = smlua_collision_util_get("lantern_collision")
 E_MODEL_GOGGLES = smlua_model_util_get_id("goggles_geo")
+E_MODEL_STONEWALL = smlua_model_util_get_id("stonewall_geo")
+COL_STONEWALL = smlua_collision_util_get("stonewall_collision")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -358,10 +361,14 @@ sOnWarpToFunc = {
     [LEVEL_JRB] = function()
         if np.currAreaIndex == 1 then
             -- Spawns lava over water, unless inside the pirate ship.
-            spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1050, gMarioStates[0].pos.z, function(o)
-                -- obj_scale(o, 4)
-            end)
-            spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 5910, 1050, 4412, nil)
+            --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1050, gMarioStates[0].pos.z, function(o)
+			spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1020, gMarioStates[0].pos.z, nil)
+			if np.currActNum == 1 then
+				spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 6710, 1050, 4512, nil)
+			else
+				spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 1976, 1050, 5734, nil)
+
+			end 
             local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
             o.oPosY = o.oPosY + 21
         end
