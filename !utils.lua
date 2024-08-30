@@ -391,12 +391,26 @@ sOnWarpToFunc = {
 
     [LEVEL_SECRETHUB] = function()
         local m = gMarioStates[0]
+		local np = gNetworkPlayers[0]
+		local s = gStateExtras[0]
 
-		--Entrance fix. If the player visits Hell first then goes to secret room, they will spawn out of the map.
-		m.pos.x = -975
-		m.pos.y = 850
-		m.pos.z = -721
-		soft_reset_camera(m.area.camera)
+		--Entrance fix. If the player visits Hell first then goes to secret room, they will spawn out of the map and shit goes wacky. This fixes position and camera at the expense of warping back being goofed (but functional).
+		if np.currAreaIndex == 1 and s.visitedhell then
+			m.pos.x = -975
+			m.pos.y = 850
+			m.pos.z = -721
+		end
+		local c = m.area.camera
+		local pos = {
+			x = -975,
+			y = 691,
+			z = 641
+		}
+		vec3f_copy(c.pos, pos)
+		vec3f_copy(gLakituState.pos, pos)
+		vec3f_copy(gLakituState.goalPos, pos)
+
+
 
 
         if trophy_unlocked(1) and trophy_unlocked(2) and trophy_unlocked(3) and
@@ -449,7 +463,7 @@ sOnLvlInitToFunc = {
         set_lighting_color(2, 100)
         set_lighting_dir(1, -128)
         stream_play(musicHell)
-
+		--gLakituState.mode = CAMERA_MODE_BEHIND_MARIO
         if gGlobalSyncTable.gameisbeat then
             -- GRANT TROPHY #14
             spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -4367, 1680, 4883, function(t)
@@ -529,6 +543,15 @@ sOnLvlInitToFunc = {
         set_lighting_color(1, 127)
         set_lighting_color(2, 100)
         set_lighting_dir(1, -128)
+
+        set_vertex_color(0, 255)
+        set_vertex_color(1, 127)
+        set_vertex_color(2, 100)
+        set_fog_color(0, 255)
+        set_fog_color(1, 127)
+        set_fog_color(2, 100)
+
+
         if savedCollisionBugStatus == nil then
             savedCollisionBugStatus = gLevelValues.fixCollisionBugs
             gLevelValues.fixCollisionBugs = true

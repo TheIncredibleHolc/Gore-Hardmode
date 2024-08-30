@@ -111,22 +111,15 @@ function testing(m)
 	local s = gStateExtras[m.playerIndex]
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		spawn_non_sync_object(id_bhvStonewall, E_MODEL_STONEWALL, m.pos.x, m.pos.y, m.pos.z, nil)
-		djui_chat_message_create(tostring(m.pos.x))
-		djui_chat_message_create(tostring(m.pos.y))
-		djui_chat_message_create(tostring(m.pos.z))
-
-		--spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, m.pos.x + 200, m.pos.y + 300, m.pos.z, nil)
-
+		djui_chat_message_create(tostring(gLakituState.pos.x))
+		djui_chat_message_create(tostring(gLakituState.pos.y))
+		djui_chat_message_create(tostring(gLakituState.pos.z))
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-		--spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, m.pos.x, m.pos.y, m.pos.z, nil)
-		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		--m.numLives = 1
-		--squishblood(m.marioObj)
-		--set_mario_action(m, ACT_NECKSNAP, 0)
+		m.numLives = 1
+		set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -275,7 +268,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
-	--djui_chat_message_create(tostring(m.vel.y))
+
+	--djui_chat_message_create(tostring(gLakituState.yaw))
 
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
 		m.action = ACT_NOTHING
@@ -362,6 +356,32 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         set_fog_color(0, 100)
         set_fog_color(1, 147)
         set_fog_color(2, 200)
+	end
+
+	if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then
+		if gLakituState.pos.y < 944 then
+			set_lighting_color(0, 255)
+			set_lighting_color(1, 255)
+			set_lighting_color(2, 255)
+			set_lighting_dir(1, 128)
+			set_vertex_color(0, 255)
+			set_vertex_color(1, 255)
+			set_vertex_color(2, 255)
+			set_fog_color(0, 255)
+			set_fog_color(1, 255)
+			set_fog_color(2, 255)
+		else
+			set_lighting_color(0, 255)
+			set_lighting_color(1, 127)
+			set_lighting_color(2, 100)
+			set_lighting_dir(1, -128)
+			set_vertex_color(0, 255)
+			set_vertex_color(1, 127)
+			set_vertex_color(2, 100)
+			set_fog_color(0, 255)
+			set_fog_color(1, 127)
+			set_fog_color(2, 100)
+		end
 	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -851,7 +871,20 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	if np.currLevelNum == LEVEL_HELL then
 		if not ia(m) then return end
 		
+		if m.marioObj.oTimer <= 2 then --FIXES THE CAMERA if the player has visited the secret room first. 
+			local c = m.area.camera
+			local pos = {
+				x = 69,
+				y = 848,
+				z = -12900
+			}
+			vec3f_copy(c.pos, pos)
+			vec3f_copy(gLakituState.pos, pos)
+			vec3f_copy(gLakituState.goalPos, pos)
+		end
+
 		if m.marioObj.oTimer <= 60 then
+			--gLakituState.mode = CAMERA_MODE_BEHIND_MARIO
 			--cur_obj_disable_rendering_and_become_intangible(m.marioObj)
 			cur_obj_disable_rendering()
 			m.pos.x = 69
@@ -1395,6 +1428,9 @@ function marioalive() -- Resumes the death counter to accept death counts.
 	if m.numLives <= 0 and not s.isinhell and not s.iwbtg and gGlobalSyncTable.hellenabled then
 		s.isinhell = true
 		warp_to_level(LEVEL_HELL, 1, 0)
+		--level_trigger_warp(m, LEVEL_HELL)
+		
+
 	else 
 		--s.iwbtg = false
 		--s.death = false
@@ -1797,8 +1833,8 @@ local msgToLevel = {
 function warp_command(msg)
     msg = string.upper(msg)
     if msgToLevel[msg] then
-        warp_to_level(msgToLevel[msg], 1, 1)
-		--djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
+        --warp_to_level(msgToLevel[msg], 1, 1)
+		djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
     else
         djui_chat_message_create("ERROR: Tried warping to an invalid level!")
     end
