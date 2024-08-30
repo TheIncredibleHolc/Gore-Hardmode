@@ -225,7 +225,7 @@ E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 E_MODEL_HEADLESS_MARIO = smlua_model_util_get_id("headlessmario_geo")
 E_MODEL_BOTTOMLESS_MARIO = smlua_model_util_get_id("bottomlessmario_geo")
 E_MODEL_HEADLESS_LUIGI = smlua_model_util_get_id("luigidead_geo")
---E_MODEL_BOTTOMLESS_LUIGI = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_BOTTOMLESS_LUIGI = smlua_model_util_get_id("bottomlessmario_geo")
 E_MODEL_HEADLESS_TOAD = smlua_model_util_get_id("toad_headless_geo")
 E_MODEL_TOPLESS_TOAD = smlua_model_util_get_id("toad_topless_geo")
 E_MODEL_HEADLESS_WARIO = smlua_model_util_get_id("wario_headless_geo")
@@ -767,6 +767,7 @@ _G.ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVUL
 
 local toplessModel = {
 [0]=E_MODEL_BOTTOMLESS_MARIO,
+	E_MODEL_BOTTOMLESS_MARIO,
 	E_MODEL_TOPLESS_TOAD,
 	E_MODEL_TOPLESS_WALUIGI,
 	E_MODEL_TOPLESS_WARIO

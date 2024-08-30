@@ -111,15 +111,15 @@ function testing(m)
 	local s = gStateExtras[m.playerIndex]
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		djui_chat_message_create(tostring(gLakituState.pos.x))
-		djui_chat_message_create(tostring(gLakituState.pos.y))
-		djui_chat_message_create(tostring(gLakituState.pos.z))
+		--djui_chat_message_create(tostring(gLakituState.pos.x))
+		--djui_chat_message_create(tostring(gLakituState.pos.y))
+		--djui_chat_message_create(tostring(gLakituState.pos.z))
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		m.numLives = 1
-		set_mario_action(m, ACT_NECKSNAP, 0)
+		--m.numLives = 1
+		--set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -1771,6 +1771,14 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 
 end)
 ---------------------------------------
+
+hook_chat_command("disappear", "disappear", function ()
+	if network_is_server() then
+		local m = gMarioStates[0]
+		set_mario_action(m, ACT_DISAPPEARED, 0)
+	end
+	return true
+end)
 
 --IWBTG MODE
 hook_chat_command("iwbtg", "iwbtm", function ()
