@@ -105,6 +105,36 @@ function lerp(a, b, t) return a * (1 - t) + b * t end
 
 function vec3f() return {x=0,y=0,z=0} end
 
+function vec3f_rotate_zyx(dest, rotate)
+    local v = { x = dest.x, y = dest.y, z = dest.z }
+    
+    local sx = sins(rotate.x)
+    local cx = coss(rotate.x)
+
+    local sy = sins(rotate.y)
+    local cy = coss(rotate.y)
+
+    local sz = sins(rotate.z)
+    local cz = coss(rotate.z)
+
+    -- Rotation around Z axis
+    local xz = v.x * cz - v.y * sz
+    local yz = v.x * sz + v.y * cz
+    local zz = v.z
+
+    -- Rotation around Y axis
+    local xy = xz * cy + zz * sy
+    local yy = yz
+    local zy = -xz * sy + zz * cy
+
+    -- Rotation around X axis
+    dest.x = xy
+    dest.y = yy * cx - zy * sx
+    dest.z = yy * sx + zy * cx
+
+    return dest
+end
+
 function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 
 function testing(m)
@@ -118,8 +148,8 @@ function testing(m)
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		--m.numLives = 1
-		--set_mario_action(m, ACT_NECKSNAP, 0)
+		m.numLives = 1
+		set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -268,6 +298,11 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
+	if np.currLevelNum == LEVEL_HELL or np.currLevelNum == LEVEL_SECRETHUB then
+        gLevelValues.fixCollisionBugs = true
+	else
+		gLevelValues.fixCollisionBugs = false
+	end
 
 	--djui_chat_message_create(tostring(gLakituState.yaw))
 
@@ -794,6 +829,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			obj_scale(m.usedObj, 6)
 			obj_copy_pos(m.usedObj, m.marioObj)
 			m.usedObj.oGraphYOffset = 100
+			m.usedObj.oBehParams = 4
 			m.marioObj.oMarioBurnTimer = 1
 		end
 
@@ -825,7 +861,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			end
         end
 	end
-	if m.usedObj and obj_has_behavior_id(m.usedObj, id_bhvFlame) ~= 0 and m.health < 128 then
+	if m.usedObj and obj_has_behavior_id(m.usedObj, id_bhvFlame) ~= 0 and m.action == ACT_GONE then
 		obj_mark_for_deletion(m.usedObj)
 	end
 
@@ -1841,8 +1877,11 @@ local msgToLevel = {
 function warp_command(msg)
     msg = string.upper(msg)
     if msgToLevel[msg] then
-        --warp_to_level(msgToLevel[msg], 1, 1)
-		djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
+		if network_is_server() then
+			warp_to_level(msgToLevel[msg], 1, 1)
+		else
+			djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
+		end
     else
         djui_chat_message_create("ERROR: Tried warping to an invalid level!")
     end
@@ -1896,16 +1935,13 @@ hook_chat_command("hell", "HELL", function ()
 end)
 
 local function default_level_func()
+	local np = gNetworkPlayers[0]
     set_lighting_color(0, 255)
     set_lighting_color(1, 255)
     set_lighting_color(2, 255)
     set_lighting_dir(1, 0)
     set_override_skybox(-1)
     set_override_envfx(-1)
-    if savedCollisionBugStatus ~= nil then
-        gLevelValues.fixCollisionBugs = savedCollisionBugStatus
-        savedCollisionBugStatus = nil
-    end
 end
 
 hook_event(HOOK_ON_LEVEL_INIT, function()

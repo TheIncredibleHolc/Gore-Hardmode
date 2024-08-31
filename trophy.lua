@@ -171,9 +171,12 @@ function trophy_loop(o)
 	if obj_check_hitbox_overlap(o, player) and o.oAction == 0 then
 		if o.oBehParams & 1 ~= 0 then -- collectible
 			-- collect (spin, fly up and shrink, leaving a trail of sparkles behind)
-			play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
+			djui_popup_create_global(tostring(gNetworkPlayers[gMarioStates[0].playerIndex].name) .. " collected a trophy!", 1)
+			play_puzzle_jingle()
+			--network_play(sTrophy, m.pos, 1, m.playerIndex)
+			--play_sound(SOUND_MENU_COLLECT_SECRET, gMarioStates[0].pos)
 			--network_play(sTrophy, o.header.gfx.pos, 1, 0)
-			djui_chat_message_create("Trophy collected!")
+			--djui_chat_message_create("Trophy collected!")
 			unlock_trophy(o.oBehParams >> 16)
 
 			o.oVelY = -15
@@ -182,7 +185,7 @@ function trophy_loop(o)
 		else -- display, do a little bounce
 			o.oVelY = 70
 			o.oAction = 1
-			cur_obj_push_mario_away(80)
+			--cur_obj_push_mario_away(80)
 		end
 	end
 end

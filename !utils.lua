@@ -474,10 +474,6 @@ sOnLvlInitToFunc = {
         -- Apply environment effects and lighting settings
         set_override_envfx(ENVFX_LAVA_BUBBLES)
         set_override_skybox(BACKGROUND_FLAMING_SKY)
-        if savedCollisionBugStatus == nil then
-            savedCollisionBugStatus = gLevelValues.fixCollisionBugs
-            gLevelValues.fixCollisionBugs = true
-        end
     end,
 
 	[LEVEL_TTM] = function()
@@ -551,11 +547,6 @@ sOnLvlInitToFunc = {
         set_fog_color(1, 127)
         set_fog_color(2, 100)
 
-
-        if savedCollisionBugStatus == nil then
-            savedCollisionBugStatus = gLevelValues.fixCollisionBugs
-            gLevelValues.fixCollisionBugs = true
-        end
     end
 }
 

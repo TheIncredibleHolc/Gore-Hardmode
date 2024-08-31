@@ -107,6 +107,12 @@ end
 
 local function bobomb_loop(o) -- makes bobombs SCARY fast (Thanks blocky.cmd!!)
 	local player = nearest_player_to_object(o)
+	local np = gNetworkPlayers[0]
+
+	if np.currLevelNum == LEVEL_BITS then
+		obj_mark_for_deletion(o)
+	end
+
 	if o.oAction == 0 then
 		if player ~= nil and
 		   obj_return_home_if_safe(o, o.oHomeX, o.oHomeY, o.oHomeZ, 400) == 1 and
@@ -719,9 +725,11 @@ local function bhv_backroom_smiler_loop(o)
 		if mod_storage_load("smiler") == "1" then
 			--nothing
 		else
-			spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, m.pos.x, m.pos.y, m.pos.z, function(t)
-				t.oBehParams = 8 << 16 | 1
-			end)
+			if gGlobalSyncTable.gameisbeat then
+				spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, m.pos.x, m.pos.y, m.pos.z, function(t)
+					t.oBehParams = 8 << 16 | 1
+				end)
+			end
 		end
 		obj_mark_for_deletion(o)
 
@@ -772,7 +780,7 @@ local function bhv_custom_heart(o)
 	if mario_is_within_rectangle(o.oPosX - 200, o.oPosX + 200, o.oPosZ - 200, o.oPosZ + 200) ~= 0 then
 		obj_mark_for_deletion(o)
 		spawn_mist_particles()
-		local_play(sFart, o.header.gfx.pos, 1)
+		local_play(sFart, m.pos, 1)
 	end
 end
 
@@ -1362,7 +1370,9 @@ local function gorrie_loop(o)
 	local m = gMarioStates[0]
     local np = gNetworkPlayers[0]
     local nm = nearest_mario_state_to_object(o)
+	--local dorriemounted = cur_obj_is_mario_on_platform()
     local dorriemounted = cur_obj_is_any_player_on_platform()
+	djui_chat_message_create(tostring(dorriemounted))
 	local goal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
 	if goal == nil then
 		goal = obj_get_first_with_behavior_id(id_bhvStaticObject)
@@ -1420,18 +1430,18 @@ local function gorrie_loop(o)
 	end
 
 	--Actual Gorrie Code
-    if dorriemounted == 1 then
-		if dist_between_objects(o, goal) < 1200 then
+    if dorriemounted >= 1 then
+		if dist_between_objects(o, goal) < 1200 then --If Gorrie is at the Netherportal and players need to jump off...
 			if o.oAction ~= GORRIE_WAITING_FOR_DISEMBARK then
 				o.oAction = GORRIE_WAITING_FOR_DISEMBARK
-				if dist_between_objects(o, m.marioObj) < 1200 then
+				if dist_between_objects(o, m.marioObj) < 1200 and o.oTimer % 60 then
 					network_send_object(o, true)
 				end
 			end
 		else
-			if o.oAction ~= GORRIE_TRAVEL_TO_GOAL then
+			if o.oAction ~= GORRIE_TRAVEL_TO_GOAL then --If Gorrie is on the way to the nether portal.
 				o.oAction = GORRIE_TRAVEL_TO_GOAL
-				if dist_between_objects(o, m.marioObj) < 1200 then
+				if dist_between_objects(o, m.marioObj) < 1200 and o.oTimer % 60 then
 					network_send_object(o, true)
 				end
 			end
@@ -1441,7 +1451,7 @@ local function gorrie_loop(o)
 			if o.oAction ~= GORRIE_WAITING_FOR_PLAYERS_TO_BOARD then
 				o.oAction = GORRIE_WAITING_FOR_PLAYERS_TO_BOARD
 				if dist_between_objects(o, m.marioObj) < 1200 then
-					network_send_object(o, true)
+					--network_send_object(o, true)
 				end
 			end
         else
@@ -1449,14 +1459,14 @@ local function gorrie_loop(o)
 				if o.oAction ~= GORRIE_TRAVEL_TO_HOME then
 					o.oAction = GORRIE_TRAVEL_TO_HOME
 					if dist_between_objects(o, m.marioObj) < 1200 then
-						network_send_object(o, true)
+						--network_send_object(o, true)
 					end
 				end
 			else
 				if o.oAction ~= GORRIE_HOME_IDLE then
 					o.oAction = GORRIE_HOME_IDLE
 					if dist_between_objects(o, m.marioObj) < 1200 then
-						network_send_object(o, true)
+						--network_send_object(o, true)
 					end
 				end
 			end
@@ -1757,6 +1767,25 @@ function lantern_loop(o)
 	local s = gStateExtras[0]
 	local distance = dist_between_objects (o, m.marioObj)
 	local worldlighting = 255
+
+	--[[ Fancy lighting for the lantern. Will need more work if it is to be enabled.
+	local l = gLakituState
+	local pitch = calculate_pitch(l.pos, l.focus)
+	local yaw = calculate_yaw(l.pos, l.focus)
+	local roll = l.roll
+	
+	local lightDir = { x = 70, y = 100, z = -90 }
+	
+	local m = gMarioStates[0]
+	if o then vec3f_dif(lightDir, m.pos, o.header.gfx.pos) lightDir.y = -lightDir.y  end
+	
+	vec3f_rotate_zyx(lightDir, { x = -pitch, y = -yaw, z = roll })
+	
+	set_lighting_dir(0, lightDir.x - 0x28/0xFF)
+	set_lighting_dir(1, lightDir.y - 0x28/0xFF)
+	set_lighting_dir(2, lightDir.z - 0x28/0xFF)
+	]]
+
 	o.oGraphYOffset = 30
 	o.oInteractStatus = 0
 	cur_obj_update_floor_height_and_get_floor()
@@ -2040,7 +2069,12 @@ function stonewall_loop(o)
 	load_object_collision_model()
 end
 
-
+function flame_loop(o) --This is to help prevent a bunch of stuck flames from building up in Hell near the beginning. 
+	if o.oBehParams == 4 and o.oTimer > 400 then -- BehParam 4 is set to the usedflame when mario ignites. This will cause that flame to burn out within 500 frames.
+		obj_unused_die()
+		obj_mark_for_deletion(o)
+	end
+end
 -------Behavior Hooks-------
 
 local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
@@ -2114,6 +2148,7 @@ hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_spawn_ukiki, bhv_bowse
 --hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
 hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
 hook_gore_behavior(id_bhvChuckya, false, nil, chuckya)
+hook_gore_behavior(id_bhvFlame, false, flame_loop)
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
 id_bhvSquishblood = hook_behavior(nil, OBJ_LIST_GENACTOR, true, squishblood_init, squishblood_loop, "bhvSquishblood")
