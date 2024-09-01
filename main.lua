@@ -10,6 +10,9 @@
 
 --gLevelValues.entryLevel = LEVEL_CASTLE
 
+--For PVP murdering. Default off.
+gGlobalSyncTable.pvp = false
+
 --Turns off bubble death.
 gServerSettings.bubbleDeath = false
 
@@ -148,8 +151,8 @@ function testing(m)
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		m.numLives = 1
-		set_mario_action(m, ACT_NECKSNAP, 0)
+		--m.numLives = 1
+		--set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -215,7 +218,8 @@ function squishblood_nogibs(o) -- Creates instant pool of impact-blood under mar
 end
 
 function gibs(o)
-	for i = 0, 60 do
+	--for i = 0, 60 do
+	for i = 0, 40 do
 		if m.playerIndex ~= 0 then return end
 		local random = math.random()		
 		spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
@@ -782,7 +786,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		s.highdeathtimer = 0
 		s.isdead = true
 	end
-
+----------------------------------------------------------------------------------------------------------------------------------
 	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
 		if ia(m) and m.marioObj.oTimer == 30 and not s.sslIntro then
 			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
@@ -1775,10 +1779,12 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 
 	--Enables 'ground pound' PvP splattering. 
 	if attacker.action == ACT_GROUND_POUND and s.splatter == 1 then
-		local_play(sSplatter, victim.pos, 1)
-		s.splatterdeath = 1
-		s.splatter = 0
-		s.disappear = 1 -- No corpse mode.  
+		if gGlobalSyncTable.pvp == true then
+			local_play(sSplatter, victim.pos, 1)
+			s.splatterdeath = 1
+			s.splatter = 0
+			s.disappear = 1 -- No corpse mode.  
+		end
 	end
 
 	--Punching Sounds and blood
@@ -1799,7 +1805,9 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 	--Neck snapping
 	if attacker.action == ACT_DIVE and victim.action ~= ACT_NECKSNAP then
 		--local_play(sBoneBreak, victim.pos, 1)
-		set_mario_action(victim, ACT_NECKSNAP, 0)
+		if gGlobalSyncTable.pvp == true then
+			set_mario_action(victim, ACT_NECKSNAP, 0)
+		end
 		set_mario_action(attacker, ACT_DIVE_SLIDE, 0)
 	end
 
@@ -1807,6 +1815,20 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 
 end)
 ---------------------------------------
+
+hook_chat_command("pvp", "pvp deaths", function ()
+	if network_is_server() then
+		local m = gMarioStates[0]
+		if gGlobalSyncTable.pvp == true then
+			gGlobalSyncTable.pvp = false
+			djui_chat_message_create("PVP killing disabled.")
+		else
+			gGlobalSyncTable.pvp = true
+			djui_chat_message_create("PVP killing enabled.")
+		end
+	end
+	return true
+end)
 
 hook_chat_command("disappear", "disappear", function ()
 	if network_is_server() then

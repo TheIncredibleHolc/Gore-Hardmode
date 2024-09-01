@@ -362,7 +362,10 @@ local function bhv_custom_whomp(obj) --Whomps jump FAR now!
 end
 
 local function bhv_custom_seesaw(obj) --SeeSaw Objects spin like windmills
-	obj.oSeesawPlatformPitchVel = -400
+	local np = gNetworkPlayers[0]
+	if np.currLevelNum == LEVEL_BITS and obj.oPosY < -3500 then
+		obj.oSeesawPlatformPitchVel = -400
+	end
 end
 
 local function bhv_custom_sign(obj) --This is the single most evil addition to the game. Real proud of this one :')
@@ -1065,13 +1068,13 @@ local function bhv_secretwarp_loop(o)
 			--gPlayerSyncTable[m.playerIndex].gold = true
 
 		else
-			if m.numStars > 80 or gGlobalSyncTable.gameisbeat then
+			if m.numStars >= 50 or gGlobalSyncTable.gameisbeat then
 				set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
 				m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
 				m.pos.y = m.pos.y + 120
 				o.oTimer = 0
 			else
-				djui_chat_message_create("You need at least 80 stars to enter. (Or beat the game)")
+				djui_chat_message_create("You need at least 50 stars to enter. (Or beat the game)")
 				local_play(sWrong, m.pos, 1)
 			end
 		end
@@ -1216,7 +1219,16 @@ local function squishblood_init(o)
 end
 
 local function squishblood_loop(o)
+	local m = gMarioStates[0]
 	cur_obj_update_floor()
+
+	if m.marioObj.oTimer < 5 then --This protects blood spam and low FPS
+		obj_mark_for_deletion(o)
+	end
+
+	if o.oFloor == SURFACE_DEATH_PLANE then
+		obj_mark_for_deletion(o)
+	end
 	local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
 	o.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
 	o.oFaceAngleYaw = calculate_yaw(z, normal)
@@ -1247,7 +1259,18 @@ local function gib_init(o)
 end
 
 local function gib_loop(o)
+	local m = gMarioStates[0]
 	local random = math.random(1,1500)
+	local gibs = obj_count_objects_with_behavior_id(id_bhvGib)
+
+	if gibs > 240 then
+		obj_mark_for_deletion(o)
+	end
+
+	if m.marioObj.oTimer < 10 then --This protects from gib spam and low FPS
+		obj_mark_for_deletion(o)
+	end
+
 	cur_obj_update_floor_height_and_get_floor()
 	if o.oPosY > o.oFloorHeight then
 		cur_obj_move_using_fvel_and_gravity()
@@ -1260,7 +1283,7 @@ local function gib_loop(o)
 		o.oPosY = o.oFloorHeight
 	end
 
-	if o.oTimer > 1200 then -- 40 second timer before deleting. 
+	if o.oTimer > 600 then -- 40 second timer before deleting. 
 		obj_mark_for_deletion(o)
 	end
 
@@ -1372,14 +1395,9 @@ local function gorrie_loop(o)
     local nm = nearest_mario_state_to_object(o)
 	--local dorriemounted = cur_obj_is_mario_on_platform()
     local dorriemounted = cur_obj_is_any_player_on_platform()
-	djui_chat_message_create(tostring(dorriemounted))
 	local goal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
 	if goal == nil then
 		goal = obj_get_first_with_behavior_id(id_bhvStaticObject)
-	end
-
-	if dist_between_objects(o, m.marioObj) < 1200 and o.oTimer % 60 then
-		network_send_object(o, true)
 	end
 
     o.oAnimState = o.oTimer % 90
@@ -1425,17 +1443,17 @@ local function gorrie_loop(o)
 		o.oForwardVel = 0
 		local goal_angle = obj_angle_to_object(o, goal)
 		local anglesmooth = obj_face_yaw_approach(goal_angle, 256)
-		obj_turn_toward_object(o, goal, 16, 256)
-		obj_face_yaw_approach(goal_angle, 256)
+		obj_turn_toward_object(o, goal, 16, 512)
+		obj_face_yaw_approach(goal_angle, 512)
 	end
 
 	--Actual Gorrie Code
-    if dorriemounted >= 1 then
+    if dorriemounted == 1 then
 		if dist_between_objects(o, goal) < 1200 then --If Gorrie is at the Netherportal and players need to jump off...
 			if o.oAction ~= GORRIE_WAITING_FOR_DISEMBARK then
 				o.oAction = GORRIE_WAITING_FOR_DISEMBARK
 				if dist_between_objects(o, m.marioObj) < 1200 and o.oTimer % 60 then
-					network_send_object(o, true)
+					--network_send_object(o, true)
 				end
 			end
 		else
@@ -1447,27 +1465,20 @@ local function gorrie_loop(o)
 			end
         end
     else
-        if mario_is_within_rectangle(o.oPosX - 700, o.oPosX + 700, o.oPosZ - 700, o.oPosZ + 700) ~= 0 and dist_between_objects(o, goal) > 1600 then
+        if o.oAction == GORRIE_HOME_IDLE then
 			if o.oAction ~= GORRIE_WAITING_FOR_PLAYERS_TO_BOARD then
 				o.oAction = GORRIE_WAITING_FOR_PLAYERS_TO_BOARD
-				if dist_between_objects(o, m.marioObj) < 1200 then
-					--network_send_object(o, true)
-				end
 			end
         else
-			if cur_obj_lateral_dist_from_obj_to_home(o) >= 500 then
+			if cur_obj_lateral_dist_from_obj_to_home(o) >= 50 then
 				if o.oAction ~= GORRIE_TRAVEL_TO_HOME then
 					o.oAction = GORRIE_TRAVEL_TO_HOME
-					if dist_between_objects(o, m.marioObj) < 1200 then
-						--network_send_object(o, true)
-					end
 				end
 			else
 				if o.oAction ~= GORRIE_HOME_IDLE then
 					o.oAction = GORRIE_HOME_IDLE
-					if dist_between_objects(o, m.marioObj) < 1200 then
-						--network_send_object(o, true)
-					end
+					--cur_obj_set_pos_to_home()
+					--network_send_object(o, true)
 				end
 			end
         end
@@ -2044,17 +2055,17 @@ function hoot_loop(o)
 		gibs(o)
 		obj_unused_die()
 		squishblood_nogibs(o)
-
 		network_play(sSplatter, m.pos, 1, m.playerIndex)
 		stop_background_music(SEQ_EVENT_BOSS)
 	end
 end
 
 function chuckya(o)
+	local nm = nearest_mario_state_to_object(o)
 	local m = gMarioStates[0]
 	if o.oTimer == 10 and o.oAction == 1 then
 		network_play(sChuckster, m.pos, 1, m.playerIndex)
-		cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_116)
+		cutscene_object_with_dialog(CUTSCENE_DIALOG, nm.marioObj, DIALOG_116)
 	end
 end
 

@@ -466,6 +466,9 @@ function act_vulnerable(o)
                 stream_stop_all()
 
                 unlock_trophy(m.character.type+1)
+                if m.playerIndex == 0 then
+                    djui_popup_create_global(tostring(gNetworkPlayers[gMarioStates[0].playerIndex].name) .. " beat the game!", 1)
+                end
                 gGlobalSyncTable.gameisbeat = true
                 mod_storage_save("file"..get_current_save_file_num().."gameisbeat", "true")
                 --mod_storage_save("gameisbeat", "true")

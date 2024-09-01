@@ -32,6 +32,7 @@ const GeoLayout secretroom_area_1_geo[] = {
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -2760, 784, -2468, 0, 60, 0, secretroom_dl_Portrait_Saniky_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -3499, 483, -1230, 0, 60, 0, secretroom_dl_Portrait_Tilly_mesh_layer_1),
 		GEO_DISPLAY_LIST(LAYER_OPAQUE, secretroom_dl_Skybox_mesh_layer_1),
+		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, 745, 552, 1148, 90, 0, 120, secretroom_dl_Text_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -3490, 784, -1228, 0, 60, 0, secretroom_dl_theincredibleholc_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -1016, 477, 1738, 90, 0, 180, secretroom_dl_Tilly_s_koopa_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -1904, 494, 1738, 90, 0, 180, secretroom_dl_Trolololol_mesh_layer_1),
