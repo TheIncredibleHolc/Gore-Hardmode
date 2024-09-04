@@ -1,5 +1,4 @@
 
-
 gSamples = {
 	audio_sample_load("bonebreak.ogg"),
 	audio_sample_load("bigexplosion.ogg"),
@@ -39,7 +38,11 @@ gSamples = {
 	audio_sample_load("ground.ogg"),
 	audio_sample_load("klepto.ogg"),
 	audio_sample_load("nightvision.ogg"),
-	audio_sample_load("chuckster.ogg")
+	audio_sample_load("chuckster.ogg"),
+	audio_sample_load("angryluigi.ogg"),
+	audio_sample_load("angrytoad.ogg"),
+	audio_sample_load("angrywario.ogg"),
+	audio_sample_load("angrywaluigi.ogg")
 }
 
 sBoneBreak = 1
@@ -81,6 +84,10 @@ sGround = 36
 sAngryKlepto = 37
 sNightvision = 38
 sChuckster = 39
+sAngryLuigi = 40
+sAngryToad = 41
+sAngryWario = 42
+sAngryWaluigi = 43
 
 function loop(music) audio_stream_set_looping(music, true) end
 
@@ -151,7 +158,7 @@ function local_play(id, pos, vol)
 end
 function network_play(id, pos, vol, i)
     local_play(id, pos, vol)
-    network_send(true, {id = id, x = pos.x, y = pos.y, z = pos.z, vol = vol, i = network_global_index_from_local(i)})
+    network_send(true, {type = PACKET_SOUND, id = id, x = pos.x, y = pos.y, z = pos.z, vol = vol, i = network_global_index_from_local(i)})
 end
 function stop_all_samples()
 	for _, audio in pairs(gSamples) do
@@ -160,10 +167,17 @@ function stop_all_samples()
 end
 
 hook_event(HOOK_ON_PACKET_RECEIVE, function (data)
-	if is_player_active(gMarioStates[network_local_index_from_global(data.i)]) ~= 0 then
+	if data.type == PACKET_SOUND and is_player_active(gMarioStates[network_local_index_from_global(data.i)]) ~= 0 then
 		local_play(data.id, {x=data.x, y=data.y, z=data.z}, data.vol)
 	end
+
+	if data.type == PACKET_UNLOCK then
+		unlock_trophy(data.id)
+	end
 end)
+
+PACKET_UNLOCK = 0
+PACKET_SOUND = 1
 
 --! models
 
@@ -789,7 +803,7 @@ function adjust_turn_speed(m, turn_speed_factor)
     m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, turnSpeed, turnSpeed)
 end
 
-PACKET_UNLOCK = 0
+
 
 function unlock_trophy(id)
 	if network_is_server() then
@@ -800,12 +814,6 @@ function unlock_trophy(id)
 		end
 	else network_send_to(1, true, {type = PACKET_UNLOCK, id = id}) end
 end
-
-hook_event(HOOK_ON_PACKET_RECEIVE, function (data)
-	if data.type == PACKET_UNLOCK then
-		unlock_trophy(data.id)
-	end
-end)
 
 function delete_save(m)
 	--[[

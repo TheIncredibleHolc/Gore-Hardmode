@@ -175,14 +175,16 @@ end
 ------Globals--------
 local function modsupport()
 	for key,value in pairs(gActiveMods) do
-		if (value.name == "Flood") or (value.name == "Flood \\#00ffd5\\Expanded v1.5.0") then
+		if (value.name == "Flood") or _G.floodExpanded then
 			if network_is_server() then
+				--djui_chat_message_create("Gore/HM Flood compatibility enabled.")
 				gGlobalSyncTable.floodenabled = true
 				gGlobalSyncTable.gameisbeat = false
 			end
 		else
 			if network_is_server() then
 				gGlobalSyncTable.floodenabled = false
+				--djui_chat_message_create("no flood")
 			end
 		end
 	end
@@ -308,7 +310,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		gLevelValues.fixCollisionBugs = false
 	end
 
-	--djui_chat_message_create(tostring(gLakituState.yaw))
+	--djui_chat_message_create(tostring(s.ishigh))
 
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
 		m.action = ACT_NOTHING
@@ -751,11 +753,11 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		   s.highdeathtimer == 1200 then
 			local randommodel = math.random(3)
 			if randommodel == 1 then
-				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER, m.pos.x, m.pos.y, m.pos.z, nil)
+				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
 			elseif randommodel == 2 then
-				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER2, m.pos.x, m.pos.y, m.pos.z, nil)
+				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER2, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
 			elseif randommodel == 3 then
-				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER3, m.pos.x, m.pos.y, m.pos.z, nil)
+				spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER3, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
 			end
 		end
 	end
@@ -1135,7 +1137,18 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		end
 	end
 	if (s.penguintimer) == 230 then
-		local_play(sAngryMario, m.pos, 1)
+		
+		if m.character.type == CT_MARIO then
+			network_play(sAngryMario, m.pos, 1, m.playerIndex)
+		elseif m.character.type == CT_LUIGI then
+			network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
+		elseif m.character.type == CT_TOAD then
+			network_play(sAngryToad, m.pos, 1, m.playerIndex)
+		elseif m.character.type == CT_WARIO then
+			network_play(sAngryWario, m.pos, 1, m.playerIndex)
+		elseif m.character.type == CT_WALUIGI then
+			network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
+		end
 	end
 	if (s.penguintimer) == 280 then
 		m.heldObj.oAction = 6
@@ -1726,30 +1739,32 @@ end
 
 ---------hooks--------
 hook_event(HOOK_MARIO_UPDATE, mario_update)
-hook_event(HOOK_MARIO_UPDATE, modsupport)
+hook_event(HOOK_ON_LEVEL_INIT, modsupport)
 hook_event(HOOK_MARIO_UPDATE, testing)
 hook_event(HOOK_MARIO_UPDATE, mariohitbyenemy)
 hook_event(HOOK_MARIO_UPDATE, splattertimer)
 hook_event(HOOK_BEFORE_MARIO_UPDATE, function (m) -- mario high
---local s = gStateExtras[m.playerIndex]
-local s = gStateExtras[0]
-if (s.ishigh) == 1 then
-    if m.input & INPUT_NONZERO_ANALOG ~= 0 then
-		local range = 12288
-        local t = m.marioObj.oTimer/50
-        local angle = atan2s(m.controller.stickY, m.controller.stickX)
-        local woowoo = sins(2 * t) + sins(math.pi * t)
+	local s = gStateExtras[0]
+	if (s.ishigh) == 1 then
+		if m.input & INPUT_NONZERO_ANALOG ~= 0 then
+			local range = 12288
+			local t = m.marioObj.oTimer/50
+			local angle = atan2s(m.controller.stickY, m.controller.stickX)
+			local woowoo = sins(2 * t) + sins(math.pi * t)
 
-		if (s.highdeathtimer) < 1100 then m.controller.stickMag = m.controller.stickMag*.25 end
-        m.intendedYaw = m.intendedYaw + woowoo*range
-        m.controller.stickX = m.controller.stickMag * sins(angle+woowoo*range)
-        m.controller.stickY = m.controller.stickMag * coss(angle+woowoo*range)
-    end
-	if (s.highdeathtimer) >= 1100 then
-		m.controller.buttonDown = Z_TRIG
-		m.controller.buttonPressed = Z_TRIG
+			if (s.highdeathtimer) < 1100 then m.controller.stickMag = m.controller.stickMag*.25 end
+
+			m.intendedYaw = m.intendedYaw + woowoo*range
+			m.controller.stickX = m.controller.stickMag * sins(angle+woowoo*range)
+			m.controller.stickY = m.controller.stickMag * coss(angle+woowoo*range)
+		end
+		if (s.highdeathtimer) >= 1100 then
+			m.controller.buttonDown = Z_TRIG
+			m.controller.buttonPressed = Z_TRIG
+		end
+	else
+		--djui_chat_message_create("not high")
 	end
-end
 	if m.usedObj and obj_has_behavior_id(m.usedObj, id_bhvKingBobomb) ~= 0 and m.usedObj.usingObj == m.marioObj then
 		m.controller.buttonDown = m.usedObj.oTimer == 40 and A_BUTTON or 0
 	end

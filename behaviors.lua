@@ -363,7 +363,9 @@ end
 
 local function bhv_custom_seesaw(obj) --SeeSaw Objects spin like windmills
 	local np = gNetworkPlayers[0]
-	if np.currLevelNum == LEVEL_BITS and obj.oPosY < -3500 then
+	if np.currLevelNum == LEVEL_BITS and obj.oPosY > -3500 then
+		--do nothing
+	else
 		obj.oSeesawPlatformPitchVel = -400
 	end
 end
@@ -1222,7 +1224,7 @@ local function squishblood_loop(o)
 	local m = gMarioStates[0]
 	cur_obj_update_floor()
 
-	if m.marioObj.oTimer < 5 then --This protects blood spam and low FPS
+	if m.marioObj.oTimer > 900 then --This protects blood spam and low FPS
 		obj_mark_for_deletion(o)
 	end
 

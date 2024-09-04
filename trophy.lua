@@ -170,9 +170,10 @@ function trophy_loop(o)
 
 	if obj_check_hitbox_overlap(o, player) and o.oAction == 0 then
 		if o.oBehParams & 1 ~= 0 then -- collectible
+			local nm = nearest_mario_state_to_object(o)
 			-- collect (spin, fly up and shrink, leaving a trail of sparkles behind)
-			if m.playerIndex == 0 then
-				djui_popup_create_global(tostring(gNetworkPlayers[gMarioStates[0].playerIndex].name) .. " collected a trophy!", 1)
+			if nm.playerIndex == 0 then
+				djui_popup_create_global(tostring(gNetworkPlayers[nm.playerIndex].name) .. " collected a trophy!", 1)
 				play_puzzle_jingle()
 			end
 			--network_play(sTrophy, m.pos, 1, m.playerIndex)
