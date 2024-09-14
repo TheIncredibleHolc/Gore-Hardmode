@@ -1319,7 +1319,7 @@ end
 
 local function eyerok_loop(o)
 	if o.oAction == EYEROK_BOSS_ACT_WAKE_UP then
-		o.oEyerokBossNumHands = o.parentObj.oEyerokBossNumHands + 4
+		--o.oEyerokBossNumHands = o.parentObj.oEyerokBossNumHands + 4
 	end
 end
 
@@ -2083,6 +2083,7 @@ function stonewall_loop(o)
 end
 
 function flame_loop(o) --This is to help prevent a bunch of stuck flames from building up in Hell near the beginning. 
+	np = gNetworkPlayers[0]
 	if o.oBehParams == 4 and o.oTimer > 400 then -- BehParam 4 is set to the usedflame when mario ignites. This will cause that flame to burn out within 500 frames.
 		obj_unused_die()
 		obj_mark_for_deletion(o)

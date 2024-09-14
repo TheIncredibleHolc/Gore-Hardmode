@@ -1,4 +1,76 @@
 
+--GUI Gore Customizations
+local function helltoggle()
+	if network_is_server() and gGlobalSyncTable.hellenabled then
+		djui_chat_message_create("Hell disabled.")
+		gGlobalSyncTable.hellenabled = false
+	elseif network_is_server() and gGlobalSyncTable.hellenabled == false then
+		djui_chat_message_create("Hell enabled.")
+		gGlobalSyncTable.hellenabled = true
+	elseif not network_is_server() then
+		djui_chat_message_create("Option only available for host.")
+	end
+end
+hook_mod_menu_button("Toggle Hell [HOST]", helltoggle)
+
+local function pvptoggle()
+	if network_is_server() and gGlobalSyncTable.pvp	then
+		djui_chat_message_create("PvP Murdering disabled.")
+		gGlobalSyncTable.pvp = false
+	elseif network_is_server() and gGlobalSyncTable.pvp == false then
+		djui_chat_message_create("PvP Murdering enabled.")
+		gGlobalSyncTable.pvp = true
+	elseif not network_is_server() then
+		djui_chat_message_create("Option only available for host.")
+	end
+end
+hook_mod_menu_button("Toggle murdering [HOST]", pvptoggle)
+
+local function levelspawnstoggle()
+	if network_is_server() and gGlobalSyncTable.romhackcompatibility	then
+		djui_chat_message_create("Romhack compatibility mode disabled.")
+		gGlobalSyncTable.romhackcompatibility = false
+	elseif network_is_server() and gGlobalSyncTable.romhackcompatibility == false then
+		djui_chat_message_create("Romhack compatibility mode enabled.")
+		gGlobalSyncTable.romhackcompatibility = true
+	elseif not network_is_server() then
+		djui_chat_message_create("Option only available for host.")
+	end
+end
+hook_mod_menu_button("Romhack Compatibility Mode [HOST]", levelspawnstoggle)
+
+local function iwbtgtoggle()
+	local m = gMarioStates[0]
+	local s = gStateExtras[0]
+	if not s.iwbtg then
+
+        delete_save(m)
+
+		play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
+		s.iwbtg = true
+		m.numLives = 1
+		play_character_sound(m, CHAR_SOUND_LETS_A_GO)
+		play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
+        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
+		djui_chat_message_create("IWBTG MODE ENABLED!")
+	else
+		save_file_set_using_backup_slot(false)
+		djui_chat_message_create("IWBTG mode disabled... Chicken!")
+		m.health = 2176
+		s.iwbtg = false
+		s.death = true
+		m.numLives = 4
+		stream_stop_all()
+		local_play(sChicken, m.pos, 1)
+		spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
+	end
+	return true
+end
+hook_mod_menu_button("IWBTG Mode", iwbtgtoggle)
+
+
+
+--Custom audio engine (Thanks coolio!!)
 gSamples = {
 	audio_sample_load("bonebreak.ogg"),
 	audio_sample_load("bigexplosion.ogg"),

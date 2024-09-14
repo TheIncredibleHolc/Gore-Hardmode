@@ -121,6 +121,7 @@ end
 local function mario_update(m)
     np = gNetworkPlayers[0]
     if m.playerIndex ~= 0 then return end
+    if gGlobalSyncTable.romhackcompatibility then return end
     if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
         if not obj_get_first_with_behavior_id(id_bhvFog) then
             spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)

@@ -13,6 +13,9 @@
 --For PVP murdering. Default off.
 gGlobalSyncTable.pvp = false
 
+--Romhack compatibility mode. Default OFF. Controls custom level spawns. 
+gGlobalSyncTable.romhackcompatibility = false
+
 --Turns off bubble death.
 gServerSettings.bubbleDeath = false
 
@@ -209,18 +212,19 @@ local TEX_NIGHTVISION5 = get_texture_info("nightvision5")
 -----------------------------------------------------------------------------------------------------------------------------
 -------ACT_FUNCTIONS------------
 
-function squishblood(o) -- Creates instant pool of impact-blood under mario.
+function squishblood(o) -- Creates instant pool of impact-blood under an object.
 	spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil, 0)
 	bloodmist(o)
 end
 
-function squishblood_nogibs(o) -- Creates instant pool of impact-blood under mario.
+function squishblood_nogibs(o) -- Creates instant pool of impact-blood under an object.
 	spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, function (gibs) gibs.oBehParams = 1 end, 0)
 	bloodmist(o)
 end
 
 function gibs(o)
 	--for i = 0, 60 do
+	local m = gMarioStates[0]
 	for i = 0, 40 do
 		if m.playerIndex ~= 0 then return end
 		local random = math.random()		
@@ -301,6 +305,7 @@ end
 
 function mario_update(m) -- ALL Mario_Update hooked commands.,
 	if is_player_active(m) == 0 then return end
+	local m = gMarioStates[0] --MIGHT BREAK THINGS, I JUST ADDED THIS DUE TO SM64 EE ERRORS. BE WARNED!
 	local np = gNetworkPlayers[0]
 	local s = gStateExtras[m.playerIndex]
 
@@ -384,44 +389,45 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		end
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
-	--if in Snowman Land...
-	if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
-		set_override_envfx(ENVFX_SNOW_BLIZZARD)
-		cur_obj_play_sound_1(SOUND_ENV_WIND1)
-		set_lighting_color(0, 100)
-        set_lighting_color(1, 147)
-        set_lighting_color(2, 200)
-		set_vertex_color(0, 100)
-        set_vertex_color(1, 147)
-        set_vertex_color(2, 200)
-        set_fog_color(0, 100)
-        set_fog_color(1, 147)
-        set_fog_color(2, 200)
-	end
-
-	if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then
-		if gLakituState.pos.y < 944 then
-			set_lighting_color(0, 255)
-			set_lighting_color(1, 255)
-			set_lighting_color(2, 255)
-			set_lighting_dir(1, 128)
-			set_vertex_color(0, 255)
-			set_vertex_color(1, 255)
-			set_vertex_color(2, 255)
-			set_fog_color(0, 255)
-			set_fog_color(1, 255)
-			set_fog_color(2, 255)
-		else
-			set_lighting_color(0, 255)
-			set_lighting_color(1, 127)
-			set_lighting_color(2, 100)
-			set_lighting_dir(1, -128)
-			set_vertex_color(0, 255)
-			set_vertex_color(1, 127)
-			set_vertex_color(2, 100)
-			set_fog_color(0, 255)
-			set_fog_color(1, 127)
-			set_fog_color(2, 100)
+	if not gGlobalSyncTable.romhackcompatibility then
+		if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
+			set_override_envfx(ENVFX_SNOW_BLIZZARD)
+			cur_obj_play_sound_1(SOUND_ENV_WIND1)
+			set_lighting_color(0, 100)
+			set_lighting_color(1, 147)
+			set_lighting_color(2, 200)
+			set_vertex_color(0, 100)
+			set_vertex_color(1, 147)
+			set_vertex_color(2, 200)
+			set_fog_color(0, 100)
+			set_fog_color(1, 147)
+			set_fog_color(2, 200)
+		end
+	
+		if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then
+			if gLakituState.pos.y < 944 then
+				set_lighting_color(0, 255)
+				set_lighting_color(1, 255)
+				set_lighting_color(2, 255)
+				set_lighting_dir(1, 128)
+				set_vertex_color(0, 255)
+				set_vertex_color(1, 255)
+				set_vertex_color(2, 255)
+				set_fog_color(0, 255)
+				set_fog_color(1, 255)
+				set_fog_color(2, 255)
+			else
+				set_lighting_color(0, 255)
+				set_lighting_color(1, 127)
+				set_lighting_color(2, 100)
+				set_lighting_dir(1, -128)
+				set_vertex_color(0, 255)
+				set_vertex_color(1, 127)
+				set_vertex_color(2, 100)
+				set_fog_color(0, 255)
+				set_fog_color(1, 127)
+				set_fog_color(2, 100)
+			end
 		end
 	end
 
@@ -467,11 +473,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Lava bubbling at HMC
-	if np.currLevelNum == LEVEL_HMC and m.pos.y < -3900 then
-		set_override_envfx(ENVFX_LAVA_BUBBLES)
-	elseif np.currLevelNum == LEVEL_HMC and m.pos.y >= -3900 then
-		set_override_envfx(ENVFX_MODE_NONE)
+	if not gGlobalSyncTable.romhackcompatibility then
+		if np.currLevelNum == LEVEL_HMC and m.pos.y < -3900 then
+			set_override_envfx(ENVFX_LAVA_BUBBLES)
+		elseif np.currLevelNum == LEVEL_HMC and m.pos.y >= -3900 then
+			set_override_envfx(ENVFX_MODE_NONE)
+		end
 	end
+
 
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -490,21 +499,21 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 ----------------------------------------------------------------------------------------------------------------------------------
 
 -- (PSS/TTM Only) Faster sliding.
-    
-    local is_pss = np.currLevelNum == LEVEL_PSS
-    local is_ttm = np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2
-    local is_butt_or_dive_slide = m.action == ACT_BUTT_SLIDE or m.action == ACT_DIVE_SLIDE
-    
-    if is_pss and is_butt_or_dive_slide then
-        adjust_slide_velocity(m, 50)
-    elseif is_ttm and is_butt_or_dive_slide then
-        adjust_slide_velocity(m, 40)
-    end
-    
-    if (is_pss or is_ttm) and m.action == ACT_BUTT_SLIDE then
-        adjust_turn_speed(m)
-    end
-
+    if not gGlobalSyncTable.romhackcompatibility then
+		local is_pss = np.currLevelNum == LEVEL_PSS
+		local is_ttm = np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2
+		local is_butt_or_dive_slide = m.action == ACT_BUTT_SLIDE or m.action == ACT_DIVE_SLIDE
+		
+		if is_pss and is_butt_or_dive_slide then
+			adjust_slide_velocity(m, 50)
+		elseif is_ttm and is_butt_or_dive_slide then
+			adjust_slide_velocity(m, 40)
+		end
+		
+		if (is_pss or is_ttm) and m.action == ACT_BUTT_SLIDE then
+			adjust_turn_speed(m)
+		end
+	end
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--If dead, gold go bye bye
@@ -529,14 +538,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Spooky BBH
-	if np.currLevelNum == LEVEL_BBH then
+	if np.currLevelNum == LEVEL_BBH and not gGlobalSyncTable.romhackcompatibility then
 		set_lighting_color(0,50)
 		set_lighting_color(1,50)
 		set_lighting_color(2,65)
 		set_lighting_dir(1,128)
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
-	if np.currLevelNum == LEVEL_BITFS then
+	if np.currLevelNum == LEVEL_BITFS and not gGlobalSyncTable.romhackcompatibility then
 		local minvertedpyramid = obj_get_first_with_behavior_id(id_bhvBitfsTiltingInvertedPyramid)
 		while minvertedpyramid do
 			obj_mark_for_deletion(minvertedpyramid)
@@ -546,7 +555,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Wet/Dry world is now just dry world... LOL...
-	if np.currLevelNum == LEVEL_WDW then
+	if np.currLevelNum == LEVEL_WDW and not gGlobalSyncTable.romhackcompatibility then
         for i = 0, 3 do
 		    set_environment_region(i, -10000)
         end
@@ -789,43 +798,47 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		s.isdead = true
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
-	if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
-		if ia(m) and m.marioObj.oTimer == 30 and not s.sslIntro then
-			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
-			s.sslIntro = true
-		end
-		if (m.action & ACT_FLAG_WATER_OR_TEXT) == 0 then
-			s.ssldiethirst = s.ssldiethirst + 1
-		else
-			s.ssldiethirst = 0 -- stops timer
-		end
 
-		if s.ssldiethirst >= 300 then
-			m.health = m.health - 1
-			if m.health < 1024 then
-				if m.action == ACT_IDLE then
-					m.action = ACT_PANTING
-				end
-				if m.action == ACT_WALKING or m.action == ACT_JUMP or m.action == ACT_JUMP_KICK then
-					m.forwardVel = clampf(m.forwardVel, -100, m.health / 64)
-				end
-				if m.action == ACT_LONG_JUMP then
-					set_mario_action(m, ACT_JUMP, 0)
+	if not gGlobalSyncTable.romhackcompatibility then
+		if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
+			if ia(m) and m.marioObj.oTimer == 30 and not s.sslIntro then
+				cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
+				s.sslIntro = true
+			end
+			if (m.action & ACT_FLAG_WATER_OR_TEXT) == 0 then
+				s.ssldiethirst = s.ssldiethirst + 1
+			else
+				s.ssldiethirst = 0 -- stops timer
+			end
+	
+			if s.ssldiethirst >= 300 then
+				m.health = m.health - 1
+				if m.health < 1024 then
+					if m.action == ACT_IDLE then
+						m.action = ACT_PANTING
+					end
+					if m.action == ACT_WALKING or m.action == ACT_JUMP or m.action == ACT_JUMP_KICK then
+						m.forwardVel = clampf(m.forwardVel, -100, m.health / 64)
+					end
+					if m.action == ACT_LONG_JUMP then
+						set_mario_action(m, ACT_JUMP, 0)
+					end
 				end
 			end
+			m.forwardVel = m.forwardVel + 0.3
+		else
+			s.ssldiethirst = 0
 		end
-		m.forwardVel = m.forwardVel + 0.3
-	else
-		s.ssldiethirst = 0
+	
+		if np.currLevelNum == LEVEL_SL and np.currAreaIndex == 1 then
+			if ia(m) and m.marioObj.oTimer == 30 and not s.slIntro then
+				cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
+				s.slIntro = true
+			end
+			m.health = m.health - 1
+		end
 	end
 
-	if np.currLevelNum == LEVEL_SL and np.currAreaIndex == 1 then
-		if ia(m) and m.marioObj.oTimer == 30 and not s.slIntro then
-			cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
-			s.slIntro = true
-		end
-		m.health = m.health - 1
-	end
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Mario Disintegrates when on fire
 	if m.action == ACT_BURNING_JUMP or m.action == ACT_BURNING_GROUND or m.action == ACT_BURNING_FALL then
@@ -1395,7 +1408,7 @@ function before_mario_action(m, action)
 
 		if (m.marioObj.oMarioBurnTimer == 0) then
 			if (m.usedObj and obj_has_behavior_id(m.usedObj, id_bhvFlame) == 0) or not m.usedObj then
-				m.usedObj = spawn_sync_object(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil)
+				m.usedObj = spawn_sync_object(id_bhvFlame, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, function (flame) flame.oBehParams = 4 end)
 			end
 			if m.character.type == CT_MARIO then
 				network_play(sAgonyMario, m.pos, 1, m.playerIndex)
@@ -1831,57 +1844,6 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 end)
 ---------------------------------------
 
-hook_chat_command("pvp", "pvp deaths", function ()
-	if network_is_server() then
-		local m = gMarioStates[0]
-		if gGlobalSyncTable.pvp == true then
-			gGlobalSyncTable.pvp = false
-			djui_chat_message_create("PVP killing disabled.")
-		else
-			gGlobalSyncTable.pvp = true
-			djui_chat_message_create("PVP killing enabled.")
-		end
-	end
-	return true
-end)
-
-hook_chat_command("disappear", "disappear", function ()
-	if network_is_server() then
-		local m = gMarioStates[0]
-		set_mario_action(m, ACT_DISAPPEARED, 0)
-	end
-	return true
-end)
-
---IWBTG MODE
-hook_chat_command("iwbtg", "iwbtm", function ()
-	local m = gMarioStates[0]
-	local s = gStateExtras[0]
-	if not s.iwbtg then
-
-        delete_save(m)
-
-		play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
-		s.iwbtg = true
-		m.numLives = 1
-		play_character_sound(m, CHAR_SOUND_LETS_A_GO)
-		play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
-        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
-		djui_chat_message_create("IWBTG MODE ENABLED!")
-	else
-		save_file_set_using_backup_slot(false)
-		djui_chat_message_create("IWBTG mode disabled... Chicken!")
-		m.health = 2176
-		s.iwbtg = false
-		s.death = true
-		m.numLives = 4
-		stream_stop_all()
-		local_play(sChicken, m.pos, 1)
-		spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
-	end
-	return true
-end)
-
 local msgToLevel = {
     ["BOB"] = LEVEL_BOB,
     ["WF"] = LEVEL_WF,
@@ -1959,18 +1921,6 @@ hook_chat_command("lock", "trophy", function (msg)
 end)
 ]]
 
-hook_chat_command("hell", "HELL", function ()
-	if network_is_server() and gGlobalSyncTable.hellenabled then
-		djui_chat_message_create("Hell disabled.")
-		gGlobalSyncTable.hellenabled = false
-	elseif network_is_server() and gGlobalSyncTable.hellenabled == false then
-		djui_chat_message_create("Hell enabled.")
-		gGlobalSyncTable.hellenabled = true
-	end
-	--warp_to_level(LEVEL_HELL, 1, 0)
-	return true
-end)
-
 local function default_level_func()
 	local np = gNetworkPlayers[0]
     set_lighting_color(0, 255)
@@ -2001,7 +1951,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function()
 
     -- Execute level-specific actions
     local level_func = sOnLvlInitToFunc[np.currLevelNum]
-    if level_func then
+    if level_func and not gGlobalSyncTable.romhackcompatibility then
         level_func()
     else
         default_level_func()
@@ -2009,6 +1959,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function()
 end)
 
 local function level_init_spawns()
+	if gGlobalSyncTable.romhackcompatibility then return end
 	local m = gMarioStates[0]
 	local np = gNetworkPlayers[0]
 	local gorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
@@ -2017,13 +1968,11 @@ local function level_init_spawns()
 		if gorrie ~= nil then
 			--djui_chat_message_create('dorrie exists')
 		else
-			--djui_chat_message_create('spawning dorrie')
 			spawn_sync_object(id_bhvGorrie, E_MODEL_RED_DORRIE, -5269, 1050, 3750, nil)
 		end
 		if stonewall ~= nil then
 			--djui_chat_message_create('stonewall exists')
 		else
-			--djui_chat_message_create('spawning stonewall')
 			spawn_sync_object(id_bhvStonewall, E_MODEL_STONEWALL, 6307, 1090, 2600, function (wall) 
 				wall.oFaceAngleYaw = 0
 				wall.oMoveAngleYaw = wall.oFaceAngleYaw
@@ -2031,18 +1980,6 @@ local function level_init_spawns()
 			end)
 		end
 	end
-	--[[
-	if np.currLevelNum == LEVEL_TTM then
-		local lantern = obj_get_first_with_behavior_id(id_bhvLantern)
-		if lantern ~= nil then
-			--djui_chat_message_create('exists')
-		else
-			--djui_chat_message_create('spawning')
-			spawn_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)	
-			--spawn_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
-		end
-	end
-	]]
 end
 
 hook_event(HOOK_ON_SYNC_VALID, level_init_spawns)
@@ -2056,11 +1993,12 @@ hook_event(HOOK_ON_WARP, function()
         s.timeattack = false
     end
 
-    -- Execute the action based on the current level
-    local level_func = sOnWarpToFunc[np.currLevelNum]
-    if level_func then
-        level_func()
-    end
+	-- Execute the action based on the current level
+	local level_func = sOnWarpToFunc[np.currLevelNum]
+	if level_func and not gGlobalSyncTable.romhackcompatibility then
+		level_func()
+	end
+
 end)
 
 --Custom character sound changes, like disabling mario's fire scream to make room for custom scream.
