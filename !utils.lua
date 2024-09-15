@@ -114,7 +114,9 @@ gSamples = {
 	audio_sample_load("angryluigi.ogg"),
 	audio_sample_load("angrytoad.ogg"),
 	audio_sample_load("angrywario.ogg"),
-	audio_sample_load("angrywaluigi.ogg")
+	audio_sample_load("angrywaluigi.ogg"),
+	audio_sample_load("sick.ogg"),
+	audio_sample_load("toadsick.ogg")
 }
 
 sBoneBreak = 1
@@ -160,6 +162,8 @@ sAngryLuigi = 40
 sAngryToad = 41
 sAngryWario = 42
 sAngryWaluigi = 43
+sSick = 44
+sToadSick = 45
 
 function loop(music) audio_stream_set_looping(music, true) end
 
@@ -305,6 +309,7 @@ COL_LANTERN = smlua_collision_util_get("lantern_collision")
 E_MODEL_GOGGLES = smlua_model_util_get_id("goggles_geo")
 E_MODEL_STONEWALL = smlua_model_util_get_id("stonewall_geo")
 COL_STONEWALL = smlua_collision_util_get("stonewall_collision")
+E_MODEL_VOMIT = smlua_model_util_get_id("vomit_geo")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -373,7 +378,8 @@ for i = 0, MAX_PLAYERS-1 do
 		death = false,
 		sslIntro = false,
 		slIntro = false,
-		hasNightvision = false
+		hasNightvision = false,
+		sick = 0
 	}
 end
 
@@ -702,6 +708,45 @@ function act_reading_trophy(m)
 	end
 end
 hook_mario_action(ACT_READING_TROPHY, act_reading_trophy)
+
+_G.ACT_PUKE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
+function act_puke(m)
+	local s = gStateExtras[m.playerIndex]
+	m.marioBodyState.eyeState = MARIO_EYES_DEAD
+	s.sick = s.sick + 1
+
+	if s.sick == 2 then
+		set_mario_animation(m, MARIO_ANIM_COUGHING)
+	end
+	if s.sick == 20 then
+		if m.character.type ~= CT_TOAD then
+			network_play(sSick, m.pos, 2, m.playerIndex)
+		else
+			network_play(sToadSick, m.pos, 1.5, m.playerIndex)
+		end
+	end
+	if s.sick > 30 and s.sick < 70 then
+		if m.playerIndex ~= 0 then return end
+		if m.character.type == CT_MARIO then
+			spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 50, m.pos.z, nil)
+		elseif m.character.type == CT_LUIGI then
+			spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 60, m.pos.z, nil)
+		elseif m.character.type == CT_TOAD then
+			spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 20, m.pos.z, nil)
+		elseif m.character.type == CT_WARIO then
+			spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 60, m.pos.z, nil)
+		elseif m.character.type == CT_WALUIGI then
+			spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 110, m.pos.z, nil)
+
+		end
+	end
+	if s.sick == 90 then
+		set_mario_action(m, ACT_IDLE, 0)
+		--soft_reset_camera(m.area.camera)
+		s.sick = 0
+	end
+end
+hook_mario_action(ACT_PUKE, act_puke)
 
 local MC = PARTICLE_MIST_CIRCLE
 local T  = PARTICLE_TRIANGLE

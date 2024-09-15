@@ -147,9 +147,7 @@ function testing(m)
 	local s = gStateExtras[m.playerIndex]
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		--djui_chat_message_create(tostring(gLakituState.pos.x))
-		--djui_chat_message_create(tostring(gLakituState.pos.y))
-		--djui_chat_message_create(tostring(gLakituState.pos.z))
+		s.sick = 1
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 	end
@@ -316,7 +314,26 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 
 	--djui_chat_message_create(tostring(s.ishigh))
+	-------------------------------------------------------------------------------
+	-- Puking
+	if s.sick == 1 then
+		if m.forwardVel > 4 then
+			--djui_chat_message_create(tostring(m.forwardVel))
+			m.forwardVel = m.forwardVel - 1
+		end
+		if m.forwardVel <= 7 and m.pos.y == m.floorHeight then
+			set_mario_action(m, ACT_PUKE, 0)
+		end
+	end
 
+	if s.sick > 0 then
+		set_handheld_shake(HAND_CAM_SHAKE_HIGH)
+	end
+
+
+	
+	
+	-------------------------------------------------------------------------------
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
 		m.action = ACT_NOTHING
 	end
@@ -2019,6 +2036,10 @@ hook_event(HOOK_CHARACTER_SOUND, function(m, sound)
     if sound == CHAR_SOUND_ATTACKED and in_hitbox then return 0 end
     if sound == CHAR_SOUND_DYING and (s.headless or s.bottomless) then return 0 end
     if sound == CHAR_SOUND_WAAAOOOW and (m.action == ACT_THROWN_FORWARD or m.action == ACT_THROWN_BACKWARD) then return 0 end
+	if sound == CHAR_SOUND_COUGHING1 and s.puking then return 0 end
+	if sound == CHAR_SOUND_COUGHING2 and s.puking then return 0 end
+	if sound == CHAR_SOUND_COUGHING3 and s.puking then return 0 end
+
     if check_trophyplate(m, np, sound) then return 0 end
 end)
 

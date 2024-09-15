@@ -2089,6 +2089,32 @@ function flame_loop(o) --This is to help prevent a bunch of stuck flames from bu
 		obj_mark_for_deletion(o)
 	end
 end
+
+function vomit_init(o)
+    o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
+	o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+	o.header.gfx.skipInViewCheck = true
+	o.oGraphYOffset = 40
+	obj_scale(o, 0.2)
+	o.oGravity = -1
+	end
+
+function vomit_loop(o)
+	local sickmario = nearest_mario_state_to_object(o)
+	--obj_set_face_angle(o, sickmario.marioObj.oFaceAnglePitch, sickmario.marioObj.oFaceAngleYaw, sickmario.marioObj.oFaceAngleRoll)
+	--obj_set_face_angle_to_move_angle(o)
+	local random = math.random(2.0, 15.0)
+	o.oForwardVel = random
+	cur_obj_move_using_fvel_and_gravity()
+	cur_obj_update_floor_height()
+	if o.oPosY <= o.oFloorHeight then
+		obj_mark_for_deletion(o)
+	end
+
+	o.oOpacity = (-clampf(math.floor(o.oTimer * 8), 0, 255) + 255)
+	o.oGraphYOffset = o.oGraphYOffset + -2.5
+
+end
 -------Behavior Hooks-------
 
 local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
@@ -2184,3 +2210,4 @@ id_bhvLantern = hook_behavior(nil, OBJ_LIST_SURFACE, true, lantern_init, lantern
 id_bhvGlow = hook_behavior(nil, OBJ_LIST_GENACTOR, true, glow_init, glow_loop)
 id_bhvGoggles = hook_behavior(nil, OBJ_LIST_GENACTOR, true, goggles_init, goggles_loop)
 id_bhvStonewall = hook_behavior(nil, OBJ_LIST_SURFACE, true, stonewall_init, stonewall_loop)
+id_bhvVomit = hook_behavior(nil, OBJ_LIST_GENACTOR, true, vomit_init, vomit_loop)
