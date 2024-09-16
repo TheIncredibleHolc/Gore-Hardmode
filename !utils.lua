@@ -1,5 +1,18 @@
 
 --GUI Gore Customizations
+local function levelspawnstoggle()
+	if network_is_server() and gGlobalSyncTable.romhackcompatibility	then
+		djui_chat_message_create("Romhack compatibility mode disabled.")
+		gGlobalSyncTable.romhackcompatibility = false
+	elseif network_is_server() and gGlobalSyncTable.romhackcompatibility == false then
+		djui_chat_message_create("Romhack compatibility mode enabled.")
+		gGlobalSyncTable.romhackcompatibility = true
+	elseif not network_is_server() then
+		djui_chat_message_create("Option only available for host.")
+	end
+end
+hook_mod_menu_button("Romhack Compatibility Mode [HOST]", levelspawnstoggle)
+
 local function helltoggle()
 	if network_is_server() and gGlobalSyncTable.hellenabled then
 		djui_chat_message_create("Hell disabled.")
@@ -26,18 +39,18 @@ local function pvptoggle()
 end
 hook_mod_menu_button("Toggle murdering [HOST]", pvptoggle)
 
-local function levelspawnstoggle()
-	if network_is_server() and gGlobalSyncTable.romhackcompatibility	then
-		djui_chat_message_create("Romhack compatibility mode disabled.")
-		gGlobalSyncTable.romhackcompatibility = false
-	elseif network_is_server() and gGlobalSyncTable.romhackcompatibility == false then
-		djui_chat_message_create("Romhack compatibility mode enabled.")
-		gGlobalSyncTable.romhackcompatibility = true
+local function puketoggle()
+	if network_is_server() and gGlobalSyncTable.puking then
+		djui_chat_message_create("Puking disabled.")
+		gGlobalSyncTable.puking = false
+	elseif network_is_server() and gGlobalSyncTable.puking == false then
+		djui_chat_message_create("Puking enabled.")
+		gGlobalSyncTable.puking = true
 	elseif not network_is_server() then
 		djui_chat_message_create("Option only available for host.")
 	end
 end
-hook_mod_menu_button("Romhack Compatibility Mode [HOST]", levelspawnstoggle)
+hook_mod_menu_button("Toggle Puking [HOST]", puketoggle)
 
 local function iwbtgtoggle()
 	local m = gMarioStates[0]
@@ -67,6 +80,7 @@ local function iwbtgtoggle()
 	return true
 end
 hook_mod_menu_button("IWBTG Mode", iwbtgtoggle)
+
 
 
 
@@ -338,6 +352,32 @@ gold_models = {
     [CT_WALUIGI] = E_MODEL_GOLD_WALUIGI
 }
 
+local MC = PARTICLE_MIST_CIRCLE
+local T  = PARTICLE_TRIANGLE
+local particleTimings = {
+	[20] = MC,
+	[40] = MC,
+	[50] = MC,
+	[65] = MC,
+	[75] = MC|T,
+	[82] = MC|T,
+	[90] = MC|T,
+	[95] = MC|T,
+	[100]= MC|T,
+	[105]= MC|T,
+	[108]= MC|T,
+	[114]= MC|T,
+	[118]= MC|T,
+	[121]= MC|T,
+	[124]= MC|T,
+	[127]= MC|T,
+	[130]= MC|T,
+	[132]= MC|T,
+	[134]= MC|T,
+	[136]= MC|T,
+	[138]= MC|T,
+	[140]= T
+}
 --! music and course names
 
 smlua_audio_utils_replace_sequence(SEQ_EVENT_CUTSCENE_ENDING, 35, 76, "gorepeach") --Custom Audio for end cutscene
@@ -383,6 +423,13 @@ for i = 0, MAX_PLAYERS-1 do
 	}
 end
 
+--GlobalSync Variables
+gGlobalSyncTable.deathcounter = 0
+gGlobalSyncTable.toaddeathcounter = 0
+gGlobalSyncTable.hellenabled = true
+gGlobalSyncTable.puking = false
+
+--Variables
 toadguitimer = 0
 ukikiheldby = -1
 ukikiholding = 0
@@ -393,7 +440,6 @@ hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
 nightvisionnoise = 0
-
 
 if network_is_server() and mod_storage_load("file"..get_current_save_file_num().."gameisbeat") then
 	--djui_chat_message_create("game is beat!")
@@ -453,7 +499,6 @@ sOnWarpToFunc = {
     [LEVEL_JRB] = function()
         if np.currAreaIndex == 1 then
             -- Spawns lava over water, unless inside the pirate ship.
-            --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1050, gMarioStates[0].pos.z, function(o)
 			spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1020, gMarioStates[0].pos.z, nil)
 			if np.currActNum == 1 then
 				spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 6710, 1050, 4512, nil)
@@ -501,9 +546,6 @@ sOnWarpToFunc = {
 		vec3f_copy(c.pos, pos)
 		vec3f_copy(gLakituState.pos, pos)
 		vec3f_copy(gLakituState.goalPos, pos)
-
-
-
 
         if trophy_unlocked(1) and trophy_unlocked(2) and trophy_unlocked(3) and
            trophy_unlocked(4) and trophy_unlocked(5) and not trophy_unlocked(6) then
@@ -569,9 +611,7 @@ sOnLvlInitToFunc = {
     end,
 
 	[LEVEL_TTM] = function()
-		--spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_BOBOMB_BUDDY, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
-		--spawn_non_sync_object(id_bhvBobombBuddy, E_MODEL_LANTERN, 342, -2556, 5712, function(bob) bob.oBehParams = 20 end)
-		
+
 		--Lantern spawns with Mario. If you were to disable this spawn, light bubble will naturally follow Mario.
 		if not gGlobalSyncTable.floodenabled then
 			spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)
@@ -641,7 +681,7 @@ sOnLvlInitToFunc = {
 
     end
 }
-
+----------------------------------------------------------------------------------------------------------------------
 --! actions
 
 _G.ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
@@ -712,20 +752,24 @@ hook_mario_action(ACT_READING_TROPHY, act_reading_trophy)
 _G.ACT_PUKE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_puke(m)
 	local s = gStateExtras[m.playerIndex]
+	obj_update_gfx_pos_and_angle(m.marioObj)
 	m.marioBodyState.eyeState = MARIO_EYES_DEAD
+	if s.sick < 100.9 then
+		s.sick = 101
+	end
 	s.sick = s.sick + 1
 
-	if s.sick == 2 then
+	if s.sick == 102 then
 		set_mario_animation(m, MARIO_ANIM_COUGHING)
 	end
-	if s.sick == 20 then
+	if s.sick == 120 then
 		if m.character.type ~= CT_TOAD then
 			network_play(sSick, m.pos, 2, m.playerIndex)
 		else
 			network_play(sToadSick, m.pos, 1.5, m.playerIndex)
 		end
 	end
-	if s.sick > 30 and s.sick < 70 then
+	if s.sick > 130 and s.sick < 155 then
 		if m.playerIndex ~= 0 then return end
 		if m.character.type == CT_MARIO then
 			spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 50, m.pos.z, nil)
@@ -740,40 +784,13 @@ function act_puke(m)
 
 		end
 	end
-	if s.sick == 90 then
+	if s.sick == 190 then
 		set_mario_action(m, ACT_IDLE, 0)
 		--soft_reset_camera(m.area.camera)
 		s.sick = 0
 	end
 end
 hook_mario_action(ACT_PUKE, act_puke)
-
-local MC = PARTICLE_MIST_CIRCLE
-local T  = PARTICLE_TRIANGLE
-local particleTimings = {
-	[20] = MC,
-	[40] = MC,
-	[50] = MC,
-	[65] = MC,
-	[75] = MC|T,
-	[82] = MC|T,
-	[90] = MC|T,
-	[95] = MC|T,
-	[100]= MC|T,
-	[105]= MC|T,
-	[108]= MC|T,
-	[114]= MC|T,
-	[118]= MC|T,
-	[121]= MC|T,
-	[124]= MC|T,
-	[127]= MC|T,
-	[130]= MC|T,
-	[132]= MC|T,
-	[134]= MC|T,
-	[136]= MC|T,
-	[138]= MC|T,
-	[140]= T
-}
 
 --Electricutes the F out of Mario
 function act_shocked(m)

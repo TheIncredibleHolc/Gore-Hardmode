@@ -145,9 +145,9 @@ function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 
 function testing(m)
 	local s = gStateExtras[m.playerIndex]
+	local m = gMarioStates[0]
 
 	if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-		s.sick = 1
 	end
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 	end
@@ -163,6 +163,9 @@ function testing(m)
 		--	play_secondary_music(0,0,0,0)
 		--end
 	end
+
+
+
 end
 
 function spawn_sync_if_main(behaviorId, modelId, x, y, z, objSetupFunction, i)
@@ -191,11 +194,7 @@ local function modsupport()
 	end
 end
 
-gGlobalSyncTable.deathcounter = 0
-gGlobalSyncTable.toaddeathcounter = 0
-gGlobalSyncTable.hellenabled = true
-
------------Locals-------------
+--Textures
 local TEX_MARIO_LESS_HIGH = get_texture_info('mariolesshigh')
 local TEX_BLOOD_OVERLAY = get_texture_info('bloodoverlay')
 local TEX_TRIPPY_OVERLAY = get_texture_info('trippy')
@@ -316,7 +315,32 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	--djui_chat_message_create(tostring(s.ishigh))
 	-------------------------------------------------------------------------------
 	-- Puking
-	if s.sick == 1 then
+
+	--Mario Sick Counter
+	if gGlobalSyncTable.puking and s.sick < 100 and m.forwardVel > 0 and m.faceAngle.y ~= m.intendedYaw and m.action ~= ACT_PUKE and m.action ~= ACT_LONG_JUMP
+	and m.action ~= ACT_JUMP and m.action ~= ACT_DOUBLE_JUMP and m.action ~= ACT_READING_NPC_DIALOG and m.action ~= ACT_WAITING_FOR_DIALOG
+	and	m.action ~= ACT_READING_AUTOMATIC_DIALOG and m.action ~= ACT_EXIT_LAND_SAVE_DIALOG and m.action ~= ACT_FLYING then
+		s.sick = s.sick + 0.5
+	elseif s.sick > 0 and s.sick < 100 and not m.marioObj.platform then
+		s.sick = s.sick - 0.5
+	end
+
+	--Mario is getting sick and the camera is dizzy.
+	if s.sick > 80 then
+		set_handheld_shake(HAND_CAM_SHAKE_HIGH)
+	elseif s.sick <= 80 and s.sick > 40 then
+		set_handheld_shake(HAND_CAM_SHAKE_LOW)
+	end
+
+	--If mario is stationary on a spinning platform, get sick.
+	if m.marioObj.platform and s.sick < 100 and gGlobalSyncTable.puking then
+		if m.marioObj.platform.oAngleVelYaw > 1000 then
+			s.sick = s.sick + 0.5
+		end
+	end
+
+	--Mario is now sick and is going to puke! :X
+	if s.sick >= 100 then
 		if m.forwardVel > 4 then
 			--djui_chat_message_create(tostring(m.forwardVel))
 			m.forwardVel = m.forwardVel - 1
@@ -326,13 +350,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		end
 	end
 
-	if s.sick > 0 then
-		set_handheld_shake(HAND_CAM_SHAKE_HIGH)
-	end
+	--djui_chat_message_create(tostring(s.sick))
 
 
-	
-	
 	-------------------------------------------------------------------------------
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
 		m.action = ACT_NOTHING
@@ -1742,6 +1762,7 @@ function mario_before_phys_step(m)
 	m.vel.x = m.vel.x * hScale
 	m.vel.y = m.vel.y * vScale
 	m.vel.z = m.vel.z * hScale
+
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1773,7 +1794,7 @@ hook_event(HOOK_ON_LEVEL_INIT, modsupport)
 hook_event(HOOK_MARIO_UPDATE, testing)
 hook_event(HOOK_MARIO_UPDATE, mariohitbyenemy)
 hook_event(HOOK_MARIO_UPDATE, splattertimer)
-hook_event(HOOK_BEFORE_MARIO_UPDATE, function (m) -- mario high
+hook_event(HOOK_BEFORE_MARIO_UPDATE, function (m) -- mario high in gas with messed up controls. (NOT WORKING SUDDENLY, no idea why)
 	local s = gStateExtras[0]
 	if (s.ishigh) == 1 then
 		if m.input & INPUT_NONZERO_ANALOG ~= 0 then
