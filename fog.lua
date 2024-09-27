@@ -75,8 +75,11 @@ local function fog_loop(o)
         end
     end
 
-    --[[
-    if not np.currLevelNum == LEVEL_TTM or not np.currLevelNum == LEVEL_SL then
+    if not np.currLevelNum == LEVEL_TTM or not np.currLevelNum == LEVEL_SL then --THIS WAS COMMENTED OUT BUT NOW I'M USING IT TO DELETE TEH FOG IF PLAYER ISN'T IN ONE OF THESE TWO LEVELS.
+    
+        obj_mark_for_deletion(o)
+    
+        --[[
         set_lighting_color(0, r)
         set_lighting_color(1, g)
         set_lighting_color(2, b)
@@ -85,8 +88,8 @@ local function fog_loop(o)
         set_vertex_color(2, b)
         set_fog_color(0, r)
         set_fog_color(1, g)
-        set_fog_color(2, b)
-    end]]
+        set_fog_color(2, b)]]
+    end
 
     if np.currLevelNum ~= LEVEL_TTM then
         o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z

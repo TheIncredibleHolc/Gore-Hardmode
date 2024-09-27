@@ -152,8 +152,6 @@ function testing(m)
 	if (m.controller.buttonPressed & L_JPAD) ~= 0 then
 	end
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-		--m.numLives = 1
-		--set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
 		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
@@ -190,6 +188,9 @@ local function modsupport()
 				gGlobalSyncTable.floodenabled = false
 				--djui_chat_message_create("no flood")
 			end
+		end
+		if (value.name == "Cheats") then
+			gGlobalSyncTable.cheats = true
 		end
 	end
 end
@@ -313,45 +314,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 
 	--djui_chat_message_create(tostring(s.ishigh))
-	-------------------------------------------------------------------------------
-	-- Puking
-
-	--Mario Sick Counter
-	if gGlobalSyncTable.puking and s.sick < 100 and m.forwardVel > 0 and m.faceAngle.y ~= m.intendedYaw and m.action ~= ACT_PUKE and m.action ~= ACT_LONG_JUMP
-	and m.action ~= ACT_JUMP and m.action ~= ACT_DOUBLE_JUMP and m.action ~= ACT_READING_NPC_DIALOG and m.action ~= ACT_WAITING_FOR_DIALOG
-	and	m.action ~= ACT_READING_AUTOMATIC_DIALOG and m.action ~= ACT_EXIT_LAND_SAVE_DIALOG and m.action ~= ACT_FLYING then
-		s.sick = s.sick + 0.5
-	elseif s.sick > 0 and s.sick < 100 and not m.marioObj.platform then
-		s.sick = s.sick - 0.5
-	end
-
-	--Mario is getting sick and the camera is dizzy.
-	if s.sick > 80 then
-		set_handheld_shake(HAND_CAM_SHAKE_HIGH)
-	elseif s.sick <= 80 and s.sick > 40 then
-		set_handheld_shake(HAND_CAM_SHAKE_LOW)
-	end
-
-	--If mario is stationary on a spinning platform, get sick.
-	if m.marioObj.platform and s.sick < 100 and gGlobalSyncTable.puking then
-		if m.marioObj.platform.oAngleVelYaw > 1000 then
-			s.sick = s.sick + 0.5
-		end
-	end
-
-	--Mario is now sick and is going to puke! :X
-	if s.sick >= 100 then
-		if m.forwardVel > 4 then
-			--djui_chat_message_create(tostring(m.forwardVel))
-			m.forwardVel = m.forwardVel - 1
-		end
-		if m.forwardVel <= 7 and m.pos.y == m.floorHeight then
-			set_mario_action(m, ACT_PUKE, 0)
-		end
-	end
-
-	--djui_chat_message_create(tostring(s.sick))
-
 
 	-------------------------------------------------------------------------------
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
@@ -381,16 +343,29 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		--set_mario_action(m, ACT_NOTHING, 0)
 	end
 
-	if s.iwbtg and not s.death and m.health ~= 0xff then
-		if currentlyPlaying ~= iwbtg then
+	if s.iwbtg and not s.death and m.health ~= 0xff and m.numStars < 1 then
+		if currentlyPlaying ~= iwbtgMusic[1] then
 			stream_stop_all()
-			stream_play(iwbtg)
+			stream_play(iwbtgMusic[1])
 		end
-		--hud_hide()
-	else
-		--stream_stop_all()
+	elseif s.iwbtg and not s.death and m.health ~= 0xff and m.numStars == 5 then
+		audio_stream_stop(iwbtg)
+		if currentlyPlaying ~= iwbtgMusic[2] then
+			play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
+			play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
+			stream_stop_all()
+			stream_play(iwbtgMusic[2])
+		end
+	elseif s.iwbtg and not s.death and m.health ~= 0xff and m.numStars == 10 then
+		if currentlyPlaying ~= iwbtgMusic[3] then
+			play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
+			play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
+			stream_stop_all()
+			stream_play(iwbtgMusic[3])
+		end
 	end
 
+	
 	if s.iwbtg and m.health == 0xff and not s.death then
 		stream_stop_all()
 		delete_save(m)
@@ -493,10 +468,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 set_mario_action(m, ACT_BUTT_SLIDE, 0)
                 m.forwardVel = 120
                 play_secondary_music(0, 0, 0, 20)
-                stream_play(edils)
+				if not s.iwbtg then
+					stream_play(edils)
+				end
             elseif m.numCoins == 81 then
                 play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
-                stream_stop_all()
+				if not s.iwbtg then
+                	stream_stop_all()
+				end
                 stop_secondary_music(0)
                 djui_chat_message_create("Trophy spawned!")
                 spawn_sync_object(id_bhvTrophy, E_MODEL_NONE, -6386, -4484, 5416, function(t)
@@ -1002,7 +981,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			set_mario_action(m, ACT_HARD_FORWARD_AIR_KB, 0)
 		end
 
-
 		if m.marioObj.oTimer == 120 and not s.visitedhell then
 			if ia(m) then
 				cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_019)
@@ -1211,6 +1189,48 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 end
 
+function sick() -- Puking
+	local m = gMarioStates[0]
+	local s = gStateExtras[0]
+	
+	--Mario Sick Counter
+	if puking then
+		local m0 = gMarioStates[0]
+		if m0.playerIndex ~= 0 then return end
+		if s.sick < 100 and m0.forwardVel > 0 and m0.faceAngle.y ~= m0.intendedYaw and m0.action ~= ACT_PUKE and m0.action ~= ACT_LONG_JUMP
+		and m0.action ~= ACT_JUMP and m0.action ~= ACT_DOUBLE_JUMP and m0.action ~= ACT_READING_NPC_DIALOG and m0.action ~= ACT_WAITING_FOR_DIALOG
+		and	m0.action ~= ACT_READING_AUTOMATIC_DIALOG and m0.action ~= ACT_EXIT_LAND_SAVE_DIALOG and m0.action ~= ACT_FLYING then
+			s.sick = s.sick + 0.5
+		elseif s.sick > 0 and s.sick < 100 and not m0.marioObj.platform then
+			s.sick = s.sick - 0.5
+		end
+
+		--Mario is getting sick and the camera is dizzy.
+		if s.sick > 55 then
+			set_handheld_shake(HAND_CAM_SHAKE_HIGH)
+		elseif s.sick <= 55 and s.sick > 30 then
+			set_handheld_shake(HAND_CAM_SHAKE_LOW)
+		end
+
+		--If mario is stationary on a spinning platform, get sick.
+		if m0.marioObj.platform and s.sick < 100 and puking then
+			if m0.marioObj.platform.oAngleVelYaw > 1000 then
+				s.sick = s.sick + 0.5
+			end
+		end
+
+		--Mario is now sick and is going to puke! :X
+		if s.sick >= 100 then
+			if m0.forwardVel > 4 then
+				--djui_chat_message_create(tostring(m.forwardVel))
+				m0.forwardVel = m0.forwardVel - 1
+			end
+			if m0.forwardVel <= 7 and m0.pos.y == m0.floorHeight then
+				set_mario_action(m, ACT_PUKE, 0)
+			end
+		end
+	end
+end
 ----------------------------------------------------------------------------------------------------------------------------------
 
 function mariohitbyenemy(m) -- Default and generic 1-hit death commands.
@@ -1790,6 +1810,7 @@ end
 
 ---------hooks--------
 hook_event(HOOK_MARIO_UPDATE, mario_update)
+hook_event(HOOK_UPDATE, sick)
 hook_event(HOOK_ON_LEVEL_INIT, modsupport)
 hook_event(HOOK_MARIO_UPDATE, testing)
 hook_event(HOOK_MARIO_UPDATE, mariohitbyenemy)

@@ -196,7 +196,7 @@ end
 
 local function bhv_custom_explosion(obj) -- replaces generic explosions with NUKES! (Bigger radius, bigger explosion, louder)
 	local m = nearest_mario_state_to_object(obj)
-	if obj.oBehParams ~= 20 then
+	if obj.oBehParams ~= 20 then		
 		local_play(sBigExplosion, m.pos, 1)
 		cur_obj_shake_screen(SHAKE_POS_LARGE)
 		spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, obj.oPosX, obj.oPosY, obj.oPosZ, nil, 0)
@@ -1222,9 +1222,10 @@ end
 
 local function squishblood_loop(o)
 	local m = gMarioStates[0]
+	local bloodcount = obj_count_objects_with_behavior_id(id_bhvSquishblood)
 	cur_obj_update_floor()
 
-	if m.marioObj.oTimer > 900 then --This protects blood spam and low FPS
+	if o.oTimer > 900 or bloodcount > 15 then --This protects blood spam and low FPS
 		obj_mark_for_deletion(o)
 	end
 
@@ -1339,8 +1340,9 @@ local function dorrie_dead(o)
 			o.oPosY = o.oPosY - 25
 			o.oFaceAnglePitch = o.oFaceAnglePitch - 20
 			o.oMoveAnglePitch = o.oFaceAnglePitch
-			if o.oTimer == 1 then
-				play_secondary_music(0, 0, 0, 120)
+			djui_chat_message_create(tostring(o.oTimer))
+			if o.oTimer <= 359 then
+				play_secondary_music(0, 0, 0, 0)
 			end
 			if o.oTimer == 60 then
 				stream_play(sad)
@@ -2131,6 +2133,21 @@ local function hook_gore_behavior(id, override, init, loop)
     return hook_behavior(id, objectList, override, init, loop, newBehaviorName)
 end
 
+function heaveho_loop(o)
+	local m = gMarioStates[0]
+	local test = o.oAction
+	djui_chat_message_create(tostring(test))
+	if o.oHeaveHoUnk88 >= 1 then
+		set_mario_action(m, ACT_RAGDOLL, 0)
+		m.pos.y = m.pos.y + 4
+	end
+	if is_within_100_units_of_mario(o.oPosX, o.oPosY, o.oPosZ) and m.forwardVel == -45 then
+		m.forwardVel = 45
+		m.vel.y = m.vel.y + 80
+	end
+end
+
+hook_gore_behavior(id_bhvHeaveHo, false, nil, heaveho_loop)
 hook_event(HOOK_MARIO_UPDATE, killer_exclamation_boxes)
 hook_gore_behavior(id_bhvStarDoor, true, star_door_init, star_door_loop)
 hook_gore_behavior(id_bhvDorrie, false, nil, dorrie_dead)

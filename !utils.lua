@@ -1,4 +1,4 @@
-
+-------------------------------------------------------------------------------------------------------
 --GUI Gore Customizations
 local function levelspawnstoggle()
 	if network_is_server() and gGlobalSyncTable.romhackcompatibility	then
@@ -11,7 +11,6 @@ local function levelspawnstoggle()
 		djui_chat_message_create("Option only available for host.")
 	end
 end
-hook_mod_menu_button("Romhack Compatibility Mode [HOST]", levelspawnstoggle)
 
 local function helltoggle()
 	if network_is_server() and gGlobalSyncTable.hellenabled then
@@ -24,7 +23,6 @@ local function helltoggle()
 		djui_chat_message_create("Option only available for host.")
 	end
 end
-hook_mod_menu_button("Toggle Hell [HOST]", helltoggle)
 
 local function pvptoggle()
 	if network_is_server() and gGlobalSyncTable.pvp	then
@@ -37,53 +35,75 @@ local function pvptoggle()
 		djui_chat_message_create("Option only available for host.")
 	end
 end
-hook_mod_menu_button("Toggle murdering [HOST]", pvptoggle)
 
 local function puketoggle()
-	if network_is_server() and gGlobalSyncTable.puking then
+	if puking then
 		djui_chat_message_create("Puking disabled.")
-		gGlobalSyncTable.puking = false
-	elseif network_is_server() and gGlobalSyncTable.puking == false then
+		puking = false
+	elseif puking == false then
 		djui_chat_message_create("Puking enabled.")
-		gGlobalSyncTable.puking = true
-	elseif not network_is_server() then
-		djui_chat_message_create("Option only available for host.")
+		puking = true
 	end
 end
-hook_mod_menu_button("Toggle Puking [HOST]", puketoggle)
 
 local function iwbtgtoggle()
 	local m = gMarioStates[0]
 	local s = gStateExtras[0]
-	if not s.iwbtg then
-
-        delete_save(m)
-
-		play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
-		s.iwbtg = true
-		m.numLives = 1
-		play_character_sound(m, CHAR_SOUND_LETS_A_GO)
-		play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
-        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
-		djui_chat_message_create("IWBTG MODE ENABLED!")
+	if not gGlobalSyncTable.cheats then
+		if not s.iwbtg then
+			delete_save(m)
+			play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
+			s.iwbtg = true
+			m.numLives = 1
+			play_character_sound(m, CHAR_SOUND_LETS_A_GO)
+			play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
+			play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
+			djui_chat_message_create("IWBTG MODE ENABLED!")
+			--level_trigger_warp(m, LEVEL_CASTLE_GROUNDS)
+			warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 1)
+			m.numStars = 0
+		else
+			save_file_set_using_backup_slot(false)
+			djui_chat_message_create("IWBTG mode disabled... Chicken!")
+			local_play(sChicken, m.pos, 1)
+			m.health = 2176
+			s.iwbtg = false
+			s.death = true
+			m.numLives = 4
+			stream_stop_all()
+			spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
+		end
 	else
-		save_file_set_using_backup_slot(false)
-		djui_chat_message_create("IWBTG mode disabled... Chicken!")
-		m.health = 2176
-		s.iwbtg = false
-		s.death = true
-		m.numLives = 4
-		stream_stop_all()
-		local_play(sChicken, m.pos, 1)
-		spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
+		djui_chat_message_create("Reload the game with cheats OFF to play IWBTG mode.")
 	end
+
 	return true
 end
-hook_mod_menu_button("IWBTG Mode", iwbtgtoggle)
 
+local function cleartrophies()
+	if network_is_server() then
+		for id, trophy in pairs(trophyinfo) do
+			mod_storage_save("file"..get_current_save_file_num()..trophy.name, "0")
+			gGlobalSyncTable.trophystatus[id] = false
+		end
+		djui_chat_message_create("All trophies have been reset. Happy hunting!")
+	else
+		djui_chat_message_create("Option only available for host.")
+	end
+end
 
+if network_is_server() then
+	hook_mod_menu_checkbox("Romhack Compatibility Mode [HOST]", false, levelspawnstoggle)
+	hook_mod_menu_checkbox("Enable Hell [HOST]", true, helltoggle)
+	hook_mod_menu_checkbox("Enable murdering [HOST]", false, pvptoggle)
+end
+hook_mod_menu_checkbox("Enable vomiting", false, puketoggle)
+hook_mod_menu_checkbox("Enable IWBTG Mode", false, iwbtgtoggle)
+if network_is_server() then
+	hook_mod_menu_button("Reset All Trophies [HOST]", cleartrophies)
+end
 
-
+-------------------------------------------------------------------------------------------------------
 --Custom audio engine (Thanks coolio!!)
 gSamples = {
 	audio_sample_load("bonebreak.ogg"),
@@ -192,8 +212,16 @@ musicbows2 = audio_stream_load("bows2loop.ogg")         loop(musicbows2)
 timeattack = audio_stream_load("timeattack.ogg")
 edils = audio_stream_load("edils.ogg")					loop(edils)
 sad = audio_stream_load("sad.ogg")
-iwbtg = audio_stream_load("iwbtg.ogg")					loop(iwbtg)
 frijoleslobby = audio_stream_load("frijlobby.ogg")		loop(frijoleslobby)
+iwbtg = audio_stream_load("iwbtg.ogg")					loop(iwbtg)
+meanbean = audio_stream_load("iwbtg1.ogg")              loop(meanbean)
+tetrisphere = audio_stream_load("iwbtg2.ogg")           loop(tetrisphere)
+
+iwbtgMusic = {
+	iwbtg,
+	meanbean,
+	tetrisphere
+}
 
 currentlyPlaying = nil
 local fadeTimer = 0
@@ -229,6 +257,10 @@ function stream_stop_all()
 	audio_stream_stop(edils)
 	audio_stream_stop(sad)
 	audio_stream_stop(frijoleslobby)
+	audio_stream_stop(meanbean)
+	audio_stream_stop(tetrisphere)
+
+	
 	currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()
@@ -269,6 +301,7 @@ end)
 PACKET_UNLOCK = 0
 PACKET_SOUND = 1
 
+-------------------------------------------------------------------------------------------------------
 --! models
 
 LEVEL_HELL = level_register('level_hell_entry', COURSE_NONE, 'Hell', 'Hell', 28000, 0x28, 0x28, 0x28)
@@ -427,9 +460,9 @@ end
 gGlobalSyncTable.deathcounter = 0
 gGlobalSyncTable.toaddeathcounter = 0
 gGlobalSyncTable.hellenabled = true
-gGlobalSyncTable.puking = false
 
 --Variables
+puking = false
 toadguitimer = 0
 ukikiheldby = -1
 ukikiholding = 0
@@ -440,6 +473,7 @@ hallucinate = 0
 portalalpha = 0
 loadingscreen = 0
 nightvisionnoise = 0
+iwbtgSongs = 1
 
 if network_is_server() and mod_storage_load("file"..get_current_save_file_num().."gameisbeat") then
 	--djui_chat_message_create("game is beat!")
@@ -471,7 +505,8 @@ sOnWarpToFunc = {
         end
 
         -- Adjust Dorrie and set water level
-        local dorrie = obj_get_nearest_object_with_behavior_id(o, id_bhvDorrie)
+		local m = gMarioStates[0]
+        local dorrie = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvDorrie)
         if dorrie then
             dorrie.oPosY = dorrie.oPosY - 200
         end
@@ -762,13 +797,16 @@ function act_puke(m)
 	if s.sick == 102 then
 		set_mario_animation(m, MARIO_ANIM_COUGHING)
 	end
+
 	if s.sick == 120 then
+		if m.playerIndex ~= 0 then return end
 		if m.character.type ~= CT_TOAD then
 			network_play(sSick, m.pos, 2, m.playerIndex)
 		else
 			network_play(sToadSick, m.pos, 1.5, m.playerIndex)
 		end
 	end
+
 	if s.sick > 130 and s.sick < 155 then
 		if m.playerIndex ~= 0 then return end
 		if m.character.type == CT_MARIO then
