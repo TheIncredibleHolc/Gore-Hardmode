@@ -196,12 +196,15 @@ end
 
 local function bhv_custom_explosion(obj) -- replaces generic explosions with NUKES! (Bigger radius, bigger explosion, louder)
 	local m = nearest_mario_state_to_object(obj)
-	if obj.oBehParams ~= 20 then		
+	if obj.oBehParams ~= 20 then
 		local_play(sBigExplosion, m.pos, 1)
 		cur_obj_shake_screen(SHAKE_POS_LARGE)
 		spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, obj.oPosX, obj.oPosY, obj.oPosZ, nil, 0)
 		if dist_between_objects(obj, m.marioObj) <= 850 then
 			m.squishTimer = 50
+		end
+		if obj.oChicken == 1 then
+			local_play(sChicken, m.pos, 1)
 		end
 	end
 end
@@ -1340,7 +1343,7 @@ local function dorrie_dead(o)
 			o.oPosY = o.oPosY - 25
 			o.oFaceAnglePitch = o.oFaceAnglePitch - 20
 			o.oMoveAnglePitch = o.oFaceAnglePitch
-			djui_chat_message_create(tostring(o.oTimer))
+			--djui_chat_message_create(tostring(o.oTimer))
 			if o.oTimer <= 359 then
 				play_secondary_music(0, 0, 0, 0)
 			end
@@ -2135,8 +2138,6 @@ end
 
 function heaveho_loop(o)
 	local m = gMarioStates[0]
-	local test = o.oAction
-	djui_chat_message_create(tostring(test))
 	if o.oHeaveHoUnk88 >= 1 then
 		set_mario_action(m, ACT_RAGDOLL, 0)
 		m.pos.y = m.pos.y + 4
@@ -2147,6 +2148,30 @@ function heaveho_loop(o)
 	end
 end
 
+function skeeter_loop(o)
+	local m = nearest_mario_state_to_object(o)
+	if is_point_within_radius_of_mario(o.oPosX, o.oPosY, o.oPosZ, 1200) ~= 0 and m.action ~= ACT_GONE then
+		local ang = obj_angle_to_object(o, m.marioObj)
+		o.oForwardVel = 65
+		o.oFaceAngleYaw = ang
+		o.oMoveAngleYaw = o.oFaceAngleYaw
+	end
+end
+
+function scuttlebug_loop(o)
+	--Nothing yet D:
+end
+
+function coin_switch(o)
+	if o.oAction == BLUE_COIN_SWITCH_ACT_RECEDING and o.oTimer == 4 then
+		local m = gMarioStates[0]
+		set_mario_action(m, ACT_BUTT_STUCK_IN_GROUND, 0)
+	end
+end
+
+hook_gore_behavior(id_bhvBlueCoinSwitch, false, nil, coin_switch)
+hook_gore_behavior(id_bhvScuttlebug, false, nil, scuttlebug_loop)
+hook_gore_behavior(id_bhvSkeeter, false, nil, skeeter_loop)
 hook_gore_behavior(id_bhvHeaveHo, false, nil, heaveho_loop)
 hook_event(HOOK_MARIO_UPDATE, killer_exclamation_boxes)
 hook_gore_behavior(id_bhvStarDoor, true, star_door_init, star_door_loop)

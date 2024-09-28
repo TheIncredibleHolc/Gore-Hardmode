@@ -313,7 +313,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		gLevelValues.fixCollisionBugs = false
 	end
 
-	--djui_chat_message_create(tostring(s.ishigh))
+	--djui_chat_message_create(tostring(m.floor.type))
 
 	-------------------------------------------------------------------------------
 	if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
@@ -328,7 +328,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 	end
 
 	if s.iwbtg then
-		play_secondary_music(0,0,0,0)
+		local np = gNetworkPlayers[0]
+		if np.currLevelNum ~= LEVEL_CASTLE_GROUNDS then
+			play_secondary_music(0,0,0,0)
+		end
 		if m.numLives > 1 then
 			m.numLives = 1
 		end
@@ -496,8 +499,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			set_override_envfx(ENVFX_MODE_NONE)
 		end
 	end
-
-
 
 ----------------------------------------------------------------------------------------------------------------------------------
 	if gGlobalSyncTable.gameisbeat and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3 and not trophy_unlocked(13) then --GRANT TROPHY #13
@@ -1068,9 +1069,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Switches snow landing to snow drowning
 	if (m.action == ACT_HEAD_STUCK_IN_GROUND) or (m.action == ACT_BUTT_STUCK_IN_GROUND) or (m.action == ACT_FEET_STUCK_IN_GROUND) then
-		m.particleFlags = PARTICLE_MIST_CIRCLE
-		set_mario_action(m, ACT_GONE, 60)
-		m.health = 0xff
+		if m.floor.type == 19 or m.floor.type == 117 or m.floor.type == 20 then
+			m.particleFlags = PARTICLE_MIST_CIRCLE | PARTICLE_19 | PARTICLE_WATER_SPLASH | PARTICLE_SNOW | PARTICLE_DIRT | PARTICLE_HORIZONTAL_STAR | PARTICLE_TRIANGLE
+			set_mario_action(m, ACT_GONE, 60)
+			m.health = 0xff
+		end
+		--djui_chat_message_create(tostring(m.floor.type))
  	end
 ----------------------------------------------------------------------------------------------------------------------------------
 

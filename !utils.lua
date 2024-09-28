@@ -49,29 +49,29 @@ end
 local function iwbtgtoggle()
 	local m = gMarioStates[0]
 	local s = gStateExtras[0]
+	local np = gNetworkPlayers[0]
 	if not gGlobalSyncTable.cheats then
 		if not s.iwbtg then
+			if np.currLevelNum ~= LEVEL_CASTLE_GROUNDS then
+				warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 1)
+			end
 			delete_save(m)
-			play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
-			s.iwbtg = true
-			m.numLives = 1
-			play_character_sound(m, CHAR_SOUND_LETS_A_GO)
 			play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
 			play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
 			djui_chat_message_create("IWBTG MODE ENABLED!")
-			--level_trigger_warp(m, LEVEL_CASTLE_GROUNDS)
-			warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 1)
+			s.iwbtg = true
+			m.numLives = 1
 			m.numStars = 0
+			play_character_sound(m, CHAR_SOUND_LETS_A_GO)
 		else
 			save_file_set_using_backup_slot(false)
 			djui_chat_message_create("IWBTG mode disabled... Chicken!")
-			local_play(sChicken, m.pos, 1)
 			m.health = 2176
 			s.iwbtg = false
 			s.death = true
 			m.numLives = 4
 			stream_stop_all()
-			spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, nil)
+			spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, function (exp) exp.oChicken = 1 end)
 		end
 	else
 		djui_chat_message_create("Reload the game with cheats OFF to play IWBTG mode.")
@@ -485,7 +485,8 @@ else
 end
 
 define_custom_obj_fields({
-    oBloody = "u32"
+    oBloody = "u32",
+	oChicken = "u32"
 })
 
 GORRIE_WAITING_FOR_DISEMBARK = 0
