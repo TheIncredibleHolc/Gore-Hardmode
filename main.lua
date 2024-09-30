@@ -154,12 +154,6 @@ function testing(m)
 	if (m.controller.buttonPressed & R_JPAD) ~= 0 then
 	end
 	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-		--spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, m.pos.x, m.pos.y, m.pos.z, nil)
-		--local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
-		--if hoot ~= nil then
-		--	hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
-		--	play_secondary_music(0,0,0,0)
-		--end
 	end
 
 
@@ -221,7 +215,6 @@ function squishblood_nogibs(o) -- Creates instant pool of impact-blood under an 
 end
 
 function gibs(o)
-	--for i = 0, 60 do
 	local m = gMarioStates[0]
 	for i = 0, 40 do
 		if m.playerIndex ~= 0 then return end
@@ -242,15 +235,10 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 		s.splattimer = s.splattimer + 1
 	end
 	if s.splattimer == 2 then
-		--m.health = 120
 		m.health = 0xff
 		set_mario_action(m, ACT_THROWN_FORWARD, 0) --Throws mario forward more to "sell" the fall damage big impact.
 		if s.disappear == 1 then --No fall damage, so Mario got squished. No corpse. It's funnier this way. 
 			set_mario_action(m, ACT_GONE, 78)
-			-- if not s.isdead and ia(m) then
-			-- 	gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
-			-- end
-			-- s.isdead = true
 		end
 		if s.disappear == 1 then --Not a fall damage death, so cap won't fly as far. Works better since this is mostly triggered by enemies or objects smashing mario.
 			mario_blow_off_cap(m, 15)
@@ -266,7 +254,6 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
 		function (obj)
 			local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
 			obj.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
-			--obj.oFaceAngleYaw = calculate_yaw(z, normal)
 			obj.oFaceAngleRoll = 0
 		end, 0)
 	end
@@ -324,7 +311,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		m.health = 0xff
 		m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
 		set_mario_action(m, ACT_GONE, 0)
-		--m.pos.y = m.floorHeight + 70
 	end
 
 	if s.iwbtg then
@@ -335,47 +321,45 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		if m.numLives > 1 then
 			m.numLives = 1
 		end
-		if m.numStars == 10 then
-			--djui_chat_message_create("trophy awarded!")
-		end
 		save_file_set_using_backup_slot(true)
 	end
 
 	if s.death then
 		audio_stream_stop(iwbtg)
-		--set_mario_action(m, ACT_NOTHING, 0)
 	end
 
-	if s.iwbtg and not s.death and m.health ~= 0xff and m.numStars < 1 then
-		if currentlyPlaying ~= iwbtgMusic[1] then
-			stream_stop_all()
-			stream_play(iwbtgMusic[1])
-		end
-	elseif s.iwbtg and not s.death and m.health ~= 0xff and m.numStars == 5 then
-		audio_stream_stop(iwbtg)
-		if currentlyPlaying ~= iwbtgMusic[2] then
-			play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
-			play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
-			stream_stop_all()
-			stream_play(iwbtgMusic[2])
-		end
-	elseif s.iwbtg and not s.death and m.health ~= 0xff and m.numStars == 10 then
-		if currentlyPlaying ~= iwbtgMusic[3] then
-			play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
-			play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
-			stream_stop_all()
-			stream_play(iwbtgMusic[3])
+	if np.currLevelNum == LEVEL_BOWSER_1 or np.currLevelNum == LEVEL_BOWSER_2 or np.currLevelNum == LEVEL_BOWSER_3 then
+		--do nothing
+	else
+		if s.iwbtg and not s.death and m.health ~= 0xff and m.numStars < 15 then
+			if currentlyPlaying ~= iwbtgMusic[1] then
+				stream_stop_all()
+				stream_play(iwbtgMusic[1])
+			end
+		elseif s.iwbtg and not s.death and m.health ~= 0xff and m.numStars >= 15 and m.numStars < 30 then
+			audio_stream_stop(iwbtg)
+			if currentlyPlaying ~= iwbtgMusic[3] then
+				play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
+				play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
+				stream_stop_all()
+				stream_play(iwbtgMusic[3])
+			end
+		elseif s.iwbtg and not s.death and m.health ~= 0xff and m.numStars >= 30 then
+			if currentlyPlaying ~= iwbtgMusic[4] then
+				play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
+				play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
+				stream_stop_all()
+				stream_play(iwbtgMusic[4])
+			end
 		end
 	end
-
 	
 	if s.iwbtg and m.health == 0xff and not s.death then
 		stream_stop_all()
 		delete_save(m)
 		local_play(sIwbtgDeath, gLakituState.pos, 1)
-		--set_mario_action(m, ACT_NOTHING, 0)
-		--s.iwbtg = false
 		s.death = true
+		m.marioObj.oTimer = 1
 	end
 
 
@@ -400,7 +384,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			soft_reset_camera(m0.area.camera)
 			gPlayerSyncTable[m0.playerIndex].gold = true
 			s.turningGold = false
-			--djui_chat_message_create("gold")
 		end
 	end
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -457,9 +440,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 ----------------------------------------------------------------------------------------------------------------------------------
 	--PSS TROPHY
 	if np.currLevelNum == LEVEL_PSS and not trophy_unlocked(11) then
-	--if mod_storage_load("file1coin") == "1" then
-		--DO NOTHING
-		--djui_chat_message_create("already collected")
         local psstrophy = obj_get_first_with_behavior_id(id_bhvTrophy)
         if gGlobalSyncTable.gameisbeat and not psstrophy then
             if m.pos.y <= -4587 and m.numCoins < 81 then
@@ -1060,12 +1040,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		m.numCoins = m.numCoins + 1
 		spawn_sync_if_main(id_bhvBobomb, E_MODEL_BOBOMB_BUDDY, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
 	end
-----------------------------------------------------------------------------------------------------------------------------------
-	--Pokey cactus do things
-	pokey = obj_get_nearest_object_with_behavior_id(o, id_bhvPokey)
-	if (pokey ~= nil) then
-		pokey.oForwardVel = 40
-	end
+
 ----------------------------------------------------------------------------------------------------------------------------------
 	--Switches snow landing to snow drowning
 	if (m.action == ACT_HEAD_STUCK_IN_GROUND) or (m.action == ACT_BUTT_STUCK_IN_GROUND) or (m.action == ACT_FEET_STUCK_IN_GROUND) then
@@ -1088,7 +1063,17 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		end
 	end
 	if (ukikitimer) == 2 and m.playerIndex == ukikiheldby then
-		local_play(sAngryMario, m.pos, 1)
+		if m.character.type == CT_MARIO then
+			network_play(sAngryMario, m.pos, 1, m.playerIndex)
+		elseif m.character.type == CT_LUIGI then
+			network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
+		elseif m.character.type == CT_TOAD then
+			network_play(sAngryToad, m.pos, 1, m.playerIndex)
+		elseif m.character.type == CT_WARIO then
+			network_play(sAngryWario, m.pos, 1, m.playerIndex)
+		elseif m.character.type == CT_WALUIGI then
+			network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
+		end
 		stream_stop_all()
 		local_play(sSMWBonusEnd, m.pos, 1)
 	end
@@ -1301,7 +1286,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
 	--Custom Bully necksnap
 	if obj_has_behavior_id(o, id_bhvSmallBully) ~= 0 and (m.action == ACT_SOFT_FORWARD_GROUND_KB or m.action == ACT_SOFT_BACKWARD_GROUND_KB) then
-		--network_play(sBoneBreak, m.pos, 1, m.playerIndex)
 		set_mario_action(m, ACT_NECKSNAP, 0)
 	end
 
@@ -1350,7 +1334,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 		s.headless = true
 		network_play(sSplatter, m.pos, 1, m.playerIndex)
 		network_play(sCrunch, m.pos, 1, m.playerIndex)
-		--squishblood(m.marioObj)
 		m.health = 0xff
 		set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
 		m.particleFlags = PARTICLE_MIST_CIRCLE
@@ -1450,8 +1433,6 @@ function before_mario_action(m, action)
 		set_mario_action(m, ACT_GONE, 1)
 		local_play(sSplash, m.pos, 1)
 		spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
-		--m.health = 120
-		--common_death_handler(m, 0, 60)
 		m.health = 0xff
 		
 		return 1
@@ -1520,7 +1501,6 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
 	audio_sample_stop(gSamples[sAgonyWario]) --Stops Wario's super long scream
 	audio_sample_stop(gSamples[sAgonyWaluigi]) --Stops Waluigi's super long scream
 	s.timeattack = false
-	--set_override_envfx(ENVFX_MODE_NONE)
 	stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
 	if not s.isdead and not s.disableuntilnextwarp then
 		gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
@@ -1554,16 +1534,10 @@ function marioalive() -- Resumes the death counter to accept death counts.
 
 	if m.numLives <= 0 and not s.isinhell and not s.iwbtg and gGlobalSyncTable.hellenabled then
 		s.isinhell = true
-		warp_to_level(LEVEL_HELL, 1, 0)
-		--level_trigger_warp(m, LEVEL_HELL)
-		
-
+		warp_to_level(LEVEL_HELL, 1, 0)		
 	else 
 		--s.iwbtg = false
-		--s.death = false
-		--warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 0)
 	end
-
 	--Resets the baby penguin timer on warp so it doesn't glitch out if mario leaves the level without fully killing the baby penguin.
 	s.penguinholding = 0
 	s.penguintimer = 0
@@ -1638,7 +1612,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 		djui_hud_render_texture(TEX_GAMEOVER, (screenWidth/2) - 256, (screenHeight/2) - 128, 1, 1)
 		--hud_hide()
 		hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) & ~HUD_DISPLAY_FLAG_POWER)
-		if (m.controller.buttonPressed & A_BUTTON) ~= 0 then
+		if (m.controller.buttonPressed & A_BUTTON) ~= 0 and m.marioObj.oTimer > 30 then
 			hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) | HUD_DISPLAY_FLAG_POWER)
 			m.health = 2176
 			s.iwbtg = false
@@ -1810,8 +1784,6 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
     end
 end
 
-
-
 ---------hooks--------
 hook_event(HOOK_MARIO_UPDATE, mario_update)
 hook_event(HOOK_UPDATE, sick)
@@ -1889,7 +1861,6 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 
 	--Tripping
 	if attacker.action == ACT_SLIDE_KICK and victim.action ~= ACT_GROUND_BONK then
-		--local_play(sBoneBreak, victim.pos, 1) --Doesn't play consistently and I don't know why. Sometimes none, sometimes doubles. Probably not even a good sound for this anyway.
 		set_mario_action(victim, ACT_GROUND_BONK, 0)
 	end
 
@@ -1901,8 +1872,6 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 		end
 		set_mario_action(attacker, ACT_DIVE_SLIDE, 0)
 	end
-
-
 
 end)
 ---------------------------------------

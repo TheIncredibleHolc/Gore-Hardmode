@@ -497,6 +497,18 @@ GORRIE_HOME_IDLE = 4
 
 -- Table to map levels to their specific actions
 sOnWarpToFunc = {
+
+	[LEVEL_BOWSER_1] = function()
+		local s = gStateExtras[0]
+        if s.iwbtg then
+			if currentlyPlaying ~= meanbean then
+				audio_stream_stop(iwbtgMusic[1])
+				audio_stream_stop(iwbtgMusic[2])
+				stream_play(meanbean)
+			end
+        end
+    end,
+
     [LEVEL_HMC] = function()
         if gGlobalSyncTable.gameisbeat then
             -- GRANT TROPHY #16
