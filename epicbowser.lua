@@ -19,27 +19,27 @@ end
 
 ------------------------------------------------------------------------------
 function custom_bowser(obj)
-	local m = gMarioStates[0]
-	if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-		obj.oHealth = obj.oHealth - 1
-	end
+    local m = gMarioStates[0]
+    if (m.controller.buttonPressed & U_JPAD) ~= 0 then
+        obj.oHealth = obj.oHealth - 1
+    end
     if obj.oBehParams2ndByte == 2 then
         obj.oHealth = 1
     end
-	if obj.oBehParams2ndByte == 2 then
+    if obj.oBehParams2ndByte == 2 then
         --[[   --Enables bowser to be splattered against bomb.
-		if obj.oHealth <= 0 then
-			squishblood(obj)
-			local_play(sSplatter, m.pos, 1)
-			obj_mark_for_deletion(obj)
-			fadeout_level_music(100)
-			--play_music(0, SEQ_EVENT_CUTSCENE_ENDING, 0)
-			spawn_sync_object(id_bhvGrandStar, E_MODEL_STAR, -2.4, 350, -46, function (o)
+        if obj.oHealth <= 0 then
+            squishblood(obj)
+            local_play(sSplatter, m.pos, 1)
+            obj_mark_for_deletion(obj)
+            fadeout_level_music(100)
+            --play_music(0, SEQ_EVENT_CUTSCENE_ENDING, 0)
+            spawn_sync_object(id_bhvGrandStar, E_MODEL_STAR, -2.4, 350, -46, function (o)
                 o.oAction = 0
             end)
-		end
+        end
         ]]
-	end
+    end
     --obj_mark_for_deletion(obj) --Enable this for faster testing
 end
 
@@ -98,7 +98,7 @@ function grand_star_init(o)
     -- gCutsceneFocus = o
     -- gSecondCameraFocus = o
 
-	network_init_object(o, true, nil)
+    network_init_object(o, true, nil)
 
 
     o.oFlags = (OBJ_FLAG_MOVE_XZ_USING_FVEL | OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
@@ -116,14 +116,14 @@ function grand_star_init(o)
 
     --[[
     spawn_non_sync_object(id_bhvStaticObject, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 200, o.oPosZ, function (obj)
-		vec = {x=obj.oPosX, y=obj.oPosY, z=obj.oPosZ}
-		local yaw = calculate_yaw(vec, gLakituState.pos)
-		--djui_popup_create(tostring(yaw), 1)
-		obj.oFaceAngleYaw = yaw + -20000
-		if (obj.oTimer) >= 2 then
-			obj_mark_for_deletion(obj)
-		end
-	end)
+        vec = {x=obj.oPosX, y=obj.oPosY, z=obj.oPosZ}
+        local yaw = calculate_yaw(vec, gLakituState.pos)
+        --djui_popup_create(tostring(yaw), 1)
+        obj.oFaceAngleYaw = yaw + -20000
+        if (obj.oTimer) >= 2 then
+            obj_mark_for_deletion(obj)
+        end
+    end)
     ]]
 
 
@@ -801,7 +801,7 @@ end
 function gsbeam_init (o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.collisionData = COL_GSBEAM
-	o.oCollisionDistance = 10000
+    o.oCollisionDistance = 10000
     o.header.gfx.skipInViewCheck = true
 end
 
@@ -824,13 +824,13 @@ function gsshadow_init(o)
 end
 
 function gsshadow_loop(gss)
-	local o = obj_get_nearest_object_with_behavior_id(gss, id_bhvGrandStar)
+    local o = obj_get_nearest_object_with_behavior_id(gss, id_bhvGrandStar)
     load_object_collision_model()
-	if o ~= nil then
-		gss.oPosX = o.oPosX
-		gss.oPosY = 300
-		gss.oPosZ = o.oPosZ
-	end
+    if o ~= nil then
+        gss.oPosX = o.oPosX
+        gss.oPosY = 300
+        gss.oPosZ = o.oPosZ
+    end
 end
 
 -- Hook behaviors for Grand Star and Star Minions
