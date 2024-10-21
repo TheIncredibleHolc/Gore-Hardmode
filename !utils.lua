@@ -861,7 +861,7 @@ function act_shocked(m)
 	if particleTimings[m.actionTimer] then
 		m.particleFlags = particleTimings[m.actionTimer]
 	end
-	if m.actionTimer == 140 then
+	if m.actionTimer == 120 then
 		m.squishTimer = 50
 	end
 end

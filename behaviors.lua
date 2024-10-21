@@ -1002,9 +1002,12 @@ local function bhv_custom_ActivatedBackAndForthPlatform(o)
 
 	if np.currLevelNum == LEVEL_BITFS and m.pos.y >= o.oPosY -10 and mario_is_within_rectangle(o.oPosX - 500, o.oPosX + 500, o.oPosZ - 500, o.oPosZ + 500) ~= 0 then
 		spawn_triangle_break_particles(30, 138, 1, 4)
-		play_sound(SOUND_GENERAL_WALL_EXPLOSION, m.marioObj.header.gfx.cameraToObject)
-		play_sound(SOUND_GENERAL_EXPLOSION6, m.marioObj.header.gfx.cameraToObject)
-
+		spawn_mist_particles()
+		set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
+		play_sound(SOUND_GENERAL_WALL_EXPLOSION, m.pos)
+		play_sound(SOUND_GENERAL_EXPLOSION6, m.pos)
+		play_sound(SOUND_GENERAL_WALL_EXPLOSION, m.pos)
+		play_sound(SOUND_GENERAL_EXPLOSION6, m.pos)
 		obj_mark_for_deletion(o)
 	end
 end
@@ -1456,15 +1459,12 @@ local function gorrie_loop(o)
 
 	--Actual Gorrie Code
     if dorriemounted == 1 then
-		if dist_between_objects(o, goal) < 1200 then --If Gorrie is at the Netherportal and players need to jump off...
+		if dist_between_objects(o, goal) < 1200 then --Gorrie is at the Netherportal and players need to jump off...
 			if o.oAction ~= GORRIE_WAITING_FOR_DISEMBARK then
 				o.oAction = GORRIE_WAITING_FOR_DISEMBARK
-				if dist_between_objects(o, m.marioObj) < 1200 and o.oTimer % 60 then
-					--network_send_object(o, true)
-				end
 			end
 		else
-			if o.oAction ~= GORRIE_TRAVEL_TO_GOAL then --If Gorrie is on the way to the nether portal.
+			if o.oAction ~= GORRIE_TRAVEL_TO_GOAL then --Gorrie is on the way to the nether portal.
 				o.oAction = GORRIE_TRAVEL_TO_GOAL
 				if dist_between_objects(o, m.marioObj) < 1200 and o.oTimer % 60 then
 					network_send_object(o, true)
@@ -1472,20 +1472,18 @@ local function gorrie_loop(o)
 			end
         end
     else
-        if o.oAction == GORRIE_HOME_IDLE then
+        if o.oAction == GORRIE_HOME_IDLE then --Gorrie is home and doing nothing...
 			if o.oAction ~= GORRIE_WAITING_FOR_PLAYERS_TO_BOARD then
 				o.oAction = GORRIE_WAITING_FOR_PLAYERS_TO_BOARD
 			end
-        else
+        else --Nobody is aboard Gorrie and Gorrie needs to travel home.
 			if cur_obj_lateral_dist_from_obj_to_home(o) >= 50 then
 				if o.oAction ~= GORRIE_TRAVEL_TO_HOME then
 					o.oAction = GORRIE_TRAVEL_TO_HOME
 				end
-			else
+			else --Gorrie has made it back home and needs to go to idle to ready herself for player boarding.
 				if o.oAction ~= GORRIE_HOME_IDLE then
 					o.oAction = GORRIE_HOME_IDLE
-					--cur_obj_set_pos_to_home()
-					--network_send_object(o, true)
 				end
 			end
         end

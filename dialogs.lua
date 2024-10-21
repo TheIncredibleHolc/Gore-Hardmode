@@ -910,13 +910,6 @@ Red Circle: Elevator 2\
 //// Underground Lake\
 Arrow: You are here"))
 
-smlua_text_utils_dialog_replace(DIALOG_090,1,6,30,200, ("Bwa ha ha ha!\
-You've stepped right into\
-my trap, just as I knew\
-you would! I warn you,\
-『Friend,』 watch your\
-step!"))
-
 smlua_text_utils_dialog_replace(DIALOG_091,2,2,30,200, ("Danger!\
 Strong Gusts!\
 But the wind makes a\
@@ -944,23 +937,6 @@ walls...\
 And you'll never see the\
 Princess again!\
 Bwa ha ha ha!"))
-
-smlua_text_utils_dialog_replace(DIALOG_094,1,4,30,200, ("Get a good run up the\
-slope! Do you remember\
-the Long Jump? Run, press\
-[Z], then jump!"))
-
-smlua_text_utils_dialog_replace(DIALOG_095,1,4,30,200, ("To read a sign, stand in\
-front of it and press [B],\
-like you did just now.\
-\
-When you want to talk to\
-a Koopa Troopa or other\
-animal, stand right in\
-front of it.\
-Please recover the Stars\
-that were stolen by\
-Bowser in this course."))
 
 smlua_text_utils_dialog_replace(DIALOG_096,1,4,30,200, ("The path is narrow here.\
 Easy does it! No one is\
