@@ -690,17 +690,17 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 
     if ia(m) and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
-		s.ishigh = 1
+		s.ishigh = true
 		s.outsidegastimer = 0
 		m.health = m.health + 4
 	end
 
-	if (s.ishigh == 1) then
+	if s.ishigh then
 		set_environment_region(2, -400) --RAISES THE GAS HIGHER
 	end
 
-	if ((s.outsidegastimer == 30) or s.isdead) and s.ishigh == 1 then --If Mario is outside the gas for 1 second, the high wears off and resets all timers.
-		s.ishigh = 0
+	if ((s.outsidegastimer == 30) or s.isdead) and s.ishigh then --If Mario is outside the gas for 1 second, the high wears off and resets all timers.
+		s.ishigh = false
 		s.highdeathtimer = 0
 		if ia(m) then
 			local butterfly = obj_get_first_with_behavior_id(id_bhvButterfly)
@@ -719,7 +719,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 			set_override_fov(0)
 		end
 	end
-	if (s.ishigh) == 1 then --Mario is in gas, thefore the death timer starts counting and M velocity is lowered.
+	if s.ishigh then --Mario is in gas, thefore the death timer starts counting and M velocity is lowered.
 		s.highdeathtimer = s.highdeathtimer + 1
 		if ia(m) then
 			if (s.highdeathtimer < 1100) then
@@ -789,7 +789,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 		m.health = 0xff
 		set_mario_action(m, ACT_DEATH_ON_STOMACH, 0)
 		play_character_sound(m, CHAR_SOUND_DYING)
-		s.ishigh = 0
+		s.ishigh = false
 		s.outsidegastimer = 30
 		s.highdeathtimer = 0
 		s.isdead = true
@@ -1570,13 +1570,14 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	local n = gNetworkPlayers[0]
 	if m.floor and m.floor.object and obj_has_behavior_id(m.floor.object, id_bhvBackroom) ~= 0 then return end
 
-	if s.hasNightvision then
-		local width = (djui_hud_get_screen_width()+1)/512
-		local height = 240/512
+	djui_hud_set_resolution(RESOLUTION_DJUI)
+	djui_hud_set_color(255, 255, 255, 255)
+	screenW = djui_hud_get_screen_width()
+	screenH = djui_hud_get_screen_height()
+	local width  = screenW/512
+	local height = screenH/512
 
-		djui_hud_set_color(255, 255, 255, 255)
-		
-		--[[ 
+	if s.hasNightvision then
 		local nightvisionnoise = {
 			TEX_NIGHTVISION,
 			TEX_NIGHTVISION2,
@@ -1584,40 +1585,25 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 			TEX_NIGHTVISION4,
 			TEX_NIGHTVISION5
 		}
-		local nightvision = math.random(nightvisionnoise)
-		]]
-		nightvisionnoise = nightvisionnoise + 1
-		if nightvisionnoise >= 6 then
-			nightvisionnoise = 1
-		end
-		if nightvisionnoise == 1 then --DON'T YELL AT ME I TRIED YOUR DAMN TABLE AND IT DIDNT WORK
-			nightvision = TEX_NIGHTVISION
-		elseif nightvisionnoise == 2 then
-			nightvision = TEX_NIGHTVISION2
-		elseif nightvisionnoise == 3 then
-			nightvision = TEX_NIGHTVISION3
-		elseif nightvisionnoise == 4 then
-			nightvision = TEX_NIGHTVISION4
-		elseif nightvisionnoise == 5 then
-			nightvision = TEX_NIGHTVISION5
-		end
-		djui_hud_render_texture(nightvision, 0, 0, 5, 5)
+		local nightvision = nightvisionnoise[math.random(#nightvisionnoise)]
+
+		djui_hud_render_texture(nightvision, 0, 0, width, height)
 
 		set_lighting_color(0, 20)
         set_lighting_color(1, 255)
         set_lighting_color(2, 20)
 	end
 
-	if s.death and s.iwbtg then
-		djui_hud_render_texture(TEX_GAMEOVER, (screenWidth/2) - 256, (screenHeight/2) - 128, 1, 1)
+	if s.iwbtg and s.death then
+		djui_hud_render_texture(TEX_GAMEOVER, (screenW/2) - 256, (screenH/2) - 128, 1, 1)
 		--hud_hide()
 		hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) & ~HUD_DISPLAY_FLAG_POWER)
 		if (m.controller.buttonPressed & A_BUTTON) ~= 0 and m.marioObj.oTimer > 30 then
 			hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) | HUD_DISPLAY_FLAG_POWER)
-			m.health = 2176
+			m.health = 0x880
 			s.iwbtg = false
 			s.death = false
-			warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 0)
+			warp_to_start_level()
 			m.numLives = 4
 			s.iwbtg = true
 		end
@@ -1632,43 +1618,34 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 			local seconds = totalSeconds % 60
 			local timerString = string.format("%02d :%02d", minutes, seconds)
 			--djui_hud_print_text(timerString, 850, 100, 5)
-			djui_hud_print_text(timerString, screenWidth / 2 - djui_hud_measure_text(timerString), screenHeight - 48, 1)
-
+			djui_hud_print_text(timerString, screenW / 2 - djui_hud_measure_text(timerString), screenH - 48, 1)
 		else
 			s.timeattack = false
 		end
-
 	end
-
-
-	screenHeight = djui_hud_get_screen_height()
-	screenWidth = djui_hud_get_screen_width()
 
 	--TOAD DEATH COUNTER. Each time you kill toad, the count goes up. It compares the number with the PreviousToadDeath variable, which tells it to update and triggers commands.
 	--Toad gives 3 stars. I have set this to give these stars after every 100 toad kills.
 	local deathcount = "Total server death count: "..gGlobalSyncTable.deathcounter
-	djui_hud_print_text(deathcount, screenWidth - 30 - djui_hud_measure_text(deathcount), screenHeight - 78, 1)
+	djui_hud_print_text(deathcount, screenW - 30 - djui_hud_measure_text(deathcount), screenH - 78, 1)
 
-	if (toadguitimer) ~= 0 then
+	if toadguitimer > 0 then
 		toadguitimer = toadguitimer - 1
 		djui_hud_set_color(255, 255, 0, lerp(0, 255, (math.max(0, toadguitimer))/150))
 
 		local toaddeathcount = "Server Toad death count: "..gGlobalSyncTable.toaddeathcounter
-		djui_hud_print_text(toaddeathcount, screenWidth - 30 - djui_hud_measure_text(toaddeathcount), screenHeight - 48, 1)
+		djui_hud_print_text(toaddeathcount, screenW - 30 - djui_hud_measure_text(toaddeathcount), screenH - 48, 1)
 	end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-	djui_hud_set_resolution(RESOLUTION_N64)
-	local width = (djui_hud_get_screen_width()+1)/512
-	local height = 240/512
 
 	--MARIO HIGH IN GAS OVERLAY
 	djui_hud_set_color(255, 255, 255, highalpha)
 	djui_hud_render_texture(TEX_MARIO_LESS_HIGH, 0, 0, width, height)
 
-	if (s.highdeathtimer) >= 1 then --Mario is high, therefore a hazy green gas overlay comes up on the screen.
+	if s.highdeathtimer > 0 then --Mario is high, therefore a hazy green gas overlay comes up on the screen.
 		highalpha = highalpha + 1
 	end
-	if (s.ishigh == 0) or (s.highdeathtimer >= 940) then --Mario is not high, therefore this will remove the gas effect on the hud.
+	if not s.ishigh or s.highdeathtimer >= 940 then --Mario is not high, therefore this will remove the gas effect on the hud.
 		highalpha = highalpha - 2
 	end
 	highalpha = clamp(highalpha, 0, 255)
@@ -1677,10 +1654,10 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	djui_hud_set_color(255, 255, 255, bloodalpha)
 	djui_hud_render_texture(TEX_BLOOD_OVERLAY, 0, 0, width, height)
 
-	if (s.highdeathtimer) >= 1000 then --Mario is very high and dying, therefore bloody gas overlay comes up on the screen.
+	if s.highdeathtimer >= 1000 then --Mario is very high and dying, therefore bloody gas overlay comes up on the screen.
 		bloodalpha = bloodalpha + 1
 	end
-	if (s.ishigh == 0) then --Mario is not high, therefore this will remove the gas effect on the hud.
+	if not s.ishigh then --Mario is not high, therefore this will remove the gas effect on the hud.
 		bloodalpha = bloodalpha - 4
 	end
 	bloodalpha = clamp(bloodalpha, 0, 255)
@@ -1689,10 +1666,10 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	djui_hud_set_color(255, 255, 255, hallucinate)
 	djui_hud_render_texture(TEX_TRIPPY_OVERLAY, 0, 0, width, height)
 
-	if (s.highdeathtimer) >= 360 then --Mario is hallucinating.
+	if s.highdeathtimer >= 360 then --Mario is hallucinating.
 		hallucinate = hallucinate + 1
 	end
-	if (s.ishigh == 0) or (s.highdeathtimer >= 1090) then --Mario is not high or too high, therefore this will remove the gas effect on the hud.
+	if not s.ishigh or s.highdeathtimer >= 1090 then --Mario is not high or too high, therefore this will remove the gas effect on the hud.
 		hallucinate = hallucinate - 3
 	end
 	hallucinate = clamp(hallucinate, 0, 111)
@@ -1700,7 +1677,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 	--PORTAL OVERLAY
 	if m.marioObj and loadingscreen < 1 then
 		djui_hud_set_color(255, 255, 255, portalalpha)
-		djui_hud_render_texture_tile(TEX_PORTAL, 0, 0, width*32, 15, 0, (m.marioObj.oTimer % 32)*16, 16, 16)
+		djui_hud_render_texture_tile(TEX_PORTAL, 0, 0, width*32, height*32, 0, (m.marioObj.oTimer % 32) * 16, 16, 16)
 
 		local portal = obj_get_first_with_behavior_id(id_bhvNetherPortal)
 		if portal and portal.oSubAction > 0 then --Mario is in the portal.
@@ -1714,15 +1691,16 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 
 	-- warp loading screen
 	if loadingscreen > 0 then
+		local scale = 10
 		loadingscreen = loadingscreen - 1
 		sound_banks_disable(0, SOUND_BANKS_ALL)
 		sound_banks_disable(1, SOUND_BANKS_ALL)
 		sound_banks_disable(2, SOUND_BANKS_ALL)
 		djui_hud_set_color(255, 255, 255, 255)
 
-		for i=0, math.ceil(djui_hud_get_screen_width()/32) do
-			for j=0, 7 do
-				djui_hud_render_texture(TEX_DIRT, i*32, j*32, 1, 1)
+		for i=0, width*512 / (32*scale) do
+			for j=0, height*512 / (32*scale) do
+				djui_hud_render_texture(TEX_DIRT, i*32*scale, j*32*scale, scale, scale)
 			end
 		end
 		if loadingscreen == 2 then
@@ -1735,7 +1713,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 			sound_banks_enable(2, SOUND_BANKS_ALL)
 
 			local_play(sPortalTravel, gLakituState.pos, 1)
-			play_sound(SOUND_GENERAL_COLLECT_1UP, vec3f())
+			play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
 		end
 	end
 end
@@ -1793,7 +1771,7 @@ hook_event(HOOK_MARIO_UPDATE, mariohitbyenemy)
 hook_event(HOOK_MARIO_UPDATE, splattertimer)
 hook_event(HOOK_BEFORE_MARIO_UPDATE, function (m) -- mario high in gas with messed up controls. (NOT WORKING SUDDENLY, no idea why)
 	local s = gStateExtras[0]
-	if (s.ishigh) == 1 then
+	if s.ishigh then
 		if m.input & INPUT_NONZERO_ANALOG ~= 0 then
 			local range = 12288
 			local t = m.marioObj.oTimer/50
