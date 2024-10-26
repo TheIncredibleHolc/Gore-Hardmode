@@ -467,7 +467,10 @@ end
 
 define_custom_obj_fields({
     oBloody = "u32",
-    oChicken = "u32"
+    oChicken = "u32",
+    oFlyGuyVel = "f32",
+    oFlyGuyTargetTimer = "f32",
+    oFlyGuyMoveYaw = "f32"
 })
 end
 
@@ -639,7 +642,7 @@ sOnLvlInitToFunc = {
     end,
 
     [LEVEL_TTM] = function()
-
+        local np = gNetworkPlayers[0]
         --Lantern spawns with Mario. If you were to disable this spawn, light bubble will naturally follow Mario.
         if not gGlobalSyncTable.floodenabled then
             spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)

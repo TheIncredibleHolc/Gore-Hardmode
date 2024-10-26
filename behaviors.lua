@@ -149,12 +149,6 @@ local function bhv_custom_bouncing_fireball(o) --Locks onto mario and homes-in o
     obj_turn_toward_object(o, m, 16, 0x800)
 end
 
-define_custom_obj_fields({
-    oFlyGuyVel = "f32",
-    oFlyGuyTargetTimer = "f32",
-    oFlyGuyMoveYaw = "f32"
-})
-
 local sFlyGuyOverrideVelActions = {
     [FLY_GUY_ACT_IDLE] = 0,
     [FLY_GUY_ACT_APPROACH_MARIO] = 1,
@@ -270,9 +264,6 @@ end
 local function bhv_custom_bully(o)
     local np = gNetworkPlayers[0]
     local m = nearest_mario_state_to_object(o)
-    if np.currLevelNum == LEVEL_SECRETHUB then
-        
-    end
     if o.oBehParams == 20 then
         cur_obj_scale(0.02)
         o.oFlags = GRAPH_RENDER_INVISIBLE
@@ -295,13 +286,14 @@ local function bhv_custom_explosion(o) -- replaces generic explosions with NUKES
         if dist_between_objects(o, m.marioObj) <= 850 then
             m.squishTimer = 50
         end
-        if obj.oChicken == 1 then
+        if o.oChicken == 1 then
             local_play(sChicken, m.pos, 1)
         end
     end
 end
 
 local function bhv_custom_chain_chomp(o)
+    local m = gMarioStates[0]
     if (o.oChainChompReleaseStatus == CHAIN_CHOMP_NOT_RELEASED) then
         o.oMoveAngleYaw = o.oMoveAngleYaw * 5
         o.oForwardVel = o.oForwardVel * 3
@@ -866,6 +858,7 @@ local function bhv_custom_rotating_platform(o) --Spinning platform high up on RR
 end
 
 local function bhv_custom_heart(o)
+    local m = gMarioStates[0]
     --if is_point_within_radius_of_any_player(200, 50, 200, 200) ~= 0 then
     if mario_is_within_rectangle(o.oPosX - 200, o.oPosX + 200, o.oPosZ - 200, o.oPosZ + 200) ~= 0 then
         obj_mark_for_deletion(o)
@@ -1407,6 +1400,7 @@ end
 
 local function dorrie_dead(o)
     local np = gNetworkPlayers[0]
+    local m = gMarioStates[0]
     local nm = nearest_mario_state_to_object(o)
     if np.currLevelNum ~= LEVEL_HELL then
         if o.oAction == DORRIE_ACT_LOWER_HEAD then
@@ -1858,6 +1852,7 @@ function lantern_init(o)
 end
 
 function lantern_loop(o)
+    local m = gMarioStates[0]
     local s = gStateExtras[0]
     local distance = dist_between_objects (o, m.marioObj)
     local worldlighting = 255

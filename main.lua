@@ -1120,7 +1120,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     --(Lethal Lava Land) LLL Objects
 
     ----The Drawbridge by the eye across from spawn.
-    o = obj_get_nearest_object_with_behavior_id(o, id_bhvLllDrawbridge)
+    o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvLllDrawbridge)
     if o ~= nil then
         if mario_is_within_rectangle(o.oPosX - 250, o.oPosX + 250, o.oPosZ - 250, o.oPosZ + 250) ~= 0 then
             obj_mark_for_deletion(o)
@@ -1128,7 +1128,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     end
 
     ----This is a 2x2 (4-square) type platform that sinks, not the individual tiles.
-    o = obj_get_nearest_object_with_behavior_id(o, id_bhvLllSinkingSquarePlatforms)
+    o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvLllSinkingSquarePlatforms)
     if o ~= nil then
         o.oMoveAngleYaw = o.oMoveAngleYaw + 500
     end
@@ -1527,6 +1527,7 @@ function marioalive() -- Resumes the death counter to accept death counts.
 end
 
 function toaddeath(o)
+    local m = gMarioStates[0]
     local deaths = gGlobalSyncTable.toaddeathcounter
     if obj_has_behavior_id(o, id_bhvToadMessage) ~= 0 then
         if deaths == 10 then
