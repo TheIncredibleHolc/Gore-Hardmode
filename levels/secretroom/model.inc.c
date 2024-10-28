@@ -16049,7 +16049,7 @@ Gfx mat_secretroom_dl_f3dlite_material_023[] = {
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, 0, 0, 0, 0, ENVIRONMENT),
 	gsSPTexture(65535, 65535, 0, 0, 1),
 	gsSPSetLights1(secretroom_dl_f3dlite_material_023_lights),
-	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, secretroom_dl_chillyn_rgba16),
+	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, secretroom_dl_profejavix_rgba16),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadBlock(7, 0, 0, 65535, 32),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b, 64, 0, 0, 0, G_TX_CLAMP | G_TX_NOMIRROR, 8, 0, G_TX_CLAMP | G_TX_NOMIRROR, 8, 0),

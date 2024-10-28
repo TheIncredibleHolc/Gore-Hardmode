@@ -83,9 +83,9 @@ u8 secretroom_dl_coolion_rgba16[] = {
 	#include "levels/secretroom/coolion.rgba16.inc.c"
 };
 
-Gfx secretroom_dl_chillyn_rgba16_aligner[] = {gsSPEndDisplayList()};
-u8 secretroom_dl_chillyn_rgba16[] = {
-	#include "levels/secretroom/chillyn.rgba16.inc.c"
+Gfx secretroom_dl_profejavix_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_profejavix_rgba16[] = {
+	#include "levels/secretroom/profejavix.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_fritos_rgba16_aligner[] = {gsSPEndDisplayList()};

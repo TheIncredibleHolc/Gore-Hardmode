@@ -64,7 +64,7 @@ extern u8 secretroom_dl_birdekekn_rgba16[];
 extern u8 secretroom_dl_blockyn_rgba16[];
 extern u8 secretroom_dl_isaac_rgba16[];
 extern u8 secretroom_dl_coolion_rgba16[];
-extern u8 secretroom_dl_chillyn_rgba16[];
+extern u8 secretroom_dl_profejavix_rgba16[];
 extern u8 secretroom_dl_fritos_rgba16[];
 extern u8 secretroom_dl_imyourcatn_rgba16[];
 extern u8 secretroom_dl_saniky2_rgba16[];
