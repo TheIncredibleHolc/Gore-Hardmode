@@ -2250,9 +2250,111 @@ local function mips(o)
     o.oMipsForwardVelocity = 100
 end
 
+local function koopatheQUICC(o)
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum == LEVEL_BOB then
+        gBehaviorValues.KoopaCatchupAgility = 60
+    else
+        gBehaviorValues.KoopaCatchupAgility = 8
+    end
+end
 
+local function invertedpyramid(o)
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum == LEVEL_BITFS and not gGlobalSyncTable.romhackcompatibility then
+        obj_mark_for_deletion(o)
+    end
+end
 
+local function waterdiamond(o)
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum == LEVEL_WDW then
+        obj_mark_for_deletion(o)
+    end
+end
 
+function piranha_plant(o)
+	local m = nearest_mario_state_to_object(o)
+    if m ~= nil and o.oAction == PIRANHA_PLANT_ACT_BITING then
+        cur_obj_update_floor_and_walls()
+        o.oWallHitboxRadius = 40
+        o.oForwardVel = 30
+		--[[ Not sure if this is fair
+		cur_obj_rotate_yaw_toward(obj_angle_to_object(o, m.marioObj), 0x400) ]]
+        o.oPosY = o.oFloorHeight
+        cur_obj_move_using_fvel_and_gravity()
+    end
+end
+
+function pokey_body_part(o)
+    local m = nearest_mario_state_to_object(o)
+    if m ~= nil and dist_between_objects(o, m.marioObj) <= 1000 then
+	    if o.oTimer > 20 then
+            o.oTimer = 0
+            if o.oPosY + 60 >= m.pos.y and o.oPosY + 60 <= m.pos.y + 160 then
+                cur_obj_play_sound_2(SOUND_OBJ_SNUFIT_SHOOT)
+                spawn_sync_object(id_bhvPokeySpike, E_MODEL_SPINY_BALL, o.oPosX, o.oPosY + 60, o.oPosZ, nil)
+            end
+        end
+    end
+end
+
+function pokey_spike_init(o)
+
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oInteractType = INTERACT_DAMAGE
+
+    o.oHomeX = o.oPosX
+    o.oHomeY = o.oPosY
+    o.oHomeZ = o.oPosZ
+
+    o.oForwardVel = 100
+    o.hurtboxHeight = 40
+    o.hurtboxRadius = 40
+    o.oIntangibleTimer = 0
+    o.oDamageOrCoinValue = 2
+
+    local m = nearest_mario_state_to_object(o)
+    if m ~= nil then
+        o.oMoveAngleYaw = obj_angle_to_object(o, m.marioObj)
+    else
+        obj_mark_for_deletion(o)
+    end
+    
+end
+
+function pokey_spike_loop(o)
+    local vh = {
+        x=o.oHomeX,
+        y=o.oHomeY,
+        z=o.oHomeZ
+    }
+    local vp = {
+        x=o.oPosX,
+        y=o.oPosY,
+        z=o.oPosZ
+    }
+    local dist = vec3f_dist(vh, vp)
+    if dist > 1500 then
+        obj_mark_for_deletion(o)
+        return
+    end
+
+    local m = nearest_interacting_mario_state_to_object(o)
+    
+    if o.oInteractStatus & INT_STATUS_INTERACTED ~= 0 then
+        m.squishTimer = 50
+        obj_mark_for_deletion(o)
+    end
+
+    cur_obj_move_xz_using_fvel_and_yaw()
+end
+
+hook_gore_behavior(id_bhvPiranhaPlant, false, nil, piranha_plant)
+hook_gore_behavior(id_bhvPokeyBodyPart, false, nil, pokey_body_part)
+hook_gore_behavior(id_bhvWaterLevelDiamond, false, nil, waterdiamond)
+hook_gore_behavior(id_bhvKoopa, false, nil, koopatheQUICC)
+hook_gore_behavior(id_bhvBitfsTiltingInvertedPyramid, false, nil, invertedpyramid)
 hook_gore_behavior(id_bhvSignOnWall, false, nil, delete_on_spawn)
 hook_gore_behavior(id_bhvMips, false, nil, mips)
 hook_gore_behavior(id_bhvLllSinkingSquarePlatforms, false, nil, obj_explode_if_within_150_units)
@@ -2342,3 +2444,4 @@ id_bhvGlow = hook_behavior(nil, OBJ_LIST_GENACTOR, true, glow_init, glow_loop)
 id_bhvGoggles = hook_behavior(nil, OBJ_LIST_GENACTOR, true, goggles_init, goggles_loop)
 id_bhvStonewall = hook_behavior(nil, OBJ_LIST_SURFACE, true, stonewall_init, stonewall_loop)
 id_bhvVomit = hook_behavior(nil, OBJ_LIST_GENACTOR, true, vomit_init, vomit_loop)
+id_bhvPokeySpike = hook_behavior(nil, OBJ_LIST_GENACTOR, true, pokey_spike_init, pokey_spike_loop)

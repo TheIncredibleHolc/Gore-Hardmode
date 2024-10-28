@@ -155,9 +155,6 @@ function testing(m)
     end
     if (m.controller.buttonPressed & U_JPAD) ~= 0 then
     end
-
-
-
 end
 
 function spawn_sync_if_main(behaviorId, modelId, x, y, z, objSetupFunction, i)
@@ -300,65 +297,67 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     end
 
     -------------------------------------------------------------------------------
-    if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
-        m.action = ACT_NOTHING
-    end
-
-    if s.iwbtg and m.floor.type == SURFACE_DEATH_PLANE and m.pos.y < m.floorHeight + 2048 then
-        m.health = 0xff
-        m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
-        set_mario_action(m, ACT_GONE, 0)
-    end
-
     if s.iwbtg then
-        local np = gNetworkPlayers[0]
-        if np.currLevelNum ~= LEVEL_CASTLE_GROUNDS then
-            play_secondary_music(0,0,0,0)
+        if m.action == ACT_DEATH_ON_STOMACH then
+            m.action = ACT_NOTHING
         end
-        if m.numLives > 1 then
-            m.numLives = 1
+
+        if m.floor.type == SURFACE_DEATH_PLANE and m.pos.y < m.floorHeight + 2048 then
+            m.health = 0xff
+            m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
+            set_mario_action(m, ACT_GONE, 0)
         end
-        save_file_set_using_backup_slot(true)
-    end
 
-    if s.death then
-        audio_stream_stop(iwbtg)
-    end
-
-    if np.currLevelNum == LEVEL_BOWSER_1 or np.currLevelNum == LEVEL_BOWSER_2 or np.currLevelNum == LEVEL_BOWSER_3 then
-        --do nothing
-    else
-        if s.iwbtg and not s.death and m.health ~= 0xff and m.numStars < 15 then
-            if currentlyPlaying ~= iwbtgMusic[1] then
-                stream_stop_all()
-                stream_play(iwbtgMusic[1])
+        if s.iwbtg then
+            if np.currLevelNum ~= LEVEL_CASTLE_GROUNDS then
+                play_secondary_music(0,0,0,0)
             end
-        elseif s.iwbtg and not s.death and m.health ~= 0xff and m.numStars >= 15 and m.numStars < 30 then
+            if m.numLives > 1 then
+                m.numLives = 1
+            end
+            save_file_set_using_backup_slot(true)
+        end
+
+        if s.death then
             audio_stream_stop(iwbtg)
-            if currentlyPlaying ~= iwbtgMusic[3] then
-                play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
-                play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
-                stream_stop_all()
-                stream_play(iwbtgMusic[3])
+        end
+
+        if np.currLevelNum == LEVEL_BOWSER_1 or np.currLevelNum == LEVEL_BOWSER_2 or np.currLevelNum == LEVEL_BOWSER_3 then
+            --do nothing
+        else
+            if not s.death and m.health ~= 0xff and m.numStars < 15 then
+                if currentlyPlaying ~= iwbtgMusic[1] then
+                    stream_stop_all()
+                    stream_play(iwbtgMusic[1])
+                end
+            elseif not s.death and m.health ~= 0xff and m.numStars >= 15 and m.numStars < 30 then
+                audio_stream_stop(iwbtg)
+                if currentlyPlaying ~= iwbtgMusic[3] then
+                    play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
+                    play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
+                    stream_stop_all()
+                    stream_play(iwbtgMusic[3])
+                end
+            elseif not s.death and m.health ~= 0xff and m.numStars >= 30 then
+                if currentlyPlaying ~= iwbtgMusic[4] then
+                    play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
+                    play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
+                    stream_stop_all()
+                    stream_play(iwbtgMusic[4])
+                end
             end
-        elseif s.iwbtg and not s.death and m.health ~= 0xff and m.numStars >= 30 then
-            if currentlyPlaying ~= iwbtgMusic[4] then
-                play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
-                play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
-                stream_stop_all()
-                stream_play(iwbtgMusic[4])
-            end
+        end
+
+        if m.health == 0xff and not s.death then
+            stream_stop_all()
+            delete_save(m)
+            local_play(sIwbtgDeath, gLakituState.pos, 1)
+            s.death = true
+            m.marioObj.oTimer = 1
         end
     end
 
-    if s.iwbtg and m.health == 0xff and not s.death then
-        stream_stop_all()
-        delete_save(m)
-        local_play(sIwbtgDeath, gLakituState.pos, 1)
-        s.death = true
-        m.marioObj.oTimer = 1
-    end
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     --Turning Gold
     if s.turningGold then
         local m = gMarioStates[0]
@@ -381,8 +380,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             s.turningGold = false
         end
     end
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     if not gGlobalSyncTable.romhackcompatibility then
+        if np.currLevelNum == LEVEL_BBH then
+            if m.marioObj.oTimer <= 30 then
+                play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 40, 0, 0, 0)
+            end
+        end
+
         if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
             set_override_envfx(ENVFX_SNOW_BLIZZARD)
             cur_obj_play_sound_1(SOUND_ENV_WIND1)
@@ -422,15 +427,66 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 set_fog_color(2, 100)
             end
         end
+
+        if np.currLevelNum == LEVEL_HMC and m.pos.y < -3900 then
+            set_override_envfx(ENVFX_LAVA_BUBBLES)
+        elseif np.currLevelNum == LEVEL_HMC and m.pos.y >= -3900 then
+            set_override_envfx(ENVFX_MODE_NONE)
+        end
+
+        ---WDW is now just Dry World! 
+        if np.currLevelNum == LEVEL_WDW then
+            for i = 0, 3 do
+                set_environment_region(i, -10000)
+            end
+        end
+
+        if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
+            if ia(m) and m.marioObj.oTimer == 30 and not s.sslIntro then
+                cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
+                s.sslIntro = true
+            end
+            if (m.action & ACT_FLAG_WATER_OR_TEXT) == 0 then
+                s.ssldiethirst = s.ssldiethirst + 1
+            else
+                s.ssldiethirst = 0 -- stops timer
+            end
+    
+            if s.ssldiethirst >= 300 then
+                m.health = m.health - 1
+                if m.health < 1024 then
+                    if m.action == ACT_IDLE then
+                        m.action = ACT_PANTING
+                    end
+                    if m.action == ACT_WALKING or m.action == ACT_JUMP or m.action == ACT_JUMP_KICK then
+                        m.forwardVel = clampf(m.forwardVel, -100, m.health / 64)
+                    end
+                    if m.action == ACT_LONG_JUMP then
+                        set_mario_action(m, ACT_JUMP, 0)
+                    end
+                end
+            end
+            m.forwardVel = m.forwardVel + 0.3
+        else
+            s.ssldiethirst = 0
+        end
+
+        if np.currLevelNum == LEVEL_SL and np.currAreaIndex == 1 then
+            if ia(m) and m.marioObj.oTimer == 30 and not s.slIntro then
+                cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
+                s.slIntro = true
+            end
+            m.health = m.health - 1
+        end
     end
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     --IWBTG Trophy
     if gGlobalSyncTable.gameisbeat and not trophy_unlocked(20) and s.iwbtg and m.numStars == 10 then
         unlock_trophy(20)
         play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
         djui_chat_message_create("IWBTG Trophy earned!!")
     end
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     --PSS TROPHY
     if np.currLevelNum == LEVEL_PSS and not trophy_unlocked(11) then
         local psstrophy = obj_get_first_with_behavior_id(id_bhvTrophy)
@@ -461,16 +517,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end
         end
     end
-----------------------------------------------------------------------------------------------------------------------------------
-    --Lava bubbling at HMC
-    if not gGlobalSyncTable.romhackcompatibility then
-        if np.currLevelNum == LEVEL_HMC and m.pos.y < -3900 then
-            set_override_envfx(ENVFX_LAVA_BUBBLES)
-        elseif np.currLevelNum == LEVEL_HMC and m.pos.y >= -3900 then
-            set_override_envfx(ENVFX_MODE_NONE)
-        end
-    end
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     if gGlobalSyncTable.gameisbeat and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3 and not trophy_unlocked(13) then --GRANT TROPHY #13
         local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
         if trophy then
@@ -482,8 +529,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end)
         end
     end
-----------------------------------------------------------------------------------------------------------------------------------
--- (PSS/TTM Only) Faster sliding.
+ ----------------------------------------------------------------------------------------------------------------------------------
+ -- (PSS/TTM Only) Faster sliding.
     if not gGlobalSyncTable.romhackcompatibility then
         local is_pss = np.currLevelNum == LEVEL_PSS
         local is_ttm = np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2
@@ -499,51 +546,14 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             adjust_turn_speed(m)
         end
     end
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     --If dead, gold go bye bye
     if m.health <= 120 and s.isgold then
         s.isgold = false
         gPlayerSyncTable[m.playerIndex].gold = false
     end
-----------------------------------------------------------------------------------------------------------------------------------
-    --Koopa the QUICC
-    if np.currLevelNum == LEVEL_BOB then
-        gBehaviorValues.KoopaCatchupAgility = 60
-    else
-        gBehaviorValues.KoopaCatchupAgility = 8
-    end
-----------------------------------------------------------------------------------------------------------------------------------
-    --Spooky BBH
-    if np.currLevelNum == LEVEL_BBH and not gGlobalSyncTable.romhackcompatibility then
-        set_lighting_color(0,50)
-        set_lighting_color(1,50)
-        set_lighting_color(2,65)
-        set_lighting_dir(1,128)
-    end
-----------------------------------------------------------------------------------------------------------------------------------
-    if np.currLevelNum == LEVEL_BITFS and not gGlobalSyncTable.romhackcompatibility then
-        local minvertedpyramid = obj_get_first_with_behavior_id(id_bhvBitfsTiltingInvertedPyramid)
-        while minvertedpyramid do
-            obj_mark_for_deletion(minvertedpyramid)
-            minvertedpyramid = obj_get_next_with_same_behavior_id(minvertedpyramid)
-        end
-    end
-----------------------------------------------------------------------------------------------------------------------------------
-    --Wet/Dry world is now just dry world... LOL...
-    if np.currLevelNum == LEVEL_WDW and not gGlobalSyncTable.romhackcompatibility then
-        for i = 0, 3 do
-            set_environment_region(i, -10000)
-        end
-        local watercontrol = obj_get_first_with_behavior_id(id_bhvWaterLevelDiamond)
-        while watercontrol do
-            obj_mark_for_deletion(watercontrol)
-            watercontrol = obj_get_next_with_same_behavior_id(watercontrol)
-        end
-    end
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     --Backroom Teleport
-
-    --djui_chat_message_create(tostring(m.forwardVel))
     if np.currLevelNum == LEVEL_CASTLE and m.forwardVel < -120 and ia(m) then
         m.forwardVel = 0
         if not obj_get_first_with_behavior_id(id_bhvBackroom) then
@@ -562,22 +572,20 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         m.pos.z = 0
         set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
     end
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     --Stupid shell riding
-
     if m.action == ACT_RIDING_SHELL_GROUND or m.action == ACT_RIDING_SHELL_JUMP or m.action == ACT_RIDING_SHELL_FALL then
         set_mario_anim_with_accel(m, MARIO_ANIM_FIRST_PERSON, 0) --Funny standing
         --set_mario_anim_with_accel(m, MARIO_ANIM_HOLDING_BOWSER, 0) --Funny thicc dumper
         --set_mario_anim_with_accel(m, MARIO_ANIM_TWIRL, 0) --Funny tpose
     end
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     -- FLY FASTER!!
     if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON or m.action == ACT_THROWN_BACKWARD or m.action == ACT_THROWN_FORWARD then -- Makes flying gradually get FASTER!
         m.forwardVel = m.forwardVel + 0.3
         s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
     end
-
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     -- BONKING DEATHS!!
     if m.action == ACT_BACKWARD_AIR_KB or m.action == ACT_FORWARD_AIR_KB and s.flyingVel > 60 then -- Enables Mario to wall-splat when air-bonking objects.
         if m.prevAction == ACT_FLYING or m.prevAction == ACT_SHOT_FROM_CANNON then
@@ -631,8 +639,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end)
         end
     end
-
-----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     --SPLAT CHECK. CHECKS TO SEE IF MARIO IS HIGH ENOUGH TO SPLAT.
     --IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
     --This gets set to '0' when Mario IS splattered. After the splatter timer is up, it sets s.splatter back to 1 to re-enable splattering. 
@@ -661,158 +668,118 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         s.splatterdeath = 0
         s.enablesplattimer = 1
     end
-    ----------------------------------------------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------------------------------------------
     --(Hazy Maze Cave) Mario get high when walking in gas. 
-    s.outsidegastimer = s.outsidegastimer + 1 -- This is constantly counting up. As long as Mario is in gas, this number will keep getting set back to zero. If Mario isnt in gas, the timer will count up to 60 and trigger some "not in gas" commands. 
+    if np.currLevelNum == LEVEL_HMC then
+        s.outsidegastimer = s.outsidegastimer + 1 -- This is constantly counting up. As long as Mario is in gas, this number will keep getting set back to zero. If Mario isnt in gas, the timer will count up to 60 and trigger some "not in gas" commands. 
 
-    if ia(m) and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
-        s.ishigh = true
-        s.outsidegastimer = 0
-        m.health = m.health + 4
-    end
+        if ia(m) and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
+            s.ishigh = true
+            s.outsidegastimer = 0
+            m.health = m.health + 4
+        end
 
-    if s.ishigh then
-        set_environment_region(2, -400) --RAISES THE GAS HIGHER
-    end
+        if s.ishigh then
+            set_environment_region(2, -400) --RAISES THE GAS HIGHER
+        end
 
-    if ((s.outsidegastimer == 30) or s.isdead) and s.ishigh then --If Mario is outside the gas for 1 second, the high wears off and resets all timers.
-        s.ishigh = false
-        s.highdeathtimer = 0
+        if ((s.outsidegastimer == 30) or s.isdead) and s.ishigh then --If Mario is outside the gas for 1 second, the high wears off and resets all timers.
+            s.ishigh = false
+            s.highdeathtimer = 0
+            if ia(m) then
+                local butterfly = obj_get_first_with_behavior_id(id_bhvButterfly)
+                while butterfly ~= nil do
+                    obj_mark_for_deletion(butterfly)
+                    butterfly = obj_get_next_with_same_behavior_id(butterfly)
+                end
+                stream_stop_all()
+                set_background_music(0, get_current_background_music(), 0)
+            end
+        end
         if ia(m) then
-            local butterfly = obj_get_first_with_behavior_id(id_bhvButterfly)
-            while butterfly ~= nil do
-                obj_mark_for_deletion(butterfly)
-                butterfly = obj_get_next_with_same_behavior_id(butterfly)
-            end
-            stream_stop_all()
-            set_background_music(0, get_current_background_music(), 0)
-        end
-    end
-    if ia(m) then
-        if highalpha ~= 0 then
-            set_override_fov(lerp(45, lerp(140, 30, .5+math.cos(m.marioObj.oTimer*.02)/2), highalpha/255))
-        else
-            set_override_fov(0)
-        end
-    end
-    if s.ishigh then --Mario is in gas, thefore the death timer starts counting and M velocity is lowered.
-        s.highdeathtimer = s.highdeathtimer + 1
-        if ia(m) then
-            if (s.highdeathtimer < 1100) then
-                m.forwardVel = 10
-                set_handheld_shake(HAND_CAM_SHAKE_UNUSED)
-            elseif (s.highdeathtimer > 1100) then
-                set_handheld_shake(HAND_CAM_SHAKE_HIGH)
-            end
-        end
-    end
-    if (s.highdeathtimer) == 1 and ia(m) then --initiates the 'high' music
-        fadeout_level_music(900)
-        stream_play(highmusic)
-        spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
-    end
-
-    --* need to rewrite this later
-    if ia(m) then
-        if s.highdeathtimer == 200 or --Some butterflies start spawning around Mario.
-           s.highdeathtimer == 400 or
-           s.highdeathtimer == 600 or
-           s.highdeathtimer == 700 or
-           s.highdeathtimer == 800 or
-           s.highdeathtimer == 900 or
-           s.highdeathtimer == 1000 or
-           s.highdeathtimer == 1100 or
-           s.highdeathtimer == 1200 then
-            spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x + 5, m.pos.y - 5, m.pos.z + 5, nil)
-            spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
-        end
-        if s.highdeathtimer == 100 or --Spawns occasional coins spawn to keep Mario alive
-           s.highdeathtimer == 300 or
-           s.highdeathtimer == 500 or
-           s.highdeathtimer == 700 or
-           s.highdeathtimer == 900 or
-           s.highdeathtimer == 1100 or
-           s.highdeathtimer == 1200 then
-            local randommodel = math.random(3)
-            if randommodel == 1 then
-                spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
-            elseif randommodel == 2 then
-                spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER2, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
-            elseif randommodel == 3 then
-                spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER3, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
-            end
-        end
-    end
-    if (s.highdeathtimer) == 1100 then
-        play_character_sound(m, CHAR_SOUND_COUGHING1)
-    end
-    if (s.highdeathtimer) == 1200 then
-        play_character_sound(m, CHAR_SOUND_COUGHING2)
-    end
-    if (s.highdeathtimer) == 1210 then
-        play_character_sound(m, CHAR_SOUND_COUGHING3)
-    end
-    if (s.highdeathtimer) == 1250 then
-        play_character_sound(m, CHAR_SOUND_COUGHING2)
-    end
-    if (s.highdeathtimer) == 1265 then
-        play_character_sound(m, CHAR_SOUND_COUGHING3)
-    end
-    if (s.highdeathtimer) == 1290 then --Mario dies from gas and resets all timers.
-
-    end
-    if (s.highdeathtimer) == 1340 then --Mario dies.
-        m.health = 0xff
-        set_mario_action(m, ACT_DEATH_ON_STOMACH, 0)
-        play_character_sound(m, CHAR_SOUND_DYING)
-        s.ishigh = false
-        s.outsidegastimer = 30
-        s.highdeathtimer = 0
-        s.isdead = true
-    end
-----------------------------------------------------------------------------------------------------------------------------------
-
-    if not gGlobalSyncTable.romhackcompatibility then
-        if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
-            if ia(m) and m.marioObj.oTimer == 30 and not s.sslIntro then
-                cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_046)
-                s.sslIntro = true
-            end
-            if (m.action & ACT_FLAG_WATER_OR_TEXT) == 0 then
-                s.ssldiethirst = s.ssldiethirst + 1
+            if highalpha ~= 0 then
+                set_override_fov(lerp(45, lerp(140, 30, .5+math.cos(m.marioObj.oTimer*.02)/2), highalpha/255))
             else
-                s.ssldiethirst = 0 -- stops timer
+                set_override_fov(0)
             end
-    
-            if s.ssldiethirst >= 300 then
-                m.health = m.health - 1
-                if m.health < 1024 then
-                    if m.action == ACT_IDLE then
-                        m.action = ACT_PANTING
-                    end
-                    if m.action == ACT_WALKING or m.action == ACT_JUMP or m.action == ACT_JUMP_KICK then
-                        m.forwardVel = clampf(m.forwardVel, -100, m.health / 64)
-                    end
-                    if m.action == ACT_LONG_JUMP then
-                        set_mario_action(m, ACT_JUMP, 0)
-                    end
+        end
+        if s.ishigh then --Mario is in gas, thefore the death timer starts counting and M velocity is lowered.
+            s.highdeathtimer = s.highdeathtimer + 1
+            if ia(m) then
+                if (s.highdeathtimer < 1100) then
+                    m.forwardVel = 10
+                    set_handheld_shake(HAND_CAM_SHAKE_UNUSED)
+                elseif (s.highdeathtimer > 1100) then
+                    set_handheld_shake(HAND_CAM_SHAKE_HIGH)
                 end
             end
-            m.forwardVel = m.forwardVel + 0.3
-        else
-            s.ssldiethirst = 0
         end
-    
-        if np.currLevelNum == LEVEL_SL and np.currAreaIndex == 1 then
-            if ia(m) and m.marioObj.oTimer == 30 and not s.slIntro then
-                cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
-                s.slIntro = true
+        if (s.highdeathtimer) == 1 and ia(m) then --initiates the 'high' music
+            fadeout_level_music(900)
+            stream_play(highmusic)
+            spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
+        end
+
+        --* need to rewrite this later
+        if ia(m) then
+            if s.highdeathtimer == 200 or --Some butterflies start spawning around Mario.
+            s.highdeathtimer == 400 or
+            s.highdeathtimer == 600 or
+            s.highdeathtimer == 700 or
+            s.highdeathtimer == 800 or
+            s.highdeathtimer == 900 or
+            s.highdeathtimer == 1000 or
+            s.highdeathtimer == 1100 or
+            s.highdeathtimer == 1200 then
+                spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x + 5, m.pos.y - 5, m.pos.z + 5, nil)
+                spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
             end
-            m.health = m.health - 1
+            if s.highdeathtimer == 100 or --Spawns occasional coins spawn to keep Mario alive
+            s.highdeathtimer == 300 or
+            s.highdeathtimer == 500 or
+            s.highdeathtimer == 700 or
+            s.highdeathtimer == 900 or
+            s.highdeathtimer == 1100 or
+            s.highdeathtimer == 1200 then
+                local randommodel = math.random(3)
+                if randommodel == 1 then
+                    spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
+                elseif randommodel == 2 then
+                    spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER2, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
+                elseif randommodel == 3 then
+                    spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER3, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
+                end
+            end
+        end
+        if (s.highdeathtimer) == 1100 then
+            play_character_sound(m, CHAR_SOUND_COUGHING1)
+        end
+        if (s.highdeathtimer) == 1200 then
+            play_character_sound(m, CHAR_SOUND_COUGHING2)
+        end
+        if (s.highdeathtimer) == 1210 then
+            play_character_sound(m, CHAR_SOUND_COUGHING3)
+        end
+        if (s.highdeathtimer) == 1250 then
+            play_character_sound(m, CHAR_SOUND_COUGHING2)
+        end
+        if (s.highdeathtimer) == 1265 then
+            play_character_sound(m, CHAR_SOUND_COUGHING3)
+        end
+        if (s.highdeathtimer) == 1290 then --Mario dies from gas and resets all timers.
+
+        end
+        if (s.highdeathtimer) == 1340 then --Mario dies.
+            m.health = 0xff
+            set_mario_action(m, ACT_DEATH_ON_STOMACH, 0)
+            play_character_sound(m, CHAR_SOUND_DYING)
+            s.ishigh = false
+            s.outsidegastimer = 30
+            s.highdeathtimer = 0
+            s.isdead = true
         end
     end
-
-----------------------------------------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------------------------------------
     --Mario Disintegrates when on fire
     local flame = m.marioObj.prevObj
     if flame and obj_has_behavior_id(flame, id_bhvFireParticleSpawner) ~= 0 then
@@ -846,8 +813,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             audio_sample_stop(gSamples[sAgonyWaluigi])
         end
     end
-
-----------------------------------------------------------------------------------------------------------------------------------
+  ----------------------------------------------------------------------------------------------------------------------------------
     --ENDING OF THE GAME CUTSCENE
     peach = obj_get_first_with_behavior_id(id_bhvEndPeach)
     if peach ~= nil then
@@ -1008,50 +974,52 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
      end
 ----------------------------------------------------------------------------------------------------------------------------------
     -- Murder Ukiki
-    if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj, id_bhvUkiki) ~= 0) and np.currLevelNum == LEVEL_BOWSER_1 then
-        ukikiholding = 1
-        ukikiheldby = m.playerIndex
-    end
-    if (ukikiholding) == 1 then
+    if np.currLevelNum == LEVEL_BOWSER_1 then
         if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj, id_bhvUkiki) ~= 0) then
+            ukikiholding = 1
+            ukikiheldby = m.playerIndex
+        end
+        if (ukikiholding) == 1 then
+            if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj, id_bhvUkiki) ~= 0) then
+                ukikitimer = ukikitimer + 1
+            end
+        end
+        if (ukikitimer) == 2 and m.playerIndex == ukikiheldby then
+            if m.character.type == CT_MARIO then
+                network_play(sAngryMario, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_LUIGI then
+                network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_TOAD then
+                network_play(sAngryToad, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_WARIO then
+                network_play(sAngryWario, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_WALUIGI then
+                network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
+            end
+            stream_stop_all()
+            local_play(sSMWBonusEnd, m.pos, 1)
+        end
+        if (ukikitimer) == 40 then
+            obj_mark_for_deletion(m.heldObj)
+            m.heldObj = nil
+            set_mario_action(m, ACT_PUNCHING, 0)
             ukikitimer = ukikitimer + 1
+            print("40")
         end
-    end
-    if (ukikitimer) == 2 and m.playerIndex == ukikiheldby then
-        if m.character.type == CT_MARIO then
-            network_play(sAngryMario, m.pos, 1, m.playerIndex)
-        elseif m.character.type == CT_LUIGI then
-            network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
-        elseif m.character.type == CT_TOAD then
-            network_play(sAngryToad, m.pos, 1, m.playerIndex)
-        elseif m.character.type == CT_WARIO then
-            network_play(sAngryWario, m.pos, 1, m.playerIndex)
-        elseif m.character.type == CT_WALUIGI then
-            network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
+        if (ukikitimer) >= 41 and ia(m) then
+            ukikitimer = ukikitimer + 1
+            print("timing")
         end
-        stream_stop_all()
-        local_play(sSMWBonusEnd, m.pos, 1)
-    end
-    if (ukikitimer) == 40 then
-        obj_mark_for_deletion(m.heldObj)
-        m.heldObj = nil
-        set_mario_action(m, ACT_PUNCHING, 0)
-        ukikitimer = ukikitimer + 1
-        print("40")
-    end
-    if (ukikitimer) >= 41 and ia(m) then
-        ukikitimer = ukikitimer + 1
-        print("timing")
-    end
-    if (ukikitimer) == 50 then
-        print("kaboom!")
-        if m.playerIndex == ukikiheldby then
-            m.particleFlags = PARTICLE_MIST_CIRCLE
-            squishblood(m.marioObj)
-            local_play(sSplatter, m.pos, 1)
-            ukikiheldby = -1
-            ukikiholding = 0
-            ukikitimer = 0
+        if (ukikitimer) == 50 then
+            print("kaboom!")
+            if m.playerIndex == ukikiheldby then
+                m.particleFlags = PARTICLE_MIST_CIRCLE
+                squishblood(m.marioObj)
+                local_play(sSplatter, m.pos, 1)
+                ukikiheldby = -1
+                ukikiholding = 0
+                ukikitimer = 0
+            end
         end
     end
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -1098,11 +1066,13 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 end
 
 function sick() -- Puking
-    local m = gMarioStates[0]
-    local s = gStateExtras[0]
-    
-    --Mario Sick Counter
     if puking then
+
+        local m = gMarioStates[0]
+        local s = gStateExtras[0]
+    
+        --Mario Sick Counter
+    
         if s.sick < 100 and m.forwardVel > 0 and m.faceAngle.y ~= m.intendedYaw and m.action ~= ACT_PUKE and m.action ~= ACT_LONG_JUMP
         and m.action ~= ACT_JUMP and m.action ~= ACT_DOUBLE_JUMP and m.action ~= ACT_READING_NPC_DIALOG and m.action ~= ACT_WAITING_FOR_DIALOG
         and m.action ~= ACT_READING_AUTOMATIC_DIALOG and m.action ~= ACT_EXIT_LAND_SAVE_DIALOG and m.action ~= ACT_FLYING then
@@ -1140,25 +1110,25 @@ end
 ----------------------------------------------------------------------------------------------------------------------------------
 
 function mariohitbyenemy(m) -- Default and generic 1-hit death commands.
-if (m.hurtCounter > 0) then
-    local s = gStateExtras[m.playerIndex]
+    if (m.hurtCounter > 0) then
+        local s = gStateExtras[m.playerIndex]
 
-    -- Air Insta-Kill Mario (Generic hits, mario pvp air kicks, etc..)
-    if (m.action == ACT_HARD_FORWARD_AIR_KB) then
-        m.health = 0xff
-    end
-    if (m.action == ACT_HARD_BACKWARD_AIR_KB) then
-        m.health = 0xff
-    end
+        -- Air Insta-Kill Mario (Generic hits, mario pvp air kicks, etc..)
+        if (m.action == ACT_HARD_FORWARD_AIR_KB) then
+            m.health = 0xff
+        end
+        if (m.action == ACT_HARD_BACKWARD_AIR_KB) then
+            m.health = 0xff
+        end
 
-    -- BIG fall insta-kill (Falling from REALLY high)
-    if (m.action == ACT_HARD_BACKWARD_GROUND_KB) then
-        m.squishTimer = 50
+        -- BIG fall insta-kill (Falling from REALLY high)
+        if (m.action == ACT_HARD_BACKWARD_GROUND_KB) then
+            m.squishTimer = 50
+        end
+        if (m.action == ACT_HARD_FORWARD_GROUND_KB) then
+            m.squishTimer = 50
+        end
     end
-    if (m.action == ACT_HARD_FORWARD_GROUND_KB) then
-        m.squishTimer = 50
-    end
-end
 end
 
 function on_interact(m, o, intType, interacted) --Best place to switch enemy behaviors to have mario insta-die.
@@ -1653,7 +1623,6 @@ function mario_before_phys_step(m)
 
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
 -----GREEN DEMONS (ONCE AND FOR ALL!!) This finally works so DON'T TOUCH IT!!
 local function before_phys_step(m,stepType) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
     local np = gNetworkPlayers[0]
@@ -1673,7 +1642,6 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
         local_play(sFart, m.pos, 1)
     end
 end
-
 ---------hooks--------
 hook_event(HOOK_MARIO_UPDATE, mario_update)
 hook_event(HOOK_UPDATE, sick)
@@ -1718,7 +1686,6 @@ hook_event(HOOK_ON_HUD_RENDER, hud_render)
 hook_event(HOOK_BEFORE_PHYS_STEP, before_phys_step) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
 
 -------------PvP-----------------------
-
 --Custom PvP
 hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
     local s = gStateExtras[victim.playerIndex]

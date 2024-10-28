@@ -524,12 +524,21 @@ sOnWarpToFunc = {
     end,
 
     [LEVEL_SSL] = function()
+        local np = gNetworkPlayers[0]
         if np.currAreaIndex == 2 and gMarioStates[0].playerIndex == 0 then
             spawn_non_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 686, -1530, -2157, nil)
         end
     end,
 
+    [LEVEL_BBH] = function()
+        set_lighting_color(0,50)
+        set_lighting_color(1,50)
+        set_lighting_color(2,65)
+        set_lighting_dir(1,128)
+    end,
+
     [LEVEL_JRB] = function()
+        local np = gNetworkPlayers[0]
         if np.currAreaIndex == 1 then
             -- Spawns lava over water, unless inside the pirate ship.
             spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1020, gMarioStates[0].pos.z, nil)
@@ -622,6 +631,7 @@ sOnWarpToFunc = {
     end,
 
     [LEVEL_CASTLE] = function()
+        local np = gNetworkPlayers[0]
         if np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then
             -- GRANT TROPHY #12 (Mirror room)
             spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5514, 1613, 3159, function(t)
@@ -659,8 +669,8 @@ sOnLvlInitToFunc = {
             spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)
         end
 
-        if np.currActNum == 6 then --Secret lantern spawns near beginning of level
-            --spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 342, -2556, 5712, nil)
+        if np.currActNum > 1 then --Secret lantern spawns near beginning of level
+            spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 342, -2556, 5812, nil)
         end
 
         spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 434, -2000, 3704, function (nvg) 
@@ -668,6 +678,13 @@ sOnLvlInitToFunc = {
             nvg.oMoveAngleYaw = nvg.oFaceAngleYaw
         end)
         --spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, -3492, -4100, 3705, nil)
+    end,
+
+    [LEVEL_BBH] = function()
+        set_lighting_color(0,50)
+        set_lighting_color(1,50)
+        set_lighting_color(2,65)
+        set_lighting_dir(1,128)
     end,
 
     [LEVEL_BITFS] = function()
@@ -682,12 +699,19 @@ sOnLvlInitToFunc = {
         set_lighting_color(0, 255)
         set_lighting_color(1, 255)
         set_lighting_color(2, 255)
+        set_vertex_color(0, 255)
+        set_vertex_color(1, 255)
+        set_vertex_color(2, 255)
+        set_fog_color(0, 255)
+        set_fog_color(1, 255)
+        set_fog_color(2, 255)
         set_lighting_dir(1,0)
         set_override_skybox(-1)
         set_override_envfx(-1)
     end,
 
     [LEVEL_WF] = function()
+        local np = gNetworkPlayers[0]
         if np.currActNum >= 2 and gGlobalSyncTable.gameisbeat then
             -- GRANT TROPHY #17
             spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -404, 3584, -4, function(t)

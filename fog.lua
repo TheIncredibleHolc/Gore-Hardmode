@@ -75,20 +75,8 @@ local function fog_loop(o)
         end
     end
 
-    if not np.currLevelNum == LEVEL_TTM or not np.currLevelNum == LEVEL_SL then --THIS WAS COMMENTED OUT BUT NOW I'M USING IT TO DELETE TEH FOG IF PLAYER ISN'T IN ONE OF THESE TWO LEVELS.
-    
+    if not np.currLevelNum == LEVEL_TTM or not np.currLevelNum == LEVEL_SL then
         obj_mark_for_deletion(o)
-    
-        --[[
-        set_lighting_color(0, r)
-        set_lighting_color(1, g)
-        set_lighting_color(2, b)
-        set_vertex_color(0, r)
-        set_vertex_color(1, g)
-        set_vertex_color(2, b)
-        set_fog_color(0, r)
-        set_fog_color(1, g)
-        set_fog_color(2, b)]]
     end
 
     if np.currLevelNum ~= LEVEL_TTM then
@@ -97,7 +85,6 @@ local function fog_loop(o)
     else
         local lantern = obj_get_first_with_behavior_id(id_bhvBobombBuddy) or obj_get_first_with_behavior_id(id_bhvLantern)
         local distance = dist_between_objects (lantern, m.marioObj)
-        --if distance > 800 and m.heldObj ~= lantern then
         if distance > 1100 and m.heldObj ~= lantern then
 
             o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
@@ -121,8 +108,8 @@ local function fog_loop(o)
 end
 
 ---@param m MarioState
-local function mario_update(m)
-    np = gNetworkPlayers[0]
+function mario_update(m)
+    local np = gNetworkPlayers[0]
     if m.playerIndex ~= 0 then return end
     if gGlobalSyncTable.romhackcompatibility then return end
     if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
@@ -152,15 +139,6 @@ local function mario_update(m)
         set_fog_color(0, 255)
         set_fog_color(1, 255)
         set_fog_color(2, 255)
-    elseif np.currLevelNum == LEVEL_TTM then
-        o.oAnimState = STATE_BLACK
-        set_lighting_dir(1, 0)
-        --set_vertex_color(0, 255)
-        --set_vertex_color(1, 255)
-        --set_vertex_color(2, 255)
-        --set_fog_color(0, 0)
-        --set_fog_color(1, 0)
-        --set_fog_color(2, 0)
     elseif np.currLevelNum ~= LEVEL_HELL and np.currLevelNum ~= LEVEL_JRB and m.marioObj.oTimer < 30 then
         set_lighting_color(0, 255)
         set_lighting_color(1, 255)
@@ -171,6 +149,11 @@ local function mario_update(m)
         set_fog_color(0, 255)
         set_fog_color(1, 255)
         set_fog_color(2, 255)
+    elseif np.currLevelNum == LEVEL_BBH then
+        set_lighting_color(0,50)
+        set_lighting_color(1,50)
+        set_lighting_color(2,65)
+        set_lighting_dir(1,128)
     end
 end
 
