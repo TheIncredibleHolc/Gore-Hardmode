@@ -1,5 +1,26 @@
 --All custom behaviors.
 
+local function obj_explode_if_within_150_units(o)
+    local m = gMarioStates[0]
+    local oPos = {
+        x = o.oPosX,
+        y = o.oPosY,
+        z = o.oPosZ
+    }
+    if mario_is_within_rectangle(o.oPosX - 150, o.oPosX + 150, o.oPosZ - 150, o.oPosZ + 150) ~= 0 then
+        spawn_triangle_break_particles(30, 138, 1, 4)
+        spawn_mist_particles()
+        set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
+        play_sound(SOUND_GENERAL_WALL_EXPLOSION, oPos)
+        play_sound(SOUND_GENERAL_EXPLOSION6, oPos)
+        obj_mark_for_deletion(o)
+    end
+end
+
+local function delete_on_spawn(o)
+    obj_mark_for_deletion(o)
+end
+
 local function killer_exclamation_boxes(m) -- Makes exclamation boxes drop on top of you! (squishes)
     local box = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvExclamationBox)
 
@@ -176,9 +197,9 @@ local function bhv_custom_flyguy(o)
         local isApproaching = o.oAction == FLY_GUY_ACT_APPROACH_MARIO
         local isShooting = (o.oAction == FLY_GUY_ACT_SHOOT_FIRE)
         local tooClose = dist < 400
-        if isApproaching then djui_chat_message_create("go go")             end
-        if isShooting and not tooClose then djui_chat_message_create("keep going !!")     end
-        if tooClose      then djui_chat_message_create("WAIT NO STOP STOP") end
+        --if isApproaching then djui_chat_message_create("go go")             end
+        --if isShooting and not tooClose then djui_chat_message_create("keep going !!")     end
+        --if tooClose      then djui_chat_message_create("WAIT NO STOP STOP") end
         if isApproaching or (isShooting and not tooClose) then
             targetTimer = targetTimer + 8
             -- djui_chat_message_create("calculate vel")
@@ -200,7 +221,7 @@ local function bhv_custom_flyguy(o)
             -- o.oFaceAngleYaw = o.oMoveAngleYaw
         end
         -- djui_chat_message_create(""..0x400 * invert_float(vel/100))
-        djui_chat_message_create(""..o.oAngleToHome)
+        --djui_chat_message_create(""..o.oAngleToHome)
         -- djui_chat_message_create(""..(0x400 - math.min(angle_range_float(angleDiff, 0x100, 0x1000) * 0x400, 0x400)) * invert_float(vel/100))
 
         targetTimer = targetTimer
@@ -1080,7 +1101,6 @@ local function bhv_custom_ActivatedBackAndForthPlatform(o)
         set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
         play_sound(SOUND_GENERAL_WALL_EXPLOSION, m.marioObj.header.gfx.cameraToObject)
         play_sound(SOUND_GENERAL_EXPLOSION6, m.marioObj.header.gfx.cameraToObject)
-
         obj_mark_for_deletion(o)
     end
 end
@@ -1088,15 +1108,6 @@ end
 local function bhv_custom_yoshi(o)
     local m = gMarioStates[0]
     if o.oAction == 6 then
-
-
-        --[[
-        local count = obj_count_objects_with_behavior_id(id_bhv1upRunningAway)
-        if count <= 99 then
-            spawn_sync_object(id_bhvBouncy1up, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, nil)
-        end
-        ]]
-
         if o.oTimer == 0 then
             o.oGravity = -2
             o.oForwardVel = 125
@@ -1146,8 +1157,6 @@ local function bhv_secretwarp_loop(o)
             m.faceAngle.y = -10477
             set_mario_action(m, ACT_QUICKSAND_DEATH, 0)
             m.marioObj.oTimer = 0
-            --gPlayerSyncTable[m.playerIndex].gold = true
-
         else
             if m.numStars >= 50 or gGlobalSyncTable.gameisbeat then
                 set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
@@ -1211,7 +1220,6 @@ local function bouncy_loop(o)
     local m = gMarioStates[0]
     obj_set_billboard(o)
     cur_obj_move_using_fvel_and_gravity()
-    -- cur_obj_move_using_vel()
     if o.oPosY == o.oFloorHeight then
         o.oAction = 1
     end
@@ -1816,7 +1824,7 @@ local function star_door_loop(o)
     load_object_collision_model()
 end
 
-function blood_mist_init(o)
+local function blood_mist_init(o)
     -- someone more experienced than me can probably do the init and loop better
     --local s = gStateExtras[0]
     o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
@@ -1826,7 +1834,7 @@ function blood_mist_init(o)
     obj_scale(o, 1)
 end
 
-function blood_mist_loop(o)
+local function blood_mist_loop(o)
     o.oOpacity = (-clampf(math.floor(o.oTimer * 8), 0, 255) + 255)
     o.oGraphYOffset = o.oGraphYOffset + -2.5
     if o.oTimer > 30 then -- 2 second timer before deleting. 
@@ -1834,7 +1842,7 @@ function blood_mist_loop(o)
     end
 end
 
-function lantern_init(o)
+local function lantern_init(o)
     o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_HOLDABLE | OBJ_COL_FLAG_GROUNDED
     o.oInteractType = INTERACT_GRABBABLE
     o.header.gfx.skipInViewCheck = true
@@ -1851,7 +1859,7 @@ function lantern_init(o)
     spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, nil)
 end
 
-function lantern_loop(o)
+local function lantern_loop(o)
     local m = gMarioStates[0]
     local s = gStateExtras[0]
     local distance = dist_between_objects (o, m.marioObj)
@@ -2000,7 +2008,7 @@ function bobomb_lantern_loop(o)
 end
 ]]
 
-function glow_init(o)
+local function glow_init(o)
     o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
     o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
     o.header.gfx.skipInViewCheck = true
@@ -2010,7 +2018,7 @@ function glow_init(o)
 
 end
 
-function glow_loop(o)
+local function glow_loop(o)
     local m = gMarioStates[0]
     --local target = obj_get_nearest_object_with_behavior_id(o, id_bhvBobombBuddy)
     local target = obj_get_nearest_object_with_behavior_id(o, id_bhvLantern)
@@ -2027,7 +2035,7 @@ function glow_loop(o)
     end
 end
 
-function goggles_init(o)
+local function goggles_init(o)
     o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
     o.header.gfx.skipInViewCheck = true
     o.hitboxRadius = 50
@@ -2037,7 +2045,7 @@ function goggles_init(o)
     obj_scale(o, 1.3)
 end
 
-function goggles_loop(o)
+local function goggles_loop(o)
     local s = gStateExtras[0]
     local m = gMarioStates[0]
     o.oGraphYOffset = 20
@@ -2055,7 +2063,7 @@ function goggles_loop(o)
     end
 end
 
-function hoot_loop(o)
+local function hoot_loop(o)
     local m = gMarioStates[0]
     local player = nearest_player_to_object(o)
     local nearmario = nearest_mario_state_to_object(o)
@@ -2138,7 +2146,7 @@ function hoot_loop(o)
     end
 end
 
-function chuckya(o)
+local function chuckya(o)
     local nm = nearest_mario_state_to_object(o)
     local m = gMarioStates[0]
     if o.oTimer == 10 and o.oAction == 1 then
@@ -2147,18 +2155,18 @@ function chuckya(o)
     end
 end
 
-function stonewall_init(o)
+local function stonewall_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.collisionData = COL_STONEWALL
     o.oCollisionDistance = 10000
     o.header.gfx.skipInViewCheck = true
 end
 
-function stonewall_loop(o)
+local function stonewall_loop(o)
     load_object_collision_model()
 end
 
-function flame_loop(o) --This is to help prevent a bunch of stuck flames from building up in Hell near the beginning. 
+local function flame_loop(o) --This is to help prevent a bunch of stuck flames from building up in Hell near the beginning. 
     np = gNetworkPlayers[0]
     if o.oBehParams == 4 and o.oTimer > 400 then -- BehParam 4 is set to the usedflame when mario ignites. This will cause that flame to burn out within 500 frames.
         obj_unused_die()
@@ -2166,19 +2174,17 @@ function flame_loop(o) --This is to help prevent a bunch of stuck flames from bu
     end
 end
 
-function vomit_init(o)
+local function vomit_init(o)
     o.oFlags = (OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
     o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
     o.header.gfx.skipInViewCheck = true
     o.oGraphYOffset = 40
     obj_scale(o, 0.2)
     o.oGravity = -1
-    end
+end
 
-function vomit_loop(o)
+local function vomit_loop(o)
     local sickmario = nearest_mario_state_to_object(o)
-    --obj_set_face_angle(o, sickmario.marioObj.oFaceAnglePitch, sickmario.marioObj.oFaceAngleYaw, sickmario.marioObj.oFaceAngleRoll)
-    --obj_set_face_angle_to_move_angle(o)
     local random = math.random(2.0, 15.0)
     o.oForwardVel = random
     cur_obj_move_using_fvel_and_gravity()
@@ -2207,7 +2213,7 @@ local function hook_gore_behavior(id, override, init, loop)
     return hook_behavior(id, objectList, override, init, loop, newBehaviorName)
 end
 
-function heaveho_loop(o)
+local function heaveho_loop(o)
     local m = gMarioStates[0]
     if o.oHeaveHoUnk88 >= 1 then
         set_mario_action(m, ACT_RAGDOLL, 0)
@@ -2219,7 +2225,7 @@ function heaveho_loop(o)
     end
 end
 
-function skeeter_loop(o)
+local function skeeter_loop(o)
     local m = nearest_mario_state_to_object(o)
     if is_point_within_radius_of_mario(o.oPosX, o.oPosY, o.oPosZ, 1200) ~= 0 and m.action ~= ACT_GONE then
         local ang = obj_angle_to_object(o, m.marioObj)
@@ -2229,17 +2235,29 @@ function skeeter_loop(o)
     end
 end
 
-function scuttlebug_loop(o)
+local function scuttlebug_loop(o)
     --Nothing yet D:
 end
 
-function coin_switch(o)
+local function coin_switch(o)
     if o.oAction == BLUE_COIN_SWITCH_ACT_RECEDING and o.oTimer == 4 then
         local m = gMarioStates[0]
         set_mario_action(m, ACT_BUTT_STUCK_IN_GROUND, 0)
     end
 end
 
+local function mips(o)
+    o.oMipsForwardVelocity = 100
+end
+
+
+
+
+hook_gore_behavior(id_bhvSignOnWall, false, nil, delete_on_spawn)
+hook_gore_behavior(id_bhvMips, false, nil, mips)
+hook_gore_behavior(id_bhvLllSinkingSquarePlatforms, false, nil, obj_explode_if_within_150_units)
+hook_gore_behavior(id_bhvLllDrawbridge, false, nil, obj_explode_if_within_150_units)
+hook_gore_behavior(id_bhvWfRotatingWoodenPlatform, false, nil, obj_explode_if_within_150_units)
 hook_gore_behavior(id_bhvBlueCoinSwitch, false, nil, coin_switch)
 hook_gore_behavior(id_bhvScuttlebug, false, nil, scuttlebug_loop)
 hook_gore_behavior(id_bhvSkeeter, false, nil, skeeter_loop)

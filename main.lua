@@ -167,7 +167,6 @@ function spawn_sync_if_main(behaviorId, modelId, x, y, z, objSetupFunction, i)
     if get_network_player_smallest_global().localIndex + i == 0 then print("passed!") return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction) end
 end
 
-
 ------Globals--------
 local function modsupport()
     for key,value in pairs(gActiveMods) do
@@ -288,7 +287,6 @@ function convert_s16(num)
     return num
 end
 
----@param m MarioState
 function mario_update(m) -- ALL Mario_Update hooked commands.,
     if is_player_active(m) == 0 then return end
     local m = gMarioStates[0] --MIGHT BREAK THINGS, I JUST ADDED THIS DUE TO SM64 EE ERRORS. BE WARNED!
@@ -300,8 +298,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     else
         gLevelValues.fixCollisionBugs = false
     end
-
-    --djui_chat_message_create(tostring(m.floor.type))
 
     -------------------------------------------------------------------------------
     if s.iwbtg and m.action == ACT_DEATH_ON_STOMACH then
@@ -354,7 +350,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end
         end
     end
-    
+
     if s.iwbtg and m.health == 0xff and not s.death then
         stream_stop_all()
         delete_save(m)
@@ -362,8 +358,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         s.death = true
         m.marioObj.oTimer = 1
     end
-
-
 ----------------------------------------------------------------------------------------------------------------------------------
     --Turning Gold
     if s.turningGold then
@@ -429,7 +423,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end
         end
     end
-
 ----------------------------------------------------------------------------------------------------------------------------------
     --IWBTG Trophy
     if gGlobalSyncTable.gameisbeat and not trophy_unlocked(20) and s.iwbtg and m.numStars == 10 then
@@ -437,7 +430,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
         djui_chat_message_create("IWBTG Trophy earned!!")
     end
-
 ----------------------------------------------------------------------------------------------------------------------------------
     --PSS TROPHY
     if np.currLevelNum == LEVEL_PSS and not trophy_unlocked(11) then
@@ -469,8 +461,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end
         end
     end
-
-
 ----------------------------------------------------------------------------------------------------------------------------------
     --Lava bubbling at HMC
     if not gGlobalSyncTable.romhackcompatibility then
@@ -480,7 +470,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             set_override_envfx(ENVFX_MODE_NONE)
         end
     end
-
 ----------------------------------------------------------------------------------------------------------------------------------
     if gGlobalSyncTable.gameisbeat and np.currLevelNum == LEVEL_TTM and np.currAreaIndex == 3 and not trophy_unlocked(13) then --GRANT TROPHY #13
         local trophy = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophy)
@@ -493,9 +482,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end)
         end
     end
-
 ----------------------------------------------------------------------------------------------------------------------------------
-
 -- (PSS/TTM Only) Faster sliding.
     if not gGlobalSyncTable.romhackcompatibility then
         local is_pss = np.currLevelNum == LEVEL_PSS
@@ -512,27 +499,18 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             adjust_turn_speed(m)
         end
     end
-
 ----------------------------------------------------------------------------------------------------------------------------------
     --If dead, gold go bye bye
     if m.health <= 120 and s.isgold then
         s.isgold = false
         gPlayerSyncTable[m.playerIndex].gold = false
     end
-    
 ----------------------------------------------------------------------------------------------------------------------------------
     --Koopa the QUICC
     if np.currLevelNum == LEVEL_BOB then
         gBehaviorValues.KoopaCatchupAgility = 60
     else
         gBehaviorValues.KoopaCatchupAgility = 8
-    end
-
-----------------------------------------------------------------------------------------------------------------------------------
-    --Disables signs on the wall, which gives us extra dialog_ID's to use for custom readouts while having regular (enemy) signs readable.
-    local wallsigns = obj_get_nearest_object_with_behavior_id(o, id_bhvSignOnWall)
-    if wallsigns ~= nil then
-        obj_mark_for_deletion(wallsigns)
     end
 ----------------------------------------------------------------------------------------------------------------------------------
     --Spooky BBH
@@ -550,7 +528,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             minvertedpyramid = obj_get_next_with_same_behavior_id(minvertedpyramid)
         end
     end
-
 ----------------------------------------------------------------------------------------------------------------------------------
     --Wet/Dry world is now just dry world... LOL...
     if np.currLevelNum == LEVEL_WDW and not gGlobalSyncTable.romhackcompatibility then
@@ -563,7 +540,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             watercontrol = obj_get_next_with_same_behavior_id(watercontrol)
         end
     end
-
 ----------------------------------------------------------------------------------------------------------------------------------
     --Backroom Teleport
 
@@ -688,7 +664,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     ----------------------------------------------------------------------------------------------------------------------------------
     --(Hazy Maze Cave) Mario get high when walking in gas. 
     s.outsidegastimer = s.outsidegastimer + 1 -- This is constantly counting up. As long as Mario is in gas, this number will keep getting set back to zero. If Mario isnt in gas, the timer will count up to 60 and trigger some "not in gas" commands. 
-
 
     if ia(m) and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
         s.ishigh = true
@@ -966,13 +941,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         m.pos.z = -11771
         m.faceAngle.y = 0
     end
-
-----------------------------------------------------------------------------------------------------------------------------------
-    --Mips is a pain to catch
-    mips = obj_get_nearest_object_with_behavior_id(o, id_bhvMips)
-    if mips ~= nil then
-        mips.oMipsForwardVelocity = 100
-    end
 ----------------------------------------------------------------------------------------------------------------------------------
     --Racing penguin is stupid fast now. Only beatable by falling to the bottom of slide. Will insult mario to death if race lost, will crash into wall and splat if race won.
     racepen = obj_get_nearest_object_with_behavior_id(o, id_bhvRacingPenguin)
@@ -1009,7 +977,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         local_play(sGoombaStomp, m.pos, 1)
         s.stomped = true
     elseif m.bounceSquishTimer == 0 then s.stomped = false end
-
 ----------------------------------------------------------------------------------------------------------------------------------
     --Enables King Bobombs RIDICULOUS cannon-arm mario launch and chuckyas..
     if m.prevAction == ACT_GRABBED and m.action == ACT_THROWN_FORWARD then
@@ -1024,14 +991,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             set_mario_action(m, ACT_RAGDOLL, 0)
         end
     end
-    
 ----------------------------------------------------------------------------------------------------------------------------------
     --When getting the 100 coin star, a bobomb nuke spawns on Mario.
-    if (m.numCoins) == 100 then 
+    if (m.numCoins) == 100 then
         m.numCoins = m.numCoins + 1
         spawn_sync_if_main(id_bhvBobomb, E_MODEL_BOBOMB_BUDDY, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
     end
-
 ----------------------------------------------------------------------------------------------------------------------------------
     --Switches snow landing to snow drowning
     if (m.action == ACT_HEAD_STUCK_IN_GROUND) or (m.action == ACT_BUTT_STUCK_IN_GROUND) or (m.action == ACT_FEET_STUCK_IN_GROUND) then
@@ -1040,10 +1005,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             set_mario_action(m, ACT_GONE, 60)
             m.health = 0xff
         end
-        --djui_chat_message_create(tostring(m.floor.type))
      end
 ----------------------------------------------------------------------------------------------------------------------------------
-
+    -- Murder Ukiki
     if m.heldObj ~= nil and (obj_has_behavior_id(m.heldObj, id_bhvUkiki) ~= 0) and np.currLevelNum == LEVEL_BOWSER_1 then
         ukikiholding = 1
         ukikiheldby = m.playerIndex
@@ -1095,75 +1059,39 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     save_file_clear_flags(SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI | SAVE_FLAG_CAP_ON_MR_BLIZZARD)
     m.cap = m.cap & ~(SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI | SAVE_FLAG_CAP_ON_MR_BLIZZARD)
 ----------------------------------------------------------------------------------------------------------------------------------
-    --(Whomps Fortress) No more wood platform
-    o = obj_get_nearest_object_with_behavior_id(o, id_bhvWfRotatingWoodenPlatform)
-    if (o) ~= nil then
-        if mario_is_within_rectangle(o.oPosX - 50, o.oPosX + 50, o.oPosZ - 50, o.oPosZ + 50) ~= 0 then
-            o.oPosY = o.oPosY - 100
-            obj_mark_for_deletion(o)
-        end
-    end
-----------------------------------------------------------------------------------------------------------------------------------
-    --BoB Objects
-
-    ----This makes the chain chomp gate disappear.
-    o = obj_get_nearest_object_with_behavior_id(o, id_bhvChainChompGate)
-    if o ~= nil then
-        if mario_is_within_rectangle(o.oPosX - 150, o.oPosX + 150, o.oPosZ - 150, o.oPosZ + 150) ~= 0 then
-            spawn_triangle_break_particles(30, 138, 1, 4)
-            play_sound(SOUND_ACTION_HIT_2, m.marioObj.header.gfx.cameraToObject)
-            obj_mark_for_deletion(o)
-        end
-    end
-
-----------------------------------------------------------------------------------------------------------------------------------
-    --(Lethal Lava Land) LLL Objects
-
-    ----The Drawbridge by the eye across from spawn.
-    o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvLllDrawbridge)
-    if o ~= nil then
-        if mario_is_within_rectangle(o.oPosX - 250, o.oPosX + 250, o.oPosZ - 250, o.oPosZ + 250) ~= 0 then
-            obj_mark_for_deletion(o)
-        end
-    end
-
-    ----This is a 2x2 (4-square) type platform that sinks, not the individual tiles.
-    o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvLllSinkingSquarePlatforms)
-    if o ~= nil then
-        o.oMoveAngleYaw = o.oMoveAngleYaw + 500
-    end
-
-----------------------------------------------------------------------------------------------------------------------------------
     -- (Cool Cool Mountain) Baby penguin gets thrown after 8 seconds of mario losing his patience.
-
-    if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
-        s.penguinholding = 1
-    end
-    if (s.penguinholding) == 1 then
+    if np.currLevelNum == LEVEL_CCM then
         if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
-            s.penguintimer = s.penguintimer + 1
+            s.penguinholding = 1
         end
-    end
-    if (s.penguintimer) == 230 then
-        
-        if m.character.type == CT_MARIO then
-            network_play(sAngryMario, m.pos, 1, m.playerIndex)
-        elseif m.character.type == CT_LUIGI then
-            network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
-        elseif m.character.type == CT_TOAD then
-            network_play(sAngryToad, m.pos, 1, m.playerIndex)
-        elseif m.character.type == CT_WARIO then
-            network_play(sAngryWario, m.pos, 1, m.playerIndex)
-        elseif m.character.type == CT_WALUIGI then
-            network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
+        if (s.penguinholding) == 1 then
+            if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
+                s.penguintimer = s.penguintimer + 1
+            end
         end
-    end
-    if (s.penguintimer) == 280 then
-        m.heldObj.oAction = 6
-        mario_drop_held_object(m)
-        set_mario_action(m, ACT_JUMP_KICK, 0)
-        m.particleFlags = PARTICLE_MIST_CIRCLE|PARTICLE_TRIANGLE
-        play_sound(SOUND_ACTION_BONK, m.marioObj.header.gfx.cameraToObject)
+        if (s.penguintimer) == 230 then
+            if m.character.type == CT_MARIO then
+                network_play(sAngryMario, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_LUIGI then
+                network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_TOAD then
+                network_play(sAngryToad, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_WARIO then
+                network_play(sAngryWario, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_WALUIGI then
+                network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
+            end
+        end
+        if (s.penguintimer) == 280 then
+            m.heldObj.oAction = 6
+            mario_drop_held_object(m)
+            set_mario_action(m, ACT_JUMP_KICK, 0)
+            m.particleFlags = PARTICLE_MIST_CIRCLE|PARTICLE_TRIANGLE
+            play_sound(SOUND_ACTION_BONK, m.marioObj.header.gfx.cameraToObject)
+            s.penguinholding = 0
+            s.penguintimer = 0
+        end
+    else
         s.penguinholding = 0
         s.penguintimer = 0
     end

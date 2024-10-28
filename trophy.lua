@@ -197,21 +197,16 @@ end
 function trophyplate_init(o)
 	o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
 	obj_set_hitbox_radius_and_height(o, 40, 100)
-end
-
-function trophyplate_loop(o)
-    local m = gMarioStates[0]
-    local trophy = trophyinfo[o.oBehParams >> 16]
-    local save_file_num = get_current_save_file_num()
-    --local trophy_state = mod_storage_load("file" .. save_file_num .. trophy.name)
-    trophy_unlocked(o.oBehParams >> 16)
-
-    --if trophy_state == "1" then
 	if trophy_unlocked(o.oBehParams >> 16) then
         obj_set_model_extended(o, E_MODEL_GOLD_PLATE)
     else
         obj_set_model_extended(o, E_MODEL_SILVER_PLATE)
     end
+end
+
+function trophyplate_loop(o)
+    local m = gMarioStates[0]
+    local trophy = trophyinfo[o.oBehParams >> 16]
 
     if obj_check_hitbox_overlap(o, m.marioObj) and (m.controller.buttonPressed & B_BUTTON) ~= 0 then
         djui_chat_message_create(tostring(trophy.message))
@@ -229,14 +224,7 @@ function prize_spawner() -- Trophy Hunt Prize Spawner
     if np.currLevelNum == LEVEL_SECRETHUB then
         local starplatform = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvSecretWarp)
         if not starplatform then
-            local allTrophiesUnlocked = true
-            for i = 1, 20 do
-                if not trophy_unlocked(i) then
-                    allTrophiesUnlocked = false
-                end
-            end
-
-            if allTrophiesUnlocked then
+            if gGlobalSyncTable.allTrophiesUnlocked then
                 spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, 723, 196, -1683, nil)
                 spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, 723, 196, -1683, nil)
             end
@@ -248,6 +236,8 @@ function gold_players(m)
 	--local m = gMarioStates[0]
 	local s = gStateExtras[0]
 	
+	if not gGlobalSyncTable.allTrophiesUnlocked then return end
+
 	for i = 0, (MAX_PLAYERS - 1) do
 		if gPlayerSyncTable[i].gold then
 			local s = gStateExtras[i]

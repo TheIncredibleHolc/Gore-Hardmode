@@ -595,6 +595,17 @@ sOnWarpToFunc = {
         elseif np.currAreaIndex == 3 and currentlyPlaying ~= frijoleslobby then
             stream_play(frijoleslobby)
         end
+
+        local allTrophiesUnlocked = true
+        for i = 1, 20 do
+            if not trophy_unlocked(i) then
+                allTrophiesUnlocked = false
+            end
+        end
+        if allTrophiesUnlocked then
+            gGlobalSyncTable.allTrophiesUnlocked = true
+        end
+
     end,
 
     [LEVEL_CCM] = function()
