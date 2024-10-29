@@ -249,17 +249,7 @@ function gold_players(m)
 		--djui_chat_message_create("player is gold")
 		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
 		m.marioObj.hookRender = 1
-		if m.character.type == CT_MARIO then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_MARIO)
-		elseif m.character.type == CT_LUIGI then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_LUIGI)
-		elseif m.character.type == CT_TOAD then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_TOAD)
-		elseif m.character.type == CT_WARIO then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WARIO)
-		elseif m.character.type == CT_WALUIGI then
-			obj_set_model_extended(m.marioObj, E_MODEL_GOLD_WALUIGI)
-		end
+		obj_set_model_extended(m.marioObj, GoreHMApi.get_char_models(m).gold)
 	end
 end
 

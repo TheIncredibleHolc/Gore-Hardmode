@@ -361,29 +361,24 @@ E_MODEL_VOMIT = smlua_model_util_get_id("vomit_geo")
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
 E_MODEL_HEADLESS_MARIO = smlua_model_util_get_id("headlessmario_geo")
-E_MODEL_BOTTOMLESS_MARIO = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_TOPLESS_MARIO = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
+
 E_MODEL_HEADLESS_LUIGI = smlua_model_util_get_id("luigidead_geo")
-E_MODEL_BOTTOMLESS_LUIGI = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_TOPLESS_LUIGI = smlua_model_util_get_id("bottomlessmario_geo")
+E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")
+
 E_MODEL_HEADLESS_TOAD = smlua_model_util_get_id("toad_headless_geo")
 E_MODEL_TOPLESS_TOAD = smlua_model_util_get_id("toad_topless_geo")
-E_MODEL_HEADLESS_WARIO = smlua_model_util_get_id("wario_headless_geo")
-E_MODEL_TOPLESS_WARIO = smlua_model_util_get_id("wario_topless_geo")
+E_MODEL_GOLD_TOAD = smlua_model_util_get_id("golden_toad_player_geo")
+
 E_MODEL_HEADLESS_WALUIGI = smlua_model_util_get_id("waluigiheadless_geo")
 E_MODEL_TOPLESS_WALUIGI = smlua_model_util_get_id("waluigitopless_geo")
-
-E_MODEL_GOLD_MARIO = smlua_model_util_get_id("golden_mario_geo")
-E_MODEL_GOLD_LUIGI = smlua_model_util_get_id("golden_luigi_geo")
-E_MODEL_GOLD_TOAD = smlua_model_util_get_id("golden_toad_player_geo")
-E_MODEL_GOLD_WARIO = smlua_model_util_get_id("golden_wario_geo")
 E_MODEL_GOLD_WALUIGI = smlua_model_util_get_id("golden_waluigi_geo")
 
-gold_models = {
-    [CT_MARIO] = E_MODEL_GOLD_MARIO,
-    [CT_LUIGI] = E_MODEL_GOLD_LUIGI,
-    [CT_TOAD] = E_MODEL_GOLD_TOAD,
-    [CT_WARIO] = E_MODEL_GOLD_WARIO,
-    [CT_WALUIGI] = E_MODEL_GOLD_WALUIGI
-}
+E_MODEL_HEADLESS_WARIO = smlua_model_util_get_id("wario_headless_geo")
+E_MODEL_TOPLESS_WARIO = smlua_model_util_get_id("wario_topless_geo")
+E_MODEL_GOLD_WARIO = smlua_model_util_get_id("golden_wario_geo")
 end
 
 --! music and course names
@@ -969,22 +964,14 @@ hook_mario_action(ACT_RAGDOLL, act_ragdoll)
 --Mario is decapitated.
 _G.ACT_DECAPITATED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 
-local headlessModel = {
-    [0] = E_MODEL_HEADLESS_MARIO,
-    E_MODEL_HEADLESS_LUIGI,
-    E_MODEL_HEADLESS_TOAD,
-    E_MODEL_HEADLESS_WALUIGI,
-    E_MODEL_HEADLESS_WARIO,
-}
-
 function act_decapitated(m)
     local s = gStateExtras[m.playerIndex]
-    local player_sync = gPlayerSyncTable[m.playerIndex]
+    local pt = gPlayerSyncTable[m.playerIndex]
 
     s.isgold = false
-    player_sync.gold = false
+    pt.gold = false
 
-    obj_set_model_extended(m.marioObj, headlessModel[m.character.type])
+    obj_set_model_extended(m.marioObj, GoreHMApi.get_char_models(m).headless)
 
     if m.actionTimer == 0 then
         squishblood(m.marioObj)
@@ -1000,19 +987,11 @@ hook_mario_action(ACT_DECAPITATED, act_decapitated)
 --Mario is bitten in half.
 _G.ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
 
-local toplessModel = {
-[0]=E_MODEL_BOTTOMLESS_MARIO,
-    E_MODEL_BOTTOMLESS_MARIO,
-    E_MODEL_TOPLESS_TOAD,
-    E_MODEL_TOPLESS_WALUIGI,
-    E_MODEL_TOPLESS_WARIO
-}
-
 function act_bitten_in_half(m)
     local s = gStateExtras[m.playerIndex]
     s.isgold = false
     gPlayerSyncTable[m.playerIndex].gold = false
-    obj_set_model_extended(m.marioObj, toplessModel[m.character.type])
+    obj_set_model_extended(m.marioObj, GoreHMApi.get_char_models(m).topless)
     if not s.iwbtg then
         common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
     else

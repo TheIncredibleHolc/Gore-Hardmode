@@ -483,7 +483,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     --IWBTG Trophy
     if gGlobalSyncTable.gameisbeat and not trophy_unlocked(20) and s.iwbtg and m.numStars == 10 then
         unlock_trophy(20)
-        play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
+        play_sound(SOUND_MENU_COLLECT_SECRET, gGlobalSoundSource)
         djui_chat_message_create("IWBTG Trophy earned!!")
     end
  ----------------------------------------------------------------------------------------------------------------------------------

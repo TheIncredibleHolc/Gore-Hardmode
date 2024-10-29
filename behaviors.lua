@@ -1,25 +1,19 @@
 --All custom behaviors.
 
 local function obj_explode_if_within_150_units(o)
-    local m = gMarioStates[0]
-    local oPos = {
-        x = o.oPosX,
-        y = o.oPosY,
-        z = o.oPosZ
-    }
-    if mario_is_within_rectangle(o.oPosX - 150, o.oPosX + 150, o.oPosZ - 150, o.oPosZ + 150) ~= 0 then
+    local mObj = nearest_player_to_object(o)
+    local pos = o.header.gfx.cameraToObject
+    if dist_between_objects(mObj, o) < 150 then
         spawn_triangle_break_particles(30, 138, 1, 4)
         spawn_mist_particles()
         set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
-        play_sound(SOUND_GENERAL_WALL_EXPLOSION, oPos)
-        play_sound(SOUND_GENERAL_EXPLOSION6, oPos)
+        play_sound(SOUND_GENERAL_WALL_EXPLOSION, pos)
+        play_sound(SOUND_GENERAL_EXPLOSION6, pos)
         obj_mark_for_deletion(o)
     end
 end
 
-local function delete_on_spawn(o)
-    obj_mark_for_deletion(o)
-end
+local delete_on_spawn = obj_mark_for_deletion
 
 local function killer_exclamation_boxes(m) -- Makes exclamation boxes drop on top of you! (squishes)
     local box = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvExclamationBox)
@@ -336,7 +330,7 @@ local function bhv_custom_chain_chomp(o)
                     feedchomp = feedchomp + 1
                 end
             end
-        end 
+        end
         if goomba ~= nil then
             if obj_check_hitbox_overlap(o, goomba) then
                 squishblood(goomba)
@@ -349,7 +343,7 @@ local function bhv_custom_chain_chomp(o)
                     feedchomp = feedchomp + 1
                 end
             end
-        end 
+        end
         if bobomb ~= nil then
             if obj_check_hitbox_overlap(o, bobomb) then
                 squishblood(bobomb)
@@ -362,7 +356,7 @@ local function bhv_custom_chain_chomp(o)
                     feedchomp = feedchomp + 1
                 end
             end
-        end 
+        end
         if feedchomp == 5 and gGlobalSyncTable.gameisbeat and not trophy_unlocked(7) then --GRANT TROPHY #19
             play_puzzle_jingle()
             network_play(sBurp, m.pos, 1, m.playerIndex)
@@ -373,8 +367,6 @@ local function bhv_custom_chain_chomp(o)
             end)
             feedchomp = 0
         end
-
-
     else
         if o.oTimer >= 117 then
             local m = nearest_mario_state_to_object(o)
