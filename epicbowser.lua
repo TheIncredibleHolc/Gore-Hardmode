@@ -500,6 +500,7 @@ end
 
 
 function act_attacked(o)
+    local m = gMarioStates[0]
     if o.oAction == GRAND_STAR_ACT_ATTACKED then
         --Actions to do after being attacked--
         --djui_chat_message_create(tostring(o.oTimer))

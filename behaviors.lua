@@ -654,6 +654,7 @@ local function bhv_checkerboard_platform(o)
 end
 
 local function bhv_ferris_wheel_axle(o)
+    local np = gNetworkPlayers[0]
     o.oFaceAngleRoll = o.oFaceAngleRoll + 400
 end
 
@@ -676,16 +677,19 @@ local function get_pressure_point(o)
 end
 
 local function bhv_ferris_wheel(o)
-    local pressure = get_pressure_point(o)
-    o.oAngleVelRoll = (o.oAngleVelRoll + (-pressure.x*30 - o.oFaceAngleRoll)*0.1)*0.95
-    if cur_obj_is_mario_ground_pounding_platform() ~= 0 then
-        o.oAngleVelRoll = -pressure.x*300
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum ~= LEVEL_BITS then
+        local pressure = get_pressure_point(o)
+        o.oAngleVelRoll = (o.oAngleVelRoll + (-pressure.x*30 - o.oFaceAngleRoll)*0.1)*0.95
+        if cur_obj_is_mario_ground_pounding_platform() ~= 0 then
+            o.oAngleVelRoll = -pressure.x*300
+        end
+        if o.oFaceAngleRoll ~= limit_angle(o.oFaceAngleRoll) then
+            cur_obj_play_sound_1(SOUND_GENERAL_BIG_CLOCK)
+            o.oFaceAngleRoll = limit_angle(o.oFaceAngleRoll)
+        end
+        cur_obj_rotate_face_angle_using_vel()
     end
-    if o.oFaceAngleRoll ~= limit_angle(o.oFaceAngleRoll) then
-        cur_obj_play_sound_1(SOUND_GENERAL_BIG_CLOCK)
-        o.oFaceAngleRoll = limit_angle(o.oFaceAngleRoll)
-    end
-    cur_obj_rotate_face_angle_using_vel()
 end
 
 local function bhv_custom_grindel(o)
@@ -1086,13 +1090,14 @@ end
 local function bhv_custom_ActivatedBackAndForthPlatform(o)
     local m = nearest_mario_state_to_object(o)
     local np = gNetworkPlayers[0]
+    local pos = o.header.gfx.cameraToObject
 
     if np.currLevelNum == LEVEL_BITFS and m.pos.y >= o.oPosY -10 and mario_is_within_rectangle(o.oPosX - 500, o.oPosX + 500, o.oPosZ - 500, o.oPosZ + 500) ~= 0 then
         spawn_triangle_break_particles(30, 138, 1, 4)
         spawn_mist_particles()
         set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
-        play_sound(SOUND_GENERAL_WALL_EXPLOSION, m.marioObj.header.gfx.cameraToObject)
-        play_sound(SOUND_GENERAL_EXPLOSION6, m.marioObj.header.gfx.cameraToObject)
+        play_sound(SOUND_GENERAL_WALL_EXPLOSION, pos)
+        play_sound(SOUND_GENERAL_EXPLOSION6, pos)
         obj_mark_for_deletion(o)
     end
 end
