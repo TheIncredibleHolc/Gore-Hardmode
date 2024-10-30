@@ -232,6 +232,7 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
     end
     if s.splattimer == 2 then
         m.health = 0xff
+        gPlayerSyncTable[m.playerIndex].gold = false
         set_mario_action(m, ACT_THROWN_FORWARD, 0) --Throws mario forward more to "sell" the fall damage big impact.
         if s.disappear == 1 then --No fall damage, so Mario got squished. No corpse. It's funnier this way. 
             set_mario_action(m, ACT_GONE, 78)
@@ -548,8 +549,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     end
  ----------------------------------------------------------------------------------------------------------------------------------
     --If dead, gold go bye bye
-    if m.health <= 120 and s.isgold then
-        s.isgold = false
+    if m.health <= 120 then
         gPlayerSyncTable[m.playerIndex].gold = false
     end
  ----------------------------------------------------------------------------------------------------------------------------------
@@ -1356,13 +1356,11 @@ end
 function action_start(m)
     if m.action == ACT_NECKSNAP then
         local s = gStateExtras[m.playerIndex]
-        s.isgold = false
         gPlayerSyncTable[m.playerIndex].gold = false
         squishblood(m.marioObj)
 
     elseif m.action == ACT_SHOCKED then -- play shock sounds
         local s = gStateExtras[m.playerIndex]
-        s.isgold = false
         gPlayerSyncTable[m.playerIndex].gold = false
         print("playing shock for "..gNetworkPlayers[m.playerIndex].name)
         network_play(sElectricScream, m.pos, 1, m.playerIndex)

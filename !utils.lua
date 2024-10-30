@@ -416,7 +416,6 @@ for i = 0, MAX_PLAYERS-1 do
         penguintimer = 0,
         objtimer = 0,
         ishigh = false,
-        isgold = false,
         outsidegastimer = 60,
         highdeathtimer = 0,
         ssldiethirst = 0,
@@ -749,7 +748,6 @@ if ACTIONS then
 _G.ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_gone(m)
     local s = gStateExtras[m.playerIndex]
-    s.isgold = false
     gPlayerSyncTable[m.playerIndex].gold = false
     m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
     m.actionTimer = m.actionTimer + 1
@@ -794,7 +792,6 @@ function act_necksnap(m)
         local_play(sBoneBreak, m.pos, 1)
         set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
     end
-    s.isgold = false
     gPlayerSyncTable[m.playerIndex].gold = false
 end
 hook_mario_action(ACT_NECKSNAP, act_necksnap)
@@ -886,7 +883,6 @@ local particleTimings = {
 --Electricutes the F out of Mario
 function act_shocked(m)
     local s = gStateExtras[m.playerIndex]
-    s.isgold = false
     gPlayerSyncTable[m.playerIndex].gold = false
     m.actionTimer = m.actionTimer + 1
     set_mario_animation(m, MARIO_ANIM_SHOCKED)
@@ -968,7 +964,6 @@ function act_decapitated(m)
     local s = gStateExtras[m.playerIndex]
     local pt = gPlayerSyncTable[m.playerIndex]
 
-    s.isgold = false
     pt.gold = false
 
     obj_set_model_extended(m.marioObj, GoreHMApi.get_char_models(m).headless)
@@ -989,7 +984,6 @@ _G.ACT_BITTEN_IN_HALF = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVUL
 
 function act_bitten_in_half(m)
     local s = gStateExtras[m.playerIndex]
-    s.isgold = false
     gPlayerSyncTable[m.playerIndex].gold = false
     obj_set_model_extended(m.marioObj, GoreHMApi.get_char_models(m).topless)
     if not s.iwbtg then

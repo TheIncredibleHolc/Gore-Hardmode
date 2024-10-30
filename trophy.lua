@@ -233,24 +233,15 @@ function prize_spawner() -- Trophy Hunt Prize Spawner
 end
 
 function gold_players(m)
-	--local m = gMarioStates[0]
-	local s = gStateExtras[0]
-	
 	if not gGlobalSyncTable.allTrophiesUnlocked then return end
-
 	for i = 0, (MAX_PLAYERS - 1) do
 		if gPlayerSyncTable[i].gold then
-			local s = gStateExtras[i]
-			s.isgold = true
+			local m = gMarioStates[i]
+			m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
+			obj_set_model_extended(m.marioObj, GoreHMApi.get_char_models(m).gold)
 		end
 	end
 
-	if s.isgold then
-		--djui_chat_message_create("player is gold")
-		m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-		m.marioObj.hookRender = 1
-		obj_set_model_extended(m.marioObj, GoreHMApi.get_char_models(m).gold)
-	end
 end
 
 hook_event(HOOK_MARIO_UPDATE, gold_players)

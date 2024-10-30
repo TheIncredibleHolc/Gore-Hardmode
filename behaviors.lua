@@ -104,6 +104,7 @@ local function bhv_custom_kingbobomb(o)
 
     if o.oAction == 3 then --I'M A CHUCKSTER
         if o.oTimer == 0 and m.marioObj == o.usingObj then
+            local m = nearest_mario_state_to_object(o)
             --cutscene_object_with_dialog(CUTSCENE_DIALOG, o, DIALOG_116)
             cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_116)
             network_play(sChuckster, m.pos, 1, m.playerIndex)
@@ -1301,10 +1302,9 @@ end
 
 local function squishblood_loop(o)
     local m = gMarioStates[0]
-    local bloodcount = obj_count_objects_with_behavior_id(id_bhvSquishblood)
     cur_obj_update_floor()
 
-    if o.oTimer > 900 or bloodcount > 15 then --This protects blood spam and low FPS
+    if o.oTimer > 900 then --This protects blood spam and low FPS
         obj_mark_for_deletion(o)
     end
 
@@ -1343,11 +1343,6 @@ end
 local function gib_loop(o)
     local m = gMarioStates[0]
     local random = math.random(1,1500)
-    local gibs = obj_count_objects_with_behavior_id(id_bhvGib)
-
-    if gibs > 240 then
-        obj_mark_for_deletion(o)
-    end
 
     if m.marioObj.oTimer < 10 then --This protects from gib spam and low FPS
         obj_mark_for_deletion(o)
@@ -2148,7 +2143,7 @@ local function chuckya(o)
     local m = gMarioStates[0]
     if o.oTimer == 10 and o.oAction == 1 then
         network_play(sChuckster, m.pos, 1, m.playerIndex)
-        cutscene_object_with_dialog(CUTSCENE_DIALOG, nm.marioObj, DIALOG_116)
+        --cutscene_object_with_dialog(CUTSCENE_DIALOG, nm.marioObj, DIALOG_116)
     end
 end
 
