@@ -789,6 +789,9 @@ local function bhv_backroom_smiler_init(o)
     o.hitboxHeight = 100
     o.oWallHitboxRadius = 30
     o.oGravity = 1
+    obj_scale(o, 1.6)
+    obj_set_billboard(o)
+
 end
 
 local function bhv_backroom_smiler_loop(o)

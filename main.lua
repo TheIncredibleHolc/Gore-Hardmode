@@ -145,9 +145,10 @@ function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 
 function testing(m)
     local s = gStateExtras[m.playerIndex]
-    local m = gMarioStates[0]
+    --local m = gMarioStates[0]
 
     if (m.controller.buttonPressed & D_JPAD) ~= 0 then
+        spawn_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, m.pos.x + 400, m.pos.y, m.pos.z + 400, nil)
     end
     if (m.controller.buttonPressed & L_JPAD) ~= 0 then
     end
@@ -163,7 +164,7 @@ function spawn_sync_if_main(behaviorId, modelId, x, y, z, objSetupFunction, i)
     print(get_network_player_smallest_global().localIndex + i)
     --djui_chat_message_create("index:".. i)
     --djui_chat_message_create((get_network_player_smallest_global().localIndex + i) .. "")
-    if get_network_player_smallest_global().localIndex == i then print("passed!") return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction) end
+    if get_network_player_smallest_global().localIndex + i == 0 then print("passed!") return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction) end
 end
 
 ------Globals--------
