@@ -969,7 +969,7 @@ function act_decapitated(m)
     obj_set_model_extended(m.marioObj, GoreHMApi.get_char_models(m).headless)
 
     if m.actionTimer == 0 then
-        squishblood(m.marioObj)
+        squishblood_if_main(m.marioObj)
         m.actionTimer = 1
     end
 

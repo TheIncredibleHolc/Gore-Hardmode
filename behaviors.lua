@@ -472,7 +472,6 @@ local function bhv_custom_sign(o) --This is the single most evil addition to the
     --m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
     local m = nearest_player_to_object(o)
     if dist_between_objects(m, o) < 500 then
-        --evilsign =
         spawn_sync_if_main(id_bhvGoomba, E_MODEL_WOODEN_SIGNPOST, o.oPosX, o.oPosY, o.oPosZ, function (goomba)
             obj_copy_angle(goomba, o)
             goomba.oBehParams = o.oBehParams2ndByte
@@ -521,6 +520,7 @@ end
 
 local function bhv_bowser_key_custom_init(o) --Bow1 spawns Ukiki minigame, Bow2 spawns Goomba minigame
     local np = gNetworkPlayers[0]
+
     if np.currLevelNum == LEVEL_BOWSER_1 then
         spawn_sync_if_main(id_bhvUkiki, E_MODEL_UKIKI, o.oPosX, o.oPosY + 50, o.oPosZ, function (ukiki)
             ukiki.oAction = 3
@@ -540,6 +540,8 @@ local function bhv_bowser_key_custom_loop(o) --Bow1 spawns Ukiki minigame, Bow2 
     --djui_chat_message_create(tostring(o.oTimer))
     --djui_chat_message_create(tostring(o.oAction))
     local np = gNetworkPlayers[0]
+
+
 
     if np.currLevelNum == LEVEL_BOWSER_1 then
         local ukiki = obj_get_nearest_object_with_behavior_id(o, id_bhvUkiki)
@@ -625,7 +627,14 @@ local function bhv_bowser_key_custom_loop(o) --Bow1 spawns Ukiki minigame, Bow2 
 end
 
 hook_behavior(id_bhvUkiki, OBJ_LIST_GENACTOR, false, function (o)
+    local np = gNetworkPlayers[0]
     o.oPosY = o.oHomeY
+    if np.currLevelNum == LEVEL_BOWSER_1 then
+        local ukiki = obj_count_objects_with_behavior_id(id_bhvUkiki)
+        if ukiki > 1 then
+            obj_mark_for_deletion(o)
+        end
+    end
 end, nil)
 
 local function lava_init(o)
@@ -2341,6 +2350,65 @@ function pokey_spike_loop(o)
 
     cur_obj_move_xz_using_fvel_and_yaw()
 end
+
+function fire_piranha_plant(o)
+    --djui_chat_message_create(tostring(o.oTimer))
+    if o.oAction == FIRE_PIRANHA_PLANT_ACT_HIDE then return end
+    --Spit more fireballs and make them faster
+    if o.oTimer < 50 and o.oTimer % 10 == 0 then
+        spawn_sync_object(id_bhvSmallPiranhaFlame, E_MODEL_RED_FLAME_SHADOW, o.oPosX, o.oPosY, o.oPosZ,
+            ---@param flame Object
+            function(flame)
+                -- from obj_spit_fire logic
+                obj_scale(flame, 2.5 * o.oFirePiranhaPlantNeutralScale)
+                obj_copy_pos_and_angle(flame, o)
+                flame.oBehParams2ndByte = 1
+                flame.oBehParams = (1 & 0xFF) << 16
+                flame.oSmallPiranhaFlameStartSpeed = 40
+                flame.oSmallPiranhaFlameEndSpeed = 50
+                flame.oMoveAnglePitch = 0x1000
+            end)
+    elseif o.oTimer >= 40 and o.oTimer <= 80 then
+        o.oTimer = 81
+    end
+end
+
+function wiggler_head(o)
+    -- make wiggler crazier with more jumping and random turning
+    if o.oAction == WIGGLER_ACT_WALK and o.oWigglerTextStatus == WIGGLER_TEXT_STATUS_COMPLETED_DIALOG then
+        if o.oPosY == o.oFloorHeight and o.oTimer % (20 * o.oHealth) == 0 then
+            cur_obj_play_sound_2(SOUND_OBJ_WIGGLER_JUMP)
+            o.oVelY = 70
+        end
+
+        if o.oWigglerTimeUntilRandomTurn == 0 then
+            o.oWigglerTimeUntilRandomTurn = o.oHealth * 10
+        end
+    end
+end
+
+function fire_spitter(o)
+    --spit fire more quickly
+    local mo = nearest_player_to_object(o)
+    if mo == nil or dist_between_objects(o, mo) >= 800 or o.oMoveFlags & OBJ_MOVE_MASK_IN_WATER ~= 0 then return end
+    
+    if o.oAction == FIRE_SPITTER_ACT_IDLE then
+        if o.oTimer % 20 == 0 then
+            if o.oFireSpitterScaleVel == -0.03 then
+                o.oFireSpitterScaleVel = 0.05
+            end
+            o.oAction = FIRE_SPITTER_ACT_SPIT_FIRE
+        end
+
+        if o.oTimer == 150 then
+            o.oTimer = 0
+        end
+    end
+end
+
+hook_gore_behavior(id_bhvFirePiranhaPlant, false, nil, fire_piranha_plant)
+hook_gore_behavior(id_bhvWigglerHead, false, nil, wiggler_head)
+hook_gore_behavior(id_bhvFireSpitter, false, nil, fire_spitter)
 
 hook_gore_behavior(id_bhvPiranhaPlant, false, nil, piranha_plant)
 hook_gore_behavior(id_bhvPokeyBodyPart, false, nil, pokey_body_part)

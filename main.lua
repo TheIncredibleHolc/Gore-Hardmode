@@ -161,7 +161,9 @@ function spawn_sync_if_main(behaviorId, modelId, x, y, z, objSetupFunction, i)
     print("index:", i)
     print("attempt by "..get_network_player_smallest_global().name)
     print(get_network_player_smallest_global().localIndex + i)
-    if get_network_player_smallest_global().localIndex + i == 0 then print("passed!") return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction) end
+    --djui_chat_message_create("index:".. i)
+    --djui_chat_message_create((get_network_player_smallest_global().localIndex + i) .. "")
+    if get_network_player_smallest_global().localIndex == i then print("passed!") return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction) end
 end
 
 ------Globals--------
@@ -201,23 +203,38 @@ local TEX_NIGHTVISION5 = get_texture_info("nightvision5")
 -------ACT_FUNCTIONS------------
 
 function squishblood(o) -- Creates instant pool of impact-blood under an object.
+    local m = gMarioStates[0].playerIndex
+    local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
+    spawn_sync_object(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil)
+    bloodmist(o)
+    djui_chat_message_create(tostring(count))
+
+end
+
+function squishblood_if_main(o) -- Creates instant pool of impact-blood under an object.
+    local m = gMarioStates[0].playerIndex
+    local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
     spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil, 0)
     bloodmist(o)
+    djui_chat_message_create(tostring(count))
+
 end
 
 function squishblood_nogibs(o) -- Creates instant pool of impact-blood under an object.
-    spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, function (gibs) gibs.oBehParams = 1 end, 0)
+    spawn_sync_object(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, function (gibs) gibs.oBehParams = 1 end)
     bloodmist(o)
 end
 
 function gibs(o)
     local m = gMarioStates[0]
-    for i = 0, 40 do
-        if m.playerIndex ~= 0 then return end
-        local random = math.random()
-        spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
-            obj_scale(gib, random/2)
-        end)
+    if m.marioObj.oTimer > 60 then
+        for i = 0, 40 do
+            if m.playerIndex ~= 0 then return end
+            local random = math.random()
+            spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
+                obj_scale(gib, random/2)
+            end)
+        end
     end
 end
 
@@ -1758,18 +1775,19 @@ local msgToLevel = {
     ["HELL"] = LEVEL_HELL,
     ["SECRET"] = LEVEL_SECRETHUB,
     ["HUB"] = LEVEL_SECRETHUB,
+    ["BOW1"] = LEVEL_BOWSER_1,
+    ["BOW2"] = LEVEL_BOWSER_2,
+    ["BOW3"] = LEVEL_BOWSER_3
 }
 
 function warp_command(msg)
     msg = msg:upper()
     if msgToLevel[msg] then
-        if network_is_server() then
+      --if network_is_server() then
             warp_to_level(msgToLevel[msg], 1, 1)
-        else
-            djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
-        end
-    else
-        djui_chat_message_create("ERROR: Tried warping to an invalid level!")
+      --else
+          --djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
+      --end
     end
     return true
 end
@@ -1815,6 +1833,7 @@ local function default_level_func()
     set_lighting_dir(1, 0)
     set_override_skybox(-1)
     set_override_envfx(-1)
+
 end
 
 hook_event(HOOK_ON_LEVEL_INIT, function()
