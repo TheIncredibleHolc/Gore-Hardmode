@@ -94,7 +94,7 @@ end
 
 if network_is_server() then
     hook_mod_menu_checkbox("Romhack Compatibility Mode [HOST]", false, levelspawnstoggle)
-    hook_mod_menu_checkbox("Enable Hell [HOST]", true, helltoggle)
+    hook_mod_menu_checkbox("Enable Hell [HOST]", false, helltoggle)
     hook_mod_menu_checkbox("Enable murdering [HOST]", false, pvptoggle)
 end
 hook_mod_menu_checkbox("Enable vomiting", false, puketoggle)
@@ -260,6 +260,7 @@ function stream_stop_all()
     audio_stream_stop(frijoleslobby)
     audio_stream_stop(meanbean)
     audio_stream_stop(tetrisphere)
+    audio_stream_stop(iwbtg)
 
     
     currentlyPlaying = nil
@@ -434,7 +435,7 @@ end
 --GlobalSync Variables
 gGlobalSyncTable.deathcounter = 0
 gGlobalSyncTable.toaddeathcounter = 0
-gGlobalSyncTable.hellenabled = true
+gGlobalSyncTable.hellenabled = false
 
 --Variables
 puking = false

@@ -13,6 +13,7 @@ const GeoLayout secretroom_area_1_geo[] = {
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_TRANSPARENT, -1083, -5239, -178, secretroom_dl_Death_Plane_mesh_layer_5),
 		GEO_TRANSLATE_NODE_WITH_DL(LAYER_OPAQUE, -1045, 823, -3077, secretroom_dl_framedimage_mesh_layer_1),
 		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, -1484, 897, 1738, 90, 0, 180, secretroom_dl_Gorrie_mesh_layer_1),
+		GEO_TRANSLATE_ROTATE_WITH_DL(LAYER_OPAQUE, 1142, 530, 465, 90, 0, 120, secretroom_dl_HELL_mesh_layer_1),
 		GEO_TRANSLATE_NODE(LAYER_OPAQUE, 31103, 500, 0),
 		GEO_OPEN_NODE(),
 			GEO_SCALE(LAYER_OPAQUE, 5368709),

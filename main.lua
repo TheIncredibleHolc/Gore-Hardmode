@@ -145,12 +145,14 @@ function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 
 function testing(m)
     local s = gStateExtras[m.playerIndex]
+    local np = gNetworkPlayers[0]
     --local m = gMarioStates[0]
 
     if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        spawn_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, m.pos.x + 400, m.pos.y, m.pos.z + 400, nil)
+        --spawn_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, m.pos.x + 400, m.pos.y, m.pos.z + 400, nil)
     end
     if (m.controller.buttonPressed & L_JPAD) ~= 0 then
+        
     end
     if (m.controller.buttonPressed & R_JPAD) ~= 0 then
     end
@@ -205,19 +207,19 @@ local TEX_NIGHTVISION5 = get_texture_info("nightvision5")
 
 function squishblood(o) -- Creates instant pool of impact-blood under an object.
     local m = gMarioStates[0].playerIndex
-    local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
+    --local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
     spawn_sync_object(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil)
     bloodmist(o)
-    djui_chat_message_create(tostring(count))
+    --djui_chat_message_create(tostring(count))
 
 end
 
 function squishblood_if_main(o) -- Creates instant pool of impact-blood under an object.
     local m = gMarioStates[0].playerIndex
-    local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
+    --local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
     spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil, 0)
     bloodmist(o)
-    djui_chat_message_create(tostring(count))
+    --djui_chat_message_create(tostring(count))
 
 end
 
@@ -228,7 +230,7 @@ end
 
 function gibs(o)
     local m = gMarioStates[0]
-    if m.marioObj.oTimer > 60 then
+    --if m.marioObj.oTimer > 20 then
         for i = 0, 40 do
             if m.playerIndex ~= 0 then return end
             local random = math.random()
@@ -236,7 +238,7 @@ function gibs(o)
                 obj_scale(gib, random/2)
             end)
         end
-    end
+    --end
 end
 
 function bloodmist(o) -- Creates instant pool of impact-blood under mario.
@@ -308,6 +310,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     local m = gMarioStates[0] --MIGHT BREAK THINGS, I JUST ADDED THIS DUE TO SM64 EE ERRORS. BE WARNED!
     local np = gNetworkPlayers[0]
     local s = gStateExtras[m.playerIndex]
+
+    --djui_chat_message_create(tostring(np.currLevelNum))
+    --djui_chat_message_create(tostring(np.currAreaIndex))
 
     if np.currLevelNum == LEVEL_HELL or np.currLevelNum == LEVEL_SECRETHUB then
         gLevelValues.fixCollisionBugs = true
@@ -607,6 +612,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     -- BONKING DEATHS!!
     if m.action == ACT_BACKWARD_AIR_KB or m.action == ACT_FORWARD_AIR_KB and s.flyingVel > 60 then -- Enables Mario to wall-splat when air-bonking objects.
         if m.prevAction == ACT_FLYING or m.prevAction == ACT_SHOT_FROM_CANNON then
+            
             mario_blow_off_cap(m, 45)
             m.forwardVel = m.forwardVel - 30
             m.action = ACT_SOFT_BONK --Needed to stop the first 'if' from running twice.
@@ -615,15 +621,19 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
             m.particleFlags = PARTICLE_MIST_CIRCLE
             local_play(sSplatter, m.pos, 1)
-            spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
-                local z, normal = vec3f(), m.wall.normal
-                local x, xnormal = vec3f(), m.wall.normal
-                o.oFaceAnglePitch = 16384-calculate_pitch(x, xnormal)
-                o.oFaceAngleYaw = calculate_yaw(z, normal)
-                o.oFaceAngleRoll = obj_resolve_collisions_and_turn(o.oFaceAngleYaw, 0)
-                o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
-                o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
-            end)
+            if m.wall then
+                spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
+                    local z, normal = vec3f(), m.wall.normal
+                    local x, xnormal = vec3f(), m.wall.normal
+                    o.oFaceAnglePitch = 16384-calculate_pitch(x, xnormal)
+                    o.oFaceAngleYaw = calculate_yaw(z, normal)
+                    o.oFaceAngleRoll = obj_resolve_collisions_and_turn(o.oFaceAngleYaw, 0)
+                    o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
+                    o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
+                end)
+            else
+                bloodmist(m.marioObj)
+            end
             for i = 0, 50 do
                 if not ia(m) then break end
                 local random = math.random()
@@ -636,7 +646,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
     -- BONK DEATH DETECTION FOR HEAVEHO THROWS SPECIFICALLY (Really just for WDW)
     if (m.action == ACT_THROWN_BACKWARD) or (m.action == ACT_THROWN_FORWARD) and (s.flyingVel > 60) and np.currLevelNum == LEVEL_WDW then
-        local heaveho = obj_get_nearest_object_with_behavior_id(o, id_bhvHeaveHoThrowMario)
+        local heaveho = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHeaveHoThrowMario)
         if heaveho ~= nil and mario_is_within_rectangle(heaveho.oPosX - 100, heaveho.oPosX + 100, heaveho.oPosZ - 100, heaveho.oPosZ + 100) == 0 and m.wall ~= nil then
             mario_blow_off_cap(m, 45)
             m.forwardVel = m.forwardVel - 30
@@ -1501,7 +1511,11 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
             m.health = 0x880
             s.iwbtg = false
             s.death = false
-            warp_to_start_level()
+            if gGlobalSyncTable.romhackcompatibility then
+                warp_to_start_level()
+            else
+                warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 0)
+            end
             m.numLives = 4
             s.iwbtg = true
         end

@@ -4570,7 +4570,7 @@ Gfx mat_waluigitopless_dusk[] = {
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsSPSetLights1(waluigitopless_dusk_lights),
+	gsSPCopyLightsPlayerPart(PANTS),
 	gsSPEndDisplayList(),
 };
 
@@ -4579,7 +4579,7 @@ Gfx mat_waluigitopless_f3dlite_material_002[] = {
 	gsDPSetCombineLERP(TEXEL0, SHADE, TEXEL0_ALPHA, SHADE, 0, 0, 0, ENVIRONMENT, TEXEL0, SHADE, TEXEL0_ALPHA, SHADE, 0, 0, 0, ENVIRONMENT),
 	gsDPSetTextureLUT(G_TT_RGBA16),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsSPSetLights1(waluigitopless_f3dlite_material_002_lights),
+	gsSPCopyLightsPlayerPart(PANTS),
 	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, waluigitopless_overall2_pal_rgba16),
 	gsDPSetTile(0, 0, 0, 256, 5, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadTLUTCmd(5, 134),
@@ -4602,7 +4602,7 @@ Gfx mat_waluigitopless_metal[] = {
 	gsDPSetCombineLERP(TEXEL0, 0, SHADE, TEXEL1, 0, 0, 0, ENVIRONMENT, TEXEL0, 0, SHADE, TEXEL1, 0, 0, 0, ENVIRONMENT),
 	gsSPSetGeometryMode(G_TEXTURE_GEN),
 	gsSPTexture(4032, 1984, 0, 0, 1),
-	gsSPSetLights1(waluigitopless_metal_lights),
+	gsSPCopyLightsPlayerPart(METAL),
 	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, waluigitopless_custom_mario_metal_base_rgba16),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadBlock(7, 0, 0, 2047, 128),
@@ -4626,7 +4626,7 @@ Gfx mat_waluigitopless_white[] = {
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsSPSetLights1(waluigitopless_white_lights),
+	gsSPCopyLightsPlayerPart(GLOVES),
 	gsSPEndDisplayList(),
 };
 
@@ -4634,7 +4634,7 @@ Gfx mat_waluigitopless_purple[] = {
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsSPSetLights1(waluigitopless_purple_lights),
+	gsSPCopyLightsPlayerPart(SHIRT),
 	gsSPEndDisplayList(),
 };
 
@@ -4642,7 +4642,7 @@ Gfx mat_waluigitopless_dark_purple[] = {
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsSPSetLights1(waluigitopless_dark_purple_lights),
+	gsSPCopyLightsPlayerPart(PANTS),
 	gsSPEndDisplayList(),
 };
 
@@ -4650,7 +4650,7 @@ Gfx mat_waluigitopless_logo[] = {
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(TEXEL0, SHADE, TEXEL0_ALPHA, SHADE, 0, 0, 0, ENVIRONMENT, TEXEL0, SHADE, TEXEL0_ALPHA, SHADE, 0, 0, 0, ENVIRONMENT),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsSPSetLights1(waluigitopless_logo_lights),
+	gsSPCopyLightsPlayerPart(EMBLEM),
 	gsDPSetTextureImage(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 1, waluigitopless_custom_waluigi_logo_rgba16),
 	gsDPSetTile(G_IM_FMT_RGBA, G_IM_SIZ_16b_LOAD_BLOCK, 0, 0, 7, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0, G_TX_WRAP | G_TX_NOMIRROR, 0, 0),
 	gsDPLoadBlock(7, 0, 0, 1023, 256),
@@ -4701,7 +4701,7 @@ Gfx mat_waluigitopless_orange[] = {
 	gsDPPipeSync(),
 	gsDPSetCombineLERP(0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT, 0, 0, 0, SHADE, 0, 0, 0, ENVIRONMENT),
 	gsSPTexture(65535, 65535, 0, 0, 1),
-	gsSPSetLights1(waluigitopless_orange_lights),
+	gsSPCopyLightsPlayerPart(SHOES),
 	gsSPEndDisplayList(),
 };
 

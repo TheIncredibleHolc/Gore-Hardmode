@@ -1169,12 +1169,18 @@ local function bhv_secretwarp_loop(o)
             m.marioObj.oTimer = 0
         else
             if m.numStars >= 50 or gGlobalSyncTable.gameisbeat then
+                if not gGlobalSyncTable.gameisbeat then
+                    mod_storage_save("file"..get_current_save_file_num().."gameisbeat", "true")
+                    gGlobalSyncTable.gameisbeat = true
+                    djui_chat_message_create("Trophy Hunt is now unlocked for all players!")
+                end
+
                 set_mario_action(m, ACT_UNLOCKING_STAR_DOOR, 0)
                 m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
                 m.pos.y = m.pos.y + 120
                 o.oTimer = 0
             else
-                djui_chat_message_create("You need at least 50 stars to enter. (Or beat the game)")
+                djui_chat_message_create("You need at least 50 stars to enter!")
                 local_play(sWrong, m.pos, 1)
             end
         end
@@ -1354,9 +1360,10 @@ end
 
 local function gib_loop(o)
     local m = gMarioStates[0]
+    local s = gStateExtras[0]
     local random = math.random(1,1500)
 
-    if m.marioObj.oTimer < 10 then --This protects from gib spam and low FPS
+    if m.marioObj.oTimer < 10 and not s.iwbtg then --This protects from gib spam and low FPS
         obj_mark_for_deletion(o)
     end
 
