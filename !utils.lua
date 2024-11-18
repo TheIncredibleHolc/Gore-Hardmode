@@ -358,6 +358,7 @@ E_MODEL_GOGGLES = smlua_model_util_get_id("goggles_geo")
 E_MODEL_STONEWALL = smlua_model_util_get_id("stonewall_geo")
 COL_STONEWALL = smlua_collision_util_get("stonewall_collision")
 E_MODEL_VOMIT = smlua_model_util_get_id("vomit_geo")
+E_MODEL_HELL_ENTRANCE = smlua_model_util_get_id("hellentrance_geo")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -748,6 +749,7 @@ ACTIONS = 1
 if ACTIONS then
 _G.ACT_GONE = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_gone(m)
+    local np = gNetworkPlayers[0]
     local s = gStateExtras[m.playerIndex]
     gPlayerSyncTable[m.playerIndex].gold = false
     m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
@@ -755,6 +757,14 @@ function act_gone(m)
     if m.actionTimer == m.actionArg then
         local savedY = m.pos.y
         m.pos.y = savedY
+    end
+    if m.actionTimer == 40 then
+        if np.currLevelNum == LEVEL_SECRETHUB then
+            local hellentrance = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHellEntrance)
+            if lateral_dist_between_objects(m.marioObj, hellentrance) < 180 and m.playerIndex == 0 then
+                warp_to_level(LEVEL_HELL, 1, 0)
+            end
+        end
     end
     if m.actionTimer == 45 then
         if not s.iwbtg then

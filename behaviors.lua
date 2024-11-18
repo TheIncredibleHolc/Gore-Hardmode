@@ -2416,10 +2416,40 @@ function fire_spitter(o)
     end
 end
 
+function hell_entrance_init(o)
+    o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+    o.hitboxRadius = 100
+    o.hitboxHeight = 100
+    o.oFaceAngleYaw = -5600
+    o.oMoveAngleYaw = o.oFaceAngleYaw
+    obj_scale(o, 1.3)
+end
+
+function hell_entrance_loop(o)
+    local m = gMarioStates[0]
+    if obj_check_hitbox_overlap(o, m.marioObj) then
+        if m.controller.buttonPressed & Z_TRIG ~= 0 then
+            set_mario_action(m, ACT_GONE, 0)
+            spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
+            network_play(sFlames, m.pos, 1, m.playerIndex)
+            local yaw = 0 --Creates a flame ring portal for Mario to spawn from.
+            for i = 0, 16 do
+                yaw = yaw + 4096
+                spawn_sync_object(id_bhvFireRing, E_MODEL_RED_FLAME, m.pos.x, m.pos.y + 26, m.pos.z, function (o)
+                    o.oFaceAngleYaw = yaw
+                    o.oMoveAngleYaw = o.oFaceAngleYaw
+                end)
+            end
+            play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
+            play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
+        end
+    end
+end
+
 hook_gore_behavior(id_bhvFirePiranhaPlant, false, nil, fire_piranha_plant)
 hook_gore_behavior(id_bhvWigglerHead, false, nil, wiggler_head)
 hook_gore_behavior(id_bhvFireSpitter, false, nil, fire_spitter)
-
 hook_gore_behavior(id_bhvPiranhaPlant, false, nil, piranha_plant)
 hook_gore_behavior(id_bhvPokeyBodyPart, false, nil, pokey_body_part)
 hook_gore_behavior(id_bhvWaterLevelDiamond, false, nil, waterdiamond)
@@ -2492,6 +2522,7 @@ hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_custom_init, bhv_bowse
 hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
 hook_gore_behavior(id_bhvChuckya, false, nil, chuckya)
 hook_gore_behavior(id_bhvFlame, false, flame_loop)
+id_bhvHellEntrance = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, hell_entrance_init, hell_entrance_loop, "HellEntrance")
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
 id_bhvSquishblood = hook_behavior(nil, OBJ_LIST_GENACTOR, true, squishblood_init, squishblood_loop, "bhvSquishblood")

@@ -149,7 +149,7 @@ function testing(m)
     --local m = gMarioStates[0]
 
     if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        --spawn_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, m.pos.x + 400, m.pos.y, m.pos.z + 400, nil)
+        --spawn_sync_object(id_bhvHellEntrance, E_MODEL_HELL_ENTRANCE, 895, 195, 388, nil)
     end
     if (m.controller.buttonPressed & L_JPAD) ~= 0 then
         
@@ -316,6 +316,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
     if np.currLevelNum == LEVEL_HELL or np.currLevelNum == LEVEL_SECRETHUB then
         gLevelValues.fixCollisionBugs = true
+        if np.currLevelNum == LEVEL_SECRETHUB then
+            area_get_warp_node(0).node.destLevel = LEVEL_HELL
+        end
     else
         gLevelValues.fixCollisionBugs = false
     end
@@ -1884,6 +1887,7 @@ local function level_init_spawns()
     local np = gNetworkPlayers[0]
     local gorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
     local stonewall = obj_get_first_with_behavior_id(id_bhvStonewall)
+    local hellentrance = obj_get_first_with_behavior_id(id_bhvHellEntrance)
     if np.currLevelNum == LEVEL_JRB then
         if gorrie ~= nil then
             --djui_chat_message_create('dorrie exists')
@@ -1898,6 +1902,12 @@ local function level_init_spawns()
                 wall.oMoveAngleYaw = wall.oFaceAngleYaw
                 obj_scale(wall, 1.4)
             end)
+        end
+
+    end
+    if np.currLevelNum == LEVEL_SECRETHUB then
+        if not hellentrance then
+            spawn_non_sync_object(id_bhvHellEntrance, E_MODEL_HELL_ENTRANCE, 895, 195, 388, nil)
         end
     end
 end
