@@ -316,9 +316,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
     if np.currLevelNum == LEVEL_HELL or np.currLevelNum == LEVEL_SECRETHUB then
         gLevelValues.fixCollisionBugs = true
-        if np.currLevelNum == LEVEL_SECRETHUB then
-            area_get_warp_node(0).node.destLevel = LEVEL_HELL
-        end
     else
         gLevelValues.fixCollisionBugs = false
     end
@@ -699,117 +696,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         s.splatterdeath = 0
         s.enablesplattimer = 1
     end
- ----------------------------------------------------------------------------------------------------------------------------------
-    --(Hazy Maze Cave) Mario get high when walking in gas. 
-    if np.currLevelNum == LEVEL_HMC then
-        s.outsidegastimer = s.outsidegastimer + 1 -- This is constantly counting up. As long as Mario is in gas, this number will keep getting set back to zero. If Mario isnt in gas, the timer will count up to 60 and trigger some "not in gas" commands. 
-
-        if ia(m) and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
-            s.ishigh = true
-            s.outsidegastimer = 0
-            m.health = m.health + 4
-        end
-
-        if s.ishigh then
-            set_environment_region(2, -400) --RAISES THE GAS HIGHER
-        end
-
-        if ((s.outsidegastimer == 30) or s.isdead) and s.ishigh then --If Mario is outside the gas for 1 second, the high wears off and resets all timers.
-            s.ishigh = false
-            s.highdeathtimer = 0
-            if ia(m) then
-                local butterfly = obj_get_first_with_behavior_id(id_bhvButterfly)
-                while butterfly ~= nil do
-                    obj_mark_for_deletion(butterfly)
-                    butterfly = obj_get_next_with_same_behavior_id(butterfly)
-                end
-                stream_stop_all()
-                set_background_music(0, get_current_background_music(), 0)
-            end
-        end
-        if ia(m) then
-            if highalpha ~= 0 then
-                set_override_fov(lerp(45, lerp(140, 30, .5+math.cos(m.marioObj.oTimer*.02)/2), highalpha/255))
-            else
-                set_override_fov(0)
-            end
-        end
-        if s.ishigh then --Mario is in gas, thefore the death timer starts counting and M velocity is lowered.
-            s.highdeathtimer = s.highdeathtimer + 1
-            if ia(m) then
-                if (s.highdeathtimer < 1100) then
-                    m.forwardVel = 10
-                    set_handheld_shake(HAND_CAM_SHAKE_UNUSED)
-                elseif (s.highdeathtimer > 1100) then
-                    set_handheld_shake(HAND_CAM_SHAKE_HIGH)
-                end
-            end
-        end
-        if (s.highdeathtimer) == 1 and ia(m) then --initiates the 'high' music
-            fadeout_level_music(900)
-            stream_play(highmusic)
-            spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
-        end
-
-        --* need to rewrite this later
-        if ia(m) then
-            if s.highdeathtimer == 200 or --Some butterflies start spawning around Mario.
-            s.highdeathtimer == 400 or
-            s.highdeathtimer == 600 or
-            s.highdeathtimer == 700 or
-            s.highdeathtimer == 800 or
-            s.highdeathtimer == 900 or
-            s.highdeathtimer == 1000 or
-            s.highdeathtimer == 1100 or
-            s.highdeathtimer == 1200 then
-                spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x + 5, m.pos.y - 5, m.pos.z + 5, nil)
-                spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
-            end
-            if s.highdeathtimer == 100 or --Spawns occasional coins spawn to keep Mario alive
-            s.highdeathtimer == 300 or
-            s.highdeathtimer == 500 or
-            s.highdeathtimer == 700 or
-            s.highdeathtimer == 900 or
-            s.highdeathtimer == 1100 or
-            s.highdeathtimer == 1200 then
-                local randommodel = math.random(3)
-                if randommodel == 1 then
-                    spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
-                elseif randommodel == 2 then
-                    spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER2, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
-                elseif randommodel == 3 then
-                    spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER3, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
-                end
-            end
-        end
-        if (s.highdeathtimer) == 1100 then
-            play_character_sound(m, CHAR_SOUND_COUGHING1)
-        end
-        if (s.highdeathtimer) == 1200 then
-            play_character_sound(m, CHAR_SOUND_COUGHING2)
-        end
-        if (s.highdeathtimer) == 1210 then
-            play_character_sound(m, CHAR_SOUND_COUGHING3)
-        end
-        if (s.highdeathtimer) == 1250 then
-            play_character_sound(m, CHAR_SOUND_COUGHING2)
-        end
-        if (s.highdeathtimer) == 1265 then
-            play_character_sound(m, CHAR_SOUND_COUGHING3)
-        end
-        if (s.highdeathtimer) == 1290 then --Mario dies from gas and resets all timers.
-
-        end
-        if (s.highdeathtimer) == 1340 then --Mario dies.
-            m.health = 0xff
-            set_mario_action(m, ACT_DEATH_ON_STOMACH, 0)
-            play_character_sound(m, CHAR_SOUND_DYING)
-            s.ishigh = false
-            s.outsidegastimer = 30
-            s.highdeathtimer = 0
-            s.isdead = true
-        end
-    end
   ----------------------------------------------------------------------------------------------------------------------------------
     --Mario Disintegrates when on fire
     local flame = m.marioObj.prevObj
@@ -1058,52 +944,17 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     save_file_clear_flags(SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI | SAVE_FLAG_CAP_ON_MR_BLIZZARD)
     m.cap = m.cap & ~(SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI | SAVE_FLAG_CAP_ON_MR_BLIZZARD)
 ----------------------------------------------------------------------------------------------------------------------------------
-    -- (Cool Cool Mountain) Baby penguin gets thrown after 8 seconds of mario losing his patience.
-    if np.currLevelNum == LEVEL_CCM then
-        if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
-            s.penguinholding = 1
-        end
-        if (s.penguinholding) == 1 then
-            if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
-                s.penguintimer = s.penguintimer + 1
-            end
-        end
-        if (s.penguintimer) == 230 then
-            if m.character.type == CT_MARIO then
-                network_play(sAngryMario, m.pos, 1, m.playerIndex)
-            elseif m.character.type == CT_LUIGI then
-                network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
-            elseif m.character.type == CT_TOAD then
-                network_play(sAngryToad, m.pos, 1, m.playerIndex)
-            elseif m.character.type == CT_WARIO then
-                network_play(sAngryWario, m.pos, 1, m.playerIndex)
-            elseif m.character.type == CT_WALUIGI then
-                network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
-            end
-        end
-        if (s.penguintimer) == 280 then
-            m.heldObj.oAction = 6
-            mario_drop_held_object(m)
-            set_mario_action(m, ACT_JUMP_KICK, 0)
-            m.particleFlags = PARTICLE_MIST_CIRCLE|PARTICLE_TRIANGLE
-            play_sound(SOUND_ACTION_BONK, m.marioObj.header.gfx.cameraToObject)
-            s.penguinholding = 0
-            s.penguintimer = 0
-        end
-    else
-        s.penguinholding = 0
-        s.penguintimer = 0
-    end
+
 end
 
-function sick() -- Puking
-    if puking then
+function hook_update() 
+    local m = gMarioStates[0]
+    local s = gStateExtras[0]
+    local np = gNetworkPlayers[0]
 
-        local m = gMarioStates[0]
-        local s = gStateExtras[0]
+    if puking then -- Puking
     
         --Mario Sick Counter
-    
         if s.sick < 100 and m.forwardVel > 0 and m.faceAngle.y ~= m.intendedYaw and m.action ~= ACT_PUKE and m.action ~= ACT_LONG_JUMP
         and m.action ~= ACT_JUMP and m.action ~= ACT_DOUBLE_JUMP and m.action ~= ACT_READING_NPC_DIALOG and m.action ~= ACT_WAITING_FOR_DIALOG
         and m.action ~= ACT_READING_AUTOMATIC_DIALOG and m.action ~= ACT_EXIT_LAND_SAVE_DIALOG and m.action ~= ACT_FLYING then
@@ -1137,6 +988,156 @@ function sick() -- Puking
             end
         end
     end
+----------------------------------------------------------------------------------------------------------------------------------
+    -- (Cool Cool Mountain) Baby penguin gets thrown after 8 seconds of mario losing his patience.
+    if np.currLevelNum == LEVEL_CCM then
+        if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
+            s.penguinholding = 1
+        end
+        if (s.penguinholding) == 1 then
+            if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 and ia(m) then
+                s.penguintimer = s.penguintimer + 1
+            end
+        end
+        if (s.penguintimer) == 230 then
+            if m.character.type == CT_MARIO then
+                network_play(sAngryMario, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_LUIGI then
+                network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_TOAD then
+                network_play(sAngryToad, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_WARIO then
+                network_play(sAngryWario, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_WALUIGI then
+                network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
+            end
+        end
+        if (s.penguintimer) == 280 then
+            m.heldObj.oAction = 6
+            mario_drop_held_object(m)
+            set_mario_action(m, ACT_JUMP_KICK, 0)
+            m.particleFlags = PARTICLE_MIST_CIRCLE|PARTICLE_TRIANGLE
+            play_sound(SOUND_ACTION_BONK, m.marioObj.header.gfx.cameraToObject)
+            s.penguinholding = 0
+            s.penguintimer = 0
+        end
+    else
+        s.penguinholding = 0
+        s.penguintimer = 0
+    end
+
+----------------------------------------------------------------------------------------------------------------------------------
+    --(Hazy Maze Cave) Mario get high when walking in gas. 
+    if np.currLevelNum == LEVEL_HMC then
+        s.outsidegastimer = s.outsidegastimer + 1 -- This is constantly counting up. As long as Mario is in gas, this number will keep getting set back to zero. If Mario isnt in gas, the timer will count up to 60 and trigger some "not in gas" commands. 
+
+        if ia(m) and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
+            s.ishigh = true
+            s.outsidegastimer = 0
+            m.health = m.health + 4
+        end
+
+        if s.ishigh then
+            set_environment_region(2, -400) --RAISES THE GAS HIGHER
+        end
+
+        if ((s.outsidegastimer == 30) or s.isdead) and s.ishigh then --If Mario is outside the gas for 1 second, the high wears off and resets all timers.
+            s.ishigh = false
+            s.highdeathtimer = 0
+            if ia(m) then
+                local butterfly = obj_get_first_with_behavior_id(id_bhvButterfly)
+                while butterfly ~= nil do
+                    obj_mark_for_deletion(butterfly)
+                    butterfly = obj_get_next_with_same_behavior_id(butterfly)
+                end
+                stream_stop_all()
+                set_background_music(0, get_current_background_music(), 0)
+            end
+        end
+        if ia(m) then
+            if highalpha ~= 0 then
+                set_override_fov(lerp(45, lerp(140, 30, .5+math.cos(m.marioObj.oTimer*.02)/2), highalpha/255))
+            else
+                set_override_fov(0)
+            end
+        end
+        if s.ishigh then --Mario is in gas, thefore the death timer starts counting and M velocity is lowered.
+            if ia(m) then
+                s.highdeathtimer = s.highdeathtimer + 1
+                if (s.highdeathtimer < 1100) then
+                    m.forwardVel = 10
+                    set_handheld_shake(HAND_CAM_SHAKE_UNUSED)
+                elseif (s.highdeathtimer > 1100) then
+                    set_handheld_shake(HAND_CAM_SHAKE_HIGH)
+                end
+            end
+        end
+        if (s.highdeathtimer) == 1 and ia(m) then --initiates the 'high' music
+            fadeout_level_music(900)
+            stream_play(highmusic)
+            spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
+        end
+
+        --* need to rewrite this later
+        if ia(m) then
+            if s.highdeathtimer == 200 or --Some butterflies start spawning around Mario.
+            s.highdeathtimer == 400 or
+            s.highdeathtimer == 600 or
+            s.highdeathtimer == 700 or
+            s.highdeathtimer == 800 or
+            s.highdeathtimer == 900 or
+            s.highdeathtimer == 1000 or
+            s.highdeathtimer == 1100 or
+            s.highdeathtimer == 1200 then
+                spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x + 5, m.pos.y - 5, m.pos.z + 5, nil)
+                spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
+            end
+            if s.highdeathtimer == 100 or --Spawns occasional coins spawn to keep Mario alive
+            s.highdeathtimer == 300 or
+            s.highdeathtimer == 500 or
+            s.highdeathtimer == 700 or
+            s.highdeathtimer == 900 or
+            s.highdeathtimer == 1100 or
+            s.highdeathtimer == 1200 then
+                local randommodel = math.random(3)
+                if randommodel == 1 then
+                    spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
+                elseif randommodel == 2 then
+                    spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER2, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
+                elseif randommodel == 3 then
+                    spawn_non_sync_object(id_bhvMrIBlueCoin, E_MODEL_SMILER3, m.pos.x, m.pos.y, m.pos.z, function (coin) coin.oGraphYOffset = 50 end)
+                end
+            end
+        end
+        if (s.highdeathtimer) == 1100 then
+            play_character_sound(m, CHAR_SOUND_COUGHING1)
+        end
+        if (s.highdeathtimer) == 1200 then
+            play_character_sound(m, CHAR_SOUND_COUGHING2)
+        end
+        if (s.highdeathtimer) == 1210 then
+            play_character_sound(m, CHAR_SOUND_COUGHING3)
+        end
+        if (s.highdeathtimer) == 1250 then
+            play_character_sound(m, CHAR_SOUND_COUGHING2)
+        end
+        if (s.highdeathtimer) == 1265 then
+            play_character_sound(m, CHAR_SOUND_COUGHING3)
+        end
+        if (s.highdeathtimer) == 1290 then --Mario dies from gas and resets all timers.
+
+        end
+        if (s.highdeathtimer) == 1340 then --Mario dies.
+            m.health = 0xff
+            set_mario_action(m, ACT_DEATH_ON_STOMACH, 0)
+            play_character_sound(m, CHAR_SOUND_DYING)
+            s.ishigh = false
+            s.outsidegastimer = 30
+            s.highdeathtimer = 0
+            s.isdead = true
+        end
+    end
+
 end
 ----------------------------------------------------------------------------------------------------------------------------------
 
@@ -1677,7 +1678,7 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
 end
 ---------hooks--------
 hook_event(HOOK_MARIO_UPDATE, mario_update)
-hook_event(HOOK_UPDATE, sick)
+hook_event(HOOK_UPDATE, hook_update)
 hook_event(HOOK_ON_LEVEL_INIT, modsupport)
 hook_event(HOOK_MARIO_UPDATE, testing)
 hook_event(HOOK_MARIO_UPDATE, mariohitbyenemy)
@@ -1905,7 +1906,7 @@ local function level_init_spawns()
         end
 
     end
-    if np.currLevelNum == LEVEL_SECRETHUB then
+    if np.currLevelNum == LEVEL_SECRETHUB and np.currAreaIndex == 1 then
         if not hellentrance then
             spawn_non_sync_object(id_bhvHellEntrance, E_MODEL_HELL_ENTRANCE, 895, 195, 388, nil)
         end
