@@ -947,7 +947,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
 end
 
-function hook_update() 
+function hook_update()
     local m = gMarioStates[0]
     local s = gStateExtras[0]
     local np = gNetworkPlayers[0]

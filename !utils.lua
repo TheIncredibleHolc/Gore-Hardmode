@@ -453,12 +453,14 @@ nightvisionnoise = 0
 iwbtgSongs = 1
 
 if network_is_server() and mod_storage_load("file"..get_current_save_file_num().."gameisbeat") then
-    --djui_chat_message_create("game is beat!")
+    local m = gMarioStates[0]
     if not gGlobalSyncTable.floodenabled then
-        gGlobalSyncTable.gameisbeat = true
+        if m.numStars > 50 then
+            gGlobalSyncTable.gameisbeat = true
+        end
     end
 else
-    --djui_chat_message_create("game NOT beat")
+    --djui_chat_message_create("game NOT beat, secret room remains locked.")
 end
 
 define_custom_obj_fields({
