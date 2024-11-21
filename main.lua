@@ -149,7 +149,7 @@ function testing(m)
     --local m = gMarioStates[0]
 
     if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        --spawn_sync_object(id_bhvHellEntrance, E_MODEL_HELL_ENTRANCE, 895, 195, 388, nil)
+        --m.numStars = m.numStars + 3
     end
     if (m.controller.buttonPressed & L_JPAD) ~= 0 then
         

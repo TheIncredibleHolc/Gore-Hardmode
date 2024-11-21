@@ -215,15 +215,16 @@ musicbows2 = audio_stream_load("bows2loop.ogg")         loop(musicbows2)
 timeattack = audio_stream_load("timeattack.ogg")
 edils = audio_stream_load("edils.ogg")					loop(edils)
 sad = audio_stream_load("sad.ogg")
-frijoleslobby = audio_stream_load("frijlobby.ogg")		loop(frijoleslobby)
 iwbtg = audio_stream_load("iwbtg.ogg")					loop(iwbtg)
 meanbean = audio_stream_load("iwbtg1.ogg")              loop(meanbean)
 tetrisphere = audio_stream_load("iwbtg2.ogg")           loop(tetrisphere)
+tetrisphere2 = audio_stream_load("iwbtg3.ogg")           loop(tetrisphere2)
 
 iwbtgMusic = {
     iwbtg,
     meanbean,
-    tetrisphere
+    tetrisphere,
+    tetrisphere2
 }
 
 currentlyPlaying = nil
@@ -257,9 +258,9 @@ function stream_stop_all()
     audio_stream_stop(timeattack)
     audio_stream_stop(edils)
     audio_stream_stop(sad)
-    audio_stream_stop(frijoleslobby)
     audio_stream_stop(meanbean)
     audio_stream_stop(tetrisphere)
+    audio_stream_stop(tetrisphere2)
     audio_stream_stop(iwbtg)
 
     
@@ -599,8 +600,6 @@ sOnWarpToFunc = {
             stream_play(secret)
         elseif np.currAreaIndex == 2 and currentlyPlaying ~= musicUnderground then
             stream_play(musicUnderground)
-        elseif np.currAreaIndex == 3 and currentlyPlaying ~= frijoleslobby then
-            stream_play(frijoleslobby)
         end
 
         local allTrophiesUnlocked = true
