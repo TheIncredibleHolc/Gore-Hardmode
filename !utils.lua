@@ -218,13 +218,17 @@ sad = audio_stream_load("sad.ogg")
 iwbtg = audio_stream_load("iwbtg.ogg")					loop(iwbtg)
 meanbean = audio_stream_load("iwbtg1.ogg")              loop(meanbean)
 tetrisphere = audio_stream_load("iwbtg2.ogg")           loop(tetrisphere)
-tetrisphere2 = audio_stream_load("iwbtg3.ogg")           loop(tetrisphere2)
+tetrisphere2 = audio_stream_load("iwbtg3.ogg")          loop(tetrisphere2)
+finalegg = audio_stream_load("iwbtg4.ogg")              loop(finalegg)
+millionaire = audio_stream_load("millionaire.ogg")      loop(millionaire)
 
 iwbtgMusic = {
     iwbtg,
     meanbean,
     tetrisphere,
-    tetrisphere2
+    tetrisphere2,
+    finalegg,
+    millionaire
 }
 
 currentlyPlaying = nil
@@ -262,7 +266,8 @@ function stream_stop_all()
     audio_stream_stop(tetrisphere)
     audio_stream_stop(tetrisphere2)
     audio_stream_stop(iwbtg)
-
+    audio_stream_stop(finalegg)
+    audio_stream_stop(millionaire)
     
     currentlyPlaying = nil
 end
@@ -461,7 +466,12 @@ if network_is_server() and mod_storage_load("file"..get_current_save_file_num().
         end
     end
 else
-    --djui_chat_message_create("game NOT beat, secret room remains locked.")
+    local m = gMarioStates[0]
+    if not gGlobalSyncTable.floodenabled then
+        if m.numStars > 50 then
+            gGlobalSyncTable.gameisbeat = true
+        end
+    end
 end
 
 define_custom_obj_fields({
@@ -562,9 +572,6 @@ sOnWarpToFunc = {
             goal.oPosY,
             goal.oPosZ
         }
-        --gLakituState.curFocus = netherportalvec
-        --gLakituState.yaw = 0
-        --soft_reset_camera(m.area.camera)
     end,
 
     [LEVEL_SECRETHUB] = function()
@@ -646,7 +653,6 @@ sOnLvlInitToFunc = {
         set_lighting_color(2, 100)
         set_lighting_dir(1, -128)
         stream_play(musicHell)
-        --gLakituState.mode = CAMERA_MODE_BEHIND_MARIO
         if gGlobalSyncTable.gameisbeat then
             -- GRANT TROPHY #14
             spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, -4367, 1680, 4883, function(t)

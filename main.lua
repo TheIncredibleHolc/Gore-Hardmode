@@ -149,7 +149,7 @@ function testing(m)
     --local m = gMarioStates[0]
 
     if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        --m.numStars = m.numStars + 3
+        m.numStars = m.numStars + 3
     end
     if (m.controller.buttonPressed & L_JPAD) ~= 0 then
         
@@ -349,12 +349,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         if np.currLevelNum == LEVEL_BOWSER_1 or np.currLevelNum == LEVEL_BOWSER_2 or np.currLevelNum == LEVEL_BOWSER_3 then
             --do nothing
         else
-            if not s.death and m.health ~= 0xff and m.numStars < 15 then
+            if not s.death and m.health ~= 0xff and m.numStars < 10 then
                 if currentlyPlaying ~= iwbtgMusic[1] then
                     stream_stop_all()
                     stream_play(iwbtgMusic[1])
                 end
-            elseif not s.death and m.health ~= 0xff and m.numStars >= 15 and m.numStars < 30 then
+            elseif not s.death and m.health ~= 0xff and m.numStars >= 10 and m.numStars < 25 then
                 audio_stream_stop(iwbtg)
                 if currentlyPlaying ~= iwbtgMusic[3] then
                     play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
@@ -362,12 +362,33 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                     stream_stop_all()
                     stream_play(iwbtgMusic[3])
                 end
-            elseif not s.death and m.health ~= 0xff and m.numStars >= 30 then
+            elseif not s.death and m.health ~= 0xff and m.numStars >= 25 and m.numStars < 40 then
                 if currentlyPlaying ~= iwbtgMusic[4] then
                     play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
                     play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
                     stream_stop_all()
                     stream_play(iwbtgMusic[4])
+                end
+            elseif not s.death and m.health ~= 0xff and m.numStars >= 40 and m.numStars < 55 then
+                if currentlyPlaying ~= iwbtgMusic[5] then
+                    play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
+                    play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
+                    stream_stop_all()
+                    stream_play(iwbtgMusic[5])
+                end
+            elseif not s.death and m.health ~= 0xff and m.numStars >= 55 and m.numStars < 70 then
+                if currentlyPlaying ~= iwbtgMusic[6] then
+                    play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
+                    play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
+                    stream_stop_all()
+                    stream_play(iwbtgMusic[6])
+                end
+            elseif not s.death and m.health ~= 0xff and m.numStars >= 70 then
+                if currentlyPlaying ~= iwbtgMusic[1] then
+                    play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 255, 255)
+                    play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 255, 255)
+                    stream_stop_all()
+                    stream_play(iwbtgMusic[1])
                 end
             end
         end
