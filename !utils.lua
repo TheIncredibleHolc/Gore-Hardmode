@@ -46,32 +46,22 @@ local function puketoggle()
     end
 end
 
+iwbtgmode = false
+
 local function iwbtgtoggle()
     local m = gMarioStates[0]
     local s = gStateExtras[0]
     local np = gNetworkPlayers[0]
-    if not gGlobalSyncTable.cheats then
-        if not s.iwbtg then
-            if np.currLevelNum ~= LEVEL_CASTLE_GROUNDS then
-                warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 1)
+
+    if network_is_server() then
+        if not gGlobalSyncTable.cheats then
+            if not gGlobalSyncTable.iwbtgmode then
+                gGlobalSyncTable.iwbtgmode = true
+            else
+                gGlobalSyncTable.iwbtgmode = false
             end
-            delete_save(m)
-            play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
-            play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
-            djui_chat_message_create("IWBTG MODE ENABLED!")
-            s.iwbtg = true
-            m.numLives = 1
-            m.numStars = 0
-            play_character_sound(m, CHAR_SOUND_LETS_A_GO)
         else
-            save_file_set_using_backup_slot(false)
-            djui_chat_message_create("IWBTG mode disabled... Chicken!")
-            m.health = 2176
-            s.iwbtg = false
-            s.death = true
-            m.numLives = 4
-            stream_stop_all()
-            spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, function (exp) exp.oChicken = 1 end)
+            djui_chat_message_create("Reload the game with cheats OFF to play IWBTG mode.")
         end
     else
         djui_chat_message_create("Reload the game with cheats OFF to play IWBTG mode.")
@@ -94,14 +84,45 @@ end
 
 if network_is_server() then
     hook_mod_menu_checkbox("Romhack Compatibility Mode [HOST]", false, levelspawnstoggle)
-    hook_mod_menu_checkbox("Enable Hell [HOST]", false, helltoggle)
+    hook_mod_menu_checkbox("Enable Hell on Gameover [HOST]", false, helltoggle)
     hook_mod_menu_checkbox("Enable murdering [HOST]", false, pvptoggle)
+    hook_mod_menu_checkbox("Enable Co-Op IWBTG Mode [HOST]", false, iwbtgtoggle)
 end
 hook_mod_menu_checkbox("Enable vomiting", false, puketoggle)
-hook_mod_menu_checkbox("Enable IWBTG Mode", false, iwbtgtoggle)
 if network_is_server() then
     hook_mod_menu_button("Reset All Trophies [HOST]", cleartrophies)
 end
+
+function start_or_end_iwbtg()
+    local m = gMarioStates[0]
+    local s = gStateExtras[0]
+    local np = gNetworkPlayers[0]
+
+    if not iwbtgmode and gGlobalSyncTable.iwbtgmode then
+        if np.currLevelNum ~= LEVEL_CASTLE_GROUNDS then
+            warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 1)
+        end
+        delete_save(m)
+        play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
+        play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
+        djui_chat_message_create("IWBTG MODE ENABLED!")
+        s.iwbtg = true
+        m.numLives = 1
+        m.numStars = 0
+        play_character_sound(m, CHAR_SOUND_LETS_A_GO)
+        iwbtgmode = true
+    elseif iwbtgmode and not gGlobalSyncTable.iwbtgmode then
+        save_file_set_using_backup_slot(false)
+        djui_chat_message_create("IWBTG mode disabled... Chicken!")
+        m.health = 2176
+        s.iwbtg = false
+        s.death = true
+        m.numLives = 4
+        stream_stop_all()
+        spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, function (exp) exp.oChicken = 1 end)
+    end
+end
+hook_event(HOOK_UPDATE, start_or_end_iwbtg)
 
 -------------------------------------------------------------------------------------------------------
 --Custom audio engine (Thanks coolio!!)
@@ -443,6 +464,9 @@ end
 gGlobalSyncTable.deathcounter = 0
 gGlobalSyncTable.toaddeathcounter = 0
 gGlobalSyncTable.hellenabled = false
+gGlobalSyncTable.iwbtgmode = false
+gGlobalSyncTable.iwbtgGameoverEveryone = false
+gGlobalSyncTable.gameisbeat = false
 
 --Variables
 puking = false
@@ -458,7 +482,7 @@ loadingscreen = 0
 nightvisionnoise = 0
 iwbtgSongs = 1
 
-if network_is_server() and mod_storage_load("file"..get_current_save_file_num().."gameisbeat") then
+if network_is_server() then
     local m = gMarioStates[0]
     if not gGlobalSyncTable.floodenabled then
         if m.numStars > 50 then

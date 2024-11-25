@@ -1,5 +1,5 @@
--- name: GORE / Hard-Mode! [WIP]
--- description: Gore and extreme challenges! Not for the faint of heart. Another awesome mod from the GORE Team!
+-- name: GORE / Hard-Mode!
+-- description: Gore and extreme challenges! Not for the faint of heart.\n\nIf you're feeling especially bold, enable "IWBTG Mode" in the Mod Menu for an extra challenge! \n\nIf combining with a romhack, consider using "Romhack Compatibility" in the Mod Menu. \n\n\n\n\nAnother awesome mod from the GORE Team: IncredibleHolc, Cooliokid956, Blocky.cmd, Birdekek, Saniky, Tilly, Isaac, Frijoles, ProfeJavix, and I'mYourCat.
 -- incompatible: gore
 
 -------TESTING NOTES AND KNOWN BUGS-------------
@@ -395,8 +395,11 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
 
         if m.health == 0xff and not s.death then
             stream_stop_all()
-            delete_save(m)
             local_play(sIwbtgDeath, gLakituState.pos, 1)
+            djui_popup_create_global("Total Stars: " .. tostring(m.numStars), 1)
+            djui_popup_create_global(tostring(gNetworkPlayers[m.playerIndex].name) .. " has died!", 1)
+            delete_save(m)
+            gGlobalSyncTable.iwbtgGameoverEveryone = true
             s.death = true
             m.marioObj.oTimer = 1
         end
@@ -526,10 +529,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     end
  ----------------------------------------------------------------------------------------------------------------------------------
     --IWBTG Trophy
-    if gGlobalSyncTable.gameisbeat and not trophy_unlocked(20) and s.iwbtg and m.numStars == 10 then
-        unlock_trophy(20)
-        play_sound(SOUND_MENU_COLLECT_SECRET, gGlobalSoundSource)
-        djui_chat_message_create("IWBTG Trophy earned!!")
+    if gGlobalSyncTable.gameisbeat and s.iwbtg and m.numStars == 10 then
+        if not trophy_unlocked(20) then
+            unlock_trophy(20)
+            play_sound(SOUND_MENU_COLLECT_SECRET, gGlobalSoundSource)
+            djui_chat_message_create("IWBTG Trophy earned!!")
+        end
     end
  ----------------------------------------------------------------------------------------------------------------------------------
     --PSS TROPHY
@@ -1527,23 +1532,38 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
         set_lighting_color(2, 20)
     end
 
-    if s.iwbtg and s.death then
-        djui_hud_render_texture(TEX_GAMEOVER, (screenW/2) - 256, (screenH/2) - 128, 1, 1)
-        --hud_hide()
-        hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) & ~HUD_DISPLAY_FLAG_POWER)
-        if (m.controller.buttonPressed & A_BUTTON) ~= 0 and m.marioObj.oTimer > 30 then
-            hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) | HUD_DISPLAY_FLAG_POWER)
-            m.health = 0x880
-            s.iwbtg = false
-            s.death = false
-            if gGlobalSyncTable.romhackcompatibility then
-                warp_to_start_level()
-            else
-                warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 0)
-            end
-            m.numLives = 4
-            s.iwbtg = true
+    if s.iwbtg and s.death or gGlobalSyncTable.iwbtgGameoverEveryone then
+        if not s.death then
+            s.death = true
+            set_mario_action(m, ACT_NOTHING, 0)
+            stream_stop_all()
+            local_play(sIwbtgDeath, gLakituState.pos, 1)
         end
+        delete_save(m)
+        enable_time_stop()
+        --enable_time_stop_including_mario()
+        djui_hud_render_texture(TEX_GAMEOVER, (screenW/2) - 256, (screenH/2) - 128, 1, 1)
+        hud_hide()
+        hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) & ~HUD_DISPLAY_FLAG_POWER)
+        if (m.controller.buttonPressed & A_BUTTON) ~= 0 and m.marioObj.oTimer > 60 then
+            gGlobalSyncTable.iwbtgGameoverEveryone = false
+        end
+    end
+
+    if not gGlobalSyncTable.iwbtgGameoverEveryone and s.death and s.iwbtg then
+        hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) | HUD_DISPLAY_FLAG_POWER)
+        delete_save(m)
+        m.health = 0x880
+        s.iwbtg = false
+        s.death = false
+        if gGlobalSyncTable.romhackcompatibility then
+            warp_to_start_level()
+        else
+            warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 0)
+        end
+        m.numLives = 4
+        m.numStars = 0
+        s.iwbtg = true
     end
 
     if s.timeattack then
@@ -1787,83 +1807,6 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
 
 end)
 ---------------------------------------
-
-local msgToLevel = {
-    ["BOB"] = LEVEL_BOB,
-    ["WF"] = LEVEL_WF,
-    ["JRB"] = LEVEL_JRB,
-    ["CCM"] = LEVEL_CCM,
-    ["BBH"] = LEVEL_BBH,
-    ["HMC"] = LEVEL_HMC,
-    ["LLL"] = LEVEL_LLL,
-    ["SSL"] = LEVEL_SSL,
-    ["DDD"] = LEVEL_DDD,
-    ["SL"] = LEVEL_SL,
-    ["WDW"] = LEVEL_WDW,
-    ["TTM"] = LEVEL_TTM,
-    ["THI"] = LEVEL_THI,
-    ["TTC"] = LEVEL_TTC,
-    ["RR"] = LEVEL_RR,
-    ["PSS"] = LEVEL_PSS,
-    ["TOTWC"] = LEVEL_TOTWC,
-    ["VCUTM"] = LEVEL_VCUTM,
-    ["COTMC"] = LEVEL_COTMC,
-    ["WMOTR"] = LEVEL_WMOTR,
-    ["BITDW"] = LEVEL_BITDW,
-    ["BITFS"] = LEVEL_BITFS,
-    ["BITS"] = LEVEL_BITS,
-    ["HELL"] = LEVEL_HELL,
-    ["SECRET"] = LEVEL_SECRETHUB,
-    ["HUB"] = LEVEL_SECRETHUB,
-    ["BOW1"] = LEVEL_BOWSER_1,
-    ["BOW2"] = LEVEL_BOWSER_2,
-    ["BOW3"] = LEVEL_BOWSER_3
-}
-
-function warp_command(msg)
-    msg = msg:upper()
-    if msgToLevel[msg] then
-      --if network_is_server() then
-            warp_to_level(msgToLevel[msg], 1, 1)
-      --else
-          --djui_chat_message_create("HEY! This is ONLY A PREVIEW. Warping is disabled! >:(")
-      --end
-    end
-    return true
-end
-hook_chat_command("warp", "level abreviation", warp_command)
-
---[[
-hook_chat_command("end", "credits", function ()
-    level_trigger_warp(gMarioStates[0], WARP_OP_CREDITS_START)
-    return true
-end)
-
-hook_chat_command("go", "to", function ()
-    vec3f_copy(gMarioStates[0].pos, {x=1992,y=-767,z=-1140})
-    return true
-end)
-
-hook_chat_command("unlock", "trophy", function (msg)
-    mod_storage_save("file"..get_current_save_file_num()..msg, "1")
-    for id, trophy in pairs(trophyinfo) do
-        if trophy.name == msg then
-            gGlobalSyncTable.trophystatus[id] = true
-            return true
-        end
-    end
-end)
-
-hook_chat_command("lock", "trophy", function (msg)
-    mod_storage_save("file"..get_current_save_file_num()..msg, "0")
-    for id, trophy in pairs(trophyinfo) do
-        if trophy.name == msg then
-            gGlobalSyncTable.trophystatus[id] = false
-            return true
-        end
-    end
-end)
-]]
 
 local function default_level_func()
     local np = gNetworkPlayers[0]
