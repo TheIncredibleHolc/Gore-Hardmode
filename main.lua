@@ -1540,6 +1540,11 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
             local_play(sIwbtgDeath, gLakituState.pos, 1)
         end
         delete_save(m)
+        for course = 0, COURSE_MAX -1 do
+            save_file_remove_star_flags(get_current_save_file_num() - 1, course - 1, 0xFF)
+        end
+        save_file_clear_flags(0xFFFFFFFF)
+        save_file_do_save(get_current_save_file_num() - 1, 1)
         enable_time_stop()
         --enable_time_stop_including_mario()
         djui_hud_render_texture(TEX_GAMEOVER, (screenW/2) - 256, (screenH/2) - 128, 1, 1)

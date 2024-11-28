@@ -99,10 +99,15 @@ function start_or_end_iwbtg()
     local np = gNetworkPlayers[0]
 
     if not iwbtgmode and gGlobalSyncTable.iwbtgmode then
+        save_file_set_using_backup_slot(true)
         if np.currLevelNum ~= LEVEL_CASTLE_GROUNDS then
             warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 1)
         end
         delete_save(m)
+        for course = 0, COURSE_MAX -1 do
+            save_file_remove_star_flags(get_current_save_file_num() - 1, course - 1, 0xFF)
+        end
+        save_file_clear_flags(0xFFFFFFFF)
         play_transition(WARP_TRANSITION_FADE_INTO_COLOR, 1, 255, 0, 0)
         play_transition(WARP_TRANSITION_FADE_FROM_COLOR, 15, 255, 0, 0)
         djui_chat_message_create("IWBTG MODE ENABLED!")
@@ -120,6 +125,7 @@ function start_or_end_iwbtg()
         m.numLives = 4
         stream_stop_all()
         spawn_non_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, m.pos.x, m.pos.y, m.pos.z, function (exp) exp.oChicken = 1 end)
+        iwbtgmode = false
     end
 end
 hook_event(HOOK_UPDATE, start_or_end_iwbtg)
