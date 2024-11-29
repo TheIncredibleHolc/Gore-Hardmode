@@ -1,5 +1,5 @@
 -- name: GORE / Hard-Mode!
--- description: Gore and extreme challenges! Not for the faint of heart.\n\nIf you're feeling especially bold, enable "IWBTG Mode" in the Mod Menu for an extra challenge! \n\nIf combining with a romhack, consider using "Romhack Compatibility" in the Mod Menu. \n\n\n\n\nAnother awesome mod from the GORE Team: IncredibleHolc, Cooliokid956, Blocky.cmd, Birdekek, Saniky, Tilly, Isaac, Frijoles, ProfeJavix, and I'mYourCat.
+-- description: Gore and extreme challenges! Not for the faint of heart.\n\nIf you're combining this mode with a romhack, consider using "Romhack Compatibility" in the Mod Menu.\n\nIf you're feeling especially bold, try breaking the community record for "IWBTG Mode", selectable in the Mod Menu! \n\n\n\n\nAnother awesome mod from the GORE Team: IncredibleHolc, Cooliokid956, Blocky.cmd, Birdekek, Saniky, Tilly, Isaac, Frijoles, ProfeJavix, and I'mYourCat.
 -- incompatible: gore
 
 -------TESTING NOTES AND KNOWN BUGS-------------
@@ -1540,6 +1540,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
             local_play(sIwbtgDeath, gLakituState.pos, 1)
         end
         delete_save(m)
+        gGlobalSyncTable.toaddeathcounter = 0
         for course = 0, COURSE_MAX -1 do
             save_file_remove_star_flags(get_current_save_file_num() - 1, course - 1, 0xFF)
         end
