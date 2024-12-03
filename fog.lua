@@ -85,18 +85,20 @@ local function fog_loop(o)
     else
         local lantern = obj_get_first_with_behavior_id(id_bhvBobombBuddy) or obj_get_first_with_behavior_id(id_bhvLantern)
         local distance = dist_between_objects (lantern, m.marioObj)
-        if distance > 1100 and m.heldObj ~= lantern then
+        if lantern ~= nil then
+            if distance > 1100 and m.heldObj ~= lantern then
 
-            o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
-            if o.oBehParams ~= 1 then
-                cur_obj_disable_rendering_and_become_intangible(o)
-            end
-        else
-            if m.heldObj == lantern then
                 o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
+                if o.oBehParams ~= 1 then
+                    cur_obj_disable_rendering_and_become_intangible(o)
+                end
             else
-                o.oPosX, o.oPosY, o.oPosZ = lantern.oPosX, lantern.oPosY, lantern.oPosZ
-                cur_obj_enable_rendering_and_become_tangible(o)
+                if m.heldObj == lantern then
+                    o.oPosX, o.oPosY, o.oPosZ = m.pos.x, m.pos.y, m.pos.z
+                else
+                    o.oPosX, o.oPosY, o.oPosZ = lantern.oPosX, lantern.oPosY, lantern.oPosZ
+                    cur_obj_enable_rendering_and_become_tangible(o)
+                end
             end
         end
         o.oFaceAngleYaw = m.faceAngle.y

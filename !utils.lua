@@ -550,6 +550,7 @@ sOnWarpToFunc = {
     end,
 
     [LEVEL_LLL] = function()
+        local np = gNetworkPlayers[0]
         if np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then
             -- GRANT TROPHY #15
             spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 1331, 4032, 1281, nil)
@@ -583,7 +584,6 @@ sOnWarpToFunc = {
                 spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 6710, 1050, 4512, nil)
             else
                 spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 1976, 1050, 5734, nil)
-
             end 
             local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
             o.oPosY = o.oPosY + 21
@@ -1044,11 +1044,13 @@ end
 --! helper functions
 
 function adjust_slide_velocity(m, slide_speed)
+    if m.playerIndex ~= 0 then return end
     m.slideVelX = m.slideVelX + slide_speed * sins(m.faceAngle.y)
     m.slideVelZ = m.slideVelZ + slide_speed * coss(m.faceAngle.y)
 end
 
 function adjust_turn_speed(m, turn_speed_factor)
+    if m.playerIndex ~= 0 then return end
     local turnSpeed = 0x600 * (m.forwardVel * 0.1)
     m.faceAngle.y = m.intendedYaw - approach_s32(convert_s16(m.intendedYaw - m.faceAngle.y), 0, turnSpeed, turnSpeed)
 end

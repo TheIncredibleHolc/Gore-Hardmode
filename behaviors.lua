@@ -646,7 +646,14 @@ local function lava_init(o)
 end
 
 local function lava_loop(o)
-    load_object_collision_model()
+    local m = gMarioStates[0]
+    np = gNetworkPlayers[0]
+    if np.currLevelNum ~= LEVEL_HMC then
+        load_object_collision_model()
+    end
+    if np.currLevelNum == LEVEL_HMC and m.pos.y < -2500 then
+        load_object_collision_model()
+    end
 end
 
 local function bhv_checkerboard_platform(o)
@@ -2225,7 +2232,7 @@ local function hook_gore_behavior(id, override, init, loop)
 end
 
 local function heaveho_loop(o)
-    local m = gMarioStates[0]
+    local m = nearest_mario_state_to_object(o)
     if o.oHeaveHoUnk88 >= 1 then
         set_mario_action(m, ACT_RAGDOLL, 0)
         m.pos.y = m.pos.y + 4
@@ -2304,7 +2311,7 @@ function pokey_body_part(o)
             o.oTimer = 0
             if o.oPosY + 60 >= m.pos.y and o.oPosY + 60 <= m.pos.y + 160 then
                 cur_obj_play_sound_2(SOUND_OBJ_SNUFIT_SHOOT)
-                spawn_sync_object(id_bhvPokeySpike, E_MODEL_SPINY_BALL, o.oPosX, o.oPosY + 60, o.oPosZ, nil)
+                spawn_non_sync_object(id_bhvPokeySpike, E_MODEL_SPINY_BALL, o.oPosX, o.oPosY + 60, o.oPosZ, nil)
             end
         end
     end
@@ -2366,7 +2373,7 @@ function fire_piranha_plant(o)
     if o.oAction == FIRE_PIRANHA_PLANT_ACT_HIDE then return end
     --Spit more fireballs and make them faster
     if o.oTimer < 50 and o.oTimer % 10 == 0 then
-        spawn_sync_object(id_bhvSmallPiranhaFlame, E_MODEL_RED_FLAME_SHADOW, o.oPosX, o.oPosY, o.oPosZ,
+        spawn_non_sync_object(id_bhvSmallPiranhaFlame, E_MODEL_RED_FLAME_SHADOW, o.oPosX, o.oPosY, o.oPosZ,
             ---@param flame Object
             function(flame)
                 -- from obj_spit_fire logic
@@ -2447,6 +2454,16 @@ function hell_entrance_loop(o)
     end
 end
 
+function shockwave(o)
+    local m = gMarioStates[0]
+    o.hitboxHeight = 20
+    o.oTimer = o.oTimer + 2
+    if m.pos.y < o.oPosY - 50 then
+        cur_obj_disable_rendering_and_become_intangible(o)
+    end
+end
+
+hook_gore_behavior(id_bhvBowserShockWave, false, nil, shockwave)
 hook_gore_behavior(id_bhvFirePiranhaPlant, false, nil, fire_piranha_plant)
 hook_gore_behavior(id_bhvWigglerHead, false, nil, wiggler_head)
 hook_gore_behavior(id_bhvFireSpitter, false, nil, fire_spitter)

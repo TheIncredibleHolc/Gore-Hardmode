@@ -93,11 +93,12 @@ end
 function grand_star_init(o)
     local offset = 307
 
-    gLakituState.mode = CAMERA_MODE_BOSS_FIGHT
-    obj_set_secondary_camera_focus()
-    -- gCutsceneFocus = o
-    -- gSecondCameraFocus = o
-
+    if camera_config_is_free_cam_enabled() then
+        --do nothing
+    else
+        gLakituState.mode = CAMERA_MODE_BOSS_FIGHT
+        obj_set_secondary_camera_focus()
+    end
     network_init_object(o, true, nil)
 
 
@@ -189,7 +190,7 @@ function act_shockwave(o) --The star lunges at Mario and leaves shockwaves
 
     if o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then
     --if o.oPosY <= 200 and o.oTimer >= 2.5 then
-        -- Create a shockwave when landing
+        -- Create a shockwave when 
         spawn_non_sync_object(id_bhvBowserShockWave, E_MODEL_BOWSER_WAVE, o.oPosX, 320, o.oPosZ, function (obj)
             obj.oFaceAnglePitch = 0
         end)
@@ -665,6 +666,7 @@ function spawn_explosion_ring(o, x, z, radius, numSegments)
         local spawnX = x + radius * math.cos(angle)
         local spawnZ = z + radius * math.sin(angle)
         spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, spawnX, o.oPosY, spawnZ, nil)
+
     end
 end
 

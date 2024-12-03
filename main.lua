@@ -143,23 +143,6 @@ end
 
 function limit_angle(a) return (a + 0x8000) % 0x10000 - 0x8000 end
 
-function testing(m)
-    local s = gStateExtras[m.playerIndex]
-    local np = gNetworkPlayers[0]
-    --local m = gMarioStates[0]
-
-    if (m.controller.buttonPressed & D_JPAD) ~= 0 then
-        m.numStars = m.numStars + 3
-    end
-    if (m.controller.buttonPressed & L_JPAD) ~= 0 then
-        
-    end
-    if (m.controller.buttonPressed & R_JPAD) ~= 0 then
-    end
-    if (m.controller.buttonPressed & U_JPAD) ~= 0 then
-    end
-end
-
 function spawn_sync_if_main(behaviorId, modelId, x, y, z, objSetupFunction, i)
     print("index:", i)
     print("attempt by "..get_network_player_smallest_global().name)
@@ -319,6 +302,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     else
         gLevelValues.fixCollisionBugs = false
     end
+
 
     -------------------------------------------------------------------------------
     if s.iwbtg then
@@ -580,23 +564,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         end
     end
  ----------------------------------------------------------------------------------------------------------------------------------
- -- (PSS/TTM Only) Faster sliding.
-    if not gGlobalSyncTable.romhackcompatibility then
-        local is_pss = np.currLevelNum == LEVEL_PSS
-        local is_ttm = np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2
-        local is_butt_or_dive_slide = m.action == ACT_BUTT_SLIDE or m.action == ACT_DIVE_SLIDE
-        
-        if is_pss and is_butt_or_dive_slide then
-            adjust_slide_velocity(m, 50)
-        elseif is_ttm and is_butt_or_dive_slide then
-            adjust_slide_velocity(m, 40)
-        end
-        
-        if (is_pss or is_ttm) and m.action == ACT_BUTT_SLIDE then
-            adjust_turn_speed(m)
-        end
-    end
- ----------------------------------------------------------------------------------------------------------------------------------
     --If dead, gold go bye bye
     if m.health <= 120 then
         gPlayerSyncTable[m.playerIndex].gold = false
@@ -627,12 +594,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         set_mario_anim_with_accel(m, MARIO_ANIM_FIRST_PERSON, 0) --Funny standing
         --set_mario_anim_with_accel(m, MARIO_ANIM_HOLDING_BOWSER, 0) --Funny thicc dumper
         --set_mario_anim_with_accel(m, MARIO_ANIM_TWIRL, 0) --Funny tpose
-    end
- ----------------------------------------------------------------------------------------------------------------------------------
-    -- FLY FASTER!!
-    if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON or m.action == ACT_THROWN_BACKWARD or m.action == ACT_THROWN_FORWARD then -- Makes flying gradually get FASTER!
-        m.forwardVel = m.forwardVel + 0.3
-        s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
     end
  ----------------------------------------------------------------------------------------------------------------------------------
     -- BONKING DEATHS!!
@@ -705,12 +666,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         end
 
         if s.jumpland == 1 and m.squishTimer >= 1 then -- Checks if Mario is squished from fall damage. If so, his mangled corpse will stay on screen.
-            local_play(sSplatter, m.pos, 1)
+            network_play(sSplatter, m.pos, 1, m.playerIndex)
             s.splatterdeath = 1
             s.splatter = 0
         end
         if s.jumpland == 0 and m.squishTimer >= 1 then --Checks if Mario was squished from NON-FALL damage. Objects/enemies that squish Mario will smoosh his corpse to invisible. 
-            local_play(sSplatter, m.pos, 1)
+            network_play(sSplatter, m.pos, 1, m.playerIndex)
             s.splatterdeath = 1
             s.splatter = 0
             s.disappear = 1 -- No corpse mode.  
@@ -754,6 +715,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             audio_sample_stop(gSamples[sAgonyLuigi])
             audio_sample_stop(gSamples[sAgonyWario])
             audio_sample_stop(gSamples[sAgonyWaluigi])
+            flame = nil
         end
     end
   ----------------------------------------------------------------------------------------------------------------------------------
@@ -977,6 +939,29 @@ function hook_update()
     local m = gMarioStates[0]
     local s = gStateExtras[0]
     local np = gNetworkPlayers[0]
+
+    -- FLY FASTER!!
+    if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON or m.action == ACT_THROWN_BACKWARD or m.action == ACT_THROWN_FORWARD then -- Makes flying gradually get FASTER!
+        m.forwardVel = m.forwardVel + 0.3
+        s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
+    end
+
+    -- (PSS/TTM Only) Faster sliding.
+     if not gGlobalSyncTable.romhackcompatibility then
+        local is_pss = np.currLevelNum == LEVEL_PSS
+        local is_ttm = np.currLevelNum == LEVEL_TTM and np.currAreaIndex >= 2
+        local is_butt_or_dive_slide = m.action == ACT_BUTT_SLIDE or m.action == ACT_DIVE_SLIDE
+        
+        if is_pss and is_butt_or_dive_slide then
+            adjust_slide_velocity(m, 50)
+        elseif is_ttm and is_butt_or_dive_slide then
+            adjust_slide_velocity(m, 40)
+        end
+        
+        if (is_pss or is_ttm) and m.action == ACT_BUTT_SLIDE then
+            adjust_turn_speed(m)
+        end
+    end
 
     if puking then -- Puking
     
@@ -1376,7 +1361,7 @@ function before_mario_action(m, action)
             bully.oBehParams = 20
          end)
         set_mario_action(m, ACT_GONE, 1)
-        local_play(sSplash, m.pos, 1)
+        network_play(sSplash, m.pos, 1, m.playerIndex)
         spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
         m.health = 0xff
         
@@ -1466,7 +1451,8 @@ function marioalive() -- Resumes the death counter to accept death counts.
     s.bottomless = false --Gives Mario his whole upper body back
 
     if np.currLevelNum == LEVEL_TTM and np.currAreaIndex < 2 then
-        m.pos.y = m.pos.y + 920
+        bhv_metal_cap_init()
+        --m.pos.y = m.pos.y + 920
     end
 
     if m.numLives <= 0 and not s.isinhell and not s.iwbtg and gGlobalSyncTable.hellenabled then
@@ -1727,7 +1713,6 @@ end
 hook_event(HOOK_MARIO_UPDATE, mario_update)
 hook_event(HOOK_UPDATE, hook_update)
 hook_event(HOOK_ON_LEVEL_INIT, modsupport)
-hook_event(HOOK_MARIO_UPDATE, testing)
 hook_event(HOOK_MARIO_UPDATE, mariohitbyenemy)
 hook_event(HOOK_MARIO_UPDATE, splattertimer)
 hook_event(HOOK_BEFORE_MARIO_UPDATE, function (m) -- mario high in gas with messed up controls. (NOT WORKING SUDDENLY, no idea why)
@@ -1781,7 +1766,8 @@ hook_event(HOOK_ON_PVP_ATTACK, function (attacker, victim)
     --Enables 'ground pound' PvP splattering. 
     if attacker.action == ACT_GROUND_POUND and s.splatter == 1 then
         if gGlobalSyncTable.pvp == true then
-            local_play(sSplatter, victim.pos, 1)
+            local m = gMarioStates[0]
+            network_play(sSplatter, victim.pos, 1, m.playerIndex)
             s.splatterdeath = 1
             s.splatter = 0
             s.disappear = 1 -- No corpse mode.  
