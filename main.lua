@@ -303,9 +303,16 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         gLevelValues.fixCollisionBugs = false
     end
 
+    if np.currLevelNum == LEVEL_PSS then
+        if m.forwardVel > 250 then
+            set_mario_action(m, ACT_WALKING, 0)
+            m.forwardVel = 0
+        end
+    end
 
     -------------------------------------------------------------------------------
     if s.iwbtg then
+
         if m.action == ACT_DEATH_ON_STOMACH then
             m.action = ACT_NOTHING
         end
@@ -375,6 +382,20 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                     stream_play(iwbtgMusic[1])
                 end
             end
+        end
+
+        
+        if m.action == ACT_QUICKSAND_DEATH and not s.death and not quicksand then
+            m.health = 0xff
+            m.marioObj.oTimer = 0
+            quicksand = true
+        elseif m.action == ACT_QUICKSAND_DEATH and quicksand then
+            if m.marioObj.oTimer > 25 then
+                set_mario_action(m, ACT_NOTHING, 0)
+                quicksand = false
+            end
+        else
+            quicksand = false
         end
 
         if m.health == 0xff and not s.death then

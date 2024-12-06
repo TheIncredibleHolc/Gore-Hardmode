@@ -1045,8 +1045,8 @@ end
 
 function adjust_slide_velocity(m, slide_speed)
     if m.playerIndex ~= 0 then return end
-    m.slideVelX = m.slideVelX + slide_speed * sins(m.faceAngle.y)
-    m.slideVelZ = m.slideVelZ + slide_speed * coss(m.faceAngle.y)
+    m.slideVelX = math.min(m.slideVelX + slide_speed * sins(m.faceAngle.y), 200)
+    m.slideVelZ = math.min(m.slideVelZ + slide_speed * coss(m.faceAngle.y), 200)
 end
 
 function adjust_turn_speed(m, turn_speed_factor)
