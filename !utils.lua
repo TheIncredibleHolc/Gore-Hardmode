@@ -295,7 +295,6 @@ function stream_stop_all()
     audio_stream_stop(iwbtg)
     audio_stream_stop(finalegg)
     audio_stream_stop(millionaire)
-    
     currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()

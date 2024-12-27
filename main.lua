@@ -519,7 +519,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                     end
                 end
             end
-            m.forwardVel = m.forwardVel + 0.3
+            --m.forwardVel = m.forwardVel + 0.3
         else
             s.ssldiethirst = 0
         end
