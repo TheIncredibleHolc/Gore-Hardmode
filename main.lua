@@ -8,7 +8,7 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
---gLevelValues.entryLevel = LEVEL_CASTLE
+gLevelValues.entryLevel = LEVEL_WF
 
 --For PVP murdering. Default off.
 gGlobalSyncTable.pvp = false
@@ -862,6 +862,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         if (racepen.oPrevAction == RACING_PENGUIN_ACT_SHOW_FINAL_TEXT ~= 0) and racepen.oRacingPenguinFinalTextbox == -1 then
             m.health = 0xff
         end
+        if racepen.oForwardVel >= 50 and obj_get_nearest_object_with_behavior_id(racepen, id_bhvRacerHitbox) == nil then
+            spawn_non_sync_object(id_bhvRacerHitbox, E_MODEL_NONE, racepen.oPosX, racepen.oPosY, racepen.oPosZ, nil)
+        end
     end
 ----------------------------------------------------------------------------------------------------------------------------------
     --Goomba stomping sound effect.
@@ -1263,6 +1266,13 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
     --JRB falling pillar insta-kill
     if obj_has_behavior_id(o, id_bhvFallingPillarHitbox) ~= 0 and (m.hurtCounter > 0) then
+        m.squishTimer = 50
+    end
+
+    --Others
+    if (obj_has_behavior_id(o, id_bhvRacerHitbox) ~= 0
+    --[[or obj_has_behavior_id(o, id_bhvLargeBomp) ~= 0]])
+    and (m.hurtCounter > 0) then
         m.squishTimer = 50
     end
 

@@ -409,6 +409,10 @@ local function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredicta
             cutscene_object_with_dialog(CUTSCENE_DIALOG, o, o.oBehParams)
         end
     end
+    if o.oTimer >= 16 and o.oAction == OBJ_ACT_SQUISHED then
+        squishblood(o)
+        local_play(sSplatter, m.pos, 1)
+    end
 end
 
 local function bhv_custom_thwomp(o)
@@ -447,6 +451,67 @@ local function bhv_custom_pitbowlball(o)
     if lateral_dist_between_objects(m, o) < 350 then
         o.oForwardVel = 200
     end
+end
+
+local function bhv_custom_large_bomp_loop(o)
+    if dist_between_objects(gMarioStates[0].marioObj, o) < 750 then
+        o.oAction = 0
+        o.oForwardVel = 70
+    end
+    if o.oPosX > 3830 then
+        o.oMoveAngleYaw = o.oMoveAngleYaw - 0x8000
+        o.oPosX = 3830
+    elseif o.oPosX < 3280 then
+        o.oMoveAngleYaw = o.oMoveAngleYaw - 0x8000
+        o.oPosX = 3280
+    end
+end
+
+local function large_bomp_hitbox(o)
+    local hitbox = get_temp_object_hitbox()
+    hitbox.interactType = INTERACT_DAMAGE
+    hitbox.radius = 300
+    hitbox.height = 300
+    hitbox.damageOrCoinValue = 2
+    obj_set_hitbox(o, hitbox)
+    o.oIntangibleTimer = 0
+    o.collisionData = nil
+end
+
+local function cur_obj_rotate_pitch_toward(o, target, increment) --cur_obj_rotate_yaw_toward but for pitch
+    if not o then return 0 end
+    local startYaw = o.oMoveAnglePitch
+
+    o.oMoveAnglePitch = approach_s16_symmetric(o.oMoveAnglePitch, target, increment);
+
+    o.oAngleVelPitch = o.oMoveAnglePitch - startYaw
+    if o.oAngleVelPitch == 0 then
+        return true
+    else
+        return false
+    end
+end
+
+local function custom_bullet_bill(o)
+    local pitchToMario = obj_pitch_to_object(o, gMarioStates[0].marioObj) -- A vanilla function for this but not one for gCurrentObject??
+    local touchFloor = o.oPosY < (find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 50) -- Thx I'mYourCat
+    local touchCeiling = o.oPosY > (find_ceil_height(o.oPosX, o.oPosY, o.oPosZ) - 50) -- Also thx PeachyPeach for this function
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_SET_FACE_ANGLE_TO_MOVE_ANGLE
+    if touchFloor or touchCeiling and o.oTimer > 50 then
+        o.oAction = 0
+        spawn_mist_particles()
+    elseif o.oTimer > 50 and dist_between_objects(gMarioStates[0].marioObj, o) < 1000 then
+        o.oForwardVel = 0
+        obj_compute_vel_from_move_pitch(50.0)
+        cur_obj_rotate_yaw_toward(o.oAngleToMario, 0xF00)
+        cur_obj_rotate_pitch_toward(o, pitchToMario, 0xF00)
+    end
+    if o.oAction == 0 then
+        o.oMoveAnglePitch = 0
+        obj_compute_vel_from_move_pitch(0)
+    end
+    obj_move_xyz_using_fvel_and_yaw(o)
+    --djui_chat_message_create(tostring(o.oTimer))
 end
 
 local function bhv_custom_whomp_slidingpltf(o) --WF Sliding platforms after the weird rock eye guys.
@@ -505,9 +570,18 @@ local function bhv_custom_tree(o) -- Trees fall down through the map when approa
 end
 
 local function bhv_custom_bowlball(bowlball) -- I've got big balls, oh I've got big balls. They're such BIG balls, fancy big balls! And he's got big balls, and she's got big balls!
+    local np = gNetworkPlayers[0]
     obj_scale(bowlball, 1.8)
-    bowlball.oForwardVel = bowlball.oForwardVel + 1
-    bowlball.oFriction = 1
+    if np.currLevelNum ~= LEVEL_BOB then
+        bowlball.oForwardVel = bowlball.oForwardVel + 1
+        bowlball.oFriction = 1
+    else
+        bhv_bowling_ball_loop()
+        bhv_bowling_ball_loop()
+        bhv_bowling_ball_loop() -- Nyoom
+        bhv_bowling_ball_loop()
+        bhv_bowling_ball_loop()
+    end
     if bowlball.oTimer > 180 then
         obj_mark_for_deletion(bowlball)
     end
@@ -2268,12 +2342,66 @@ local function mips(o)
     o.oMipsForwardVelocity = 100
 end
 
+-- I had to make this behavior because i can't change the interactType of a hitbox twice --Flipflop Bell
+local function RacerHitbox_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.parentObj = obj_get_nearest_object_with_behavior_id(o, id_bhvKoopa)
+    or obj_get_nearest_object_with_behavior_id(o, id_bhvRacingPenguin)
+    local hitbox = get_temp_object_hitbox()
+    hitbox.interactType = INTERACT_DAMAGE
+    hitbox.radius = 150
+    hitbox.height = 150
+    hitbox.damageOrCoinValue = 8
+    obj_set_hitbox(o, hitbox)
+    o.oIntangibleTimer = 0
+end
+
+local function RacerHitbox_loop(o)
+    if o.parentObj == nil then return end
+    o.oPosX = o.parentObj.oPosX
+    o.oPosY = o.parentObj.oPosY
+    o.oPosZ = o.parentObj.oPosZ
+    if o.parentObj.oAction == KOOPA_THE_QUICK_ACT_AFTER_RACE or o.parentObj.oAction == RACING_PENGUIN_ACT_FINISH_RACE then
+        obj_mark_for_deletion(o)
+    end
+end
+
 local function koopatheQUICC(o)
+    local m = nearest_mario_state_to_object(o)
     local np = gNetworkPlayers[0]
     if np.currLevelNum == LEVEL_BOB then
         gBehaviorValues.KoopaCatchupAgility = 60
     else
         gBehaviorValues.KoopaCatchupAgility = 8
+    end
+    if o.oForwardVel >= 50 and o.oKoopaMovementType >= KOOPA_BP_KOOPA_THE_QUICK_BASE and
+    obj_get_nearest_object_with_behavior_id(o, id_bhvRacerHitbox) == nil then
+        spawn_non_sync_object(id_bhvRacerHitbox, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, nil)
+    -- Normal Koopa
+    -- It will run away from mario without stopping if mario is near enough
+    elseif o.oKoopaMovementType == KOOPA_BP_NORMAL then
+        o.oKoopaAgility = 5
+        if dist_between_objects(gMarioStates[0].marioObj, o) < 750 then
+            o.oHomeX = o.oPosX
+            o.oHomeY = o.oPosY
+            o.oHomeZ = o.oPosZ
+            if o.oAction == KOOPA_SHELLED_ACT_STOPPED or o.oAction == KOOPA_SHELLED_ACT_WALK then
+                o.oAction = KOOPA_SHELLED_ACT_RUN_FROM_MARIO
+            elseif o.oAction == KOOPA_SHELLED_ACT_RUN_FROM_MARIO then
+                o.oForwardVel = 32
+                cur_obj_rotate_yaw_toward(o.oAngleToMario + 0x8000, 0xF00)
+            end
+        end
+    end
+    if o.oAction == OBJ_ACT_SQUISHED then
+        o.oKoopaAgility = 1 -- For some reason this affects the squish scale
+        if o.oSubAction ~= 1 then -- I did this so the gore doesn't run twice --Flipflop Bell
+            o.oSubAction = 1
+            o.oTimer = 0
+        elseif o.oSubAction == 1 and o.oTimer >= 16 then
+            squishblood(o)
+            local_play(sSplatter, m.pos, 1)
+        end
     end
 end
 
@@ -2463,6 +2591,18 @@ function shockwave(o)
     end
 end
 
+function bhv_custom_signpost(o)
+    local m = gMarioStates[0]
+    if o.oAction == 0 and o.oWoodenPostMarioPounding ~= 0 then
+        o.oWoodenPostSpeedY = (m.peakHeight - m.pos.y) / -10
+        --djui_chat_message_create(tostring((m.peakHeight - m.pos.y) / -10))
+        o.oAction = 1
+    elseif o.oAction == 1 and o.oWoodenPostMarioPounding == 0 then
+        o.oAction = 0
+    end
+end
+
+hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
 hook_gore_behavior(id_bhvBowserShockWave, false, nil, shockwave)
 hook_gore_behavior(id_bhvFirePiranhaPlant, false, nil, fire_piranha_plant)
 hook_gore_behavior(id_bhvWigglerHead, false, nil, wiggler_head)
@@ -2519,6 +2659,8 @@ hook_gore_behavior(id_bhvLllVolcanoFallingTrap, false, nil, bhv_custom_crushtrap
 hook_gore_behavior(id_bhvSmallBully, false, nil, bhv_custom_bully)
 hook_gore_behavior(id_bhvToxBox, false, nil, bhv_custom_toxbox)
 hook_gore_behavior(id_bhvWfSlidingPlatform, false, nil, bhv_custom_whomp_slidingpltf)
+hook_gore_behavior(id_bhvLargeBomp, false, large_bomp_hitbox, bhv_custom_large_bomp_loop)
+hook_gore_behavior(id_bhvBulletBill, false, nil, custom_bullet_bill)
 hook_gore_behavior(id_bhvSeesawPlatform, false, nil, bhv_custom_seesaw)
 hook_gore_behavior(id_bhvMessagePanel, false, nil, bhv_custom_sign)
 hook_gore_behavior(id_bhvTree, false, nil, bhv_custom_tree)
@@ -2563,3 +2705,4 @@ id_bhvGoggles = hook_behavior(nil, OBJ_LIST_GENACTOR, true, goggles_init, goggle
 id_bhvStonewall = hook_behavior(nil, OBJ_LIST_SURFACE, true, stonewall_init, stonewall_loop)
 id_bhvVomit = hook_behavior(nil, OBJ_LIST_GENACTOR, true, vomit_init, vomit_loop)
 id_bhvPokeySpike = hook_behavior(nil, OBJ_LIST_GENACTOR, true, pokey_spike_init, pokey_spike_loop)
+id_bhvRacerHitbox = hook_behavior(nil, OBJ_LIST_GENACTOR, true, RacerHitbox_init, RacerHitbox_loop)
