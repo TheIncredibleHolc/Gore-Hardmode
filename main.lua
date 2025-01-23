@@ -1288,7 +1288,9 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
     --Custom bullet bill boom
     if obj_has_behavior_id(o, id_bhvBulletBill) ~= 0 and (m.hurtCounter > 0) then
         spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
-        obj_mark_for_deletion(o)
+        o.oAction = 0
+        o.oMoveAnglePitch = 0
+        obj_compute_vel_from_move_pitch(0)
     end
 
     if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 and not s.headless then
@@ -1379,6 +1381,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
     if obj_has_behavior_id(o, id_bhvBigChillBully) ~= 0 and (m.action == ACT_SOFT_FORWARD_GROUND_KB or m.action == ACT_SOFT_BACKWARD_GROUND_KB) then
         m.squishTimer = 50
     end
+
 end
 
 function before_mario_action(m, action)

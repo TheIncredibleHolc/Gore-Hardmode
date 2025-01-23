@@ -1102,7 +1102,8 @@ function handle_object_interaction(m, o)
         id_bhvMrBlizzard,
         id_bhvHauntedChair,
         id_bhvWaterBomb,
-        id_bhvLargeBomp
+        id_bhvLargeBomp,
+        id_bhvWfElevatorTowerPlatform
     }
 
     if m.hurtCounter > 0 and has_any_behavior(o, behaviors) then

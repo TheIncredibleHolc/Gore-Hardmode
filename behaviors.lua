@@ -1,3 +1,9 @@
+--Math! -Baldi
+
+local function easeOutSine(x)
+    return sins((x * math.pi) / 2)
+end
+
 --All custom behaviors.
 
 local function obj_explode_if_within_150_units(o)
@@ -492,7 +498,7 @@ local function cur_obj_rotate_pitch_toward(o, target, increment) --cur_obj_rotat
     end
 end
 
-local function custom_bullet_bill(o)
+local function bhv_custom_bullet_bill(o)
     local pitchToMario = obj_pitch_to_object(o, gMarioStates[0].marioObj) -- A vanilla function for this but not one for gCurrentObject??
     local touchFloor = o.oPosY < (find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 50) -- Thx I'mYourCat
     local touchCeiling = o.oPosY > (find_ceil_height(o.oPosX, o.oPosY, o.oPosZ) - 50) -- Also thx PeachyPeach for this function
@@ -500,7 +506,7 @@ local function custom_bullet_bill(o)
     if touchFloor or touchCeiling and o.oTimer > 50 then
         o.oAction = 0
         spawn_mist_particles()
-    elseif o.oTimer > 50 and dist_between_objects(gMarioStates[0].marioObj, o) < 1000 then
+    elseif o.oTimer > 50 and dist_between_objects(gMarioStates[0].marioObj, o) < 1000 and o.oAction == 2 then
         o.oForwardVel = 0
         obj_compute_vel_from_move_pitch(50.0)
         cur_obj_rotate_yaw_toward(o.oAngleToMario, 0xF00)
@@ -512,6 +518,61 @@ local function custom_bullet_bill(o)
     end
     obj_move_xyz_using_fvel_and_yaw(o)
     --djui_chat_message_create(tostring(o.oTimer))
+end
+
+local function bhv_custom_tower_platforms(o)
+    load_object_collision_model() --had to add this for some reason
+    if o.oPosY < 3870 then return end
+    o.parentObj = obj_get_first_with_behavior_id(id_bhvWfSolidTowerPlatform)
+    or obj_get_first_with_behavior_id(id_bhvWfSlidingTowerPlatform)
+    local mObj = gMarioStates[0].marioObj
+    local pos = o.header.gfx.cameraToObject
+    if mObj.platform == o then
+        o.oSubAction = 1
+        set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
+        play_sound(SOUND_GENERAL_WALL_EXPLOSION, pos)
+        play_sound(SOUND_GENERAL_EXPLOSION6, pos)
+    end
+    if o.parentObj == nil then return end
+    if o.parentObj.oSubAction == 1 or o.oSubAction == 1 then
+        o.parentObj.oSubAction = 1
+        spawn_triangle_break_particles(30, 138, 1, 4)
+        spawn_mist_particles()
+        obj_mark_for_deletion(o)
+    end
+end
+
+local function bhv_custom_tower_elevator(o)
+    local mObj = gMarioStates[0].marioObj
+    local m = gMarioStates[0]
+    if mObj.platform == o and o.oAction < 4 then
+        o.oAction = 4
+        cur_obj_set_home_once()
+    elseif o.oAction == 4 then
+        if o.oPosY > o.oHomeY - 150 then
+            o.oPosY = o.oPosY - 5
+            cur_obj_play_sound_1(SOUND_ENV_ELEVATOR1)
+        else
+            o.oAction = 5
+            o.oTimer = 0
+        end
+    elseif o.oAction == 5 then
+        if o.oTimer >= 32 then
+            o.oAction = 0
+        elseif o.oTimer > 15 and o.oTimer <= 24 then
+            o.oPosY = (o.oHomeY - 150) + (750 * (o.oTimer-15)/8)
+            cur_obj_play_sound_1(SOUND_ENV_ELEVATOR1)
+            if mObj.platform == o and m.action ~= ACT_GONE then
+                play_sound(SOUND_OBJ_HEAVEHO_TOSSED, mObj.header.gfx.cameraToObject)
+                set_mario_action(m, ACT_RAGDOLL, 0)
+                m.health = m.health - 0x200
+                m.vel.y = 150
+            end
+        elseif o.oTimer > 24 and o.oTimer < 32 then
+            o.oPosY = (o.oHomeY + 600) - (600 * (o.oTimer-24)/8)
+            cur_obj_play_sound_1(SOUND_ENV_ELEVATOR1)
+        end
+    end
 end
 
 local function bhv_custom_whomp_slidingpltf(o) --WF Sliding platforms after the weird rock eye guys.
@@ -2333,7 +2394,7 @@ end
 
 local function coin_switch(o)
     if o.oAction == BLUE_COIN_SWITCH_ACT_RECEDING and o.oTimer == 4 then
-        local m = gMarioStates[0]
+        local m = nearest_mario_state_to_object(o)
         set_mario_action(m, ACT_BUTT_STUCK_IN_GROUND, 0)
     end
 end
@@ -2660,7 +2721,10 @@ hook_gore_behavior(id_bhvSmallBully, false, nil, bhv_custom_bully)
 hook_gore_behavior(id_bhvToxBox, false, nil, bhv_custom_toxbox)
 hook_gore_behavior(id_bhvWfSlidingPlatform, false, nil, bhv_custom_whomp_slidingpltf)
 hook_gore_behavior(id_bhvLargeBomp, false, large_bomp_hitbox, bhv_custom_large_bomp_loop)
-hook_gore_behavior(id_bhvBulletBill, false, nil, custom_bullet_bill)
+hook_gore_behavior(id_bhvBulletBill, false, nil, bhv_custom_bullet_bill)
+hook_gore_behavior(id_bhvWfSolidTowerPlatform, false, nil, bhv_custom_tower_platforms)
+hook_gore_behavior(id_bhvWfSlidingTowerPlatform, false, nil, bhv_custom_tower_platforms)
+hook_gore_behavior(id_bhvWfElevatorTowerPlatform, false, nil, bhv_custom_tower_elevator)
 hook_gore_behavior(id_bhvSeesawPlatform, false, nil, bhv_custom_seesaw)
 hook_gore_behavior(id_bhvMessagePanel, false, nil, bhv_custom_sign)
 hook_gore_behavior(id_bhvTree, false, nil, bhv_custom_tree)
