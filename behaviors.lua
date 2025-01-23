@@ -618,7 +618,7 @@ local function bhv_custom_tree(o) -- Trees fall down through the map when approa
     local np = gNetworkPlayers[0]
     if lateral_dist_between_objects(m.marioObj, o) < 150 then
         o.oPosY = o.oPosY - 500
-        if np.currLevelNum == LEVEL_WF then
+        if np.currLevelNum == LEVEL_WF and not gGlobalSyncTable.romhackcompatibility then
             local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
             if hoot and hoot.oHootAvailability ~= HOOT_AVAIL_WANTS_TO_TALK then
                 --spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY + 200, o.oPosZ, function (x) x.oBehParams = 20 end)
