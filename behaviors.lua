@@ -2663,6 +2663,41 @@ function bhv_custom_signpost(o)
     end
 end
 
+STATIC_OBJ_FLICKER_TIMER = 40
+
+local function static_obj_loop(o)
+    if gNetworkPlayers[0].currLevelNum == LEVEL_RR and not gGlobalSyncTable.romhackcompatibility then
+        if o.oAction == 0 then
+            if o.oTimer == 1 then
+                cur_obj_unhide()
+            end
+
+            if o.oTimer % 10 == 0 and o.oTimer <= STATIC_OBJ_FLICKER_TIMER then
+                play_sound(SOUND_GENERAL2_SWITCH_TICK_FAST, gGlobalSoundSource)
+            end
+
+            if o.oTimer >= STATIC_OBJ_FLICKER_TIMER then
+                o.oAction = 1
+                o.oTimer = 0
+            end
+        else
+            if o.oTimer == 1 then
+                cur_obj_hide()
+            end
+
+            if o.oTimer % 40 == 0 and o.oTimer <= STATIC_OBJ_FLICKER_TIMER * 4 then
+                play_sound(SOUND_GENERAL2_SWITCH_TICK_FAST, gGlobalSoundSource)
+            end
+
+            if o.oTimer >= STATIC_OBJ_FLICKER_TIMER * 4 then
+                o.oAction = 0
+                o.oTimer = 0
+            end
+        end
+    end
+end
+
+hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
 hook_gore_behavior(id_bhvBowserShockWave, false, nil, shockwave)
 hook_gore_behavior(id_bhvFirePiranhaPlant, false, nil, fire_piranha_plant)
