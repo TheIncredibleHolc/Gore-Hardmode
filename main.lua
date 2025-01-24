@@ -4,6 +4,16 @@
 
 -------TESTING NOTES AND KNOWN BUGS-------------
 
+function test()
+    local m = gMarioStates[0]
+    if m.controller.buttonPressed & D_JPAD ~= 0 then
+        --m.forwardVel = m.forwardVel - 30
+        --m.numStars = 51
+    end
+
+end
+
+hook_event(HOOK_UPDATE, test)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.

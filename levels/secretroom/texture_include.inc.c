@@ -53,6 +53,11 @@ u8 secretroom_dl_toadsmile_rgba16[] = {
 	#include "levels/secretroom/toadsmile.rgba16.inc.c"
 };
 
+Gfx secretroom_dl_image_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_image_rgba16[] = {
+	#include "levels/secretroom/image.rgba16.inc.c"
+};
+
 Gfx secretroom_dl_toadhatblood_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_toadhatblood_rgba16[] = {
 	#include "levels/secretroom/toadhatblood.rgba16.inc.c"
@@ -101,6 +106,16 @@ u8 secretroom_dl_imyourcatn_rgba16[] = {
 Gfx secretroom_dl_saniky2_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_saniky2_rgba16[] = {
 	#include "levels/secretroom/saniky2.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_ffb_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_ffb_rgba16[] = {
+	#include "levels/secretroom/ffb.rgba16.inc.c"
+};
+
+Gfx secretroom_dl_chills_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_chills_rgba16[] = {
+	#include "levels/secretroom/chills.rgba16.inc.c"
 };
 
 Gfx secretroom_dl_tillyn_rgba16_aligner[] = {gsSPEndDisplayList()};
