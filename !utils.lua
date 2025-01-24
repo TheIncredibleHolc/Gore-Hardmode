@@ -1141,3 +1141,5 @@ end
 function invert_float(x)
     return 1 - x
 end
+
+originalTempo = sequence_player_get_tempo(SEQ_PLAYER_LEVEL) + (48 * 48)

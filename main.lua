@@ -8,7 +8,7 @@
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
-gLevelValues.entryLevel = LEVEL_CASTLE
+gLevelValues.entryLevel = LEVEL_TTC
 
 --For PVP murdering. Default off.
 gGlobalSyncTable.pvp = false
@@ -100,8 +100,12 @@ local function speed_objs(o)
     end
 end
 
+local function ttc_collision_distance_fix(o)
+    o.oCollisionDistance = 65535
+end
+
 for bhv, func in pairs(realbhv) do
-    fastbhv[hook_behavior(bhv, get_object_list_from_behavior(get_behavior_from_id(bhv)), false, nil, speed_objs, get_behavior_name_from_id(bhv))] = func
+    fastbhv[hook_behavior(bhv, get_object_list_from_behavior(get_behavior_from_id(bhv)), false, ttc_collision_distance_fix, speed_objs, get_behavior_name_from_id(bhv))] = func
 end
 
 function is_lowest_active_player()
@@ -956,26 +960,15 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         end
     elseif np.currLevelNum == LEVEL_TTC and not gGlobalSyncTable.romhackcompatibility then
         if m.playerIndex == 0 then
-            local ttcSetting = get_ttc_speed_setting()
-            if ttcSetting == TTC_SPEED_STOPPED then
-                if m.action ~= ACT_NOTHING then
-                    enable_time_stop_including_mario()
-                    set_mario_action(m, ACT_NOTHING, 0)
-                elseif m.actionTimer >= 150 then
-                    level_trigger_warp(m, WARP_OP_DEATH)
-                end
-
-                m.marioObj.header.gfx.animInfo.animFrameAccelAssist = 0
-            elseif ttcSetting == TTC_SPEED_FAST then
-                execute_mario_action(m.marioObj)
-            elseif ttcSetting == TTC_SPEED_RANDOM then
-                if math.random() <= 0.5 then
-                    execute_mario_action(m.marioObj)
-                end
-            elseif ttcSetting == TTC_SPEED_SLOW then
-                if m.action ~= ACT_WALKING then
-                    m.forwardVel = clamp(m.forwardVel, -100, 25)
-                end
+            local notMoving = (m.action == ACT_IDLE or m.action == ACT_WATER_IDLE or m.action == ACT_CRAWLING or m.action == ACT_HOLDING_POLE or m.action == ACT_TOP_OF_POLE) or (m.vel.x == 0 and m.vel.y == 0 and m.vel.z == 0 and m.forwardVel == 0)
+            if notMoving then
+                enable_time_stop()
+                sequence_player_set_tempo(SEQ_PLAYER_LEVEL, 0)
+                set_ttc_speed_setting(TTC_SPEED_STOPPED)
+            elseif sequence_player_get_tempo(SEQ_PLAYER_LEVEL) ~= originalTempo then
+                sequence_player_set_tempo(SEQ_PLAYER_LEVEL, originalTempo)
+                disable_time_stop()
+                set_ttc_speed_setting(TTC_SPEED_FAST)
             end
         end
     end
@@ -1947,6 +1940,8 @@ hook_event(HOOK_ON_WARP, function()
     if level_func and not gGlobalSyncTable.romhackcompatibility then
         level_func()
     end
+
+    originalTempo = sequence_player_get_tempo(SEQ_PLAYER_LEVEL) + (48 * 48)
 
 end)
 
