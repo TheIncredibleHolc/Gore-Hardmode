@@ -180,7 +180,8 @@ gSamples = {
     audio_sample_load("angrywario.ogg"),
     audio_sample_load("angrywaluigi.ogg"),
     audio_sample_load("sick.ogg"),
-    audio_sample_load("toadsick.ogg")
+    audio_sample_load("toadsick.ogg"),
+    audio_sample_load("elevatorbreak2.ogg")
 }
 
 sBoneBreak = 1
@@ -228,6 +229,7 @@ sAngryWario = 42
 sAngryWaluigi = 43
 sSick = 44
 sToadSick = 45
+sElevator = 46
 
 function loop(music) audio_stream_set_looping(music, true) end
 

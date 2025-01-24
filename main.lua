@@ -7,8 +7,11 @@
 function test()
     local m = gMarioStates[0]
     if m.controller.buttonPressed & D_JPAD ~= 0 then
-        --m.forwardVel = m.forwardVel - 30
-        --m.numStars = 51
+        m.pos.x = -4061
+        m.pos.y = -3105
+        m.pos.z = -5433
+        m.numStars = 100
+        m.pos.x = m.pos.x - 200
     end
 
 end
@@ -1353,13 +1356,13 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
     end
 
     if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and not s.headless then
-        if o.oAction == GOOMBA_ACT_JUMP then
+        if o.oAction == GOOMBA_ACT_JUMP and m.action & ACT_FLAG_AIR == 0 then
             s.headless = true
             network_play(sSplatter, m.pos, 1, m.playerIndex)
             m.health = 0xff
             set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
             m.particleFlags = PARTICLE_MIST_CIRCLE
-            set_mario_action(m, ACT_DECAPITATED, 0)
+            set_mario_action(m, ACT_DECAPITATED, 0)     
         else
             m.squishTimer = 50
         end

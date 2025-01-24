@@ -980,7 +980,7 @@ local function bhv_backroom_smiler_loop(o)
         if mod_storage_load("smiler") == "1" then
             --nothing
         else
-            if gGlobalSyncTable.gameisbeat then
+            if gGlobalSyncTable.gameisbeat and np.currLevelNum ~= LEVEL_TTM then
                 spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, m.pos.x, m.pos.y, m.pos.z, function(t)
                     t.oBehParams = 8 << 16 | 1
                 end)
@@ -2696,6 +2696,65 @@ local function static_obj_loop(o)
         end
     end
 end
+
+function mrboneswildride(o) --The fun never ends!!
+    local m = gMarioStates[0]
+    if not gGlobalSyncTable.iwbtgmode then
+        if o.oAction == 5 then
+            --djui_chat_message_create(tostring(o.oTimer))
+            local oPos = {
+                x = o.oPosX,
+                y = o.oPosY,
+                z = o.oPosZ
+            }
+            if o.oTimer == 5 then
+                fadeout_music(10)
+                network_play(sElevator, oPos, 1, m.playerIndex)
+            end
+            if o.oTimer >= 420 and o.oTimer < 1700 then
+                o.oPosY = o.oPosY + 1.4
+            end
+            if o.oTimer >= 1700 and o.oTimer < 1710 then
+                o.oPosY = o.oPosY - 105
+            end
+            if o.oTimer >= 1710 and o.oTimer < 1711 then
+                o.oVelY = 1
+                spawn_mist_particles()
+                set_camera_shake_from_hit(SHAKE_POS_LARGE)
+                play_sound(SOUND_GENERAL2_SPINDEL_ROLL, oPos)
+                play_sound(SOUND_GENERAL_BIG_POUND, oPos)
+                play_sound(SOUND_GENERAL_BIG_POUND, oPos)
+            end
+            if o.oTimer >= 1711 and o.oTimer < 1785 then
+                local risespeed = o.oTimer - 1700
+                o.oVelY = math.min(risespeed * 2, 74)
+                --o.oVelY = o.oVelY * 1.1
+                cur_obj_move_using_vel()
+            end
+            if o.oTimer == 1786 then
+                set_background_music(0, get_current_background_music(), 0)
+                spawn_triangle_break_particles(30, 138, 1, 4)
+                spawn_mist_particles()
+                set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
+                play_sound(SOUND_GENERAL_WALL_EXPLOSION, oPos)
+                play_sound(SOUND_GENERAL_EXPLOSION6, oPos)
+                
+            end
+            if o.oTimer > 1787 then
+                obj_mark_for_deletion(o)
+            end
+        end
+    end
+
+    --if o.oBehParams == 3 and o.oAction ~= 5 then
+    if o.oPosY < -2400 and cur_obj_is_mario_on_platform() ~= 0 and o.oAction ~= 5 then
+        o.oAction = 5
+        o.oTimer = 0
+        --djui_chat_message_create("running!")
+    end
+end
+
+hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
