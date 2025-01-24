@@ -18,7 +18,7 @@ hook_event(HOOK_UPDATE, test)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
---gLevelValues.entryLevel = LEVEL_CASTLE
+gLevelValues.entryLevel = LEVEL_CASTLE
 
 --For PVP murdering. Default off.
 gGlobalSyncTable.pvp = false
@@ -87,21 +87,25 @@ save_file_set_star_flags(get_current_save_file_num() - 1, COURSE_JRB, 0x80)
 
 --TTC Speed Increase
 local realbhv = {
-    [id_bhvTTC2DRotator]     = bhv_ttc_2d_rotator_update,
-    [id_bhvTTCCog]           = bhv_ttc_cog_update,
-    [id_bhvTTCElevator]      = bhv_ttc_elevator_update,
-    [id_bhvTTCMovingBar]     = bhv_ttc_moving_bar_update,
-    [id_bhvTTCPendulum]      = bhv_ttc_pendulum_update,
-    [id_bhvTTCPitBlock]      = bhv_ttc_pit_block_update,
-    [id_bhvTTCRotatingSolid] = bhv_ttc_rotating_solid_update,
-    [id_bhvTTCSpinner]       = bhv_ttc_spinner_update,
-    [id_bhvTTCTreadmill]     = bhv_ttc_treadmill_update,
+    [id_bhvTTC2DRotator]       = bhv_ttc_2d_rotator_update,
+    [id_bhvTTCCog]             = bhv_ttc_cog_update,
+    [id_bhvTTCElevator]        = bhv_ttc_elevator_update,
+    [id_bhvTTCMovingBar]       = bhv_ttc_moving_bar_update,
+    [id_bhvTTCPendulum]        = bhv_ttc_pendulum_update,
+    [id_bhvTTCPitBlock]        = bhv_ttc_pit_block_update,
+    [id_bhvTTCRotatingSolid]   = bhv_ttc_rotating_solid_update,
+    [id_bhvTTCSpinner]         = bhv_ttc_spinner_update,
+    [id_bhvTTCTreadmill]       = bhv_ttc_treadmill_update,
+    [id_bhvDecorativePendulum] = bhv_decorative_pendulum_loop,
+    [id_bhvClockHourHand]      = bhv_rotating_clock_arm_loop,
+    [id_bhvClockMinuteHand]    = bhv_rotating_clock_arm_loop,
 }
 
 local fastbhv = {}
 
 local function speed_objs(o)
     if true then
+        fastbhv[get_id_from_behavior(o.behavior)]()
         fastbhv[get_id_from_behavior(o.behavior)]()
     end
 end
@@ -872,6 +876,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         if (racepen.oPrevAction == RACING_PENGUIN_ACT_SHOW_FINAL_TEXT ~= 0) and racepen.oRacingPenguinFinalTextbox == -1 then
             m.health = 0xff
         end
+        if racepen.oForwardVel >= 50 and obj_get_nearest_object_with_behavior_id(racepen, id_bhvRacerHitbox) == nil then
+            spawn_non_sync_object(id_bhvRacerHitbox, E_MODEL_NONE, racepen.oPosX, racepen.oPosY, racepen.oPosZ, nil)
+        end
     end
 ----------------------------------------------------------------------------------------------------------------------------------
     --Goomba stomping sound effect.
@@ -955,6 +962,30 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 ukikiheldby = -1
                 ukikiholding = 0
                 ukikitimer = 0
+            end
+        end
+    elseif np.currLevelNum == LEVEL_TTC and not gGlobalSyncTable.romhackcompatibility then
+        if m.playerIndex == 0 then
+            local ttcSetting = get_ttc_speed_setting()
+            if ttcSetting == TTC_SPEED_STOPPED then
+                if m.action ~= ACT_NOTHING then
+                    enable_time_stop_including_mario()
+                    set_mario_action(m, ACT_NOTHING, 0)
+                elseif m.actionTimer >= 150 then
+                    level_trigger_warp(m, WARP_OP_DEATH)
+                end
+
+                m.marioObj.header.gfx.animInfo.animFrameAccelAssist = 0
+            elseif ttcSetting == TTC_SPEED_FAST then
+                execute_mario_action(m.marioObj)
+            elseif ttcSetting == TTC_SPEED_RANDOM then
+                if math.random() <= 0.5 then
+                    execute_mario_action(m.marioObj)
+                end
+            elseif ttcSetting == TTC_SPEED_SLOW then
+                if m.action ~= ACT_WALKING then
+                    m.forwardVel = clamp(m.forwardVel, -100, 25)
+                end
             end
         end
     end
@@ -1276,6 +1307,13 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
         m.squishTimer = 50
     end
 
+    --Others
+    if (obj_has_behavior_id(o, id_bhvRacerHitbox) ~= 0
+    --[[or obj_has_behavior_id(o, id_bhvLargeBomp) ~= 0]])
+    and (m.hurtCounter > 0) then
+        m.squishTimer = 50
+    end
+
     --Snowballs
     if obj_has_behavior_id(o, id_bhvMrBlizzardSnowball) ~= 0 and (m.hurtCounter > 0) then
         m.faceAngle.y = o.oMoveAngleYaw - 32768
@@ -1288,7 +1326,9 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
     --Custom bullet bill boom
     if obj_has_behavior_id(o, id_bhvBulletBill) ~= 0 and (m.hurtCounter > 0) then
         spawn_sync_if_main(id_bhvExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
-        obj_mark_for_deletion(o)
+        o.oAction = 0
+        o.oMoveAnglePitch = 0
+        obj_compute_vel_from_move_pitch(0)
     end
 
     if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvPiranhaPlant) ~= 0 and not s.headless then
@@ -1379,6 +1419,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
     if obj_has_behavior_id(o, id_bhvBigChillBully) ~= 0 and (m.action == ACT_SOFT_FORWARD_GROUND_KB or m.action == ACT_SOFT_BACKWARD_GROUND_KB) then
         m.squishTimer = 50
     end
+
 end
 
 function before_mario_action(m, action)

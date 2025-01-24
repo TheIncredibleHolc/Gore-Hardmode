@@ -817,7 +817,7 @@ function act_nothing(m)
         m.action = ACT_GONE
     end
     --m.marioObj.header.gfx.node.flags = m.marioObj.header.gfx.node.flags & ~GRAPH_RENDER_ACTIVE
-    --m.actionTimer = m.actionTimer + 1
+    m.actionTimer = m.actionTimer + 1
 end
 hook_mario_action(ACT_NOTHING, act_nothing)
 
@@ -1101,7 +1101,9 @@ function handle_object_interaction(m, o)
         id_bhvSpindrift,
         id_bhvMrBlizzard,
         id_bhvHauntedChair,
-        id_bhvWaterBomb
+        id_bhvWaterBomb,
+        id_bhvLargeBomp,
+        id_bhvWfElevatorTowerPlatform
     }
 
     if m.hurtCounter > 0 and has_any_behavior(o, behaviors) then
