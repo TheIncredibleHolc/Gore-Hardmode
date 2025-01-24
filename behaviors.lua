@@ -833,13 +833,13 @@ local function bhv_backroom_smiler_loop(o)
         local_play(sSmiler, o.header.gfx.pos, 1)
     end
     if obj_check_hitbox_overlap(o, m.marioObj) and not s.isdead then
-
+        m.health = 0xff
         s.bottomless = true
         network_play(sSplatter, m.pos, 1, m.playerIndex)
         network_play(sCrunch, m.pos, 1, m.playerIndex)
         audio_sample_stop(gSamples[sSmiler])
         squishblood(m.marioObj)
-        m.health = 0xff
+        
         mario_blow_off_cap(m, 15)
         set_mario_action(m, ACT_BITTEN_IN_HALF, 0)
         if mod_storage_load("smiler") == "1" then
