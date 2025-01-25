@@ -2389,7 +2389,63 @@ local function skeeter_loop(o)
 end
 
 local function scuttlebug_loop(o)
-    --Nothing yet D:
+    local m = nearest_mario_state_to_object(o)
+    local mObj = m.marioObj
+    local dist = dist_between_objects(mObj, o)
+    if dist < 700 then
+        cur_obj_rotate_yaw_toward(o.oAngleToMario, 0x400)
+        if o.oVelY ~= 0 and o.oTimer > 30 then
+            cur_obj_play_sound_2(SOUND_OBJ2_SCUTTLEBUG_ALERT)
+            o.oTimer = 0
+        end
+        if m.vel.y ~= 0 and m.action ~= ACT_GONE then
+            o.oVelY = m.pos.y - o.oPosY + 10
+            if o.oVelY > 40 then
+                o.oVelY = 40
+            elseif o.oVelY < -60 then
+                o.oVelY = -60
+            end
+        end
+    --[[elseif o.oAction == nil then
+        squishblood(o)
+        local_play(sSplatter, m.pos, 1)]]
+    end
+    --djui_chat_message_create(tostring(o.oSubAction))
+end
+
+local function boo_vanish_or_appear(o) -- Translation of the boo hiding function
+    local m = nearest_mario_state_to_object(o)
+    if not m then return false end
+    local mObj = m.marioObj
+    local dist = dist_between_objects(mObj, o)
+    local doneAppearing = false
+
+    --o.oVelY = 0
+
+    if (m.action & ACT_FLAG_AIR > 0 and dist < 500) then -- Check if mario is ground pounding and near
+        o.oBooTargetOpacity = 40
+        o.oInteractType = 0x8000
+        if (o.oOpacity == 40) then
+            o.oBooTargetOpacity = 255
+        end
+
+        if (o.oOpacity > 180) then
+            doneAppearing = true
+        end
+    end
+
+    return doneAppearing
+end
+
+local function boo_loop(o)
+    if boo_vanish_or_appear(o) then
+        o.oTimer = 0
+    elseif o.oAction > 0 and o.oTimer <= 30 then
+        o.oInteractType = 0
+        o.oForwardVel = 32 -- Doesn't seem to work
+        cur_obj_rotate_yaw_toward(o.oAngleToMario, 0x300) -- Neither this
+    end
+    --djui_chat_message_create(tostring(o.oOpacity))
 end
 
 local function coin_switch(o)
@@ -2782,6 +2838,7 @@ hook_gore_behavior(id_bhvBlueCoinSwitch, false, nil, coin_switch)
 hook_gore_behavior(id_bhvScuttlebug, false, nil, scuttlebug_loop)
 hook_gore_behavior(id_bhvSkeeter, false, nil, skeeter_loop)
 hook_gore_behavior(id_bhvHeaveHo, false, nil, heaveho_loop)
+hook_gore_behavior(id_bhvGhostHuntBoo, false, nil, boo_loop)
 hook_event(HOOK_MARIO_UPDATE, killer_exclamation_boxes)
 hook_gore_behavior(id_bhvStarDoor, true, star_door_init, star_door_loop)
 hook_gore_behavior(id_bhvDorrie, false, nil, dorrie_dead)
