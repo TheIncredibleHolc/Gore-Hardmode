@@ -2701,6 +2701,12 @@ function mrboneswildride(o) --The fun never ends!!
     local m = gMarioStates[0]
     if not gGlobalSyncTable.iwbtgmode then
         if o.oAction == 5 then
+
+            if lateral_dist_between_objects(m.marioObj, o) < 400 then
+                seq_player_lower_volume(0, 30, 100)
+            else
+                seq_player_unlower_volume(0, 30)
+            end
             --djui_chat_message_create(tostring(o.oTimer))
             local oPos = {
                 x = o.oPosX,
@@ -2708,7 +2714,7 @@ function mrboneswildride(o) --The fun never ends!!
                 z = o.oPosZ
             }
             if o.oTimer == 5 then
-                fadeout_music(10)
+                --fadeout_music(10)
                 network_play(sElevator, oPos, 1, m.playerIndex)
             end
             if o.oTimer >= 420 and o.oTimer < 1700 then
@@ -2732,7 +2738,7 @@ function mrboneswildride(o) --The fun never ends!!
                 cur_obj_move_using_vel()
             end
             if o.oTimer == 1786 then
-                set_background_music(0, get_current_background_music(), 0)
+                --set_background_music(0, get_current_background_music(), 0)
                 spawn_triangle_break_particles(30, 138, 1, 4)
                 spawn_mist_particles()
                 set_camera_shake_from_hit(SHAKE_POS_MEDIUM)

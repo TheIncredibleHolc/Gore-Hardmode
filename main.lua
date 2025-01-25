@@ -315,6 +315,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     local np = gNetworkPlayers[0]
     local s = gStateExtras[m.playerIndex]
 
+    if m.flags & MARIO_VANISH_CAP ~= 0 then
+        obj_set_model_extended(m.marioObj, E_MODEL_NONE)
+    end
+
     --djui_chat_message_create(tostring(np.currLevelNum))
     --djui_chat_message_create(tostring(np.currAreaIndex))
 
@@ -997,6 +1001,8 @@ function hook_update()
     local m = gMarioStates[0]
     local s = gStateExtras[0]
     local np = gNetworkPlayers[0]
+
+
 
     -- FLY FASTER!!
     if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON or m.action == ACT_THROWN_BACKWARD or m.action == ACT_THROWN_FORWARD then -- Makes flying gradually get FASTER!
