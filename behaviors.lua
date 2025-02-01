@@ -939,7 +939,6 @@ end
 local function bhv_backroom_smiler_loop(o)
     local m = gMarioStates[0]
     local s = gStateExtras[0]
-    local player = nearest_player_to_object(o)
     local angletomario = obj_angle_to_object(o, m.marioObj)
     local np = gNetworkPlayers[0]
 
@@ -961,7 +960,7 @@ local function bhv_backroom_smiler_loop(o)
 
     o.oFaceAngleYaw = angletomario - 16384
     --load_object_collision_model()
-    obj_turn_toward_object(o, player, 16, 0x800)
+    obj_turn_toward_object(o, m.marioObj, 16, 0x800)
     o.oForwardVel = 20
     object_step()
     if o.oTimer % 280 == 1 and np.currLevelNum ~= LEVEL_TTM then
@@ -1421,7 +1420,7 @@ local function stopwatch_loop(o)
         cur_obj_disable_rendering()
         o.oTimer = 0
         o.oAction = 1
-        gGlobalSyncTable.timerMax = 1620
+        gGlobalSyncTable.timerMax = 1410
         s.timeattack = true
         spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5748, 4403, 85, function(t)
             t.oFaceAngleYaw = 0
@@ -1431,7 +1430,7 @@ local function stopwatch_loop(o)
         end)
     end
 
-    if o.oAction == 1 and o.oTimer == 1620 then
+    if o.oAction == 1 and o.oTimer == 1410 then
         t = obj_get_nearest_object_with_behavior_id(o, id_bhvTrophy)
         if t then
             local_play(sFart, m.pos, 1)
