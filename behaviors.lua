@@ -269,17 +269,66 @@ local function bhv_custom_flyguy(o)
     -- djui_chat_message_create(""..o.oAction)
 end
 
+local function bhv_custom_coins_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_COMPUTE_DIST_TO_MARIO
+    if obj_has_behavior_id(o, id_bhvCoinFormationSpawn) ~= 0 then
+        local hitbox = get_temp_object_hitbox()
+        hitbox.interactType = INTERACT_COIN
+        hitbox.radius = 100
+        hitbox.height = 64
+        hitbox.damageOrCoinValue = 1
+        obj_set_hitbox(o, hitbox)
+    end
+    obj_set_billboard(o)
+end
+
+--I had to make this function because it isn't exposed!!! --Flipflop Bell
+local function bhv_coin_sparkles_init(o)
+    --if o == nil then return end
+    if (o.oInteractStatus & INT_STATUS_INTERACTED and (o.oInteractStatus & INT_STATUS_TOUCHED_BOB_OMB) ~= true) then
+        --spawn_sync_object(id_bhvGoldenCoinSparkles, E_MODEL_SPARKLES, o.oPosX, o.oPosY, o.oPosZ, nil)
+        --obj_mark_for_deletion(o)
+        return 1
+    end
+    --o.oInteractStatus = 0
+    return 0
+end
+
 --I tried to make coins run away from mario like 6 different ways. It aint happening.
 --IT HAPPENED (only for secret aquarium though) --Flipflop Bell
-function bhv_custom_coins(o)
+local function bhv_custom_coins(o)
     local np = gNetworkPlayers[0]
+    if obj_has_behavior_id(o, id_bhvCoinFormationSpawn) ~= 0 then --Forced to recreate the bhv :(
+        if o.oTimer == 1 then
+            bhv_init_room()
+            if o.oCoinUnkF8 == 1 then
+                o.oPosY = o.oPosY + 300.0
+                cur_obj_update_floor_height()
+                if o.oPosY < o.oFloorHeight or o.oFloorHeight < gLevelValues.floorLowerLimitMisc then
+                    obj_mark_for_deletion(o)
+                else
+                    o.oPosY = o.oFloorHeight
+                end
+            else
+                cur_obj_update_floor_height()
+                if math.abs(o.oPosY - o.oFloorHeight) > 250.0 then
+                    obj_set_model_extended(o, E_MODEL_YELLOW_COIN_NO_SHADOW)
+                end
+            end
+        else
+            if o.parentObj and bhv_coin_sparkles_init(o) == 1 then
+                o.parentObj.oCoinUnkF4 = o.parentObj.oCoinUnkF4 | bit_shift_left(o.oBehParams2ndByte);
+            end
+            bhv_yellow_coin_loop()
+        end
+        if not o.parentObj and o.parentObj.oAction == 2 then
+            obj_mark_for_deletion(o)
+        end
+    end
     if np.currLevelNum ~= LEVEL_SA then return end
     local m = nearest_mario_state_to_object(o)
     local mObj = m.marioObj
     local dist = dist_between_objects(mObj, o)
-    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_COMPUTE_DIST_TO_MARIO
-    obj_set_billboard(o)
-    bhv_yellow_coin_loop()
     if dist < 500 and obj_has_behavior_id(o, id_bhvCoinFormationSpawn) ~= 0 then
         spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, o.oPosX, o.oPosY, o.oPosZ, nil)
         obj_mark_for_deletion(o)
@@ -2951,9 +3000,9 @@ hook_gore_behavior(id_bhvLllSinkingSquarePlatforms, false, nil, obj_explode_if_w
 hook_gore_behavior(id_bhvLllDrawbridge, false, nil, obj_explode_if_within_150_units)
 hook_gore_behavior(id_bhvWfRotatingWoodenPlatform, false, nil, obj_explode_if_within_150_units)
 hook_gore_behavior(id_bhvBlueCoinSwitch, false, nil, coin_switch)
-hook_gore_behavior(id_bhvRedCoin, false, nil, bhv_custom_coins)
+hook_gore_behavior(id_bhvRedCoin, false, bhv_custom_coins_init, bhv_custom_coins)
 --hook_gore_behavior(id_bhvYellowCoin, false, nil, bhv_custom_coins)
-hook_gore_behavior(id_bhvCoinFormationSpawn, true, nil, bhv_custom_coins)
+hook_gore_behavior(id_bhvCoinFormationSpawn, true, bhv_custom_coins_init, bhv_custom_coins)
 hook_gore_behavior(id_bhvScuttlebug, false, nil, scuttlebug_loop)
 hook_gore_behavior(id_bhvSkeeter, false, nil, skeeter_loop)
 hook_gore_behavior(id_bhvHeaveHo, false, nil, heaveho_loop)

@@ -21,7 +21,7 @@ hook_event(HOOK_UPDATE, test)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
-gLevelValues.entryLevel = LEVEL_SA
+gLevelValues.entryLevel = LEVEL_BITDW
 
 --For PVP murdering. Default off.
 gGlobalSyncTable.pvp = false
