@@ -269,19 +269,41 @@ local function bhv_custom_flyguy(o)
     -- djui_chat_message_create(""..o.oAction)
 end
 
---[[ I tried to make coins run away from mario like 6 different ways. It aint happening. 
+--I tried to make coins run away from mario like 6 different ways. It aint happening.
+--IT HAPPENED (only for secret aquarium though) --Flipflop Bell
 function bhv_custom_coins(o)
-    local player = nearest_mario_state_to_object(o)
-    --local player = nearest_player_to_object(o)
-    if mario_is_within_rectangle(o.oPosX - 250, o.oPosX + 250, o.oPosZ - 250, o.oPosZ + 250) ~= 0 then
-        local coin = spawn_sync_object(id_bhvBlueCoinSliding, E_MODEL_YELLOW_COIN, o.oPosX, o.oPosY, o.oPosZ, nil)
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum ~= LEVEL_SA then return end
+    local m = nearest_mario_state_to_object(o)
+    local mObj = m.marioObj
+    local dist = dist_between_objects(mObj, o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_COMPUTE_DIST_TO_MARIO
+    obj_set_billboard(o)
+    bhv_yellow_coin_loop()
+    if dist < 500 and obj_has_behavior_id(o, id_bhvCoinFormationSpawn) ~= 0 then
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, o.oPosX, o.oPosY, o.oPosZ, nil)
         obj_mark_for_deletion(o)
-        coin.oForwardVel = 20.0
-        angleToPlayer = obj_angle_to_object(coin, player.marioObj)
-        coin.oMoveAngleYaw = angleToPlayer + 0x8000
+        local_play(sFart, m.pos, 1)
     end
+    if dist < 1000 and obj_has_behavior_id(o, id_bhvRedCoin) ~= 0 then
+        if o.oPosY >= -150 then
+            o.oGravity = 10.0
+            o.oFriction = 1.0
+            o.oBuoyancy = 1.5
+        elseif m.pos.y <= o.oPosY then
+            o.oGravity = -10.0
+            o.oFriction = 1.0
+            o.oBuoyancy = 1.5
+        end
+        bhv_moving_yellow_coin_loop()
+        o.oForwardVel = 32.0
+    end
+    if o.oTimer > 299 then
+        o.oTimer = 10
+    end
+    o.oMoveAngleYaw = o.oAngleToMario + 0x8000
+    --djui_chat_message_create(tostring(obj_get_nearest_object_with_behavior_id(mObj, id_bhvRedCoin).oMoveAngleYaw))
 end
-]]
 
 local function bhv_custom_bully(o)
     local np = gNetworkPlayers[0]
@@ -477,7 +499,7 @@ local function large_bomp_hitbox(o)
     local hitbox = get_temp_object_hitbox()
     hitbox.interactType = INTERACT_DAMAGE
     hitbox.radius = 300
-    hitbox.height = 300
+    hitbox.height = 230
     hitbox.damageOrCoinValue = 2
     obj_set_hitbox(o, hitbox)
     o.oIntangibleTimer = 0
@@ -1201,6 +1223,17 @@ end
 local function bhv_custom_spindrift(o)
     if mario_is_within_rectangle(o.oPosX - 500, o.oPosX + 500, o.oPosZ - 500, o.oPosZ + 500) ~= 0 then
         o.oForwardVel = 30
+    end
+end
+
+local function snowman_body_loop(o)
+    if o.oAction == 1 then
+        if o.oPosY < -700 then
+            o.oForwardVel = o.oForwardVel * 1.25
+        elseif o.oPosY > -40 then
+            o.oForwardVel = o.oForwardVel * 1.1
+        end
+        --djui_chat_message_create(tostring(o.oForwardVel))
     end
 end
 
@@ -2535,6 +2568,87 @@ local function waterdiamond(o)
     end
 end
 
+local function clam_shell_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    local mObj = m.marioObj
+    local dist = dist_between_objects(mObj, o)
+    if o.oSubAction == 1 then
+        o.oAction = 0
+        o.oTimer = o.oTimer + 2
+        if m.action == ACT_BACKWARD_WATER_KB or m.action == ACT_FORWARD_WATER_KB then
+        m.squishTimer = 50
+        network_play(sCrunch, m.pos, 1, m.playerIndex)
+        end
+        if o.header.gfx.animInfo.animFrame < 24 then
+            o.header.gfx.animInfo.animFrame = o.header.gfx.animInfo.animFrame + 2
+        elseif o.header.gfx.animInfo.animFrame >= 29 then
+            o.oSubAction = 0
+        end
+    elseif dist < 100 and obj_is_valid_for_interaction(o) ~= true then
+        o.oSubAction = 1
+        --o.oTimer = 0
+        --djui_chat_message_create("real")
+    end
+    --djui_chat_message_create(tostring(obj_get_nearest_object_with_behavior_id(mObj, id_bhvClamShell).oTimer))
+    --djui_chat_message_create(tostring(obj_get_nearest_object_with_behavior_id(mObj, id_bhvClamShell).header.gfx.animInfo.animFrame))
+end
+
+local function chest_bottom_init(o) -- *Epically messes up with your muscle memory*
+    if o.oBehParams2ndByte ~= 1 then
+        o.oBehParams2ndByte = o.oBehParams2ndByte - 1
+    else
+        o.oBehParams2ndByte = 4
+    end
+end
+
+local function exploding_jrb_rock_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    local mObj = m.marioObj
+    local dist = dist_between_objects(mObj, o)
+    local pos = o.header.gfx.cameraToObject
+    if dist < 750 then
+        spawn_mist_particles()
+        for i = 0, 5 do
+            play_sound(SOUND_GENERAL_POUND_ROCK, pos)
+            play_sound(SOUND_GENERAL_LOUD_POUND, pos)
+        end
+        for i = 0, math.random(10, 20) do
+            spawn_sync_object(id_bhvRockShrapnel, E_MODEL_ROCK_SHRAPNEL, o.oPosX, o.oPosY - 200, o.oPosZ, nil)
+        end
+        obj_mark_for_deletion(o)
+    end
+end
+
+local function rock_shrapnel_init(o) -- This is a slightly different version of bouncy_init
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    local randomfvel = math.random(10,40)
+    local random = math.random(30,80)
+    local randomyaw = math.random(1,65536)
+    local randompitch = math.random(1,65536)
+    local randomroll = math.random(1,65536)
+    local randomscale = math.random(1, 20)/10
+    o.oBounciness = 1
+    o.oGravity = -5
+    o.oVelY = random
+    o.oForwardVel = randomfvel
+    o.oMoveAngleYaw = randomyaw
+    o.oFaceAngleYaw = randomyaw
+    o.oFaceAnglePitch = randompitch
+    o.oFaceAngleRoll = randomroll
+    obj_scale(o, randomscale)
+    --obj_set_billboard(o)
+end
+
+local function rock_shrapnel_loop(o)
+    cur_obj_move_using_fvel_and_gravity()
+    local m = nearest_mario_state_to_object(o)
+    local mObj = m.marioObj
+    local dist = dist_between_objects(mObj, o)
+    if dist < 200 * o.header.gfx.scale.x then
+        m.squishTimer = 50
+    end
+end
+
 function piranha_plant(o)
 	local m = nearest_mario_state_to_object(o)
     if m ~= nil and o.oAction == PIRANHA_PLANT_ACT_BITING then
@@ -2826,6 +2940,9 @@ hook_gore_behavior(id_bhvFireSpitter, false, nil, fire_spitter)
 hook_gore_behavior(id_bhvPiranhaPlant, false, nil, piranha_plant)
 hook_gore_behavior(id_bhvPokeyBodyPart, false, nil, pokey_body_part)
 hook_gore_behavior(id_bhvWaterLevelDiamond, false, nil, waterdiamond)
+hook_gore_behavior(id_bhvClamShell, false, nil, clam_shell_loop)
+hook_gore_behavior(id_bhvTreasureChestBottom, false, chest_bottom_init, nil)
+hook_gore_behavior(id_bhvRockSolid, false, nil, exploding_jrb_rock_loop)
 hook_gore_behavior(id_bhvKoopa, false, nil, koopatheQUICC)
 hook_gore_behavior(id_bhvBitfsTiltingInvertedPyramid, false, nil, invertedpyramid)
 hook_gore_behavior(id_bhvSignOnWall, false, nil, delete_on_spawn)
@@ -2834,6 +2951,9 @@ hook_gore_behavior(id_bhvLllSinkingSquarePlatforms, false, nil, obj_explode_if_w
 hook_gore_behavior(id_bhvLllDrawbridge, false, nil, obj_explode_if_within_150_units)
 hook_gore_behavior(id_bhvWfRotatingWoodenPlatform, false, nil, obj_explode_if_within_150_units)
 hook_gore_behavior(id_bhvBlueCoinSwitch, false, nil, coin_switch)
+hook_gore_behavior(id_bhvRedCoin, false, nil, bhv_custom_coins)
+--hook_gore_behavior(id_bhvYellowCoin, false, nil, bhv_custom_coins)
+hook_gore_behavior(id_bhvCoinFormationSpawn, true, nil, bhv_custom_coins)
 hook_gore_behavior(id_bhvScuttlebug, false, nil, scuttlebug_loop)
 hook_gore_behavior(id_bhvSkeeter, false, nil, skeeter_loop)
 hook_gore_behavior(id_bhvHeaveHo, false, nil, heaveho_loop)
@@ -2850,6 +2970,7 @@ hook_gore_behavior(id_bhvCirclingAmp, false, nil, bhv_custom_circlingamp)
 hook_gore_behavior(id_bhvSquarishPathMoving, false, nil, bhv_custom_squarishPathMoving)
 hook_gore_behavior(id_bhvSlidingPlatform2, false, nil, bhv_custom_slidingplatform2)
 hook_gore_behavior(id_bhvSpindrift, false, nil, bhv_custom_spindrift)
+hook_gore_behavior(id_bhvSnowmansBottom, false, nil, snowman_body_loop)
 hook_gore_behavior(id_bhvHauntedChair, false, nil, bhv_custom_chairs)
 hook_gore_behavior(id_bhvMadPiano, false, nil, bhv_custom_piano)
 hook_gore_behavior(id_bhvMerryGoRound, false, nil, bhv_custom_merry_go_round)
@@ -2916,6 +3037,7 @@ id_bhvLava = hook_behavior(nil, OBJ_LIST_SURFACE, true, lava_init, lava_loop, "b
 id_bhvQuickWarp = hook_behavior(nil, OBJ_LIST_SURFACE, true, warp_init, warp_loop, "bhvWarp")
 id_bhvFlatStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, flatstar_init, flatstar_loop, "bhvFlatStar")
 id_bhvBouncy1up = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bouncy_init, bouncy_loop, "bhvBouncy1up")
+id_bhvRockShrapnel = hook_behavior(nil, OBJ_LIST_GENACTOR, true, rock_shrapnel_init, rock_shrapnel_loop, "bhvRockShrapnel")
 id_bhvGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, gib_init, gib_loop, "bhvGib")
 id_bhvFireRing = hook_behavior(nil, OBJ_LIST_GENACTOR, true, firering_init, firering_loop, "bhvFireRing")
 id_bhvGorrie = hook_behavior(nil, OBJ_LIST_SURFACE, true, gorrie_init, gorrie_loop)

@@ -21,7 +21,7 @@ hook_event(HOOK_UPDATE, test)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
-gLevelValues.entryLevel = LEVEL_TTC
+gLevelValues.entryLevel = LEVEL_SA
 
 --For PVP murdering. Default off.
 gGlobalSyncTable.pvp = false
@@ -1751,10 +1751,10 @@ function mario_before_phys_step(m)
     local vScale = 1.0
 
     -- faster swimming
-    if (m.action & ACT_FLAG_SWIMMING) ~= 0 then
-        hScale = hScale * 5.0
+    if (m.action & ACT_FLAG_SWIMMING) ~= 0 and m.action ~= ACT_BACKWARD_WATER_KB and m.action ~= ACT_FORWARD_WATER_KB then
+        hScale = hScale * 2.0
         if m.action ~= ACT_WATER_PLUNGE then
-            vScale = vScale * 5.0
+            vScale = vScale * 2.0
         end
     end
 
@@ -1770,14 +1770,16 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
 
     if not ia(m) then return end
 
-    local obj = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhv1Up)
-    if obj and np.currLevelNum ~= LEVEL_HELL and nearest_interacting_mario_state_to_object(obj).playerIndex == 0 and mario_is_within_rectangle(obj.oPosX - 200, obj.oPosX + 200, obj.oPosZ - 200, obj.oPosZ + 200) ~= 0 and m.pos.y > obj.oPosY - 200 and m.pos.y < obj.oPosY + 200 then --if local mario is touching 1up then
+    local mObj = m.marioObj
+    local obj = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1Up)
+    local dist = dist_between_objects(mObj, obj)
+    if obj and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --if local mario is touching 1up then
         spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
         obj_mark_for_deletion(obj)
         local_play(sFart, m.pos, 1)
     end
 
-    local demon = obj_get_nearest_object_with_behavior_id(m.marioObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON
+    local demon = obj_get_nearest_object_with_behavior_id(mObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON
     if np.currLevelNum ~= LEVEL_HELL and demon and nearest_interacting_mario_state_to_object(demon).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
         obj_mark_for_deletion(demon)
         local_play(sFart, m.pos, 1)

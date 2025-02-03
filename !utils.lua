@@ -391,6 +391,7 @@ E_MODEL_STONEWALL = smlua_model_util_get_id("stonewall_geo")
 COL_STONEWALL = smlua_collision_util_get("stonewall_collision")
 E_MODEL_VOMIT = smlua_model_util_get_id("vomit_geo")
 E_MODEL_HELL_ENTRANCE = smlua_model_util_get_id("hellentrance_geo")
+E_MODEL_ROCK_SHRAPNEL = smlua_model_util_get_id("rock_shrapnel_geo")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
