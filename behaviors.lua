@@ -939,6 +939,22 @@ local function bhv_custom_firebars(o)
     o.oMoveAngleYaw = -2048
 end
 
+local function bhv_custom_flamethrower(o)
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum ~= LEVEL_BITDW then return end
+    local m = nearest_mario_state_to_object(o)
+    local mObj = m.marioObj
+    local dist = dist_between_objects(mObj, o)
+    if dist < 1500 then
+        o.oAction = 1
+        o.oTimer = 0
+    elseif dist < 1500 and o.oAction == 1 then
+        if o.oTimer > 60 then
+            o.oTimer = 60
+        end
+    end
+end
+
 local function bhv_custom_hex_platform(o)
     o.oAngleVelYaw = 5000
     o.oMoveAngleYaw = o.oMoveAngleYaw + 4744
@@ -1293,6 +1309,19 @@ local function bhv_custom_slidingplatform2(o)
     end
 end
 
+local function bhv_custom_animates_on_floor_switch_press(o)
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum ~= LEVEL_BITDW then return end
+    if o.oFloorSwitchPressAnimationUnkF4 < 161 and o.oFloorSwitchPressAnimationUnkF4 ~= 0 then
+        o.oFloorSwitchPressAnimationUnkF8 = 9 * o.oFloorSwitchPressAnimationUnkF4/200
+        if o.oFloorSwitchPressAnimationUnkF8 % 2 == 0 and o.oTimer > 30 then
+            cur_obj_play_sound_1(SOUND_GENERAL_BUTTON_PRESS_2_LOWPRIO);
+            o.oTimer = 0
+        end
+    end
+    --djui_chat_message_create(tostring(o.oFloorSwitchPressAnimationUnkF4))
+end
+
 local function bhv_custom_circlingamp(o)
     --local random = math.random(1,2)
     if o.oTimer < 30 then
@@ -1312,15 +1341,27 @@ end
 
 local function bhv_custom_squarishPathMoving(o)
     local np = gNetworkPlayers[0]
-
-    if np.currLevelNum == LEVEL_BITDW and o.oPosY <= -2959 then
+    local m = nearest_mario_state_to_object(o)
+    local mObj = m.marioObj
+    local pos = o.header.gfx.cameraToObject
+    if o.oAction == 5 then
+        o.oTimer = o.oTimer + 1
+        play_sound(SOUND_GENERAL2_SWITCH_TICK_SLOW, gGlobalSoundSource)
+        if o.oTimer >= 90 then
+            spawn_triangle_break_particles(30, 138, 1, 4)
+            spawn_mist_particles()
+            set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
+            play_sound(SOUND_GENERAL_WALL_EXPLOSION, pos)
+            play_sound(SOUND_GENERAL_EXPLOSION6, pos)
+            obj_mark_for_deletion(o)
+        end
+    elseif mObj.platform == o then
+        o.oAction = 5
+    end
+    if (np.currLevelNum == LEVEL_BITDW and o.oPosY <= -2959) or np.currLevelNum == LEVEL_BITFS then
         obj_mark_for_deletion(o)
     end
-
-    if np.currLevelNum == LEVEL_BITFS then
-        obj_mark_for_deletion(o)
-    end
-
+    --djui_chat_message_create(tostring(obj_get_nearest_object_with_behavior_id(mObj, id_bhvSquarishPathMoving).oTimer))
 end
 
 local function bhv_custom_ActivatedBackAndForthPlatform(o)
@@ -3018,6 +3059,7 @@ hook_gore_behavior(id_bhvActivatedBackAndForthPlatform, false, nil, bhv_custom_A
 hook_gore_behavior(id_bhvCirclingAmp, false, nil, bhv_custom_circlingamp)
 hook_gore_behavior(id_bhvSquarishPathMoving, false, nil, bhv_custom_squarishPathMoving)
 hook_gore_behavior(id_bhvSlidingPlatform2, false, nil, bhv_custom_slidingplatform2)
+hook_gore_behavior(id_bhvAnimatesOnFloorSwitchPress, false, nil, bhv_custom_animates_on_floor_switch_press)
 hook_gore_behavior(id_bhvSpindrift, false, nil, bhv_custom_spindrift)
 hook_gore_behavior(id_bhvSnowmansBottom, false, nil, snowman_body_loop)
 hook_gore_behavior(id_bhvHauntedChair, false, nil, bhv_custom_chairs)
@@ -3040,6 +3082,7 @@ hook_gore_behavior(id_bhvFerrisWheelAxle, false, nil, bhv_ferris_wheel_axle)
 hook_gore_behavior(id_bhvFerrisWheelPlatform, false, nil, bhv_ferris_wheel)
 hook_gore_behavior(id_bhvHorizontalGrindel, false, nil, bhv_custom_grindel)
 hook_gore_behavior(id_bhvSpindel, false, nil, bhv_custom_spindel)
+hook_gore_behavior(id_bhvFlamethrower, false, nil, bhv_custom_flamethrower)
 hook_gore_behavior(id_bhvLllRotatingHexFlame, false, nil, bhv_custom_firebars)
 hook_gore_behavior(id_bhvLllRotatingHexagonalPlatform, false, nil, bhv_custom_hex_platform)
 hook_gore_behavior(id_bhvLllVolcanoFallingTrap, false, nil, bhv_custom_crushtrap)
