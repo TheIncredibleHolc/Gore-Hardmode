@@ -7,11 +7,12 @@
 function test()
     local m = gMarioStates[0]
     if m.controller.buttonPressed & D_JPAD ~= 0 then
-        m.pos.x = -4061
-        m.pos.y = -3105
-        m.pos.z = -5433
-        m.numStars = 100
-        m.pos.x = m.pos.x - 200
+        m.pos.x = 2400
+        m.pos.y = 819
+        m.pos.z = 1818
+        m.faceAngle.y = 16384
+        --m.numStars = 100
+        --m.pos.x = m.pos.x - 200
     end
 
 end
@@ -21,7 +22,7 @@ hook_event(HOOK_UPDATE, test)
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
-gLevelValues.entryLevel = LEVEL_BITDW
+gLevelValues.entryLevel = LEVEL_BBH
 
 --For PVP murdering. Default off.
 gGlobalSyncTable.pvp = false
@@ -1299,10 +1300,16 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
         m.squishTimer = 50
     end
 
-    --Scuttlebug insta-kill
-    if obj_has_behavior_id(o, id_bhvScuttlebug) ~= 0 and (m.hurtCounter > 0) then
-        m.squishTimer = 50
+    --Scuttlebug insta-kill and gore
+    if obj_has_behavior_id(o, id_bhvScuttlebug) ~= 0 then
+        if (m.hurtCounter > 0) then
+            m.squishTimer = 50
+        elseif o.oInteractStatus & INT_STATUS_WAS_ATTACKED ~= 0 then -- Thx xLuigiGamerx
+            squishblood(o)
+            local_play(sSplatter, m.pos, 1)
+        end
     end
+
 
     --JRB falling pillar insta-kill
     if obj_has_behavior_id(o, id_bhvFallingPillarHitbox) ~= 0 and (m.hurtCounter > 0) then
@@ -1311,7 +1318,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
     --Others
     if (obj_has_behavior_id(o, id_bhvRacerHitbox) ~= 0
-    --[[or obj_has_behavior_id(o, id_bhvLargeBomp) ~= 0]])
+    or obj_has_behavior_id(o, id_bhvMrI) ~= 0)
     and (m.hurtCounter > 0) then
         m.squishTimer = 50
     end
@@ -1365,6 +1372,28 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
         else
             m.squishTimer = 50
         end
+    end
+
+    if (m.hurtCounter > 0) and obj_has_behavior_id(o, id_bhvMrIParticle) ~= 0 and not s.headless then
+        if m.action & ACT_FLAG_AIR == 0 then
+            s.headless = true
+            network_play(sSplatter, m.pos, 1, m.playerIndex)
+            m.health = 0xff
+            set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+            m.particleFlags = PARTICLE_MIST_CIRCLE
+            set_mario_action(m, ACT_DECAPITATED, 0)
+        else
+            m.squishTimer = 50
+        end
+    end
+
+    if (m.hurtCounter > 0) and (obj_has_behavior_id(o, id_bhvGhostHuntBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBoo) ~= 0
+    or obj_has_behavior_id(o, id_bhvMerryGoRoundBoo) ~= 0 or obj_has_behavior_id(o, id_bhvGhostHuntBigBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBalconyBigBoo) ~= 0
+    or obj_has_behavior_id(o, id_bhvMerryGoRoundBigBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBooWithCage) ~= 0) and (not s.headless) then
+        set_mario_action(m, ACT_BURNING_JUMP, 0)
+        spawn_mist_particles()
+        set_camera_shake_from_hit(SHAKE_SMALL_DAMAGE)
+        obj_set_model_extended(m.marioObj.prevObj, E_MODEL_BLUE_FLAME) -- Only works for id_bhvBooWithCage
     end
 
     handle_object_interaction(m, o)

@@ -632,6 +632,7 @@ local function bhv_custom_tower_elevator(o)
             o.oAction = 0
         elseif o.oTimer > 15 and o.oTimer <= 24 then
             o.oPosY = (o.oHomeY - 150) + (750 * (o.oTimer-15)/8)
+            --approach_f32((o.oHomeY - 150), (o.oHomeY + 650), 8, 0)
             cur_obj_play_sound_1(SOUND_ENV_ELEVATOR1)
             if mObj.platform == o and m.action ~= ACT_GONE then
                 play_sound(SOUND_OBJ_HEAVEHO_TOSSED, mObj.header.gfx.cameraToObject)
@@ -663,6 +664,87 @@ local function bhv_custom_seesaw(obj) --SeeSaw Objects spin like windmills
     if not (np.currLevelNum == LEVEL_BITS and obj.oPosY > -3500) then
         obj.oSeesawPlatformPitchVel = -400
     end
+end
+
+local function bhv_custom_tilting_plat(o)
+    if cur_obj_is_any_player_on_platform() then
+        o.oAngleVelPitch = o.oAngleVelPitch * 5
+        o.oFaceAnglePitch = o.oFaceAnglePitch + o.oAngleVelPitch
+    end
+end
+
+local function bhv_custom_coffin(o)
+    o.oBehParams2ndByte = 1 --Not COFFIN_BP_STATIC
+    if o.oTimer == 1 then
+        o.oUnk1A8 = 4 * random_float()
+    end
+    if o.oFaceAnglePitch < 0 then
+        o.oFaceAnglePitch = 0
+    end
+    if o.oAction == COFFIN_ACT_IDLE and o.oFaceAnglePitch == 0 and o.oTimer > 0 then
+        o.oAction = COFFIN_ACT_STAND_UP
+    elseif o.oAction == COFFIN_ACT_IDLE and o.oFaceAnglePitch ~= 0 then
+        o.oAngleVelPitch = approach_s16_symmetric(o.oAngleVelPitch, -2000*o.oUnk1A8, 200*o.oUnk1A8)
+        o.oTimer = 0
+    elseif o.oAction == COFFIN_ACT_STAND_UP then
+        if o.oFaceAnglePitch ~= 0x4000 then
+            approach_s16_symmetric(o.oAngleVelPitch, -1000*o.oUnk1A8, 200*o.oUnk1A8)
+            obj_face_pitch_approach(0x4000, o.oAngleVelPitch)
+        end
+        o.oTimer = o.oTimer + 3
+    end
+end
+
+local function bhv_custom_staircase_step(o)
+    --o.oFlags = OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_SET_FACE_YAW_TO_MOVE_YAW | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    local m = nearest_mario_state_to_object(o)
+    --local mObj = m.marioObj
+    --local angleToPlayer = obj_angle_to_object(o, mObj)
+    --local dist = dist_between_objects(mObj, o)
+    if mario_is_within_rectangle(o.oPosX -300, o.oPosX +300, 900, 1500) ~= 0 and o.oAction == 0 then
+        o.oAction = 1
+        o.oForwardVel = 70
+        o.collisionData = nil
+        local_play(sMetal2, m.pos, 0.5)
+    elseif o.oAction == 1 then
+        if mario_is_within_rectangle(o.oPosX -128, o.oPosX +128, o.oPosZ-102, o.oPosZ+102) ~= 0 and
+        m.pos.y > o.oPosY and m.pos.y < o.oPosY +614 then
+            m.squishTimer = 50
+        end
+        if o.oTimer > 100 then
+            obj_mark_for_deletion(o)
+        end
+    end
+    --djui_chat_message_create(tostring(o.oAction))
+    cur_obj_move_xz_using_fvel_and_yaw()
+end
+
+local function bhv_custom_haunted_bookshelf(o) --Anti Speedrun Trick >:) (Unused for being too much of a troll)
+    local m = nearest_mario_state_to_object(o)
+    local mObj = m.marioObj
+    local angleToPlayer = obj_angle_to_object(o, mObj)
+    if o.oAction == 0 and angleToPlayer > -2000 and angleToPlayer < 2000 and m.pos.y >= 1024 and m.pos.z < 2225 then
+        o.oAction = 3
+        o.oForwardVel = 70
+        o.oRoom = 0
+        local hitbox = get_temp_object_hitbox()
+        hitbox.radius = 300
+        hitbox.height = 750
+        obj_set_hitbox(o, hitbox)
+        o.oIntangibleTimer = 0
+        o.collisionData = nil
+        local_play(sMetal2, m.pos, 1)
+    elseif o.oAction == 3 then
+        o.oFaceAnglePitch = 32768 --I can't change o.oFaceAngleYaw for this specific behavior so yeah
+        o.oFaceAngleRoll = 32768
+        if obj_check_if_collided_with_object(o, mObj) ~= 0 then
+            m.squishTimer = 50
+        end
+        if o.oTimer > 100 then
+            obj_mark_for_deletion(o)
+        end
+    end
+    cur_obj_move_xz_using_fvel_and_yaw()
 end
 
 local function bhv_custom_sign(o) --This is the single most evil addition to the game. Real proud of this one :')
@@ -1210,6 +1292,14 @@ local function bhv_custom_merry_go_round(o)
     end
 end
 
+local function bhv_custom_tumbling_bridge(o)
+    local m = nearest_mario_state_to_object(o)
+    if dist_between_objects(m.marioObj, o) < 500 and
+    obj_has_behavior(o.parentObj, get_behavior_from_id(id_bhvBbhTumblingBridge)) ~= 0 then
+        o.oInteractStatus = o.oInteractStatus | INT_STATUS_INTERACTED
+    end
+end
+
 local function bhv_custom_piano(o)
     local m = nearest_mario_state_to_object(o)
     if dist_between_objects(m.marioObj, o) < 700 then
@@ -1228,6 +1318,17 @@ local function bhv_custom_chairs(o)
             obj_compute_vel_from_move_pitch(90.0)
         end
     end
+    if o.oHauntedChairUnkF4 > 1 and o.oHauntedChairUnkF4 < 20 then
+        o.oHauntedChairUnkF4 = o.oHauntedChairUnkF4 - 2
+    end
+    o.oTimer = o.oTimer + 2
+    obj_move_xyz_using_fvel_and_yaw(o)
+end
+
+local function bhv_custom_books(o)
+    --for i = 0, 2 do
+        bhv_flying_bookend_loop()
+    --end
 end
 
 local function bhv_goalpost_init(o)
@@ -2528,7 +2629,7 @@ local function scuttlebug_loop(o)
                 o.oVelY = -60
             end
         end
-    --[[elseif o.oAction == nil then
+    --[[elseif o.oInteractStatus & INT_STATUS_WAS_ATTACKED ~= 0 then
         squishblood(o)
         local_play(sSplatter, m.pos, 1)]]
     end
@@ -2544,9 +2645,9 @@ local function boo_vanish_or_appear(o) -- Translation of the boo hiding function
 
     --o.oVelY = 0
 
-    if (m.action & ACT_FLAG_AIR > 0 and dist < 500) then -- Check if mario is ground pounding and near
+    if (m.action & ACT_FLAG_AIR > 0 and dist < 500 * o.header.gfx.scale.y and o.oAction ~= 3) then -- Check if mario is ground pounding, near and hadn't attacked
         o.oBooTargetOpacity = 40
-        o.oInteractType = 0x8000
+        o.oInteractType = 0
         if (o.oOpacity == 40) then
             o.oBooTargetOpacity = 255
         end
@@ -2560,6 +2661,7 @@ local function boo_vanish_or_appear(o) -- Translation of the boo hiding function
 end
 
 local function boo_loop(o)
+    local m = nearest_mario_state_to_object(o)
     if boo_vanish_or_appear(o) then
         o.oTimer = 0
     elseif o.oAction > 0 and o.oTimer <= 30 then
@@ -2567,7 +2669,85 @@ local function boo_loop(o)
         o.oForwardVel = 32 -- Doesn't seem to work
         cur_obj_rotate_yaw_toward(o.oAngleToMario, 0x300) -- Neither this
     end
-    --djui_chat_message_create(tostring(o.oOpacity))
+    if obj_check_if_collided_with_object(o, m.marioObj) == 1 then
+        djui_chat_message_create("yes")
+        obj_set_model_extended(m.marioObj.prevObj, E_MODEL_BLUE_FLAME)
+    end
+    --djui_chat_message_create(tostring(o.oInteractStatus & INT_STATUS_INTERACTED))
+end
+
+local function HackerSM64_mr_i_pitch_shooting(particle, o) --Thx HackerSM64 devs
+    local yScale = o.header.gfx.scale.y
+    particle.oPosX = particle.oPosX + (90.0 * yScale) *  coss(o.oMoveAnglePitch) * sins(o.oMoveAngleYaw)
+    particle.oPosY = particle.oPosY + (90.0 * yScale) * -sins(o.oMoveAnglePitch) + (50.0 * yScale)
+    particle.oPosZ = particle.oPosZ + (90.0 * yScale) *  coss(o.oMoveAnglePitch) * coss(o.oMoveAngleYaw)
+end
+
+local function spawn_more_mr_i_particles(index, o)
+    local particle = spawn_sync_object(id_bhvMrIParticle, E_MODEL_PURPLE_MARBLE, o.oPosX, o.oPosY, o.oPosZ, nil)
+    particle.oMoveAngleYaw = o.oMoveAngleYaw
+    particle.oMoveAnglePitch = o.oMoveAnglePitch
+    HackerSM64_mr_i_pitch_shooting(particle, o)
+    particle.oMoveAngleYaw = particle.oMoveAngleYaw + 0x400 * (index - 2)
+    particle.oTimer = 2
+end
+
+local function mr_i_particle(o)
+    local mr_i = obj_get_nearest_object_with_behavior_id(o, id_bhvMrI)
+    if o.oTimer == 1 then
+        for index = 0, 4 do
+            spawn_more_mr_i_particles(index, mr_i)
+        end
+        obj_mark_for_deletion(o)
+    end
+    o.oForwardVel = 0
+    obj_compute_vel_from_move_pitch(25.0)
+    obj_move_xyz_using_fvel_and_yaw(o)
+end
+
+local function mr_i(o)
+    local m = nearest_mario_state_to_object(o)
+    local mObj = m.marioObj
+    local dist = dist_between_objects(mObj, o)
+    if dist < 500 and o.oAction == 1 then
+        obj_turn_toward_object(o, mObj, 0x10,   0x800)
+        obj_turn_toward_object(o, mObj, 0x0F, 0x400)
+    elseif o.oAction == 2 then
+        if o.oMrIUnkFC >= 5000 then
+            --if o.oMrIUnk104 == o.oMrIUnk108 then
+            --o.oMrIUnk110 = 1
+            --end
+            if o.oUnk1A8 == --[[o.oMrIUnk108 +]] 20 then
+                --spawn_mr_i_particle()
+                particle = spawn_sync_object(id_bhvMrIParticle, E_MODEL_PURPLE_MARBLE, o.oPosX, o.oPosY, o.oPosZ, nil)
+                particle.oMoveAngleYaw = o.oMoveAngleYaw
+                particle.oMoveAnglePitch = o.oMoveAnglePitch
+                HackerSM64_mr_i_pitch_shooting(particle, o)
+                local_play(sShotgun, m.pos, 1) --cur_obj_play_sound_2(SOUND_OBJ_MRI_SHOOT)
+                o.oUnk1A8 = 0
+                o.oMrIUnk108 = (random_float() * 50.0 + 50.0)
+            end
+            o.oUnk1A8 = o.oUnk1A8 + 1
+        end
+    elseif o.oAction == 3 and o.oTimer == 104 then
+        squishblood(o)
+        local_play(sSplatter, m.pos, 1)
+    end
+end
+
+local function sfx_management(sfx)
+    local m = gMarioStates[0]
+    if sfx == SOUND_OBJ_MRI_SHOOT then
+        local_play(sShotgun, m.pos, 1)
+        return 0
+    end
+    local boo = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvGhostHuntBoo) or obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvBoo)
+    or obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvMerryGoRoundBoo) or obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvGhostHuntBigBoo)
+    or obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvBalconyBigBoo) or obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvMerryGoRoundBigBoo)
+    local distboo = dist_between_objects(m.marioObj, boo)
+    if sfx == SOUND_OBJ_BOO_LAUGH_LONG and boo and (m.action & ACT_FLAG_AIR > 0 and boo.oAction ~= 3) then
+        return 0
+    end
 end
 
 local function coin_switch(o)
@@ -3048,6 +3228,14 @@ hook_gore_behavior(id_bhvScuttlebug, false, nil, scuttlebug_loop)
 hook_gore_behavior(id_bhvSkeeter, false, nil, skeeter_loop)
 hook_gore_behavior(id_bhvHeaveHo, false, nil, heaveho_loop)
 hook_gore_behavior(id_bhvGhostHuntBoo, false, nil, boo_loop)
+hook_gore_behavior(id_bhvBoo, false, nil, boo_loop)
+hook_gore_behavior(id_bhvMerryGoRoundBoo, false, nil, boo_loop)
+hook_gore_behavior(id_bhvGhostHuntBigBoo, false, nil, boo_loop)
+hook_gore_behavior(id_bhvBalconyBigBoo, false, nil, boo_loop)
+hook_gore_behavior(id_bhvMerryGoRoundBigBoo, false, nil, boo_loop)
+hook_gore_behavior(id_bhvMrIParticle, false, nil, mr_i_particle)
+hook_gore_behavior(id_bhvMrI, false, nil, mr_i)
+hook_event(HOOK_ON_PLAY_SOUND, sfx_management)
 hook_event(HOOK_MARIO_UPDATE, killer_exclamation_boxes)
 hook_gore_behavior(id_bhvStarDoor, true, star_door_init, star_door_loop)
 hook_gore_behavior(id_bhvDorrie, false, nil, dorrie_dead)
@@ -3063,8 +3251,10 @@ hook_gore_behavior(id_bhvAnimatesOnFloorSwitchPress, false, nil, bhv_custom_anim
 hook_gore_behavior(id_bhvSpindrift, false, nil, bhv_custom_spindrift)
 hook_gore_behavior(id_bhvSnowmansBottom, false, nil, snowman_body_loop)
 hook_gore_behavior(id_bhvHauntedChair, false, nil, bhv_custom_chairs)
+hook_gore_behavior(id_bhvFlyingBookend, false, nil, bhv_custom_books)
 hook_gore_behavior(id_bhvMadPiano, false, nil, bhv_custom_piano)
 hook_gore_behavior(id_bhvMerryGoRound, false, nil, bhv_custom_merry_go_round)
+hook_gore_behavior(id_bhvTumblingBridgePlatform, false, nil, bhv_custom_tumbling_bridge)
 hook_gore_behavior(id_bhvSmallPenguin, false, nil, bhv_custom_tuxie)
 hook_gore_behavior(id_bhvPlatformOnTrack, false, nil, bhv_custom_moving_plats)
 hook_gore_behavior(id_bhvRecoveryHeart, false, nil, bhv_custom_heart)
@@ -3095,6 +3285,10 @@ hook_gore_behavior(id_bhvWfSolidTowerPlatform, false, nil, bhv_custom_tower_plat
 hook_gore_behavior(id_bhvWfSlidingTowerPlatform, false, nil, bhv_custom_tower_platforms)
 hook_gore_behavior(id_bhvWfElevatorTowerPlatform, false, nil, bhv_custom_tower_elevator)
 hook_gore_behavior(id_bhvSeesawPlatform, false, nil, bhv_custom_seesaw)
+hook_gore_behavior(id_bhvBbhTiltingTrapPlatform, false, nil, bhv_custom_tilting_plat)
+hook_gore_behavior(id_bhvCoffin, false, nil, bhv_custom_coffin)
+hook_gore_behavior(id_bhvHiddenStaircaseStep, false, nil, bhv_custom_staircase_step)
+--hook_gore_behavior(id_bhvHauntedBookshelf, false, nil, bhv_custom_haunted_bookshelf)
 hook_gore_behavior(id_bhvMessagePanel, false, nil, bhv_custom_sign)
 hook_gore_behavior(id_bhvTree, false, nil, bhv_custom_tree)
 hook_gore_behavior(id_bhvWhompKingBoss, false, nil, bhv_custom_kingwhomp)
