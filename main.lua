@@ -1806,6 +1806,24 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
         spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
         obj_mark_for_deletion(obj)
         local_play(sFart, m.pos, 1)
+    end 
+
+    local mObj = m.marioObj
+    local obj1 = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1upWalking)
+    local dist = dist_between_objects(mObj, obj1)
+    if obj1 and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x2
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj1.oPosX, obj1.oPosY, obj1.oPosZ, nil)
+        obj_mark_for_deletion(obj1)
+        local_play(sFart, m.pos, 1)
+    end
+    
+    local mObj = m.marioObj
+    local obj2 = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1upRunningAway)
+    local dist = dist_between_objects(mObj, obj2)
+    if obj2 and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x3
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj2.oPosX, obj2.oPosY, obj2.oPosZ, nil)
+        obj_mark_for_deletion(obj2)
+        local_play(sFart, m.pos, 1)
     end
 
     local demon = obj_get_nearest_object_with_behavior_id(mObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON

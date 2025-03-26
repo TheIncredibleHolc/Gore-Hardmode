@@ -1428,10 +1428,21 @@ local function bhv_custom_circlingamp(o)
     if o.oTimer < 30 then
         o.oPosX = o.oHomeX + sins(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 1
         o.oPosZ = o.oHomeZ + coss(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 1
+    elseif o.oTimer <= 33 then
+        o.oPosX = o.oHomeX + sins(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 0.1
+        o.oPosZ = o.oHomeZ + coss(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 0.1
     end
     if o.oTimer >= 40 then
         o.oPosX = o.oHomeX + sins(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 2
         o.oPosZ = o.oHomeZ + coss(o.oMoveAngleYaw) * o.oAmpRadiusOfRotation * 2
+    end
+    if o.oTimer < 20 then
+        cur_obj_scale(2) 
+    elseif o.oTimer <= 49 then
+        cur_obj_scale(1)
+    end
+    if o.oTimer >= 50 then
+        cur_obj_scale(2)
     end
     
     if o.oTimer >= 62 then
