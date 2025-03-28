@@ -213,7 +213,7 @@ local TEX_NIGHTVISION5 = get_texture_info("nightvision5")
 function squishblood(o) -- Creates instant pool of impact-blood under an object.
     local m = gMarioStates[0].playerIndex
     --local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
-    spawn_sync_object(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil)
+    spawn_non_sync_object(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil)
     bloodmist(o)
     --djui_chat_message_create(tostring(count))
 
@@ -581,6 +581,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 set_mario_action(m, ACT_BUTT_SLIDE, 0)
                 m.forwardVel = 120
                 play_secondary_music(0, 0, 0, 20)
+                djui_chat_message_create("A mysterious force has saved you! What could it mean?")
                 if not s.iwbtg then
                     stream_play(edils)
                 end
@@ -1021,6 +1022,18 @@ function hook_update()
             adjust_slide_velocity(m, 50)
         elseif is_ttm and is_butt_or_dive_slide then
             adjust_slide_velocity(m, 40)
+        end
+        
+        if np.currLevelNum == LEVEL_PSS and m.pos.y < -4480 then 
+            adjust_slide_velocity(m, -50)
+        end
+    
+        local m = gMarioStates[0]
+        local is_slide_fall = m.action == ACT_FREEFALL or m.action == ACT_BUTT_SLIDE_AIR
+        if np.currLevelNum == LEVEL_PSS and is_slide_fall then
+            if m.forwardVel > 160 then
+                m.forwardVel = 30
+            end
         end
         
         if (is_pss or is_ttm) and m.action == ACT_BUTT_SLIDE then
@@ -1800,36 +1813,39 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
     if not ia(m) then return end
 
     local mObj = m.marioObj
-    local obj = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1Up)
-    local dist = dist_between_objects(mObj, obj)
-    if obj and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --if local mario is touching 1up then
-        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj.oPosX, obj.oPosY, obj.oPosZ, nil)
-        obj_mark_for_deletion(obj)
-        local_play(sFart, m.pos, 1)
+    local s1up = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1Up)
+    local dist = dist_between_objects(mObj, s1up)
+    if s1up and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --if local mario is touching 1up then
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, s1up.oPosX, s1up.oPosY, s1up.oPosZ, nil)
+        obj_mark_for_deletion(s1up)
+        local_play(sFart, m.pos, 2)
     end 
 
     local mObj = m.marioObj
-    local obj1 = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1upWalking)
-    local dist = dist_between_objects(mObj, obj1)
-    if obj1 and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x2
-        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj1.oPosX, obj1.oPosY, obj1.oPosZ, nil)
-        obj_mark_for_deletion(obj1)
-        local_play(sFart, m.pos, 1)
+    local w1up = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1upWalking)
+    local dist = dist_between_objects(mObj, w1up)
+    if w1up and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x2
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, w1up.oPosX, w1up.oPosY, w1up.oPosZ, nil)
+        obj_mark_for_deletion(w1up)
+        local_play(sFart, m.pos, 2)
     end
     
     local mObj = m.marioObj
-    local obj2 = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1upRunningAway)
-    local dist = dist_between_objects(mObj, obj2)
-    if obj2 and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x3
-        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, obj2.oPosX, obj2.oPosY, obj2.oPosZ, nil)
-        obj_mark_for_deletion(obj2)
-        local_play(sFart, m.pos, 1)
+    local r1up = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1upRunningAway)
+    local dist = dist_between_objects(mObj, r1up)
+    if r1up and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x3
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, r1up.oPosX, r1up.oPosY, r1up.oPosZ, nil)
+        obj_mark_for_deletion(r1up)
+        local_play(sFart, m.pos, 2)
     end
 
-    local demon = obj_get_nearest_object_with_behavior_id(mObj,id_bhvHidden1upInPole) -- HAS ISSUES WITH CASTLE BRIDGE DEMON
-    if np.currLevelNum ~= LEVEL_HELL and demon and nearest_interacting_mario_state_to_object(demon).playerIndex == 0 and is_within_100_units_of_mario(demon.oPosX, demon.oPosY, demon.oPosZ) == 1 then --if local mario is touching 1up then
-        obj_mark_for_deletion(demon)
-        local_play(sFart, m.pos, 1)
+    local mObj = m.marioObj
+    local h1up = obj_get_nearest_object_with_behavior_id(mObj, id_bhvHidden1up)
+    local dist = dist_between_objects(mObj, h1up)
+    if h1up and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x4
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, h1up.oPosX, h1up.oPosY, h1up.oPosZ, nil)
+        obj_mark_for_deletion(h1up)
+        local_play(sFart, m.pos, 2)
     end
 end
 ---------hooks--------

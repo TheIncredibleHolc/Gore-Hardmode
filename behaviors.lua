@@ -766,18 +766,38 @@ local function bhv_custom_toxbox(o) -- Yeah this isn't doing anything. These guy
     end
 end
 
-local function bhv_custom_tree(o) -- Trees fall down through the map when approached.
+local function bhv_custom_tree(o) -- Trees shoot into the sky until blowing up after 1.66 seconds.
     local m = gMarioStates[0]
     local np = gNetworkPlayers[0]
-    if lateral_dist_between_objects(m.marioObj, o) < 150 then
-        o.oPosY = o.oPosY - 500
-        if np.currLevelNum == LEVEL_WF and not gGlobalSyncTable.romhackcompatibility then
+    local mObj = m.marioObj
+    local grab_pole = m.action == ACT_GRAB_POLE_FAST or m.action == ACT_GRAB_POLE_SLOW
+    local hoot_act = np.currLevelNum == LEVEL_WF and np.currActNum > 2
+    
+    if lateral_dist_between_objects(m.marioObj, o) < 150 and grab_pole and o.oAction ~= 2 then
+        o.oTimer = 0
+        o.oAction = 2
+    end
+    
+    if o.oAction == 2 and o.oTimer == 1 then
+        local_play(sFireworkLaunch, m.pos, 2)
+    end
+
+    if o.oAction == 2 and o.oTimer < 50 then
+        o.oPosY = o.oPosY + 50
+    elseif o.oAction == 2 and o.oTimer == 50 then
+        obj_spawn_yellow_coins(o, 5)
+        obj_mark_for_deletion(o)   
+        spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
+        set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
+        if lateral_dist_between_objects(m.marioObj, o) < 250 then 
+            m.squishTimer = 50
+        end
+
+        if hoot_act and not gGlobalSyncTable.romhackcompatibility then
             local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
             if hoot and hoot.oHootAvailability ~= HOOT_AVAIL_WANTS_TO_TALK then
-                --spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY + 200, o.oPosZ, function (x) x.oBehParams = 20 end)
                 hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
                 play_secondary_music(0,0,0,0)
-                obj_mark_for_deletion(o)
             end
         end
     end
@@ -3209,6 +3229,7 @@ function mrboneswildride(o) --The fun never ends!!
         --djui_chat_message_create("running!")
     end
 end
+
 
 hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
 
