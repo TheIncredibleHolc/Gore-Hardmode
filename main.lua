@@ -4,25 +4,25 @@
 
 -------TESTING NOTES AND KNOWN BUGS-------------
 
-function test()
-    local m = gMarioStates[0]
-    if m.controller.buttonPressed & D_JPAD ~= 0 then
-        m.pos.x = 2400
-        m.pos.y = 819
-        m.pos.z = 1818
-        m.faceAngle.y = 16384
-        --m.numStars = 100
-        --m.pos.x = m.pos.x - 200
-    end
+--function test()
+    --local m = gMarioStates[0]
+    --if m.controller.buttonPressed & D_JPAD ~= 0 then
+        --m.pos.x = 2400
+        --m.pos.y = 819
+        --m.pos.z = 1818
+        --m.faceAngle.y = 16384
+        ----m.numStars = 100
+        ----m.pos.x = m.pos.x - 200
+    --end
 
-end
+--end
 
-hook_event(HOOK_UPDATE, test)
+--hook_event(HOOK_UPDATE, test)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
 
-gLevelValues.entryLevel = LEVEL_BBH
+gLevelValues.entryLevel = LEVEL_TOTWC
 
 --For PVP murdering. Default off.
 gGlobalSyncTable.pvp = false
@@ -46,9 +46,10 @@ gBehaviorValues.KoopaThiAgility = 14
 -- King bobomb health
 gBehaviorValues.KingBobombHealth = 6
 
---Slide and Metal cap timers
+--Slide and Metal/Wing Cap timers
 gLevelValues.pssSlideStarTime = 420 -- 14 Seconds
 gLevelValues.metalCapDuration = 90 -- 3 seconds, LOL.
+gLevelValues.wingCapDuration = 900 -- 30 seconds
 
 local savedCollisionBugStatus
 
@@ -1004,11 +1005,17 @@ function hook_update()
     local s = gStateExtras[0]
     local np = gNetworkPlayers[0]
 
+    -- Prevents flying via triple jumps. (still possible with cannons and flying on spawn)
+    if m.prevAction == ACT_FLYING_TRIPLE_JUMP and m.action == ACT_FLYING and not gGlobalSyncTable.romhackcompatibility then
+        m.flags = m.flags & (MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD)
+        set_mario_action(m, ACT_FREEFALL, 0)
+        mario_blow_off_cap(m, 75)
+        stop_cap_music()
+    end
 
-
-    -- FLY FASTER!!
+    -- WC buff (and TotWC buff because faster flying made it too easy somehow)
     if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON or m.action == ACT_THROWN_BACKWARD or m.action == ACT_THROWN_FORWARD then -- Makes flying gradually get FASTER!
-        m.forwardVel = m.forwardVel + 0.3
+        m.forwardVel = math.max(85, m.forwardVel)
         s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
     end
 
@@ -2068,3 +2075,11 @@ hook_event(HOOK_ON_PLAY_SOUND, function(sound)
     local m = gMarioStates[0]
     if sound == SOUND_OBJ_KING_BOBOMB_TALK and m.action == ACT_GRABBED then return 0 end
 end)
+
+--Wing Cap intangibility check for players with no hat on.
+function wc_tangibility(m, o, intType)
+    if (obj_has_behavior_id(o, id_bhvWingCap) ~= 0) and m.flags == m.flags & ~(MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD) and not gGlobalSyncTable.romhackcompatibility then
+        return false
+    end
+end
+hook_event(HOOK_ALLOW_INTERACT, wc_tangibility)

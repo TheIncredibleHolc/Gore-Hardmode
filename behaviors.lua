@@ -352,6 +352,16 @@ local function bhv_custom_coins(o)
     end
     o.oMoveAngleYaw = o.oAngleToMario + 0x8000
     --djui_chat_message_create(tostring(obj_get_nearest_object_with_behavior_id(mObj, id_bhvRedCoin).oMoveAngleYaw))
+
+    --local np = gNetworkPlayers[0]
+    --if np.currLevelNum == LEVEL_TOTWC then
+        --local f = obj_get_first_with_behavior_id(id_bhvCoinFormation)
+        --while f do 
+            --f.oPosY = f.oPosY - 10000
+            --obj_get_next_with_same_behavior_id(f)
+        --end
+    --end
+
 end
 
 local function bhv_custom_bully(o)
@@ -767,7 +777,7 @@ local function bhv_custom_toxbox(o) -- Yeah this isn't doing anything. These guy
 end
 
 local function bhv_custom_tree(o) -- Trees shoot into the sky until blowing up after 1.66 seconds.
-    local m = gMarioStates[0]
+local m = nearest_mario_state_to_object(o)
     local np = gNetworkPlayers[0]
     local mObj = m.marioObj
     local grab_pole = m.action == ACT_GRAB_POLE_FAST or m.action == ACT_GRAB_POLE_SLOW
@@ -3233,6 +3243,82 @@ end
 
 hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
 
+
+function bhv_custom_1up(o)
+    local m = gMarioStates[0]
+    local mObj = m.marioObj
+    
+    --if o.oAction == 1 then --1up should be chasing the player.
+        --o.oTimer = 0
+    --end
+
+    if o.oAction == 1 and o.oTimer == 1 then
+        local_play(sFloweyHa, o.header.gfx.pos, 1)
+    end
+
+    if lateral_dist_between_objects(m.marioObj, o) <= 100 and o.oAction == 1 and o.oTimer < 150 then --Runs if Mario 'touches' the 1up hitbox. 120 is actually slightly before, but would be a better option imo.
+        m.health = 0xff
+        obj_mark_for_deletion(o)
+        play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
+    elseif lateral_dist_between_objects(m.marioObj, o) > 100 and o.oAction == 1 and o.oTimer == 150 then
+        local_play(sFart, o.header.gfx.pos, 2)
+        obj_mark_for_deletion(o)
+    end
+    
+end
+
+function bhv_custom_cork_box(o)
+    local n = nearest_mario_state_to_object(o)
+    local dist = dist_between_objects(o, n.marioObj)
+    
+    if n.heldObj == o and o.oAction ~= 2 then
+        o.oTimer = 0
+        o.oAction = 2
+    elseif n.heldObj ~= o then
+        o.oAction = 0
+        obj_scale(o, 0.4)
+    end
+
+    if o.oAction == 2 and o.oTimer == 12 then
+        local_play(sMegaGrow, n.pos, 2) 
+        set_mario_action(n, ACT_HOLD_HEAVY_IDLE, 0)
+    end
+
+    if o.oAction == 2 and o.oTimer > 12 and o.oTimer <= 75 then
+        obj_scale(o, math.max(0.4, o.oTimer / 30))
+    end
+
+    if dist < 50 and n.action == ACT_HEAVY_THROW and n.actionTimer == 13 then
+        n.squishTimer = 50
+        local_play(sThrowFail, n.pos, 2)
+        obj_mark_for_deletion(o)
+    elseif dist >= 50 and o.oAction == 2 and o.oTimer == 75 then
+        n.squishTimer = 50
+        local_play(sThrowFail, n.pos, 2)
+        obj_mark_for_deletion(o)
+    end
+
+end
+
+--function castle_boo_init(o) -- Move the castle Boo further from the door to eventually begin the Boo race code (won't be too fancy because me coding noob)
+    --local np = gNetworkPlayers[0]
+
+    --if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 1 then
+        --obj_mark_for_deletion(o)
+        --spawn_non_sync_object(id_bhvBooInCastle, E_MODEL_BOO_CASTLE, -1000, 90, -2000, nil)
+    --end
+--end
+
+--function custom_snufit(o) -- Periodically shoots one large bullet at the player, faster cooldown.
+    --if o.oAction == 0 then 
+        --obj_scale(o, .5)
+    --end
+    --if o.oAction == 1 then
+        --obj_scale(3)
+    --end
+
+--end
+
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
 hook_gore_behavior(id_bhvBowserShockWave, false, nil, shockwave)
@@ -3293,7 +3379,7 @@ hook_gore_behavior(id_bhvRecoveryHeart, false, nil, bhv_custom_heart)
 hook_gore_behavior(id_bhvRrRotatingBridgePlatform, false, nil, bhv_custom_rotating_platform)
 hook_gore_behavior(id_bhvSwingPlatform, false, nil, bhv_custom_swing)
 --hook_gore_behavior(id_bhv1Up, false, nil, bhv_custom_1up)
---hook_gore_behavior(id_bhvHidden1upInPole, false, nil, bhv_custom_1up)
+hook_gore_behavior(id_bhvHidden1upInPole, false, nil, bhv_custom_1up)
 hook_gore_behavior(id_bhvFlyGuy, false, nil, bhv_custom_flyguy)
 hook_gore_behavior(id_bhvBigBoulder, false, nil, bhv_custom_boulder)
 hook_gore_behavior(id_bhvBouncingFireball, false, nil, bhv_custom_bouncing_fireball)
@@ -3336,10 +3422,14 @@ hook_gore_behavior(id_bhvBobomb, false, nil, bobomb_loop)
 hook_gore_behavior(id_bhvGoomba, false, nil, bhv_custom_goomba_loop)
 hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
 hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_custom_init, bhv_bowser_key_custom_loop)
+--hook_gore_behavior(id_bhvWingCap, false, nil, bhv_custom_wc)
 --hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
 hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
 hook_gore_behavior(id_bhvChuckya, false, nil, chuckya)
 hook_gore_behavior(id_bhvFlame, false, flame_loop)
+hook_gore_behavior(id_bhvBreakableBoxSmall, false, nil, bhv_custom_cork_box)
+--hook_gore_behavior(id_bhvBooInCastle, false, nil, castle_boo)
+--hook_gore_behavior(id_bhvSnufit, false, nil, custom_snufit)
 id_bhvHellEntrance = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, hell_entrance_init, hell_entrance_loop, "HellEntrance")
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)

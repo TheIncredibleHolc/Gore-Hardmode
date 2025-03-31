@@ -185,7 +185,9 @@ gSamples = {
     audio_sample_load("shotgun.ogg"),
     audio_sample_load("metal2.ogg"), 
     audio_sample_load("floweylaugh.ogg"), 
-    audio_sample_load("fireworklaunch.ogg")
+    audio_sample_load("fireworklaunch.ogg"), 
+    audio_sample_load("corkgrow.ogg"),
+    audio_sample_load("wehhh.ogg")
 }
 
 sBoneBreak = 1
@@ -238,6 +240,8 @@ sShotgun = 47
 sMetal2 = 48
 sFloweyHa = 49
 sFireworkLaunch = 50
+sMegaGrow = 51
+sThrowFail = 52
 
 function loop(music) audio_stream_set_looping(music, true) end
 

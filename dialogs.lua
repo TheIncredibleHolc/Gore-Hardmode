@@ -1,10 +1,47 @@
-smlua_text_utils_dialog_replace(DIALOG_000,1,6,30,200, ("Watch out idiot!"))
+smlua_text_utils_dialog_replace(DIALOG_000,1,6,30,200, ("Welcome to Bob-omb\
+Battlefield! Looks pretty\
+normal so far, eh?\
+\
+Well, why don't you go\
+talk to the locals?\
+They'll tell you all about\
+the rules of this land.\
+\
+Go on... don't be shy."))
 
-smlua_text_utils_dialog_replace(DIALOG_001,1,4,95,200, ("Hey there idiot\
+smlua_text_utils_dialog_replace(DIALOG_001,1,5,95,200, ("Hey! You! Idiot!\
 Don't you have some work\
-That you should be doing?"))
+you should be doing?\
+\
+What do you mean 'what?!'\
+Look around you, bub.\
+You're on a battlefield.\
+\
+Stuck in a war between\
+US and that stupid king.\
+There's no backing out of\
+this, so don't event THINK\
+about it.\
+\
+Ya hear me?!\
+Now get yourself together\
+and steal that damn Power\
+Star from that tyrant!\
+\
+FOR ALL OF BOB-OMB KIND!!!"))
 
-smlua_text_utils_dialog_replace(DIALOG_002,1,4,95,200, ("NO U"))
+smlua_text_utils_dialog_replace(DIALOG_002,1,4,95,200, ("hey this is sherb\
+workin on the dialog\
+all by myself\
+no one else in sight\
+yea im breaking the 4th\
+wall, so what?\
+it's not like i'll blow\
+up the instant you leave\
+this unused dialog box.\
+\
+\
+...maybe."))
 
 smlua_text_utils_dialog_replace(DIALOG_003,1,5,95,200, ("Thank you, Mario! The Big\
 Bob-omb is nothing but a\
@@ -32,8 +69,11 @@ cannons in this course for\
 you to use. Bon Voyage!"))
 
 smlua_text_utils_dialog_replace(DIALOG_005,1,3,30,200, ("Hey, Mario! You may have\
-have killed king bobomb but\
-your moves are weak!\
+have killed King Bob-omb\
+but your moves are weak!\
+Let's see what you can\
+do when your SPEED is\
+put to the test...\
 Why not try a race \
 with KOOPA THE QUICC?\
 //LFG!!////Nah..."))
@@ -45,27 +85,43 @@ Later. Look me up when\
 you want to race for\
 real."))
 
-smlua_text_utils_dialog_replace(DIALOG_007,1,5,30,200, ("Hufff...fff...pufff...\
-Whoa! You...really...are...\
-fast! A human blur!\
-Here you go--you've won\
-it, fair and square!"))
+smlua_text_utils_dialog_replace(DIALOG_007,1,4,30,200, ("Hufff...fff...pufff...\
+Howww...did youuu...hahhh...\
+beat me?...aahh...huff...\
+Heh... If... If you think...\
+this is the end...for me...\
+...haahhh...\
+well you're wrong!\
+I'll make sure...\
+hufff...\
+I'll make sure next time,\
+you're the one... who'll be\
+left in the dust!\
+Hehh...Here, take it...\
+take this Power Star...\
+I won't be needing...\
+one...ever again..."))
 
-smlua_text_utils_dialog_replace(DIALOG_009,1,5,30,200, ("Long time, no see! Wow,\
-have you gotten fast!\
-Have you been training\
-on the sly, or is it the\
-power of the Stars?\
-I've been feeling down\
-about losing the last\
-race. This is my home\
-course--how about a\
-rematch?\
-The goal is in\
-Windswept Valley.\
-Ready?\
+smlua_text_utils_dialog_replace(DIALOG_009,1,5,32,200, ("Long time, no see, Mario.\
 \
-//Go//// Don't Go"))
+You didn't think I'd\
+forget, did you?\
+\
+'I'll make sure next time,\
+you're the one who'll be\
+left in the dust!'\
+\
+Well, now's the time...\
+FOR KOOPA THE QUICCCCC!\
+Last one across the island\
+is a STINKIN' LOSER!\
+I won't even NEED this\
+STUPID Power Star.\
+Ready? Ready? READY???\
+\
+3! 2! 1!\
+\
+//GO!////WAIT STOP-"))
 
 smlua_text_utils_dialog_replace(DIALOG_010,1,4,30,200, ("You've stepped on the\
 Wing Cap Switch. Wearing\
@@ -103,10 +159,14 @@ Would you like to Save?\
 \
 //Yes////No"))
 
-smlua_text_utils_dialog_replace(DIALOG_013,1,5,30,200, ("You've collected 100\
-coins! Mario gains more\
-power from the castle.\
-Do you want to Save?\
+smlua_text_utils_dialog_replace(DIALOG_013,1,5,30,200, ("Wh-\
+How did you collect 100\
+coins?! That's impossible!\
+And the Bob-omb? You\
+survived that too?\
+That can't be...\
+\
+(Do you want to Save?)\
 //Yes////No"))
 
 smlua_text_utils_dialog_replace(DIALOG_014,1,4,30,200, ("Wow! Another Power Star!\
@@ -134,26 +194,25 @@ smlua_text_utils_dialog_replace(DIALOG_017,1,4,30,200, ("I'm the Big Bob-omb, lo
 of all blasting matter,\
 king of ka-booms the\
 world over!\
-How dare you scale my\
-mountain? By what right\
-do you set foot on my\
-imperial mountaintop?\
-You may have eluded my\
-guards, but you'll never\
-escape my grasp...\
+And I'm bigger and\
+better than ever!\
+This Power Star juiced\
+me up, so I'm even more\
+powerful than before!\
+No foe from Bowser's\
+army could stand\
+against me, and you\
+won't get that chance\
+either!\
 \
-...and you'll never take\
-away my Power Star. I\
-hereby challenge you,\
+With that being said...\
 Mario!\
-If you want the Star I\
-hold, you must prove\
-yourself in battle.\
-\
-Can you pick me up from\
-the back and hurl me to\
-this royal turf? I think\
-that you cannot!"))
+Stand your ground,\
+tighten those gloves,\
+because you're not ready...\
+...to fight against true\
+Bob-omb royalty,\
+King Bob-omb!"))
 
 smlua_text_utils_dialog_replace(DIALOG_018,1,4,30,200, ("I'm sleeping because...\
 ...I'm sleepy. I don't\
@@ -168,24 +227,28 @@ You won't like it.\
 Yours truly--\
 Princess Toadstool"))
 
-smlua_text_utils_dialog_replace(DIALOG_021,1,5,95,200, ("Welcome.\
-No one's home!\
-Now scram--\
-and don't come back!\
-Gwa ha ha!"))
+smlua_text_utils_dialog_replace(DIALOG_021,1,5,95,200, ("Mario! I've been\
+waiting for your arrival.\
+Come...\
+Let's see how you fare\
+against the Koopa Crew!\
+Bwa ha ha ha ha!"))
 
-smlua_text_utils_dialog_replace(DIALOG_022,1,2,95,200, ("You need a key to open\
-this door."))
+smlua_text_utils_dialog_replace(DIALOG_022,1,2,95,200, ("You didn't think you\
+could unlock this now,\
+did you?"))
 
-smlua_text_utils_dialog_replace(DIALOG_023,1,3,95,200, ("This key doesn't fit!\
-Maybe it's for the\
-basement..."))
+smlua_text_utils_dialog_replace(DIALOG_023,1,3,95,200, ("Who would've guessed?\
+The key doesn't fit in\
+the key hole!"))
 
-smlua_text_utils_dialog_replace(DIALOG_024,1,5,95,200, ("You need Star power to\
-open this door. Recover a\
-Power Star from an enemy\
-inside one of the castle's\
-paintings."))
+smlua_text_utils_dialog_replace(DIALOG_024,1,3,95,200, ("You need Star Power to\
+open this door. Do you\
+have Star Power?\
+No?\
+\
+\
+Well, sucks to suck."))
 
 smlua_text_utils_dialog_replace(DIALOG_025,1,4,95,200, ("It takes the power of\
 3 Stars to open this\
@@ -237,15 +300,36 @@ buzzer will sound. This is\
 the Lakitu Bros.,\
 signing off."))
 
-smlua_text_utils_dialog_replace(DIALOG_031,1,5,30,200, ("No way! You beat me...\
-again!! And I just spent\
-my entire savings on\
-these new Koopa\
-Mach 1 Sprint shoes!\
-Here, I guess I have to\
-hand over this Star to\
-the winner of the race.\
-Congrats, Mario!"))
+smlua_text_utils_dialog_replace(DIALOG_031,1,5,30,200, ("You...\
+\
+beat me...?\
+\
+AGAIN?!?\
+DO YOU KNOW HOW MUCH I\
+HAD TO SPEND?\
+\
+WHAT I HAD TO SACRIFICE\
+JUST SO I COULD WIN?\
+THE MACH^2 SHOES!\
+THE MUSHROIDS!\
+EVERYTHING I EVER OWNED!\
+\
+ALL TO FIND OUT...\
+YOU USED MY COUSIN'S\
+SHELL AND STOMPED ON\
+HIS DEAD CORPSE JUST TO\
+WIN THIS STUPID\
+F#$@ING RACE!\
+...\
+\
+Here...\
+\
+take it.\
+...\
+\
+...\
+\
+Leave me alone, Mario."))
 
 smlua_text_utils_dialog_replace(DIALOG_032,1,5,30,200, ("If you get the Wing Cap,\
 you can fly! Put the cap\
@@ -378,13 +462,15 @@ smlua_text_utils_dialog_replace(DIALOG_040,1,3,30,200, ("Warning!\
 Cold, Cold Crevasse\
 Below!"))
 
-smlua_text_utils_dialog_replace(DIALOG_041,1,3,30,200, ("I win! You lose!\
-Ha ha ha!\
-\
-That's what you get for\
-messin' with Koopa the\
-Quick.\
-Better luck next time!"))
+smlua_text_utils_dialog_replace(DIALOG_041,1,3,30,200, ("AHA!\
+HAHAHAHAHAHA!\
+I'VE FINALLY WON!\
+THAT'S what happens\
+when YOU mess with\
+KOOPA THE QUICCCCC!!\
+EAT!\
+MY!\
+DUST!"))
 
 smlua_text_utils_dialog_replace(DIALOG_042,1,4,30,200, ("Caution! Narrow Bridge!\
 Cross slowly!\
@@ -507,7 +593,7 @@ Control Stick. To slow\
 down, pull back."))
 
 smlua_text_utils_dialog_replace(DIALOG_055,1,4,30,200, ("If you can't handle\
-Koopa the quicc,\
+Koopa the QUICC,\
 you're not ready for\
 PENGUIN THE THICC!!\
 RACE TO THE DEATH!\
@@ -1215,26 +1301,15 @@ into metal with the Metal\
 Cap, you can walk\
 underwater! Try it!"))
 
-smlua_text_utils_dialog_replace(DIALOG_131,1,5,30,200, ("Welcome to the Wing Cap\
-Course! Step on the red\
-switch at the top of the\
-tower, in the center of\
-the rainbow ring.\
-When you trigger the\
-switch, all of the red\
-blocks you find will\
-become solid.\
+smlua_text_utils_dialog_replace(DIALOG_131,1,5,30,200, ("Woah! You're going pretty\
+fast there bud.\
 \
-Try out the Wing Cap! Do\
-the Triple Jump to take\
-off and press [Z] to land.\
+Don't you wanna slooooow\
+down a bit?\
+You can't?\
 \
-\
-Pull back on the Control\
-Stick to go up and push\
-forward to nose down,\
-just as you would when\
-flying an airplane."))
+Awwwww...\
+What a shame."))
 
 smlua_text_utils_dialog_replace(DIALOG_132,1,4,30,200, ("Whoa, Mario, pal, you\
 aren't trying to cheat,\
