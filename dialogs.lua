@@ -123,14 +123,18 @@ Ready? Ready? READY???\
 \
 //GO!////WAIT STOP-"))
 
-smlua_text_utils_dialog_replace(DIALOG_010,1,4,30,200, ("You've stepped on the\
-Wing Cap Switch. Wearing\
-the Wing Cap, you can\
-soar through the sky.\
-Now Wing Caps will pop\
-out of all the red blocks\
-you find.\
+smlua_text_utils_dialog_replace(DIALOG_010,1,5,30,200, ("You've stepped on the\
+Wing Cap Switch!\
+While equipped, you'll\
+soar through the sky at\
+unimaginably fast speeds!\
+But be careful...\
 \
+Your cap has a mind of \
+its own, and could eject\
+if used improperly!\
+All Wing Cap boxes have\
+been enabled.\
 Would you like to Save?\
 \
 //Yes////No"))
@@ -315,11 +319,11 @@ THE MUSHROIDS!\
 EVERYTHING I EVER OWNED!\
 \
 ALL TO FIND OUT...\
-YOU USED MY COUSIN'S\
-SHELL AND STOMPED ON\
-HIS DEAD CORPSE JUST TO\
-WIN THIS STUPID\
-F#$@ING RACE!\
+YOU STOMPED ON MY COUSIN\
+AND KILLED HIM IN COLD\
+BLOOD, THEN USED HIS\
+SHELL LIKE A F#$@ING\
+SURFBOARD JUST TO WIN!\
 ...\
 \
 Here...\

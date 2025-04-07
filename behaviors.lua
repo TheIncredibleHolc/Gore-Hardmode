@@ -353,15 +353,6 @@ local function bhv_custom_coins(o)
     o.oMoveAngleYaw = o.oAngleToMario + 0x8000
     --djui_chat_message_create(tostring(obj_get_nearest_object_with_behavior_id(mObj, id_bhvRedCoin).oMoveAngleYaw))
 
-    --local np = gNetworkPlayers[0]
-    --if np.currLevelNum == LEVEL_TOTWC then
-        --local f = obj_get_first_with_behavior_id(id_bhvCoinFormation)
-        --while f do 
-            --f.oPosY = f.oPosY - 10000
-            --obj_get_next_with_same_behavior_id(f)
-        --end
-    --end
-
 end
 
 local function bhv_custom_bully(o)
@@ -386,8 +377,13 @@ local function bhv_custom_explosion(o) -- replaces generic explosions with NUKES
         local_play(sBigExplosion, m.pos, 1)
         cur_obj_shake_screen(SHAKE_POS_LARGE)
         spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, o.oPosX, o.oPosY, o.oPosZ, nil, 0)
-        if dist_between_objects(o, m.marioObj) <= 850 then
+        if dist_between_objects(o, m.marioObj) <= 850 and m.flags & MARIO_METAL_CAP == 0 then
             m.squishTimer = 50
+        elseif dist_between_objects(o, m.marioObj) <= 850 and MARIO_METAL_CAP ~= 0 then -- i think i did this for testing, may keep it for romhack compatibility
+            m.capTimer = 1
+            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+            set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+            stop_cap_music()
         end
         if o.oChicken == 1 then
             local_play(sChicken, m.pos, 1)
@@ -496,9 +492,60 @@ local function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredicta
             cutscene_object_with_dialog(CUTSCENE_DIALOG, o, o.oBehParams)
         end
     end
+
     if o.oTimer >= 16 and o.oAction == OBJ_ACT_SQUISHED then
         squishblood(o)
         local_play(sSplatter, m.pos, 1)
+        
+        local mo = m.marioObj --Spawns Goombas when Mario kills a Huge Goomba (may change spawned goombas to Tiny Goombas if I can figure out how to attach them to the player)
+        if obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and (o.oBehParams2ndByte & (GOOMBA_BP_TRIPLET_FLAG_MASK) ~= 0 or 
+        o.oBehParams2ndByte & GOOMBA_BP_SIZE_MASK == 1) then
+            spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, o.oPosX, o.oPosY, o.oPosZ, function(g) 
+                    g.oBehParams2ndByte = 0 
+                    g.oMoveAngleYaw = mo.oMoveAngleYaw + 16384
+                    g.oBehParams2ndByte = 4
+                end)
+            spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, o.oPosX, o.oPosY, o.oPosZ, function(g) 
+                    g.oBehParams2ndByte = 0
+                    g.oMoveAngleYaw = mo.oMoveAngleYaw - 16384
+                    g.oBehParams2ndByte = 4
+                end)
+
+                -- Initial plans were to make Huge Goombas immune to all squish attacks except for ground pounds, but there was a bug with themm escaping their squished state and entering an intangible state. pls fix
+                --if m.action ~= ACT_GROUND_POUND and (o.oAction == OBJ_ACT_VERTICAL_KNOCKBACK or o.oAction == OBJ_ACT_HORIZONTAL_KNOCKBACK or o.oAction == OBJ_ACT_SQUISHED) then
+                    --o.oVelX = 0
+                    --o.oVelY = 0
+                    --o.oVelZ = 0
+                    --o.oForwardVel = 0
+                    --o.oGoombaRelativeSpeed = 0
+                    --o.oAction = 0
+                --elseif m.action == ACT_GROUND_POUND and o.oAction == OBJ_ACT_SQUISHED then
+                    --whatever stops them from escaping ground pounds
+                --end
+            
+                --end
+            
+        end
+    end
+
+    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
+        if m.action == ACT_PUNCHING or m.action == ACT_JUMP_KICK or m.action == ACT_MOVE_PUNCHING or m.action == ACT_DIVE or (m.action == ACT_DIVE_SLIDE and m.vel > 12) or m.action == ACT_SLIDEKICK or (m.action == ACT_SLIDEKICK_SLIDE and m.vel > 12) or m.action == ACT_GROUND_POUND or m.action == ACT_FLAG_BUTT_OR_STOMACH_SLIDE then
+           return 
+        else
+            set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+            m.capTimer = 1
+            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+            play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+            stop_cap_music()
+        end 
+    end
+end
+
+local function goom_int(m, o, intType) -- Intangibility check specifically for Huge Goombas' goomba spawns on death, could cause unresponsiveness when killing goombas too early.
+    if obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and o.oBehParams2ndByte == 4 and o.oTimer <= 5 then
+    --djui_chat_message_create("goom")
+        if o.oTimer <= 5 then
+        return false end
     end
 end
 
@@ -777,7 +824,7 @@ local function bhv_custom_toxbox(o) -- Yeah this isn't doing anything. These guy
 end
 
 local function bhv_custom_tree(o) -- Trees shoot into the sky until blowing up after 1.66 seconds.
-local m = nearest_mario_state_to_object(o)
+    local m = nearest_mario_state_to_object(o)
     local np = gNetworkPlayers[0]
     local mObj = m.marioObj
     local grab_pole = m.action == ACT_GRAB_POLE_FAST or m.action == ACT_GRAB_POLE_SLOW
@@ -799,8 +846,15 @@ local m = nearest_mario_state_to_object(o)
         obj_mark_for_deletion(o)   
         spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
         set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
-        if lateral_dist_between_objects(m.marioObj, o) < 250 then 
-            m.squishTimer = 50
+        if lateral_dist_between_objects(m.marioObj, o) < 250 then
+            if m.flags & MARIO_METAL_CAP == 0 then 
+                m.squishTimer = 50
+            elseif m.flags & MARIO_METAL_CAP ~= 0 then -- doesn't do anything and i have no idea why
+                set_mario_action(m, ACT_FLAG_AIRBORNE, 0)
+                set_mario_action(m, ACT_HARD_BACKWARD_AIR_KB, 0)
+                play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+                stop_cap_music()
+            end
         end
 
         if hoot_act and not gGlobalSyncTable.romhackcompatibility then
@@ -966,7 +1020,7 @@ end
 local function lava_loop(o)
     local m = gMarioStates[0]
     np = gNetworkPlayers[0]
-    if np.currLevelNum ~= LEVEL_HMC then
+    if np.currLevelNum ~= LEVEL_JRB and np.currLevelNum ~= LEVEL_HMC then
         load_object_collision_model()
     end
     if np.currLevelNum == LEVEL_HMC and m.pos.y < -2500 then
@@ -2675,6 +2729,14 @@ local function scuttlebug_loop(o)
         local_play(sSplatter, m.pos, 1)]]
     end
     --djui_chat_message_create(tostring(o.oSubAction))
+
+    if dist < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
+        set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+        m.capTimer = 1
+        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+        play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+        stop_cap_music()
+    end
 end
 
 local function boo_vanish_or_appear(o) -- Translation of the boo hiding function
@@ -2955,8 +3017,14 @@ local function rock_shrapnel_loop(o)
     local m = nearest_mario_state_to_object(o)
     local mObj = m.marioObj
     local dist = dist_between_objects(mObj, o)
-    if dist < 200 * o.header.gfx.scale.x then
+    if dist < 200 * o.header.gfx.scale.x and m.flags & MARIO_METAL_CAP == 0 and m.action ~= ACT_HARD_BACKWARD_GROUND_KB then
         m.squishTimer = 50
+    elseif dist < 200 * o.header.gfx.scale.x and m.flags & MARIO_METAL_CAP ~= 0 then
+        set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+        m.capTimer = 1
+        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+        play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+        stop_cap_music()
     end
 end
 
@@ -2970,6 +3038,14 @@ function piranha_plant(o)
 		cur_obj_rotate_yaw_toward(obj_angle_to_object(o, m.marioObj), 0x400) ]]
         o.oPosY = o.oFloorHeight
         cur_obj_move_using_fvel_and_gravity()
+    end
+
+    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then -- same MC removel knockback for goombas
+        set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+        m.capTimer = 1
+        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+        play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+        stop_cap_music()
     end
 end
 
@@ -3244,7 +3320,7 @@ end
 hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
 
 
-function bhv_custom_1up(o)
+function bhv_custom_1up(o) -- Chases the nearest player for 5 seconds in a green demon state before despawning.
     local m = gMarioStates[0]
     local mObj = m.marioObj
     
@@ -3256,11 +3332,11 @@ function bhv_custom_1up(o)
         local_play(sFloweyHa, o.header.gfx.pos, 1)
     end
 
-    if lateral_dist_between_objects(m.marioObj, o) <= 100 and o.oAction == 1 and o.oTimer < 150 then --Runs if Mario 'touches' the 1up hitbox. 120 is actually slightly before, but would be a better option imo.
+    if lateral_dist_between_objects(m.marioObj, o) <= 120 and o.oAction == 1 and o.oTimer < 120 then --Runs if Mario 'touches' the 1up hitbox. 120 is actually slightly before, but would be a better option imo.
         m.health = 0xff
         obj_mark_for_deletion(o)
         play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
-    elseif lateral_dist_between_objects(m.marioObj, o) > 100 and o.oAction == 1 and o.oTimer == 150 then
+    elseif lateral_dist_between_objects(m.marioObj, o) > 120 and o.oAction == 1 and o.oTimer == 150 then
         local_play(sFart, o.header.gfx.pos, 2)
         obj_mark_for_deletion(o)
     end
@@ -3300,14 +3376,11 @@ function bhv_custom_cork_box(o)
 
 end
 
---function castle_boo_init(o) -- Move the castle Boo further from the door to eventually begin the Boo race code (won't be too fancy because me coding noob)
-    --local np = gNetworkPlayers[0]
-
-    --if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 1 then
-        --obj_mark_for_deletion(o)
-        --spawn_non_sync_object(id_bhvBooInCastle, E_MODEL_BOO_CASTLE, -1000, 90, -2000, nil)
-    --end
---end
+function castle_boo_init(o) -- Move the castle Boo further from the door to eventually start on the boo rushdown possession kill
+    o.oPosX = -1000
+    o.oPosY = 50
+    o.oPosZ = -1800 
+end
 
 --function custom_snufit(o) -- Periodically shoots one large bullet at the player, faster cooldown.
     --if o.oAction == 0 then 
@@ -3340,7 +3413,7 @@ hook_gore_behavior(id_bhvLllDrawbridge, false, nil, obj_explode_if_within_150_un
 hook_gore_behavior(id_bhvWfRotatingWoodenPlatform, false, nil, obj_explode_if_within_150_units)
 hook_gore_behavior(id_bhvBlueCoinSwitch, false, nil, coin_switch)
 hook_gore_behavior(id_bhvRedCoin, false, bhv_custom_coins_init, bhv_custom_coins)
---hook_gore_behavior(id_bhvYellowCoin, false, nil, bhv_custom_coins)
+hook_gore_behavior(id_bhvYellowCoin, false, nil, bhv_custom_coins)
 hook_gore_behavior(id_bhvCoinFormationSpawn, true, bhv_custom_coins_init, bhv_custom_coins)
 hook_gore_behavior(id_bhvScuttlebug, false, nil, scuttlebug_loop)
 hook_gore_behavior(id_bhvSkeeter, false, nil, skeeter_loop)
@@ -3420,6 +3493,7 @@ hook_gore_behavior(id_bhvBobBowlingBallSpawner, false, nil, bhv_custom_bowlballs
 hook_gore_behavior(id_bhvExplosion, false, bhv_custom_explosion, nil)
 hook_gore_behavior(id_bhvBobomb, false, nil, bobomb_loop)
 hook_gore_behavior(id_bhvGoomba, false, nil, bhv_custom_goomba_loop)
+hook_event(HOOK_ALLOW_INTERACT, goom_int)
 hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
 hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_custom_init, bhv_bowser_key_custom_loop)
 --hook_gore_behavior(id_bhvWingCap, false, nil, bhv_custom_wc)
@@ -3428,7 +3502,7 @@ hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
 hook_gore_behavior(id_bhvChuckya, false, nil, chuckya)
 hook_gore_behavior(id_bhvFlame, false, flame_loop)
 hook_gore_behavior(id_bhvBreakableBoxSmall, false, nil, bhv_custom_cork_box)
---hook_gore_behavior(id_bhvBooInCastle, false, nil, castle_boo)
+hook_gore_behavior(id_bhvBooInCastle, false, nil, castle_boo_init)
 --hook_gore_behavior(id_bhvSnufit, false, nil, custom_snufit)
 id_bhvHellEntrance = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, hell_entrance_init, hell_entrance_loop, "HellEntrance")
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
