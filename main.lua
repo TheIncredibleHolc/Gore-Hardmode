@@ -4,20 +4,25 @@
 
 -------TESTING NOTES AND KNOWN BUGS-------------
 
---function test()
-    --local m = gMarioStates[0]
-    --if m.controller.buttonPressed & D_JPAD ~= 0 then
-        --m.pos.x = 2400
-        --m.pos.y = 819
-        --m.pos.z = 1818
+-- goombas can double squish while in "chase mode"
+-- the player's velocity is carried over whentakign fall damage on a downwards slope
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+function test()
+    local m = gMarioStates[0]
+    if m.controller.buttonPressed & Y_BUTTON ~= 0 then
+        m.pos.x = -3601
+        m.pos.y = -4279
+        m.pos.z = 3591
         --m.faceAngle.y = 16384
-        ----m.numStars = 100
-        ----m.pos.x = m.pos.x - 200
-    --end
+        --m.numStars = 100
+        --m.pos.x = m.pos.x - 200
+    end
 
---end
+end
 
---hook_event(HOOK_UPDATE, test)
+hook_event(HOOK_UPDATE, test)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -- GBEHAVIORVALUES -- Fast switches to manipulate the game.
@@ -48,7 +53,7 @@ gBehaviorValues.KingBobombHealth = 6
 
 --Slide and Metal/Wing Cap timers
 gLevelValues.pssSlideStarTime = 420 -- 14 seconds
-gLevelValues.metalCapDuration = 1500 -- 50 seconds (only for JRH, it'll decrease in other levels)
+gLevelValues.metalCapDuration = 1500 -- 45 seconds (only for JRH, it'll decrease in other levels)
 gLevelValues.wingCapDuration = 900 -- 30 seconds
 gLevelValues.wingCapDurationTotwc = 2250 -- 75 seconds (good luck running out of that)
 
@@ -476,7 +481,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             set_fog_color(2, 200)
         end
     
-        if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then
+        if np.currLevelNum == LEVEL_JRB then
             if gLakituState.pos.y < 944 then
                 --set_lighting_color(0, 255)
                 --set_lighting_color(1, 255)
@@ -499,6 +504,32 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 set_fog_color(0, 255)
                 set_fog_color(1, 127)
                 set_fog_color(2, 100)
+            end
+        end
+
+        if np.currLevelNum == LEVEL_HMC then
+            if gLakituState.pos.y < -4900 then
+                set_lighting_color(0, 255)
+                set_lighting_color(1, 127)
+                set_lighting_color(2, 100)
+                set_lighting_dir(1, -128)
+                set_vertex_color(0, 58)
+                set_vertex_color(1, 66)
+                set_vertex_color(2, 17)
+                set_fog_color(0, 255)
+                set_fog_color(1, 127)
+                set_fog_color(2, 100)
+            else
+                set_lighting_color(0, 255)
+                set_lighting_color(1, 255)
+                set_lighting_color(2, 255)
+                set_lighting_dir(1, 0)
+                set_vertex_color(0, 255)
+                set_vertex_color(1, 255)
+                set_vertex_color(2, 255)
+                set_fog_color(0, 255)
+                set_fog_color(1, 255)
+                set_fog_color(2, 255)
             end
         end
 
@@ -717,7 +748,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             network_play(sSplatter, m.pos, 1, m.playerIndex)
             s.splatterdeath = 1
             s.splatter = 0
-            s.disappear = 1 -- No corpse mode.  
+            s.disappear = 1 -- No corpse mode.  +
         end
     end
     if (s.splatterdeath) == 1 then
@@ -984,6 +1015,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 disable_time_stop()
                 set_ttc_speed_setting(TTC_SPEED_FAST)
             end
+            execute_mario_action(m.marioObj)
         end
     end
  ----------------------------------------------------------------------------------------------------------------------------------
@@ -1056,15 +1088,14 @@ function hook_update()
 
  -------------------------------------------------------------------------------------------------------------------------------------------------------------    
     -- Alters the Metal Cap timer outside of JRH to be "fair".
-    if m.flags & MARIO_METAL_CAP ~= 0 and np.currLevelNum ~= LEVEL_JRB and not gGlobalSyncTable.romhackcompatibility then --thank you sunk for being romhack mods pro
-        local cap_timer = m.capTimer - 2
+    if m.flags & MARIO_METAL_CAP ~= 0 and m.action & ACT_FLAG_METAL_WATER == 0 and m.action ~= ACT_STAR_DANCE_EXIT and m.action ~= ACT_WATER_PLUNGE and not gGlobalSyncTable.romhackcompatibility then 
+        local cap_timer = m.capTimer - 1  --thank you sunk for being romhack mods pro
         if cap_timer > 1 then
-            m.capTimer = cap_timer
+            m.capTimer = cap_timer 
             if is_game_paused() then
-                m.capTimer = m.capTimer + 2
+                m.capTimer = m.capTimer + 1
             end
         end 
-        
         if mario_is_within_rectangle(1700, 6300, -6400, 800) ~= 0 and np.currLevelNum == LEVEL_HMC and not gGlobalSyncTable.romhackcompatibility then
             local cap_timer = m.capTimer - 10
             if cap_timer > 1 then
@@ -1074,7 +1105,6 @@ function hook_update()
                 end
             end
         end
-
     end
 
     if (m.flags & (MARIO_VANISH_CAP) ~= 0) then
@@ -1094,7 +1124,7 @@ function hook_update()
         end
         
         if np.currLevelNum == LEVEL_PSS and m.pos.y < -4480 then 
-            adjust_slide_velocity(m, -50)
+            m.forwardVel = math.min(m.forwardVel, 60)
         end
     
         local m = gMarioStates[0]
@@ -1185,30 +1215,40 @@ function hook_update()
     end
 ----------------------------------------------------------------------------------------------------------------------------------
     -- Jolly Roger Hell rework (Metal Cap required)
-    if np.currLevelNum == LEVEL_JRB and np.currAreaIndex == 1 then
-        --djui_chat_message_create("BURNNNNNN")
+    if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC and not gGlobalSyncTable.romhackcompatibility then
         texture_override_set("texture_waterbox_jrb_water", TEX_JRHLAVA)
-    
-        if m.flags & MARIO_METAL_CAP == 0 and (m.action == ACT_WATER_ACTION_END or m.action == ACT_WATER_PLUNGE) then
-            m.vel.y = 0
-            m.action = ACT_WATER_DEATH
-            m.health = 0xff
+        texture_override_set("texture_waterbox_water", TEX_JRHLAVA)
+        --djui_chat_message_create("BURNNNNNN")
+        
+        local spawned = false
+        local fire = obj_get_first_with_behavior_id(id_bhvFakeFire)
+        local inlava = m.pos.y <= m.waterLevel
+        if m.action == ACT_FLAG_SWIMMING & ACT_WATER_PLUNGE or (inlava and m.flags & MARIO_METAL_CAP == 0) then
+            if np.currAreaIndex == 1 then
+                m.health = m.health - 16
+                if is_game_paused() or m.action == ACT_STAR_DANCE_WATER or (m.flags & MARIO_METAL_CAP ~= 0 and m.action == ACT_WATER_PLUNGE) then -- the water plunge + metal mario check is killing me
+                m.health = m.health + 16
+                end
+            elseif np.currAreaIndex == 2 then
+                m.health = m.health - 6
+                if is_game_paused() or m.action == ACT_STAR_DANCE_WATER then
+                    m.health = m.health + 6
+                end
+            end   
+            while fire ~= nil do
+                spawn_non_sync_object(id_bhvFakeFire, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil)  -- this is doing nothing
+                spawned = true
+                break
+                fire = obj_get_next_with_behavior_id(fire)
+            end
 
-        elseif m.flags & MARIO_METAL_CAP == 0 and (m.action == ACT_WATER_IDLE or m.prevAction == ACT_FORWARD_WATER_KB or m.prevAction == ACT_BACKWARD_WATER_KB) then
-            m.action = ACT_DROWNING
-            m.health = 0xff
-
-        elseif m.flags & MARIO_METAL_CAP ~= 0 and (m.action == ACT_FORWARD_WATER_KB or m.action == ACT_BACKWARD_WATER_KB) then
-            m.capTimer = 1
-            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
-            play_sound(SOUND_ACTION_METAL_BONK, m.pos)
-            stop_cap_music()
         end
     else
         texture_override_reset("texture_waterbox_jrb_water")
+        texture_override_reset("texture_waterbox_water")
     end
 ----------------------------------------------------------------------------------------------------------------------------------
-    --(Hazy Maze Cave) Mario get high when walking in gas. 
+    --(Hazy Maze Cave) Mario get high when walking in gas.
     if np.currLevelNum == LEVEL_HMC then
         s.outsidegastimer = s.outsidegastimer + 1 -- This is constantly counting up. As long as Mario is in gas, this number will keep getting set back to zero. If Mario isnt in gas, the timer will count up to 60 and trigger some "not in gas" commands. 
 
@@ -1317,9 +1357,10 @@ function hook_update()
             s.highdeathtimer = 0
             s.isdead = true
         end
+        --if get_network_player_smallest_global().localIndex == 0 then
+        --    spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, nil)
+        --end
     end
-
-
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -1403,8 +1444,13 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
     end
 
     --Skeeter insta-kill
-    if obj_has_behavior_id(o, id_bhvSkeeter) ~= 0 and (m.hurtCounter > 0) then
-        m.squishTimer = 50
+    if obj_has_behavior_id(o, id_bhvSkeeter) ~= 0 then
+        if (m.hurtCounter > 0) then
+            m.squishtimer = 50
+        elseif o.oInteractStatus & INT_STATUS_WAS_ATTACKED ~= 0 then -- Thx xLuigiGamerx
+            squishblood(o)
+            local_play(sSplatter, m.pos, 1)
+        end
     end
 
     --Scuttlebug insta-kill and gore
@@ -1421,6 +1467,16 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
     --JRB falling pillar insta-kill
     if obj_has_behavior_id(o, id_bhvFallingPillarHitbox) ~= 0 and (m.hurtCounter > 0) then
         m.squishTimer = 50
+    end
+
+    --Swoop insta-kill
+    if obj_has_behavior_id(o, id_bhvSwoop) ~= 0 then 
+        if (m.hurtCounter > 0) then
+            m.squishtimer = 50
+        elseif o.oInteractStatus & INT_STATUS_WAS_ATTACKED ~= 0 then -- Thx xLuigiGamerx
+            squishblood(o)
+            local_play(sSplatter, m.pos, 1)
+        end
     end
 
     --Others
@@ -2407,14 +2463,25 @@ end
     ---end
 --end
 
-function thi_init() -- Moves the only Huge Triplet Goombas further from spawn (for fairness)
+function level_obj_init() -- Moves the only Huge Triplet Goombas further from spawn (for fairness)
     local np = gNetworkPlayers[0]
     local o = obj_get_first_with_behavior_id(id_bhvGoombaTripletSpawner)
     local m = gMarioStates[0]
-    if np.currLevelNum == LEVEL_THI and np.currAreaIndex == 1 then
-        while o do 
-            obj_move_xyz(o, 500, 0, -500)
-            o = obj_get_next_with_same_behavior_id(o)
+    if not gGlobalSyncTable.romhackcompatibility then
+        if np.currLevelNum == LEVEL_THI and np.currAreaIndex == 1 then
+            while o do 
+                obj_move_xyz(o, 500, 0, -500)
+                o = obj_get_next_with_same_behavior_id(o)
+            end
+        end
+
+        -- Moves the Floor Switch deeper within the lava pool.
+        local f = obj_get_first_with_behavior_id(id_bhvFloorSwitchGrills)
+        if np.currLevelNum == LEVEL_HMC then 
+            f.oPosX = -4890
+            f.oPosY = -6327  
+            f.oPosZ = 4890
+            --spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, nil)  --the issue
         end
     end
 end
@@ -2434,7 +2501,7 @@ hook_event(HOOK_MARIO_UPDATE, movesets_update)
 hook_event(HOOK_ON_SET_MARIO_ACTION, movesets_on_set_action)
 hook_event(HOOK_BEFORE_PHYS_STEP, movesets_before_phys_step)
 --hook_event(HOOK_ON_OBJECT_UNLOAD, huge_goom_ded)
-hook_event(HOOK_ON_LEVEL_INIT, thi_init)
+hook_event(HOOK_ON_LEVEL_INIT, level_obj_init)
 hook_event(HOOK_ON_WARP, thi_mini)
 -----------------------------------------------------------------------------------------------------------------------------------------------------------
 function castle_boo_init() -- Move the castle Boo further from the door to eventually begin the Boo race code (won't be too fancy because me coding noob)
@@ -2465,7 +2532,7 @@ hook_event(HOOK_BEFORE_SET_MARIO_ACTION, bbh_no_wkicks)
 hook_event(HOOK_ON_SET_MARIO_ACTION, bbh_no_wkicks)
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-local function jrh_death(m)
+local function fake_lava_death(m)
     if m.action == ACT_WATER_DEATH then
         set_mario_action(m, ACT_GONE, 1)
         network_play(sSplash, m.pos, 1, m.playerIndex)
@@ -2480,4 +2547,66 @@ local function jrh_death(m)
     end
 end 
 
-hook_event(HOOK_ON_DEATH, jrh_death)
+function no_lava_heal(m)
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC and not gGlobalSyncTable.romhackcompatibility then
+        if m.playerIndex ~= 0 then
+            return
+        end
+        if (m.health >= 0x100) then
+            --djui_chat_message_create("F")
+            if ((m.healCounter or m.hurtCounter) == 0) then
+                --djui_chat_message_create("FI")
+                if ((m.action & ACT_FLAG_SWIMMING ~= 0) and (m.action & ACT_FLAG_INTANGIBLE == 0)) then
+                    --djui_chat_message_create("FIR")
+                    if ((m.pos.y >= (m.waterLevel - 140))) then
+                        m.health = m.health - 26
+                        --djui_chat_message_create("FIRE")
+                    elseif is_game_paused and (m.pos.y >= (m.waterLevel - 140)) then
+                        m.health = m.health - 26
+                    end
+                end
+            end
+        end
+    end
+    
+end 
+
+local function spawn_objs_init()
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum == LEVEL_HMC then
+        -- spawns coins to hint towards the new floor switch location
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4460, 4890, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4260, 4890, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -5321, -6327, 3500, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4900, -6327, 2220, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3500, -6327, 1750, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 2150, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -1760, -6327, 3630, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 4910, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3560, -6327, 5330, nil)
+        spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3580, -5221, -825, function(f) 
+            f.oBehParams2ndByte = 4
+            f.oFaceAngleYaw = 0    
+            end)
+        
+        -- spawns JRH rocks for obstacles (unused due to model desyncing)
+        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -4936, -5500, 260, nil)
+        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -5010, -6035, 2690, nil)
+        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -5870, -5680, 4455, nil)
+        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -4390, -6010, 5340, nil)
+    elseif np.currLevelNum == LEVEL_BOB then
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6233, 975, 3337, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 3337, 791, 3265, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 4499, 768, 6669, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 5294, 1020, 5154, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6948, 873, 5019, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6394, 768, 6766, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 2586, 768, 6719, nil)
+    end
+end
+
+hook_event(HOOK_ON_SYNC_VALID, spawn_objs_init)
+hook_event(HOOK_MARIO_UPDATE, no_lava_heal)
+hook_event(HOOK_ON_DEATH, fake_lava_death)

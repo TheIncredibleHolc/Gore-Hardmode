@@ -842,7 +842,7 @@ local function bhv_custom_tree(o) -- Trees shoot into the sky until blowing up a
     if o.oAction == 2 and o.oTimer < 50 then
         o.oPosY = o.oPosY + 50
     elseif o.oAction == 2 and o.oTimer == 50 then
-        obj_spawn_yellow_coins(o, 5)
+        obj_spawn_yellow_coins(o, 3)
         obj_mark_for_deletion(o)   
         spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
         set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
@@ -2694,6 +2694,17 @@ local function heaveho_loop(o)
         m.forwardVel = 45
         m.vel.y = m.vel.y + 80
     end
+    if o.oAction == 1 then 
+        o.oAction = 2
+    end
+    if o.oAction == 2 then
+        o.oForwardVel = 60  -- this isnt doing anything
+        --djui_chat_message_create("zoooom")
+        if o.oTimer == 30 then
+            o.oTimer = 0
+        end
+    end
+
 end
 
 local function skeeter_loop(o)
@@ -2962,15 +2973,22 @@ local function clam_shell_loop(o)
         --o.oTimer = 0
         --djui_chat_message_create("real")
     end
+    if m.flags & MARIO_METAL_CAP ~= 0 and (m.action == ACT_FORWARD_WATER_KB or m.action == ACT_BACKWARD_WATER_KB) then
+        m.capTimer = 1
+        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+        play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+        stop_cap_music()
+    end
+    
     --djui_chat_message_create(tostring(obj_get_nearest_object_with_behavior_id(mObj, id_bhvClamShell).oTimer))
-    --djui_chat_message_create(tostring(obj_get_nearest_object_with_behavior_id(mObj, id_bhvClamShell).header.gfx.animInfo.animFrame))
+    --djui_chat_message_create(tostring(obj_get_nearest_object_with_behavior_id(mObj, id_bhvClamShell).header.gfx.animInfo.animFrame))     
 end
 
 local function chest_bottom_init(o) -- *Epically messes up with your muscle memory*
-    if o.oBehParams2ndByte ~= 1 then
+    if o.oBehParams2ndByte ~= 1 and o.oBehParams2ndByte ~= 3 then
         o.oBehParams2ndByte = o.oBehParams2ndByte - 1
     else
-        o.oBehParams2ndByte = 4
+        o.oBehParams2ndByte = o.oBehParams2ndByte + 1
     end
 end
 
@@ -3017,14 +3035,16 @@ local function rock_shrapnel_loop(o)
     local m = nearest_mario_state_to_object(o)
     local mObj = m.marioObj
     local dist = dist_between_objects(mObj, o)
-    if dist < 200 * o.header.gfx.scale.x and m.flags & MARIO_METAL_CAP == 0 and m.action ~= ACT_HARD_BACKWARD_GROUND_KB then
+    if dist < 200 * o.header.gfx.scale.x and m.flags & MARIO_METAL_CAP == 0 and (m.action ~= ACT_HARD_BACKWARD_GROUND_KB and m.action ~= ACT_BACKWARD_WATER_KB) then
         m.squishTimer = 50
-    elseif dist < 200 * o.header.gfx.scale.x and m.flags & MARIO_METAL_CAP ~= 0 then
+    elseif dist < 200 * o.header.gfx.scale.x and m.flags & MARIO_METAL_CAP ~= 0 and (m.action & ACT_FLAG_METAL_WATER == 0) then
         set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
         m.capTimer = 1
         m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
         play_sound(SOUND_ACTION_METAL_BONK, m.pos)
         stop_cap_music()
+    elseif dist < 200 * o.header.gfx.scale.x and (m.action & ACT_FLAG_METAL_WATER ~= 0) then
+        set_mario_action(m, ACT_BACKWARD_WATER_KB, 0)
     end
 end
 
@@ -3382,6 +3402,20 @@ function castle_boo_init(o) -- Move the castle Boo further from the door to even
     o.oPosZ = -1800 
 end
 
+function custom_falling_pillar(o) -- theres an argument to be made that adding complex behavior to this would bloat JRH'S cave by a lot, so its being kept to something simple
+    local m = nearest_mario_state_to_object(o)
+    local angletomario = obj_angle_to_object(o, m.marioObj)
+    local dist = dist_between_objects(o, m.marioObj)
+    if o.oAction == 0 or (o.oAction == 2 and o.oTimer < 20) then
+        o.oFaceAngleYaw = angletomario
+    end
+    if o.oAction ~= 2 and dist <= 1300 then
+        --djui_chat_message_create("sword sfx")
+        o.oAction = 2
+        o.oTimer = o.oTimer + 3 -- no idea if this is doing anything (i am coding noob)
+    end
+end
+
 --function custom_snufit(o) -- Periodically shoots one large bullet at the player, faster cooldown.
     --if o.oAction == 0 then 
         --obj_scale(o, .5)
@@ -3391,6 +3425,21 @@ end
     --end
 
 --end
+
+function fake_fire_init(o)
+    obj_set_billboard(o)
+    o.header.gfx.skipInViewCheck = true
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    obj_scale(o, 8)
+end
+
+function fake_fire_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    o.oPosX = m.pos.x
+    o.oPosY = m.pos.y + 40
+    o.oPosZ = m.pos.z
+    o.oAnimState = o.oTimer % 2
+end
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
@@ -3503,6 +3552,7 @@ hook_gore_behavior(id_bhvChuckya, false, nil, chuckya)
 hook_gore_behavior(id_bhvFlame, false, flame_loop)
 hook_gore_behavior(id_bhvBreakableBoxSmall, false, nil, bhv_custom_cork_box)
 hook_gore_behavior(id_bhvBooInCastle, false, nil, castle_boo_init)
+hook_gore_behavior(id_bhvFallingPillar, false, nil, custom_falling_pillar)
 --hook_gore_behavior(id_bhvSnufit, false, nil, custom_snufit)
 id_bhvHellEntrance = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, hell_entrance_init, hell_entrance_loop, "HellEntrance")
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
@@ -3530,3 +3580,4 @@ id_bhvStonewall = hook_behavior(nil, OBJ_LIST_SURFACE, true, stonewall_init, sto
 id_bhvVomit = hook_behavior(nil, OBJ_LIST_GENACTOR, true, vomit_init, vomit_loop)
 id_bhvPokeySpike = hook_behavior(nil, OBJ_LIST_GENACTOR, true, pokey_spike_init, pokey_spike_loop)
 id_bhvRacerHitbox = hook_behavior(nil, OBJ_LIST_GENACTOR, true, RacerHitbox_init, RacerHitbox_loop)
+id_bhvFakeFire = hook_behavior(nil, OBJ_LIST_GENACTOR, true, fake_fire_init, fake_fire_loop, "bhvFakeFire")

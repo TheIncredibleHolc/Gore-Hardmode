@@ -556,13 +556,13 @@ sOnWarpToFunc = {
         end
 
         -- Adjust Dorrie and set water level
-        local m = gMarioStates[0]
-        local dorrie = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvDorrie)
-        if dorrie then
-            dorrie.oPosY = dorrie.oPosY - 200
-        end
-        set_water_level(0, -10000, false)
-        spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, -5200, gMarioStates[0].pos.z, nil)
+        --local m = gMarioStates[0]
+        --local dorrie = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvDorrie)
+        --if dorrie then
+        --   dorrie.oPosY = dorrie.oPosY + 200
+        --end
+        set_water_level(0, -4900, false)
+        --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, -5200, gMarioStates[0].pos.z, nil)
     end,
 
     [LEVEL_LLL] = function()
@@ -596,7 +596,7 @@ sOnWarpToFunc = {
         if np.currAreaIndex == 1 then
             -- Spawns lava over water, unless inside the pirate ship.
             --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1020, gMarioStates[0].pos.z, nil)
-            spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 1976, 1050, 5734, nil)
+            spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 1600, 1050, 5700, nil)
             --if np.currActNum == 1 then
                 --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 6710, 1050, 4512, nil)
             --else
