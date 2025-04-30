@@ -6,15 +6,16 @@
 
 -- goombas can double squish while in "chase mode"
 -- the player's velocity is carried over whentakign fall damage on a downwards slope
+-- swoops will switch from rendering to not rendering when activated and too far away
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 function test()
     local m = gMarioStates[0]
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
-        m.pos.x = -3601
-        m.pos.y = -4279
-        m.pos.z = 3591
+        --m.pos.x = -3601
+        --m.pos.y = -4279
+        --m.pos.z = 3591
         --m.faceAngle.y = 16384
         --m.numStars = 100
         --m.pos.x = m.pos.x - 200
@@ -54,6 +55,7 @@ gBehaviorValues.KingBobombHealth = 6
 --Slide and Metal/Wing Cap timers
 gLevelValues.pssSlideStarTime = 420 -- 14 seconds
 gLevelValues.metalCapDuration = 1500 -- 45 seconds (only for JRH, it'll decrease in other levels)
+gLevelValues.metalCapDurationCotmc = 1800 -- 60 seconds
 gLevelValues.wingCapDuration = 900 -- 30 seconds
 gLevelValues.wingCapDurationTotwc = 2250 -- 75 seconds (good luck running out of that)
 
@@ -481,7 +483,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             set_fog_color(2, 200)
         end
     
-        if np.currLevelNum == LEVEL_JRB then
+        if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_COTMC then
             if gLakituState.pos.y < 944 then
                 --set_lighting_color(0, 255)
                 --set_lighting_color(1, 255)
@@ -558,7 +560,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end
     
             if s.ssldiethirst >= 300 then
-                m.health = m.health - 1
+                m.health = m.health - 2
                 if m.health < 1024 then
                     if m.action == ACT_IDLE then
                         m.action = ACT_PANTING
@@ -1023,6 +1025,27 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     save_file_clear_flags(SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI | SAVE_FLAG_CAP_ON_MR_BLIZZARD)
     m.cap = m.cap & ~(SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI | SAVE_FLAG_CAP_ON_MR_BLIZZARD)
  ----------------------------------------------------------------------------------------------------------------------------------
+    if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC or np.currLevelNum == LEVEL_COTMC and not gGlobalSyncTable.romhackcompatibility then
+        if m.playerIndex ~= 0 then
+            return
+        end
+        if (m.health >= 0x100) then
+            --djui_chat_message_create("F")
+            if ((m.healCounter or m.hurtCounter) == 0) then
+                --djui_chat_message_create("FI")
+                if ((m.action & ACT_FLAG_SWIMMING ~= 0) and (m.action & ACT_FLAG_INTANGIBLE == 0)) then
+                    --djui_chat_message_create("FIR")
+                    if ((m.pos.y >= (m.waterLevel - 140))) then
+                        m.health = m.health - 26
+                        --djui_chat_message_create("FIRE")
+                    elseif is_game_paused() and (m.pos.y >= (m.waterLevel - 140)) then
+                        m.health = m.health + 26
+                    end
+                end
+            end
+        end
+    end
+
 end
 
 function hook_update()
@@ -1215,7 +1238,7 @@ function hook_update()
     end
 ----------------------------------------------------------------------------------------------------------------------------------
     -- Jolly Roger Hell rework (Metal Cap required)
-    if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC and not gGlobalSyncTable.romhackcompatibility then
+    if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC or np.currLevelNum == LEVEL_COTMC and not gGlobalSyncTable.romhackcompatibility then
         texture_override_set("texture_waterbox_jrb_water", TEX_JRHLAVA)
         texture_override_set("texture_waterbox_water", TEX_JRHLAVA)
         --djui_chat_message_create("BURNNNNNN")
@@ -1223,7 +1246,7 @@ function hook_update()
         local spawned = false
         local fire = obj_get_first_with_behavior_id(id_bhvFakeFire)
         local inlava = m.pos.y <= m.waterLevel
-        if m.action == ACT_FLAG_SWIMMING & ACT_WATER_PLUNGE or (inlava and m.flags & MARIO_METAL_CAP == 0) then
+        if np.currLevelNum ~= LEVEL_COTMC and m.action == ACT_FLAG_SWIMMING & ACT_WATER_PLUNGE or (inlava and m.flags & MARIO_METAL_CAP == 0) then
             if np.currAreaIndex == 1 then
                 m.health = m.health - 16
                 if is_game_paused() or m.action == ACT_STAR_DANCE_WATER or (m.flags & MARIO_METAL_CAP ~= 0 and m.action == ACT_WATER_PLUNGE) then -- the water plunge + metal mario check is killing me
@@ -1241,7 +1264,11 @@ function hook_update()
                 break
                 fire = obj_get_next_with_behavior_id(fire)
             end
-
+        elseif np.currLevelNum == LEVEL_COTMC and m.flags & MARIO_METAL_CAP == 0 then
+            m.health = m.health - 16
+            if is_game_paused() or m.action == ACT_STAR_DANCE_WATER or (m.flags & MARIO_METAL_CAP ~= 0 and m.action == ACT_WATER_PLUNGE) then -- the water plunge + metal mario check is killing me
+                m.health = m.health + 16
+            end
         end
     else
         texture_override_reset("texture_waterbox_jrb_water")
@@ -1357,9 +1384,13 @@ function hook_update()
             s.highdeathtimer = 0
             s.isdead = true
         end
-        --if get_network_player_smallest_global().localIndex == 0 then
-        --    spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, nil)
-        --end
+    end
+ ----------------------------------------------------------------------------------------------------------------------------------  
+    local o = obj_get_nearest_with_behavior_id(id_bhvRedCoin)
+    if np.currLevelNum == LEVEL_LLL and not gGlobalSyncTable.romhackcompatibility then
+        if o.oPosY <= 250 and o.oBehParams2ndByte ~= 10 then
+            obj_mark_for_deletion(o)
+        end
     end
 end
 
@@ -1667,6 +1698,7 @@ function action_start(m)
         local s = gStateExtras[m.playerIndex]
         gPlayerSyncTable[m.playerIndex].gold = false
         squishblood(m.marioObj)
+        
 
     elseif m.action == ACT_SHOCKED then -- play shock sounds
         local s = gStateExtras[m.playerIndex]
@@ -2155,6 +2187,50 @@ local function level_init_spawns()
             spawn_non_sync_object(id_bhvHellEntrance, E_MODEL_HELL_ENTRANCE, 895, 195, 388, nil)
         end
     end
+
+    if np.currLevelNum == LEVEL_HMC then
+        -- spawns coins to hint towards the new floor switch location
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4460, 4890, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4260, 4890, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -5321, -6327, 3500, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4900, -6327, 2220, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3500, -6327, 1750, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 2150, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -1760, -6327, 3630, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 4910, nil)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3560, -6327, 5330, nil)
+        spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3580, -5221, -825, function(f) 
+            f.oBehParams2ndByte = 4
+            f.oFaceAngleYaw = 0    
+            end)
+        
+        -- spawns JRH rocks for obstacles (unused due to model desyncing)
+        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -4936, -5500, 260, nil)
+        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -5010, -6035, 2690, nil)
+        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -5870, -5680, 4455, nil)
+        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -4390, -6010, 5340, nil)
+    elseif np.currLevelNum == LEVEL_BOB then
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6233, 975, 3337, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 3337, 791, 3265, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 4499, 768, 6669, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 5294, 1020, 5154, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6948, 873, 5019, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6394, 768, 6766, nil)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 2586, 768, 6719, nil)
+    elseif np.currLevelNum == LEVEL_DDD then
+        --spawn_sync_object(id_bhvSwoop, E_MODEL_SWOOP, 4134, 1374, 394, nil)
+    elseif np.currLevelNum == LEVEL_LLL and np.currAreaIndex == 1 then 
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -5130, 560, -4080, nil)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 840, -7110, nil)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 6300, 740, -6565, nil)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 7168, 1000, 1400, nil)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 4064, 670, 6878, nil)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -3210, 80, 3460, function(r) r.oBehParams2ndByte = 10 end)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 1200, 6170, nil)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 720, -2330, nil)
+        spawn_sync_object(id_bhvBouncingFireball, E_MODEL_RED_FLAME, -760, 355, 5045, nil)
+    end
 end
 
 hook_event(HOOK_ON_SYNC_VALID, level_init_spawns)
@@ -2199,6 +2275,7 @@ hook_event(HOOK_CHARACTER_SOUND, function(m, sound)
     if sound == CHAR_SOUND_COUGHING1 and s.puking then return 0 end
     if sound == CHAR_SOUND_COUGHING2 and s.puking then return 0 end
     if sound == CHAR_SOUND_COUGHING3 and s.puking then return 0 end
+    --if sound == CHAR_SOUND_EEUH and m.action ~= ACT_LEDGE_CLIMB_SLOW_1 or m.action ~= ACT_LEDGE_CLIMB_SLOW_2 then return 0 end
 
     if check_trophyplate(m, np, sound) then return 0 end
 end)
@@ -2462,6 +2539,41 @@ end
     --    o.oAction = 0
     ---end
 --end
+--hook_event(HOOK_ON_OBJECT_UNLOAD, huge_goom_ded)
+
+
+hook_mario_action(ACT_METAL_JUMP_SQUAT, act_metal_jump_squat)
+hook_event(HOOK_ON_SET_MARIO_ACTION, metal_jump_squat)
+hook_event(HOOK_MARIO_UPDATE, movesets_update)
+hook_event(HOOK_ON_SET_MARIO_ACTION, movesets_on_set_action)
+hook_event(HOOK_BEFORE_PHYS_STEP, movesets_before_phys_step)
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+local function bbh_no_wkicks(m) --this'll be expanded on once Vanish Cap is complete
+    if m.playerIndex ~= 0 then return end
+    
+    if gNetworkPlayers[0].currLevelNum == LEVEL_BBH and m.action == ACT_AIR_HIT_WALL then
+        m.wallKickTimer = 0
+        m.actionTimer = 3
+    end
+end
+hook_event(HOOK_BEFORE_SET_MARIO_ACTION, bbh_no_wkicks)
+hook_event(HOOK_ON_SET_MARIO_ACTION, bbh_no_wkicks)
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+local function fake_lava_death(m)
+    if m.action == ACT_WATER_DEATH then
+        set_mario_action(m, ACT_GONE, 1)
+        network_play(sSplash, m.pos, 1, m.playerIndex)
+        play_sound(SOUND_OBJ_BULLY_EXPLODE_2, m.pos)
+        spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
+    end
+    if m.action == ACT_DROWNING then
+        set_mario_action(m, ACT_GONE, 1)
+        network_play(sSplash, m.pos, 1, m.playerIndex)
+        play_sound(SOUND_OBJ_BULLY_EXPLODE_2, m.pos)
+        spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
+    end
+end 
 
 function level_obj_init() -- Moves the only Huge Triplet Goombas further from spawn (for fairness)
     local np = gNetworkPlayers[0]
@@ -2483,6 +2595,37 @@ function level_obj_init() -- Moves the only Huge Triplet Goombas further from sp
             f.oPosZ = 4890
             --spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, nil)  --the issue
         end
+
+        local e = obj_get_first_with_behavior_id(id_bhvExclamationBox)
+        local r = obj_get_first_with_behavior_id(id_bhvRedCoin)
+        local f = obj_get_first_with_behavior_id(id_bhvFadingWarp)
+        if np.currLevelNum == LEVEL_LLL then
+            while e do
+                obj_mark_for_deletion(e)
+                e = obj_get_next_with_same_behavior_id(e)
+            end
+            if r.oPosY < 250 and r.oPosX < -4000 then
+                while r do
+                    obj_mark_for_deletion(r)
+                    r = obj_get_next_with_same_behavior_id(r)
+                end
+            end
+            while f do
+                obj_mark_for_deletion(f)
+                f = obj_get_next_with_same_behavior_id(f)
+            end
+        end    
+
+        -- Move the castle Boo further from the door to eventually begin the Boo race code (won't be too fancy because me coding noob)
+        local b = obj_get_first_with_behavior_id(id_bhvBooInCastle)
+        if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 1 then
+            while b do
+                djui_chat_message_create(tostring(b.oPosX))
+                djui_chat_message_create(tostring(b.oPosY))
+                djui_chat_message_create(tostring(b.oPosZ))
+                b = obj_get_next_with_same_behavior_id(b)
+            end
+        end
     end
 end
 
@@ -2495,118 +2638,6 @@ local function thi_mini() -- yea idk how to get this to work
     end
 end
 
-hook_mario_action(ACT_METAL_JUMP_SQUAT, act_metal_jump_squat)
-hook_event(HOOK_ON_SET_MARIO_ACTION, metal_jump_squat)
-hook_event(HOOK_MARIO_UPDATE, movesets_update)
-hook_event(HOOK_ON_SET_MARIO_ACTION, movesets_on_set_action)
-hook_event(HOOK_BEFORE_PHYS_STEP, movesets_before_phys_step)
---hook_event(HOOK_ON_OBJECT_UNLOAD, huge_goom_ded)
 hook_event(HOOK_ON_LEVEL_INIT, level_obj_init)
 hook_event(HOOK_ON_WARP, thi_mini)
------------------------------------------------------------------------------------------------------------------------------------------------------------
-function castle_boo_init() -- Move the castle Boo further from the door to eventually begin the Boo race code (won't be too fancy because me coding noob)
-    local np = gNetworkPlayers[0]
-    local o = obj_get_first_with_behavior_id(id_bhvBooInCastle)
-
-    if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 1 then
-        while o do
-            djui_chat_message_create(tostring(o.oPosX))
-            djui_chat_message_create(tostring(o.oPosY))
-            djui_chat_message_create(tostring(o.oPosZ))
-            o = obj_get_next_with_same_behavior_id(o)
-        end
-    end
-end
-----------------------------------------------------------------------------------------------------------------------------------------------------------
-local function bbh_no_wkicks(m) --this'll be expanded on once Vanish Cap is complete
-    if m.playerIndex ~= 0 then return end
-    
-    if gNetworkPlayers[0].currLevelNum == LEVEL_BBH and m.action == ACT_AIR_HIT_WALL then
-        m.wallKickTimer = 0
-        m.actionTimer = 3
-    end
-end
-
-hook_event(HOOK_ON_LEVEL_INIT, castle_boo_init)
-hook_event(HOOK_BEFORE_SET_MARIO_ACTION, bbh_no_wkicks)
-hook_event(HOOK_ON_SET_MARIO_ACTION, bbh_no_wkicks)
-----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-local function fake_lava_death(m)
-    if m.action == ACT_WATER_DEATH then
-        set_mario_action(m, ACT_GONE, 1)
-        network_play(sSplash, m.pos, 1, m.playerIndex)
-        play_sound(SOUND_OBJ_BULLY_EXPLODE_2, m.pos)
-        spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
-    end
-    if m.action == ACT_DROWNING then
-        set_mario_action(m, ACT_GONE, 1)
-        network_play(sSplash, m.pos, 1, m.playerIndex)
-        play_sound(SOUND_OBJ_BULLY_EXPLODE_2, m.pos)
-        spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
-    end
-end 
-
-function no_lava_heal(m)
-    local np = gNetworkPlayers[0]
-    if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC and not gGlobalSyncTable.romhackcompatibility then
-        if m.playerIndex ~= 0 then
-            return
-        end
-        if (m.health >= 0x100) then
-            --djui_chat_message_create("F")
-            if ((m.healCounter or m.hurtCounter) == 0) then
-                --djui_chat_message_create("FI")
-                if ((m.action & ACT_FLAG_SWIMMING ~= 0) and (m.action & ACT_FLAG_INTANGIBLE == 0)) then
-                    --djui_chat_message_create("FIR")
-                    if ((m.pos.y >= (m.waterLevel - 140))) then
-                        m.health = m.health - 26
-                        --djui_chat_message_create("FIRE")
-                    elseif is_game_paused and (m.pos.y >= (m.waterLevel - 140)) then
-                        m.health = m.health - 26
-                    end
-                end
-            end
-        end
-    end
-    
-end 
-
-local function spawn_objs_init()
-    local np = gNetworkPlayers[0]
-    if np.currLevelNum == LEVEL_HMC then
-        -- spawns coins to hint towards the new floor switch location
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4460, 4890, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4260, 4890, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -5321, -6327, 3500, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4900, -6327, 2220, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3500, -6327, 1750, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 2150, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -1760, -6327, 3630, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 4910, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3560, -6327, 5330, nil)
-        spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3580, -5221, -825, function(f) 
-            f.oBehParams2ndByte = 4
-            f.oFaceAngleYaw = 0    
-            end)
-        
-        -- spawns JRH rocks for obstacles (unused due to model desyncing)
-        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -4936, -5500, 260, nil)
-        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -5010, -6035, 2690, nil)
-        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -5870, -5680, 4455, nil)
-        --spawn_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, -4390, -6010, 5340, nil)
-    elseif np.currLevelNum == LEVEL_BOB then
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6233, 975, 3337, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 3337, 791, 3265, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 4499, 768, 6669, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 5294, 1020, 5154, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6948, 873, 5019, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6394, 768, 6766, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 2586, 768, 6719, nil)
-    end
-end
-
-hook_event(HOOK_ON_SYNC_VALID, spawn_objs_init)
-hook_event(HOOK_MARIO_UPDATE, no_lava_heal)
 hook_event(HOOK_ON_DEATH, fake_lava_death)

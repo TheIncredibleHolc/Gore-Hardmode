@@ -6,10 +6,10 @@ end
 
 --All custom behaviors.
 
-local function obj_explode_if_within_150_units(o)
+local function obj_explode_if_within_300_units(o)
     local mObj = nearest_player_to_object(o)
     local pos = o.header.gfx.cameraToObject
-    if dist_between_objects(mObj, o) < 150 then
+    if dist_between_objects(mObj, o) < 300 then
         spawn_triangle_break_particles(30, 138, 1, 4)
         spawn_mist_particles()
         set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
@@ -356,18 +356,44 @@ local function bhv_custom_coins(o)
 end
 
 local function bhv_custom_bully(o)
-    local np = gNetworkPlayers[0]
     local m = nearest_mario_state_to_object(o)
+    local dist = dist_between_objects(o, m.marioObj)
+    if dist < 2000 then -- essentially gives them better detection range without making them walk on the edge all the time
+        o.oHomeX = m.pos.x
+        o.oHomeY = m.pos.y
+        o.oHomeZ = m.pos.z
+        --djui_chat_message_create(tostring(o.oAction))
+    elseif dist >= 2000 and o.oAction == 0 and o.oTimer == 1 then
+        o.oHomeX = o.oPosX
+        o.oHomeY = o.oPosY
+        o.ohomez = o.oPosZ
+    end
     if o.oBehParams == 20 then
         cur_obj_scale(0.02)
         o.oFlags = GRAPH_RENDER_INVISIBLE
     end
-    o.oHomeX = m.pos.x
-    o.oHomeY = m.pos.y
-    o.oHomeZ = m.pos.z
-    if o.oAction == BULLY_ACT_CHASE_MARIO or
-       o.oAction == BULLY_ACT_PATROL then
-        o.oForwardVel = 30
+    --if dist < 400 and (m.aciton == ACT_GROUND_POUND or m.action == ACT_JUMP_KICK) and (o.oInteractStatus & INT_STATUS_INTERACTED == 0) then
+        --o.oForwardVel = 0
+    --end
+    if o.oAction == 2 then
+        if o.oTimer > 10 then
+            o.oForwardVel = o.oForwardVel / 1.4
+        end
+        if o.oTimer <= 4 then
+            cur_obj_become_intangible()
+        else
+            cur_obj_become_tangible()
+        end
+    end
+    if o.oBullyKBTimerAndMinionKOCounter == 2 then
+        o.oAction = 1
+        o.oBullyKBTimerAndMinionKOCounter = 0
+        cur_obj_init_animation(1)
+
+    end
+end
+
+
     end
 end
 
@@ -529,7 +555,7 @@ local function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredicta
     end
 
     if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
-        if m.action == ACT_PUNCHING or m.action == ACT_JUMP_KICK or m.action == ACT_MOVE_PUNCHING or m.action == ACT_DIVE or (m.action == ACT_DIVE_SLIDE and m.vel > 12) or m.action == ACT_SLIDEKICK or (m.action == ACT_SLIDEKICK_SLIDE and m.vel > 12) or m.action == ACT_GROUND_POUND or m.action == ACT_FLAG_BUTT_OR_STOMACH_SLIDE then
+        if (m.action & ACT_FLAG_ATTACKING) ~= 0 then
            return 
         else
             set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
@@ -635,7 +661,7 @@ local function bhv_custom_bullet_bill(o)
         o.oAction = 0
         spawn_mist_particles()
     elseif o.oTimer > 50 and dist_between_objects(gMarioStates[0].marioObj, o) < 1000 and o.oAction == 2 then
-        o.oForwardVel = 0
+        --o.oForwardVel = 0
         obj_compute_vel_from_move_pitch(50.0)
         cur_obj_rotate_yaw_toward(o.oAngleToMario, 0xF00)
         cur_obj_rotate_pitch_toward(o, pitchToMario, 0xF00)
@@ -718,7 +744,7 @@ end
 
 local function bhv_custom_seesaw(obj) --SeeSaw Objects spin like windmills
     local np = gNetworkPlayers[0]
-    if not (np.currLevelNum == LEVEL_BITS and obj.oPosY > -3500) then
+    if np.currLevelNum == LEVEL_BITDW or np.currLevelNum == LEVEL_BITS then
         obj.oSeesawPlatformPitchVel = -400
     end
 end
@@ -1107,7 +1133,7 @@ end
 
 local function bhv_custom_flamethrower(o)
     local np = gNetworkPlayers[0]
-    if np.currLevelNum ~= LEVEL_BITDW then return end
+    if not gGlobalSyncTable.romhackcompatibility and np.currLevelNum == LEVEL_BITFS then return end
     local m = nearest_mario_state_to_object(o)
     local mObj = m.marioObj
     local dist = dist_between_objects(mObj, o)
@@ -1572,6 +1598,15 @@ local function bhv_custom_ActivatedBackAndForthPlatform(o)
         play_sound(SOUND_GENERAL_WALL_EXPLOSION, pos)
         play_sound(SOUND_GENERAL_EXPLOSION6, pos)
         obj_mark_for_deletion(o)
+    --elseif np.currLevelNum == LEVEL_BITS and m.pos.y >= o.oPosY -10 and mario_is_within_rectangle(1650, 2300, -1240, -440) ~= 0 then
+        --spawn_triangle_break_particles(30, 138, 1, 4)
+        --spawn_mist_particles()
+        --set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
+        --play_sound(SOUND_GENERAL_WALL_EXPLOSION, pos)
+        --play_sound(SOUND_GENERAL_EXPLOSION6, pos)
+        --obj_mark_for_deletion(o)
+        --spawn_non_sync_object(id_bhvActivatedBackAndForthPlatform, E_MODEL_BITS_ARROW_PLATFORM, 2793, 2325, -904, function(b)
+        --o.oFaceAngleYaw = -16384 end)
     end
 end
 
@@ -2741,12 +2776,16 @@ local function scuttlebug_loop(o)
     end
     --djui_chat_message_create(tostring(o.oSubAction))
 
-    if dist < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
-        set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
-        m.capTimer = 1
-        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
-        play_sound(SOUND_ACTION_METAL_BONK, m.pos)
-        stop_cap_music()
+    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
+        if (m.action & ACT_FLAG_ATTACKING) ~= 0 then
+           return 
+        else
+            set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+            m.capTimer = 1
+            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+            play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+            stop_cap_music()
+        end 
     end
 end
 
@@ -3412,7 +3451,9 @@ function custom_falling_pillar(o) -- theres an argument to be made that adding c
     if o.oAction ~= 2 and dist <= 1300 then
         --djui_chat_message_create("sword sfx")
         o.oAction = 2
-        o.oTimer = o.oTimer + 3 -- no idea if this is doing anything (i am coding noob)
+        o.oAnimState = o.oTimer % 4
+
+        --o.oTimer = o.oTimer + 3 -- no idea if this is doing anything (i am coding noob)
     end
 end
 
@@ -3441,6 +3482,47 @@ function fake_fire_loop(o)
     o.oAnimState = o.oTimer % 2
 end
 
+function bhv_custom_swoop(o)
+    local m = nearest_mario_state_to_object(o)
+    local pitchToMario = obj_pitch_to_object(o, gMarioStates[0].marioObj) --ty flipflop bell
+    if o.oBehParams2ndByte == 50 and o.oAction == 1 then
+        obj_scale(o, .5)
+        obj_compute_vel_from_move_pitch(20.0)
+        cur_obj_rotate_yaw_toward(o.oAngleToMario, 0xF00)
+        cur_obj_rotate_pitch_toward(o, pitchToMario, 0xF00)
+        if dist_between_objects(o, m.marioObj) < 100 and m.action & ACT_FLAG_ATTACKING == 0 then
+            m.squishTimer = 50
+        end
+    end
+    
+    if o.oAction == 1 and o.oBehParams2ndByte ~= 50 then
+        if o.oTimer < 30 then
+            o.oVelY = 10
+        elseif o.oAction == 1 and o.oTimer == 30 then
+            o.oVelY = 0
+            o.oForwardVel = 25
+        end
+        if o.oTimer % 35 == 0 and o.oBehParams2ndByte ~= 50 and o.oTimer ~= 0 then
+            spawn_sync_object(id_bhvSwoop, E_MODEL_SWOOP, o.oPosX, o.oPosY, o.oPosZ, function(s)
+            s.oBehParams2ndByte = 50
+            s.oAction = 1
+            end)
+        end
+        if o.oTimer == 150 then
+            obj_mark_for_deletion(o)
+            spawn_mist_particles()
+        end
+    end
+
+    if o.oPrevAction == 1 and o.oAction == 0 then
+        o.oAction = 1
+    end
+end
+
+function custom_sinking_rectangular_plat_init(o)
+    o.oPosY = o.oPosY - 200
+end
+
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
 hook_gore_behavior(id_bhvBowserShockWave, false, nil, shockwave)
@@ -3457,9 +3539,9 @@ hook_gore_behavior(id_bhvKoopa, false, nil, koopatheQUICC)
 hook_gore_behavior(id_bhvBitfsTiltingInvertedPyramid, false, nil, invertedpyramid)
 hook_gore_behavior(id_bhvSignOnWall, false, nil, delete_on_spawn)
 hook_gore_behavior(id_bhvMips, false, nil, mips)
-hook_gore_behavior(id_bhvLllSinkingSquarePlatforms, false, nil, obj_explode_if_within_150_units)
-hook_gore_behavior(id_bhvLllDrawbridge, false, nil, obj_explode_if_within_150_units)
-hook_gore_behavior(id_bhvWfRotatingWoodenPlatform, false, nil, obj_explode_if_within_150_units)
+hook_gore_behavior(id_bhvLllSinkingSquarePlatforms, false, nil, obj_explode_if_within_300_units)
+hook_gore_behavior(id_bhvLllDrawbridge, false, nil, obj_explode_if_within_300_units)
+hook_gore_behavior(id_bhvWfRotatingWoodenPlatform, false, nil, obj_explode_if_within_300_units)
 hook_gore_behavior(id_bhvBlueCoinSwitch, false, nil, coin_switch)
 hook_gore_behavior(id_bhvRedCoin, false, bhv_custom_coins_init, bhv_custom_coins)
 hook_gore_behavior(id_bhvYellowCoin, false, nil, bhv_custom_coins)
@@ -3554,6 +3636,8 @@ hook_gore_behavior(id_bhvBreakableBoxSmall, false, nil, bhv_custom_cork_box)
 hook_gore_behavior(id_bhvBooInCastle, false, nil, castle_boo_init)
 hook_gore_behavior(id_bhvFallingPillar, false, nil, custom_falling_pillar)
 --hook_gore_behavior(id_bhvSnufit, false, nil, custom_snufit)
+hook_gore_behavior(id_bhvSwoop, false, nil, bhv_custom_swoop)
+hook_gore_behavior(id_bhvLllSinkingRectangularPlatform, false, nil, custom_sinking_rectangular_plat_loop)
 id_bhvHellEntrance = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, hell_entrance_init, hell_entrance_loop, "HellEntrance")
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
