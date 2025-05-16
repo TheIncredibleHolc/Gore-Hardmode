@@ -46,6 +46,16 @@ local function puketoggle()
     end
 end
 
+local function gibstoggle()
+    if bloodgibs then
+        djui_chat_message_create("Blood particles disabled.")
+        bloodgibs = false
+    elseif bloodgibs == false then
+        djui_chat_message_create("Blood particles enabled.")
+        bloodgibs = true
+    end
+end
+
 iwbtgmode = false
 
 local function iwbtgtoggle()
@@ -84,11 +94,12 @@ end
 
 if network_is_server() then
     hook_mod_menu_checkbox("Romhack Compatibility Mode [HOST]", false, levelspawnstoggle)
-    hook_mod_menu_checkbox("Enable Hell on Gameover [HOST]", false, helltoggle)
-    hook_mod_menu_checkbox("Enable murdering [HOST]", false, pvptoggle)
-    hook_mod_menu_checkbox("Enable Co-Op IWBTG Mode [HOST]", false, iwbtgtoggle)
+    hook_mod_menu_checkbox("Toggle Hell on Gameover [HOST]", false, helltoggle)
+    hook_mod_menu_checkbox("Toggle murdering [HOST]", false, pvptoggle)
+    hook_mod_menu_checkbox("Toggle Co-Op IWBTG Mode [HOST]", false, iwbtgtoggle)
 end
-hook_mod_menu_checkbox("Enable vomiting", false, puketoggle)
+hook_mod_menu_checkbox("Toggle Vomiting", false, puketoggle)
+hook_mod_menu_checkbox("Toggle Blood Particles (Lag Prevention)", true, gibstoggle)
 if network_is_server() then
     hook_mod_menu_button("Reset All Trophies [HOST]", cleartrophies)
 end
@@ -247,7 +258,7 @@ sMini = 53
 
 function loop(music) audio_stream_set_looping(music, true) end
 
-highmusic = audio_stream_load("high.ogg")
+highmusic = audio_stream_load("high.ogg")               loop (highmusic)
 smwbonusmusic = audio_stream_load("smwbonusloop.ogg")   loop(smwbonusmusic)
 boss = audio_stream_load("croppedcastle.ogg")
 backroomMusic = audio_stream_load("backroom.ogg")		loop(backroomMusic)
@@ -490,6 +501,7 @@ gGlobalSyncTable.gameisbeat = false
 
 --Variables
 puking = false
+bloodgibs = true
 toadguitimer = 0
 ukikiheldby = -1
 ukikiholding = 0
@@ -687,6 +699,15 @@ sOnWarpToFunc = {
                 t.oBehParams = 12 << 16 | 1
             end)
             spawn_non_sync_object(id_bhvQuickWarp, E_MODEL_NONE, 3158, 1613, 3172, nil)
+        end
+    end,
+
+    [LEVEL_DDD] = function()
+        local np = gNetworkPlayers[0]
+        if np.currAreaIndex == 1 then
+            set_water_level(0, -555, false)
+        else
+            set_water_level(0, -2710, false)
         end
     end
 }

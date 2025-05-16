@@ -245,6 +245,7 @@ end
 
 function gibs(o)
     local m = gMarioStates[0]
+    if bloodgibs then
     --if m.marioObj.oTimer > 20 then
         for i = 0, 40 do
             if m.playerIndex ~= 0 then return end
@@ -254,6 +255,7 @@ function gibs(o)
             end)
         end
     --end
+    end
 end
 
 function bloodmist(o) -- Creates instant pool of impact-blood under mario.
@@ -1025,7 +1027,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     save_file_clear_flags(SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI | SAVE_FLAG_CAP_ON_MR_BLIZZARD)
     m.cap = m.cap & ~(SAVE_FLAG_CAP_ON_GROUND | SAVE_FLAG_CAP_ON_KLEPTO | SAVE_FLAG_CAP_ON_UKIKI | SAVE_FLAG_CAP_ON_MR_BLIZZARD)
  ----------------------------------------------------------------------------------------------------------------------------------
-    if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC or np.currLevelNum == LEVEL_COTMC and not gGlobalSyncTable.romhackcompatibility then
+    --Effectively disables water healing, burning the player even when surfacing.
+    if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC or np.currLevelNum == LEVEL_COTMC and not gGlobalSyncTable.romhackcompatibility and not (network_player_connected_count() <= 1 and is_game_paused()) then
         if m.playerIndex ~= 0 then
             return
         end
@@ -1038,14 +1041,30 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                     if ((m.pos.y >= (m.waterLevel - 140))) then
                         m.health = m.health - 26
                         --djui_chat_message_create("FIRE")
-                    elseif is_game_paused() and (m.pos.y >= (m.waterLevel - 140)) then
-                        m.health = m.health + 26
                     end
                 end
             end
         end
     end
 
+ ----------------------------------------------------------------------------------------------------------------------------------
+    --Replaces the twirling action the player is in while in a tweester, instead flinging the player around.
+    local spinX = 1
+    if m.action == ACT_TORNADO_TWIRLING then 
+        vec3s_set(m.angleVel, 3500, 2000, 700)
+        vec3s_add(m.faceAngle, m.angleVel)
+        vec3s_copy(m.marioObj.header.gfx.angle, m.faceAngle)    
+        set_character_animation(m, CHAR_ANIM_AIRBORNE_ON_STOMACH)
+    elseif m.prevAction == ACT_TORNADO_TWIRLING then
+        m.vel.x = math.random(-120, 120)
+        m.vel.z = math.random(-100, 100)
+        m.vel.y = math.random(60, 100)
+        set_mario_action(m, ACT_RAGDOLL, 0)
+    end
+    if m.marioObj.oMarioTornadoYawVel >= 4096 and m.marioObj.oMarioTornadoYawVel < 24576 then
+        m.marioObj.oMarioTornadoYawVel = m.marioObj.oMarioTornadoYawVel + 256
+    end
+    --djui_chat_message_create(tostring(m.marioObj.oMarioTornadoYawVel))
 end
 
 function hook_update()
@@ -1059,11 +1078,13 @@ function hook_update()
         set_mario_action(m, ACT_FREEFALL, 0)
         mario_blow_off_cap(m, 75)
         stop_cap_music()
-        djui_chat_message_create("As your cap flies away, you think of other ways to take to the skies...") -- in case people are dumb and think there's no other ways to fly
+        if not s.flyFailure then
+            djui_chat_message_create("As your cap flies away, you think of other ways to take to the skies...") -- in case people are dumb and think there's no other ways to fly
+            s.flyFailure = true
+        end
     end
-
+    
     -- Prevents slow fall with WC by removing the player's cap when attempted.
-    local m = gMarioStates[0]
     if (m.flags & (MARIO_WING_CAP) ~= 0) and (m.controller.buttonDown & A_BUTTON ~= 0) and m.vel.y <= -35 and m.action ~= ACT_GROUND_POUND and m.action ~= ACT_GROUND_POUND_LAND and m.action ~= ACT_BUTT_SLIDE_STOP and m.action ~= ACT_LONG_JUMP and m.action ~= ACT_LONG_JUMP_LAND and 
     m.action ~= ACT_LONG_JUMP_LAND and m.action ~= ACT_FLYING and m.action ~= ACT_FALL_AFTER_STAR_GRAB and m.action ~= ACT_STAR_DANCE and m.action ~= ACT_STAR_DANCE_NO_EXIT and m.action ~= ACT_LEDGE_GRAB and not gGlobalSyncTable.romhackcompatibility then
         m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
@@ -1079,7 +1100,7 @@ function hook_update()
     -- WC buff (and TotWC buff because faster flying made it too easy somehow)
     if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON or m.action == ACT_THROWN_BACKWARD or m.action == ACT_THROWN_FORWARD then -- Makes flying gradually get FASTER!
         if np.currLevelNum == LEVEL_TOTWC and not gGlobalSyncTable.romhackcompatibility then
-            m.forwardVel = math.max(65, m.forwardVel)  
+            m.forwardVel = math.max(80, m.forwardVel)  
             m.forwardVel = math.min(110, m.forwardVel)
             s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
         elseif np.currLevelNum ~= LEVEL_TOTWC and not gGlobalSyncTable.romhackcompatibility then
@@ -1088,7 +1109,7 @@ function hook_update()
         end
     end
 
-    -- Oscillates coins in TOTWC (the real totwc "buff")
+--[[     -- Oscillates coins in TOTWC (the real totwc "buff") (removed because i dont like it)          
     local x = obj_get_first_with_behavior_id(id_bhvYellowCoin)
     local y = obj_get_first_with_behavior_id(id_bhvRedCoin)
     local z = obj_get_first_with_behavior_id(id_bhvCoinFormationSpawn)
@@ -1107,25 +1128,19 @@ function hook_update()
             z.oPosY = z.oPosY + math.sin(get_global_timer() * speed) * amplitude
             z = obj_get_next_with_same_behavior_id(z)
         end
-    end
+    end ]]
 
  -------------------------------------------------------------------------------------------------------------------------------------------------------------    
     -- Alters the Metal Cap timer outside of JRH to be "fair".
-    if m.flags & MARIO_METAL_CAP ~= 0 and m.action & ACT_FLAG_METAL_WATER == 0 and m.action ~= ACT_STAR_DANCE_EXIT and m.action ~= ACT_WATER_PLUNGE and not gGlobalSyncTable.romhackcompatibility then 
+    if m.flags & MARIO_METAL_CAP ~= 0 and m.action & ACT_FLAG_METAL_WATER == 0 and m.action ~= ACT_STAR_DANCE_EXIT and m.action ~= ACT_WATER_PLUNGE and not gGlobalSyncTable.romhackcompatibility and not (network_player_connected_count() <= 1 and is_game_paused()) then 
         local cap_timer = m.capTimer - 1  --thank you sunk for being romhack mods pro
         if cap_timer > 1 then
             m.capTimer = cap_timer 
-            if is_game_paused() then
-                m.capTimer = m.capTimer + 1
-            end
         end 
-        if mario_is_within_rectangle(1700, 6300, -6400, 800) ~= 0 and np.currLevelNum == LEVEL_HMC and not gGlobalSyncTable.romhackcompatibility then
+        if mario_is_within_rectangle(1700, 6300, -6400, 800) ~= 0 and np.currLevelNum == LEVEL_HMC then
             local cap_timer = m.capTimer - 10
             if cap_timer > 1 then
                 m.capTimer = cap_timer
-                if is_game_paused() then
-                    m.capTimer = m.capTimer + 10
-                end
             end
         end
     end
@@ -1246,17 +1261,11 @@ function hook_update()
         local spawned = false
         local fire = obj_get_first_with_behavior_id(id_bhvFakeFire)
         local inlava = m.pos.y <= m.waterLevel
-        if np.currLevelNum ~= LEVEL_COTMC and m.action == ACT_FLAG_SWIMMING & ACT_WATER_PLUNGE or (inlava and m.flags & MARIO_METAL_CAP == 0) then
+        if np.currLevelNum ~= LEVEL_COTMC and m.action == ACT_FLAG_SWIMMING & ACT_WATER_PLUNGE or (inlava and m.flags & MARIO_METAL_CAP == 0) and not (network_player_connected_count() <= 1 and is_game_paused()) then
             if np.currAreaIndex == 1 then
                 m.health = m.health - 16
-                if is_game_paused() or m.action == ACT_STAR_DANCE_WATER or (m.flags & MARIO_METAL_CAP ~= 0 and m.action == ACT_WATER_PLUNGE) then -- the water plunge + metal mario check is killing me
-                m.health = m.health + 16
-                end
             elseif np.currAreaIndex == 2 then
                 m.health = m.health - 6
-                if is_game_paused() or m.action == ACT_STAR_DANCE_WATER then
-                    m.health = m.health + 6
-                end
             end   
             while fire ~= nil do
                 spawn_non_sync_object(id_bhvFakeFire, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil)  -- this is doing nothing
@@ -1264,11 +1273,8 @@ function hook_update()
                 break
                 fire = obj_get_next_with_behavior_id(fire)
             end
-        elseif np.currLevelNum == LEVEL_COTMC and m.flags & MARIO_METAL_CAP == 0 then
+        elseif np.currLevelNum == LEVEL_COTMC and m.flags & MARIO_METAL_CAP == 0 and not (network_player_connected_count() <= 1 and is_game_paused()) then
             m.health = m.health - 16
-            if is_game_paused() or m.action == ACT_STAR_DANCE_WATER or (m.flags & MARIO_METAL_CAP ~= 0 and m.action == ACT_WATER_PLUNGE) then -- the water plunge + metal mario check is killing me
-                m.health = m.health + 16
-            end
         end
     else
         texture_override_reset("texture_waterbox_jrb_water")
@@ -1276,7 +1282,7 @@ function hook_update()
     end
 ----------------------------------------------------------------------------------------------------------------------------------
     --(Hazy Maze Cave) Mario get high when walking in gas.
-    if np.currLevelNum == LEVEL_HMC then
+    if np.currLevelNum == LEVEL_HMC and not gGlobalSyncTable.romhackcompatibility and not (network_player_connected_count() <= 1 and is_game_paused()) then
         s.outsidegastimer = s.outsidegastimer + 1 -- This is constantly counting up. As long as Mario is in gas, this number will keep getting set back to zero. If Mario isnt in gas, the timer will count up to 60 and trigger some "not in gas" commands. 
 
         if ia(m) and (m.input & INPUT_IN_POISON_GAS ~= 0) and m.flags & MARIO_METAL_CAP == 0 and not s.isdead then --This should be used as a check against if Mario is inside of gas. If so, IsHigh will be set to 1.
@@ -1385,9 +1391,16 @@ function hook_update()
             s.isdead = true
         end
     end
+    
+    -- Removes any instances of gas effects after leaving HMC.
+    if np.currLevelNum ~= LEVEL_HMC and s.highdeathtimer > 0 and s.ishigh and not gGlobalSyncTable.romhackcompatibility then
+        s.ishigh = false
+        s.highdeathtimer = 0
+        set_override_fov(0)
+    end
  ----------------------------------------------------------------------------------------------------------------------------------  
-    local o = obj_get_nearest_with_behavior_id(id_bhvRedCoin)
     if np.currLevelNum == LEVEL_LLL and not gGlobalSyncTable.romhackcompatibility then
+        local o = obj_get_nearest_with_behavior_id(id_bhvRedCoin)
         if o.oPosY <= 250 and o.oBehParams2ndByte ~= 10 then
             obj_mark_for_deletion(o)
         end
@@ -1698,8 +1711,6 @@ function action_start(m)
         local s = gStateExtras[m.playerIndex]
         gPlayerSyncTable[m.playerIndex].gold = false
         squishblood(m.marioObj)
-        
-
     elseif m.action == ACT_SHOCKED then -- play shock sounds
         local s = gStateExtras[m.playerIndex]
         gPlayerSyncTable[m.playerIndex].gold = false
@@ -2638,6 +2649,14 @@ local function thi_mini() -- yea idk how to get this to work
     end
 end
 
+local function on_pause_exit(m)
+    if gMarioStates[0].action ~= ACT_IDLE then 
+        djui_popup_create("You cannot exit the level in this state!", 1)
+        return false 
+        end
+end
+
+hook_event(HOOK_ON_PAUSE_EXIT, on_pause_exit)
 hook_event(HOOK_ON_LEVEL_INIT, level_obj_init)
 hook_event(HOOK_ON_WARP, thi_mini)
 hook_event(HOOK_ON_DEATH, fake_lava_death)

@@ -366,7 +366,7 @@ local function bhv_custom_bully(o)
     elseif dist >= 2000 and o.oAction == 0 and o.oTimer == 1 then
         o.oHomeX = o.oPosX
         o.oHomeY = o.oPosY
-        o.ohomez = o.oPosZ
+        o.oHomeZ = o.oPosZ
     end
     if o.oBehParams == 20 then
         cur_obj_scale(0.02)
@@ -2077,12 +2077,16 @@ local KLEPTO_ACT_CHASE_MARIO = 8
 local KLEPTO_ACT_DIE = 9
 local KLEPTO_ACT_SEARCH_FOR_MARIO = 10
 
+local KleptoHit = 0
+
 local function bhv_klepto_init(o)
     local np = gNetworkPlayers[0]
     if np.currActNum > 1 then
-        o.oAction = 10
+        o.oAction = KLEPTO_ACT_SEARCH_FOR_MARIO
         o.oBehParams2ndByte = 0
+        
     end
+    KleptoHit = 0
 end
 
 local function bhv_klepto_loop(o)
@@ -2095,13 +2099,18 @@ local function bhv_klepto_loop(o)
     if (o.oAction == KLEPTO_ACT_STRUCK_BY_MARIO) then
         gibs(o)
         network_play(sPunch, m.pos, 1, m.playerIndex)
-        o.oAction = 10
+        o.oAction = KLEPTO_ACT_SEARCH_FOR_MARIO
         o.oTimer = 2
     end
 
     if o.oAction == KLEPTO_ACT_SEARCH_FOR_MARIO then --Klepto is pissed and hunts for nearest player.
-        if o.oTimer == 3 then
+        if o.oTimer == 3 and KleptoHit < 21 then
             obj_spawn_yellow_coins(o, 2)
+            KleptoHit = KleptoHit + 1
+        elseif KleptoHit == 21 then
+            o.oAction = KLEPTO_ACT_DIE
+            play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
+            cur_obj_become_intangible()
         end
         o.oFaceAngleRoll = 0
         o.oMoveAngleRoll = 0
@@ -2117,6 +2126,7 @@ local function bhv_klepto_loop(o)
                 o.oAction = 8
             end
         end
+        djui_chat_message_create(tostring(KleptoHit))
     end
 
     if o.oAction == KLEPTO_ACT_CHASE_MARIO then --CHASING PLAYER
@@ -2130,6 +2140,7 @@ local function bhv_klepto_loop(o)
         if obj_check_hitbox_overlap(m.marioObj, o) then
             if (m.action & ACT_FLAG_ATTACKING) ~= 0 then
                 o.oAction = 9
+                o.oAction = KLEPTO_ACT_DIE
                 play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
             else
                 o.oTimer = 3
@@ -2155,8 +2166,8 @@ local function bhv_klepto_loop(o)
     end
 
     if o.oAction == KLEPTO_ACT_APPROACH_TARGET_HOLDING then
-        --o.oKleptoSpeed = 60
-        obj_turn_toward_object(o, player, 16, 0x800)
+        o.oKleptoSpeed = 80
+        --obj_turn_toward_object(o, player, 16, 0x800)
     end
 end
 
@@ -3240,7 +3251,7 @@ end
 function hell_entrance_loop(o)
     local m = gMarioStates[0]
     if obj_check_hitbox_overlap(o, m.marioObj) then
-        if m.controller.buttonPressed & Z_TRIG ~= 0 then
+        if m.controller.buttonPressed & Z_TRIG ~= 0 and m.action ~= ACT_GONE then
             set_mario_action(m, ACT_GONE, 0)
             spawn_sync_if_main(id_bhvMistCircParticleSpawner, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
             network_play(sFlames, m.pos, 1, m.playerIndex)
@@ -3270,7 +3281,7 @@ end
 function bhv_custom_signpost(o)
     local m = gMarioStates[0]
     if o.oAction == 0 and o.oWoodenPostMarioPounding ~= 0 then
-        o.oWoodenPostSpeedY = (m.peakHeight - m.pos.y) / -10
+        o.oWoodenPostSpeedY = (m.peakHeight - m.pos.y) / -8
         --djui_chat_message_create(tostring((m.peakHeight - m.pos.y) / -10))
         o.oAction = 1
     elseif o.oAction == 1 and o.oWoodenPostMarioPounding == 0 then
@@ -3486,8 +3497,8 @@ function bhv_custom_swoop(o)
     local m = nearest_mario_state_to_object(o)
     local pitchToMario = obj_pitch_to_object(o, gMarioStates[0].marioObj) --ty flipflop bell
     if o.oBehParams2ndByte == 50 and o.oAction == 1 then
-        obj_scale(o, .5)
-        obj_compute_vel_from_move_pitch(20.0)
+        obj_scale(o, 0.5)
+        obj_compute_vel_from_move_pitch(15)
         cur_obj_rotate_yaw_toward(o.oAngleToMario, 0xF00)
         cur_obj_rotate_pitch_toward(o, pitchToMario, 0xF00)
         if dist_between_objects(o, m.marioObj) < 100 and m.action & ACT_FLAG_ATTACKING == 0 then
@@ -3519,8 +3530,6 @@ function bhv_custom_swoop(o)
     end
 end
 
-function custom_sinking_rectangular_plat_init(o)
-    o.oPosY = o.oPosY - 200
 end
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
@@ -3599,6 +3608,7 @@ hook_gore_behavior(id_bhvLllRotatingHexFlame, false, nil, bhv_custom_firebars)
 hook_gore_behavior(id_bhvLllRotatingHexagonalPlatform, false, nil, bhv_custom_hex_platform)
 hook_gore_behavior(id_bhvLllVolcanoFallingTrap, false, nil, bhv_custom_crushtrap)
 hook_gore_behavior(id_bhvSmallBully, false, nil, bhv_custom_bully)
+hook_gore_behavior(id_bhvBigBully, false, bhv_custom_bully_boss_init, bhv_custom_bully_boss_loop)
 hook_gore_behavior(id_bhvToxBox, false, nil, bhv_custom_toxbox)
 hook_gore_behavior(id_bhvWfSlidingPlatform, false, nil, bhv_custom_whomp_slidingpltf)
 hook_gore_behavior(id_bhvLargeBomp, false, large_bomp_hitbox, bhv_custom_large_bomp_loop)
@@ -3637,7 +3647,7 @@ hook_gore_behavior(id_bhvBooInCastle, false, nil, castle_boo_init)
 hook_gore_behavior(id_bhvFallingPillar, false, nil, custom_falling_pillar)
 --hook_gore_behavior(id_bhvSnufit, false, nil, custom_snufit)
 hook_gore_behavior(id_bhvSwoop, false, nil, bhv_custom_swoop)
-hook_gore_behavior(id_bhvLllSinkingRectangularPlatform, false, nil, custom_sinking_rectangular_plat_loop)
+--hook_gore_behavior(id_bhvLllSinkingRectangularPlatform, false, nil, custom_sinking_rectangular_plat_loop)
 id_bhvHellEntrance = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, hell_entrance_init, hell_entrance_loop, "HellEntrance")
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
