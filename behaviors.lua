@@ -2077,14 +2077,13 @@ local KLEPTO_ACT_CHASE_MARIO = 8
 local KLEPTO_ACT_DIE = 9
 local KLEPTO_ACT_SEARCH_FOR_MARIO = 10
 
-local KleptoHit = 0
+local KleptoHit = 0 -- used to track the amount of times klepto has been hit
 
 local function bhv_klepto_init(o)
     local np = gNetworkPlayers[0]
     if np.currActNum > 1 then
         o.oAction = KLEPTO_ACT_SEARCH_FOR_MARIO
         o.oBehParams2ndByte = 0
-        
     end
     KleptoHit = 0
 end
@@ -2103,11 +2102,11 @@ local function bhv_klepto_loop(o)
         o.oTimer = 2
     end
 
-    if o.oAction == KLEPTO_ACT_SEARCH_FOR_MARIO then --Klepto is pissed and hunts for nearest player.
+    if o.oAction == KLEPTO_ACT_SEARCH_FOR_MARIO then -- Klepto is pissed and hunts for nearest player.
         if o.oTimer == 3 and KleptoHit < 21 then
             obj_spawn_yellow_coins(o, 2)
-            KleptoHit = KleptoHit + 1
-        elseif KleptoHit == 21 then
+            KleptoHit = KleptoHit + 1 
+        elseif KleptoHit == 21 then -- after 20 hits, Klepto automatically dies (KleptoHit is always set to 1 on initialization due to his action being set to 10, but pretend it says 20)
             o.oAction = KLEPTO_ACT_DIE
             play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
             cur_obj_become_intangible()
@@ -2139,7 +2138,6 @@ local function bhv_klepto_loop(o)
         o.oMoveAngleRoll = 0
         if obj_check_hitbox_overlap(m.marioObj, o) then
             if (m.action & ACT_FLAG_ATTACKING) ~= 0 then
-                o.oAction = 9
                 o.oAction = KLEPTO_ACT_DIE
                 play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
             else
@@ -2167,7 +2165,7 @@ local function bhv_klepto_loop(o)
 
     if o.oAction == KLEPTO_ACT_APPROACH_TARGET_HOLDING then
         o.oKleptoSpeed = 80
-        --obj_turn_toward_object(o, player, 16, 0x800)
+        --obj_turn_toward_object(o, player, 16, 0x800) --removed due to easy star and zero challenge???
     end
 end
 

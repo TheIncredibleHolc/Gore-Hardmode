@@ -487,7 +487,8 @@ for i = 0, MAX_PLAYERS-1 do
         sslIntro = false,
         slIntro = false,
         hasNightvision = false,
-        sick = 0
+        sick = 0,
+        personaldeathcount = 0
     }
 end
 
@@ -502,6 +503,7 @@ gGlobalSyncTable.gameisbeat = false
 --Variables
 puking = false
 bloodgibs = true
+serverguitimer = 0
 toadguitimer = 0
 ukikiheldby = -1
 ukikiholding = 0

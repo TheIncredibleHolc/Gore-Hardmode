@@ -1735,8 +1735,10 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
     stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
     if not s.isdead and not s.disableuntilnextwarp then
         gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
+        s.personaldeathcount = s.personaldeathcount + 1
         s.isdead = true
     end
+    serverguitimer = 300
 end
 
 function marioalive() -- Resumes the death counter to accept death counts. 
@@ -1862,7 +1864,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
         else
             warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 0)
         end
-        m.numLives = 4
+        m.numLives = 10
         m.numStars = 0
         s.iwbtg = true
     end
@@ -1884,8 +1886,14 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
 
     --TOAD DEATH COUNTER. Each time you kill toad, the count goes up. It compares the number with the PreviousToadDeath variable, which tells it to update and triggers commands.
     --Toad gives 3 stars. I have set this to give these stars after every 100 toad kills.
-    local deathcount = "Total server death count: "..gGlobalSyncTable.deathcounter
-    djui_hud_print_text(deathcount, screenW - 30 - djui_hud_measure_text(deathcount), screenH - 78, 1)
+    if serverguitimer > 0 then
+        serverguitimer = serverguitimer - 1
+        djui_hud_set_color(255, 255, 255, lerp(0, 255, (math.max(0, serverguitimer))/300))
+
+        local deathcount = "Total server death count: "..gGlobalSyncTable.deathcounter
+        djui_hud_print_text(deathcount, screenW - 30 - djui_hud_measure_text(deathcount), screenH - 78, 1)
+    end
+    --djui_chat_message_create(tostring(serverguitimer))
 
     if toadguitimer > 0 then
         toadguitimer = toadguitimer - 1
@@ -1964,7 +1972,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
         if loadingscreen == 2 then
             s.isinhell = false
             warp_to_start_level()
-            m.numLives = m.numLives + 10
+            m.numLives = 10
         elseif loadingscreen == 0 then
             sound_banks_enable(0, SOUND_BANKS_ALL)
             sound_banks_enable(1, SOUND_BANKS_ALL)
@@ -1974,7 +1982,33 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
             play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
         end
     end
+------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    --Adds a death counter to replace the lives counter. (ty sunk)
+    djui_hud_set_font(FONT_RECOLOR_HUD)
+    djui_hud_set_resolution(RESOLUTION_N64)
+    djui_hud_set_color(255, 255, 255, 255)
+    djui_hud_render_texture(gTextures.mario_head, 22, 15, 1, 1)
+    djui_hud_set_color(128, 128, 156, 255)
+    djui_hud_print_text("x", 40, 15, 0.95)
+
+    local s = gStateExtras[0]
+    local x = 53
+    local dedcount = s.personaldeathcount
+    djui_hud_set_color(205, 0, 0, 255)
+    djui_hud_print_text(tostring(s.personaldeathcount), x, 15, 1)
+    if s.personaldeathcount ~= nil then
+        if s.personaldeathcount >= 100 then
+        x = x + 5
+        end
+    end
+    
+    local flags = hud_get_value(HUD_DISPLAY_FLAGS)
+    if flags & HUD_DISPLAY_FLAG_LIVES ~= 0 then
+        hud_set_value(HUD_DISPLAY_FLAGS, flags & ~HUD_DISPLAY_FLAG_LIVES) 
+    end
 end
+
 -- prevent warp transition after loading finishes
 hook_event(HOOK_ON_SCREEN_TRANSITION, function ()
     if loadingscreen > 0 then return false end
@@ -2649,6 +2683,7 @@ local function thi_mini() -- yea idk how to get this to work
     end
 end
 
+-- Prevents pause exiting if you aren't idle.
 local function on_pause_exit(m)
     if gMarioStates[0].action ~= ACT_IDLE then 
         djui_popup_create("You cannot exit the level in this state!", 1)
