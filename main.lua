@@ -74,7 +74,7 @@ audio_sample_stop, obj_has_behavior_id, smlua_anim_util_set_animation, set_camer
 mario_drop_held_object, obj_angle_to_object, hud_show, djui_hud_render_texture, djui_hud_print_text, hud_set_value, hud_get_value,
 djui_hud_measure_text, djui_hud_get_screen_height, djui_hud_get_screen_width, djui_hud_set_resolution, djui_hud_set_color,
 clamp, djui_hud_render_texture_tile, nearest_interacting_mario_state_to_object, is_within_100_units_of_mario,
-play_transition, network_is_server, obj_check_hitbox_overlap
+play_transition, network_is_server, obj_check_hitbox_overlap, network_player_connected_count
 =
 bhv_ttc_2d_rotator_update, bhv_ttc_cog_update, bhv_ttc_elevator_update, bhv_ttc_moving_bar_update, bhv_ttc_pendulum_update,
 bhv_ttc_pit_block_update, bhv_ttc_rotating_solid_update, bhv_ttc_spinner_update, bhv_ttc_treadmill_update, get_id_from_behavior,
@@ -88,7 +88,7 @@ audio_sample_stop, obj_has_behavior_id, smlua_anim_util_set_animation, set_camer
 mario_drop_held_object, obj_angle_to_object, hud_show, djui_hud_render_texture, djui_hud_print_text, hud_set_value, hud_get_value,
 djui_hud_measure_text, djui_hud_get_screen_height, djui_hud_get_screen_width, djui_hud_set_resolution, djui_hud_set_color,
 clamp, djui_hud_render_texture_tile, nearest_interacting_mario_state_to_object, is_within_100_units_of_mario,
-play_transition, network_is_server, obj_check_hitbox_overlap
+play_transition, network_is_server, obj_check_hitbox_overlap, network_player_connected_count
 
 -------------------helpers------------------------------
 
@@ -217,6 +217,11 @@ local TEX_NIGHTVISION3 = get_texture_info("nightvision3")
 local TEX_NIGHTVISION4 = get_texture_info("nightvision4")
 local TEX_NIGHTVISION5 = get_texture_info("nightvision5")
 local TEX_JRHLAVA = get_texture_info("jrhlava")
+local TEX_MSKULL = get_texture_info("marioskull")
+local TEX_LSKULL = get_texture_info("luigiskull")
+local TEX_TSKULL = get_texture_info("toadskull")
+local TEX_WMSKULL = get_texture_info("warioskull")
+local TEX_WLSKULL = get_texture_info("waluigiskull")
 -----------------------------------------------------------------------------------------------------------------------------
 -------ACT_FUNCTIONS------------
 
@@ -316,6 +321,30 @@ function convert_s16(num)
         num = min + (num - max)
     end
     return num
+end
+
+function metalhit(o)
+    local m = nearest_mario_state_to_object(o)
+    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
+        set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+        m.capTimer = 1
+        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+        play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+        stop_cap_music()
+    end
+end
+
+function metalhit_attack(o)
+    local m = nearest_mario_state_to_object(o)
+    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
+        if (m.action & ACT_FLAG_ATTACKING) ~= 0 then return else
+            set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+            m.capTimer = 1
+            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+            play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+            stop_cap_music()
+        end
+    end
 end
 
 function mario_update(m) -- ALL Mario_Update hooked commands.,
@@ -557,7 +586,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 s.ssldiethirst = 0 -- stops timer
             end
     
-            if s.ssldiethirst >= 300 then
+            if s.ssldiethirst >= 300 and not (network_player_connected_count() <= 1 and is_game_paused()) then
                 m.health = m.health - 2
                 if m.health < 1024 then
                     if m.action == ACT_IDLE then
@@ -581,7 +610,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
                 s.slIntro = true
             end
-            m.health = m.health - 1
+            if not (network_player_connected_count() <= 1 and is_game_paused()) or (m.action ~= ACT_STAR_DANCE and m.action ~= ACT_STAR_DANCE_NO_EXIT) then
+                m.health = m.health - 2
+            end
         end
     end
  ----------------------------------------------------------------------------------------------------------------------------------
@@ -1035,7 +1066,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 if ((m.action & ACT_FLAG_SWIMMING ~= 0) and (m.action & ACT_FLAG_INTANGIBLE == 0)) then
                     --djui_chat_message_create("FIR")
                     if ((m.pos.y >= (m.waterLevel - 140))) then
-                        m.health = m.health - 26
+                        m.health = m.health - 74
                         --djui_chat_message_create("FIRE")
                     end
                 end
@@ -1060,7 +1091,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     if m.marioObj.oMarioTornadoYawVel >= 4096 and m.marioObj.oMarioTornadoYawVel < 24576 then
         m.marioObj.oMarioTornadoYawVel = m.marioObj.oMarioTornadoYawVel + 256
     end
-    --djui_chat_message_create(tostring(m.marioObj.oMarioTornadoYawVel))
 end
 
 function hook_update()
@@ -1259,7 +1289,7 @@ function hook_update()
         local inlava = m.pos.y <= m.waterLevel
         if np.currLevelNum ~= LEVEL_COTMC and m.action == ACT_FLAG_SWIMMING & ACT_WATER_PLUNGE or (inlava and m.flags & MARIO_METAL_CAP == 0) and not (network_player_connected_count() <= 1 and is_game_paused()) then
             if np.currAreaIndex == 1 then
-                m.health = m.health - 16
+                m.health = m.health - 64
             elseif np.currAreaIndex == 2 then
                 m.health = m.health - 6
             end   
@@ -1395,11 +1425,17 @@ function hook_update()
         set_override_fov(0)
     end
  ----------------------------------------------------------------------------------------------------------------------------------  
+    -- Moves all red coins in Lethal Lava Land to competent spots (aka its not free anymore, rip noobs)
     if np.currLevelNum == LEVEL_LLL and not gGlobalSyncTable.romhackcompatibility then
         local o = obj_get_nearest_with_behavior_id(id_bhvRedCoin)
         if o.oPosY <= 250 and o.oBehParams2ndByte ~= 10 then
             obj_mark_for_deletion(o)
         end
+    end
+
+    -- Adds a visual death counter beside all players on the player list.
+    for i = 0, MAX_PLAYERS - 1 do
+        network_player_set_description(gNetworkPlayers[i], "Deaths: " ..tostring(gPlayerSyncTable[i].personaldeathcount), 175, 0, 0, 255)
     end
 end
 
@@ -1731,10 +1767,24 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
     stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
     if not s.isdead and not s.disableuntilnextwarp then
         gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
-        s.personaldeathcount = s.personaldeathcount + 1
+        gPlayerSyncTable[0].personaldeathcount = gPlayerSyncTable[0].personaldeathcount + 1
         s.isdead = true
     end
     serverguitimer = 300
+
+    -- Disintegrates the player if they drown in fake lava.
+    if not gGlobalSyncTable.romhackcompatibility then
+        local np = gNetworkPlayers[0]
+        local m = gMarioStates[0]
+        if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC then
+            if m.action == ACT_WATER_DEATH or m.aciton == ACT_DROWNING then
+                set_mario_action(m, ACT_GONE, 1)
+                network_play(sSplash, m.pos, 1, m.playerIndex)
+                play_sound(SOUND_OBJ_BULLY_EXPLODE_2, m.pos)
+                spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
+            end
+        end
+    end
 end
 
 function marioalive() -- Resumes the death counter to accept death counts. 
@@ -1794,6 +1844,8 @@ function toaddeath(o)
         toadguitimer = 150
     end
 end
+
+
 
 function hud_render() -- Displays the total amount of mario deaths a server has incurred since opening. 
     local s = gStateExtras[0]
@@ -1860,10 +1912,12 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
         else
             warp_to_level(LEVEL_CASTLE_GROUNDS, 1, 0)
         end
-        m.numLives = 10
+        m.numLives = 1
         m.numStars = 0
         s.iwbtg = true
     end
+
+   
 
     if s.timeattack then
         --djui_hud_set_resolution(RESOLUTION)
@@ -1980,30 +2034,83 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
     end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
     
-    --Adds a death counter to replace the lives counter. (ty sunk)
-    djui_hud_set_font(FONT_RECOLOR_HUD)
-    djui_hud_set_resolution(RESOLUTION_N64)
-    djui_hud_set_color(255, 255, 255, 255)
-    djui_hud_render_texture(gTextures.mario_head, 22, 15, 1, 1)
-    djui_hud_set_color(128, 128, 156, 255)
-    djui_hud_print_text("x", 40, 15, 0.95)
+    if (not s.iwbtg and s.death) or not gGlobalSyncTable.iwbtgGameoverEveryone then
+        --Adds a death counter to replace the lives counter. (ty sunk)
+        djui_hud_set_font(FONT_RECOLOR_HUD)
+        djui_hud_set_resolution(RESOLUTION_N64)
 
-    local s = gStateExtras[0]
-    local x = 53
-    local dedcount = s.personaldeathcount
-    djui_hud_set_color(205, 0, 0, 255)
-    djui_hud_print_text(tostring(s.personaldeathcount), x, 15, 1)
-    if s.personaldeathcount ~= nil then
-        if s.personaldeathcount >= 100 then
-        x = x + 5
+        if not gGlobalSyncTable.hellenabled then
+            if m.character.type == CT_MARIO then
+                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_MSKULL, 21, 14.5, 1.1, 1)
+            elseif m.character.type == CT_LUIGI then
+                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_LSKULL, 21, 14.5, 1.1, 1)
+            elseif m.character.type == CT_TOAD then
+                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_TSKULL, 21, 14.5, 1.1, 1)
+            elseif m.character.type == CT_WARIO then
+                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_WMSKULL, 21, 14.5, 1.1, 1)
+            elseif m.character.type == CT_WALUIGI then
+                    djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_WLSKULL, 21, 14.5, 1.1, 1)
+            end
+        else
+            if m.character.type == CT_MARIO then
+                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_MSKULL, 21, 32, 1.1, 1)
+            elseif m.character.type == CT_LUIGI then
+                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_LSKULL, 21, 32, 1.1, 1)
+            elseif m.character.type == CT_TOAD then
+                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_TSKULL, 21, 32, 1.1, 1)
+            elseif m.character.type == CT_WARIO then
+                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_WMSKULL, 21, 32, 1.1, 1)
+            elseif m.character.type == CT_WALUIGI then
+                djui_hud_set_color(255, 255, 255, 255)
+                djui_hud_render_texture(TEX_WLSKULL, 21, 32, 1.1, 1)
+            end
         end
-    end
-    
-    local flags = hud_get_value(HUD_DISPLAY_FLAGS)
-    if flags & HUD_DISPLAY_FLAG_LIVES ~= 0 then
-        hud_set_value(HUD_DISPLAY_FLAGS, flags & ~HUD_DISPLAY_FLAG_LIVES) 
-    end
+
+        if not gGlobalSyncTable.hellenabled then
+            djui_hud_set_color(75, 30, 30, 255)
+            djui_hud_print_text("x", 39, 15, 0.95)
+        else
+            djui_hud_set_color(75, 30, 30, 255)
+            djui_hud_print_text("x", 39, 33, 0.95)
+        end
+
+        local s = gStateExtras[0]
+        local x = 53
+        djui_hud_set_color(205, 0, 0, 255)
+        if not gGlobalSyncTable.hellenabled then
+            djui_hud_print_text(tostring(gPlayerSyncTable[0].personaldeathcount), x, 15, 1)
+        else
+            djui_hud_print_text(tostring(gPlayerSyncTable[0].personaldeathcount), x, 33, 1)
+        end
+
+        if gPlayerSyncTable[0].personaldeathcount >= 100 then
+            x = x + 5
+        end
+        
+        local flags = hud_get_value(HUD_DISPLAY_FLAGS)
+        if not gGlobalSyncTable.hellenabled then
+            if flags & HUD_DISPLAY_FLAG_LIVES ~= 0 then
+                hud_set_value(HUD_DISPLAY_FLAGS, flags & ~HUD_DISPLAY_FLAG_LIVES) 
+            end
+        else 
+            if flags & HUD_DISPLAY_FLAG_LIVES == 0 then
+                hud_set_value(HUD_DISPLAY_FLAGS, flags | HUD_DISPLAY_FLAG_LIVES) 
+            end    
+        end
+    else return end
 end
+
+-- Adds a visual death counter beside all players on the player list.
+
 
 -- prevent warp transition after loading finishes
 hook_event(HOOK_ON_SCREEN_TRANSITION, function ()
@@ -2070,6 +2177,15 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
         local_play(sFart, m.pos, 2)
     end
 end
+
+-- Prevents pause exiting if you aren't idle.
+local function on_pause_exit(m)
+    local idle = gMarioStates[0].action == ACT_IDLE or gMarioStates[0].action == ACT_WATER_IDLE
+    if not idle then 
+        djui_popup_create("You cannot exit the level in this state!", 1)
+        return false 
+    end
+end
 ---------hooks--------
 hook_event(HOOK_MARIO_UPDATE, mario_update)
 hook_event(HOOK_UPDATE, hook_update)
@@ -2111,6 +2227,13 @@ hook_event(HOOK_ON_OBJECT_UNLOAD, toaddeath)
 hook_event(HOOK_ON_INTERACT, on_interact)
 hook_event(HOOK_ON_HUD_RENDER, hud_render)
 hook_event(HOOK_BEFORE_PHYS_STEP, before_phys_step) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
+hook_event(HOOK_ON_PAUSE_EXIT, on_pause_exit)
+hook_event(HOOK_MARIO_UPDATE, function (m) -- Prevents players from attempting to reset their life counter by toggling Hell on Gameover(THANK YOU SUNK i am too dumb to figure this out)
+    if m.playerIndex ~= 0 then return end
+    if not gGlobalSyncTable.hellenabled then
+        m.numLives = lives
+    end
+end)
 
 -------------PvP-----------------------
 --Custom PvP
@@ -2589,7 +2712,7 @@ hook_event(HOOK_MARIO_UPDATE, movesets_update)
 hook_event(HOOK_ON_SET_MARIO_ACTION, movesets_on_set_action)
 hook_event(HOOK_BEFORE_PHYS_STEP, movesets_before_phys_step)
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
-local function bbh_no_wkicks(m) --this'll be expanded on once Vanish Cap is complete
+--[[ local function bbh_no_wkicks(m) -- MAY NOT BE IMPLEMENTED BUT WILL KEEP HERE IN CASE IT WILL BE
     if m.playerIndex ~= 0 then return end
     
     if gNetworkPlayers[0].currLevelNum == LEVEL_BBH and m.action == ACT_AIR_HIT_WALL then
@@ -2598,23 +2721,8 @@ local function bbh_no_wkicks(m) --this'll be expanded on once Vanish Cap is comp
     end
 end
 hook_event(HOOK_BEFORE_SET_MARIO_ACTION, bbh_no_wkicks)
-hook_event(HOOK_ON_SET_MARIO_ACTION, bbh_no_wkicks)
+hook_event(HOOK_ON_SET_MARIO_ACTION, bbh_no_wkicks) ]]
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
-
-local function fake_lava_death(m)
-    if m.action == ACT_WATER_DEATH then
-        set_mario_action(m, ACT_GONE, 1)
-        network_play(sSplash, m.pos, 1, m.playerIndex)
-        play_sound(SOUND_OBJ_BULLY_EXPLODE_2, m.pos)
-        spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
-    end
-    if m.action == ACT_DROWNING then
-        set_mario_action(m, ACT_GONE, 1)
-        network_play(sSplash, m.pos, 1, m.playerIndex)
-        play_sound(SOUND_OBJ_BULLY_EXPLODE_2, m.pos)
-        spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
-    end
-end 
 
 function level_obj_init() -- Moves the only Huge Triplet Goombas further from spawn (for fairness)
     local np = gNetworkPlayers[0]
@@ -2679,15 +2787,6 @@ local function thi_mini() -- yea idk how to get this to work
     end
 end
 
--- Prevents pause exiting if you aren't idle.
-local function on_pause_exit(m)
-    if gMarioStates[0].action ~= ACT_IDLE then 
-        djui_popup_create("You cannot exit the level in this state!", 1)
-        return false 
-        end
-end
 
-hook_event(HOOK_ON_PAUSE_EXIT, on_pause_exit)
 hook_event(HOOK_ON_LEVEL_INIT, level_obj_init)
 hook_event(HOOK_ON_WARP, thi_mini)
-hook_event(HOOK_ON_DEATH, fake_lava_death)

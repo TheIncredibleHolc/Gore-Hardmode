@@ -1,10 +1,10 @@
 -------------------------------------------------------------------------------------------------------
 --GUI Gore Customizations
 local function levelspawnstoggle()
-    if network_is_server() and gGlobalSyncTable.romhackcompatibility	then
+    if network_is_server() and gGlobalSyncTable.romhackcompatibility then
         djui_chat_message_create("Romhack compatibility mode disabled.")
         gGlobalSyncTable.romhackcompatibility = false
-    elseif network_is_server() and gGlobalSyncTable.romhackcompatibility == false then
+    elseif network_is_server() and not gGlobalSyncTable.romhackcompatibility  then
         djui_chat_message_create("Romhack compatibility mode enabled.")
         gGlobalSyncTable.romhackcompatibility = true
     elseif not network_is_server() then
@@ -16,19 +16,20 @@ local function helltoggle()
     if network_is_server() and gGlobalSyncTable.hellenabled then
         djui_chat_message_create("Hell disabled.")
         gGlobalSyncTable.hellenabled = false
-    elseif network_is_server() and gGlobalSyncTable.hellenabled == false then
+    elseif network_is_server() and not gGlobalSyncTable.hellenabled then
         djui_chat_message_create("Hell enabled.")
         gGlobalSyncTable.hellenabled = true
     elseif not network_is_server() then
         djui_chat_message_create("Option only available for host.")
     end
+    lives = gMarioStates[0].numLives
 end
 
 local function pvptoggle()
     if network_is_server() and gGlobalSyncTable.pvp	then
         djui_chat_message_create("PvP Murdering disabled.")
         gGlobalSyncTable.pvp = false
-    elseif network_is_server() and gGlobalSyncTable.pvp == false then
+    elseif network_is_server() and not gGlobalSyncTable.pvp then
         djui_chat_message_create("PvP Murdering enabled.")
         gGlobalSyncTable.pvp = true
     elseif not network_is_server() then
@@ -60,16 +61,19 @@ local function iwbtgtoggle()
     local s = gStateExtras[0]
     local np = gNetworkPlayers[0]
 
-    if network_is_server() then
-        if not gGlobalSyncTable.cheats then
-            if not gGlobalSyncTable.iwbtgmode then
-                gGlobalSyncTable.iwbtgmode = true
+    if network_is_server() and not gGlobalSyncTable.cheats then
+        if not gGlobalSyncTable.iwbtgmode then
+            gGlobalSyncTable.iwbtgmode = true
+        elseif gGlobalSyncTable.iwbtgmode then
+            if s.death and gGlobalSyncTable.iwbtgGameoverEveryone then
+                djui_popup_create("You cannot disable this option right now!", 1)
+                hook_mod_menu_checkbox("Enable Co-Op IWBTG Mode [HOST]", true, iwbtgtoggle)
             else
                 gGlobalSyncTable.iwbtgmode = false
             end
-        else
-            djui_chat_message_create("Reload the game with cheats OFF to play IWBTG mode.")
         end
+    elseif gGlobalSyncTable.cheats then
+        djui_chat_message_create("Reload the game with cheats OFF to play IWBTG mode.")
     else
         djui_chat_message_create("Reload the game with cheats OFF to play IWBTG mode.")
     end
@@ -484,7 +488,6 @@ for i = 0, MAX_PLAYERS-1 do
         slIntro = false,
         hasNightvision = false,
         sick = 0,
-        personaldeathcount = 0
     }
 end
 
@@ -511,6 +514,11 @@ portalalpha = 0
 loadingscreen = 0
 nightvisionnoise = 0
 iwbtgSongs = 1
+lives = 10
+
+--PlayerSync Variables (currently just the death count)
+gPlayerSyncTable[0].personaldeathcount = 0
+
 
 if network_is_server() then
     local m = gMarioStates[0]
@@ -575,7 +583,7 @@ sOnWarpToFunc = {
         --   dorrie.oPosY = dorrie.oPosY + 200
         --end
         set_water_level(0, -4900, false)
-        --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, -5200, gMarioStates[0].pos.z, nil)
+        --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, -4897, gMarioStates[0].pos.z, nil)
     end,
 
     [LEVEL_LLL] = function()

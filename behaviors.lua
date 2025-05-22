@@ -45,6 +45,8 @@ local function bhv_red_flood_flag_loop(o)
     bhv_pole_base_loop()
 end
 
+--local ACT_KING_WHOMP_CHASE_FAST = 15
+
 local function bhv_custom_kingwhomp(o)
     local m = nearest_mario_state_to_object(o)
     if o.oHealth == 3 then
@@ -62,7 +64,15 @@ local function bhv_custom_kingwhomp(o)
     if o.oMoveFlags & OBJ_MOVE_LANDED ~= 0 and o.oHealth >= 2 then
         spawn_sync_object(id_bhvBowserShockWave, E_MODEL_BOWSER_WAVE, o.oPosX, o.oPosY, o.oPosZ, nil)
     end
-    o.oForwardVel = 30
+    
+    if o.oAction == 6 and o.oTimer == 35 then
+        o.oSubAction = 10
+    end
+    if o.oAction == 1 then
+        o.oForwardVel = 30
+    elseif o.oSubAction ~= 10 then
+        o.oForwardVel = 30
+    end
     --if lateral_dist_between_objects(m.marioObj, o) < 700 then
     --	--m.floor.type = surface_ --SURFACE_QUICKSAND
     --end
@@ -550,17 +560,7 @@ local function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredicta
         end
     end
 
-    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
-        if (m.action & ACT_FLAG_ATTACKING) ~= 0 then
-           return 
-        else
-            set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
-            m.capTimer = 1
-            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
-            play_sound(SOUND_ACTION_METAL_BONK, m.pos)
-            stop_cap_music()
-        end 
-    end
+    metalhit_attack(o)
 end
 
 local function goom_int(m, o, intType) -- Intangibility check specifically for Huge Goombas' goomba spawns on death, could cause unresponsiveness when killing goombas too early.
@@ -1045,9 +1045,6 @@ local function lava_loop(o)
     if np.currLevelNum ~= LEVEL_JRB and np.currLevelNum ~= LEVEL_HMC then
         load_object_collision_model()
     end
-    if np.currLevelNum == LEVEL_HMC and m.pos.y < -2500 then
-        load_object_collision_model()
-    end
 end
 
 local function bhv_checkerboard_platform(o)
@@ -1144,6 +1141,12 @@ local function bhv_custom_flamethrower(o)
 end
 
 local function bhv_custom_hex_platform(o)
+    o.oAngleVelYaw = 5000
+    o.oMoveAngleYaw = o.oMoveAngleYaw + 4744
+    load_object_collision_model()
+end
+
+local function bhv_custom_rotating_platform(o) --copied from above to fix visual disparity
     o.oAngleVelYaw = 5000
     o.oMoveAngleYaw = o.oMoveAngleYaw + 4744
     load_object_collision_model()
@@ -2124,7 +2127,6 @@ local function bhv_klepto_loop(o)
                 o.oAction = 8
             end
         end
-        djui_chat_message_create(tostring(KleptoHit))
     end
 
     if o.oAction == KLEPTO_ACT_CHASE_MARIO then --CHASING PLAYER
@@ -2784,17 +2786,7 @@ local function scuttlebug_loop(o)
     end
     --djui_chat_message_create(tostring(o.oSubAction))
 
-    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
-        if (m.action & ACT_FLAG_ATTACKING) ~= 0 then
-           return 
-        else
-            set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
-            m.capTimer = 1
-            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
-            play_sound(SOUND_ACTION_METAL_BONK, m.pos)
-            stop_cap_music()
-        end 
-    end
+    metalhit_attack(o)
 end
 
 local function boo_vanish_or_appear(o) -- Translation of the boo hiding function
@@ -3107,12 +3099,12 @@ function piranha_plant(o)
         cur_obj_move_using_fvel_and_gravity()
     end
 
-    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then -- same MC removel knockback for goombas
-        set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
-        m.capTimer = 1
-        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
-        play_sound(SOUND_ACTION_METAL_BONK, m.pos)
-        stop_cap_music()
+    if o.oAction == 5 or o.oAction == 6 or o.oAction == 7 then 
+        return 
+    elseif o.oAction == 1 then
+        metalhit(o)
+    else
+        metalhit_attack(o)
     end
 end
 
@@ -3463,6 +3455,7 @@ function custom_falling_pillar(o) -- theres an argument to be made that adding c
 
         --o.oTimer = o.oTimer + 3 -- no idea if this is doing anything (i am coding noob)
     end
+    metalhit(o)
 end
 
 --function custom_snufit(o) -- Periodically shoots one large bullet at the player, faster cooldown.
@@ -3601,6 +3594,7 @@ hook_gore_behavior(id_bhvSpindel, false, nil, bhv_custom_spindel)
 hook_gore_behavior(id_bhvFlamethrower, false, nil, bhv_custom_flamethrower)
 hook_gore_behavior(id_bhvLllRotatingHexFlame, false, nil, bhv_custom_firebars)
 hook_gore_behavior(id_bhvLllRotatingHexagonalPlatform, false, nil, bhv_custom_hex_platform)
+hook_gore_behavior(id_bhvRotatingPlatform, false, nil, bhv_custom_rotating_platform)
 hook_gore_behavior(id_bhvLllVolcanoFallingTrap, false, nil, bhv_custom_crushtrap)
 hook_gore_behavior(id_bhvSmallBully, false, nil, bhv_custom_bully)
 hook_gore_behavior(id_bhvBigBully, false, bhv_custom_bully_boss_init, bhv_custom_bully_boss_loop)
