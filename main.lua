@@ -245,16 +245,12 @@ end
 
 function gibs(o)
     local m = gMarioStates[0]
-    if bloodgibs then
-    --if m.marioObj.oTimer > 20 then
-        for i = 0, 40 do
-            if m.playerIndex ~= 0 then return end
-            local random = math.random()
-            spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
-                obj_scale(gib, random/2)
-            end)
-        end
-    --end
+    for i = 0, gibAmount do
+        if m.playerIndex ~= 0 then return end
+        local random = math.random()
+        spawn_non_sync_object(id_bhvGib, E_MODEL_GIB, o.oPosX, o.oPosY, o.oPosZ, function (gib)
+            obj_scale(gib, random/2)
+        end)
     end
 end
 
@@ -1940,7 +1936,7 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
     end
     hallucinate = clamp(hallucinate, 0, 111)
 
-    --PORTAL OVERLAY
+    --PORTAL OVERLAY 
     if m.marioObj and loadingscreen < 1 then
         djui_hud_set_color(255, 255, 255, portalalpha)
         djui_hud_render_texture_tile(TEX_PORTAL, 0, 0, width*32, height*32, 0, (m.marioObj.oTimer % 32) * 16, 16, 16)

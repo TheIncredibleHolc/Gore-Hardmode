@@ -46,15 +46,12 @@ local function puketoggle()
     end
 end
 
-local function gibstoggle()
-    if bloodgibs then
-        djui_chat_message_create("Blood particles disabled.")
-        bloodgibs = false
-    elseif bloodgibs == false then
-        djui_chat_message_create("Blood particles enabled.")
-        bloodgibs = true
-    end
+gibAmount = 40
+function gibSlider(m, slider)
+    gibAmount = slider
 end
+hook_mod_menu_slider("Amount of blood", 40, 0, 300, gibSlider)
+
 
 iwbtgmode = false
 
@@ -99,7 +96,6 @@ if network_is_server() then
     hook_mod_menu_checkbox("Toggle Co-Op IWBTG Mode [HOST]", false, iwbtgtoggle)
 end
 hook_mod_menu_checkbox("Toggle Vomiting", false, puketoggle)
-hook_mod_menu_checkbox("Toggle Blood Particles (Lag Prevention)", true, gibstoggle)
 if network_is_server() then
     hook_mod_menu_button("Reset All Trophies [HOST]", cleartrophies)
 end
@@ -537,7 +533,10 @@ define_custom_obj_fields({
     oChicken = "u32",
     oFlyGuyVel = "f32",
     oFlyGuyTargetTimer = "f32",
-    oFlyGuyMoveYaw = "f32"
+    oFlyGuyMoveYaw = "f32",
+    oRandomSpinVelX = "f32",
+    oRandomSpinVelY = "f32",
+    oRandomSpinVelZ = "f32"
 })
 end
 

@@ -393,10 +393,6 @@ local function bhv_custom_bully(o)
     end
 end
 
-
-    end
-end
-
 local function bhv_custom_explosion(o) -- replaces generic explosions with NUKES! (Bigger radius, bigger explosion, louder)
     local m = nearest_mario_state_to_object(o)
     if o.oBehParams ~= 20 then
@@ -1851,13 +1847,16 @@ local function gib_init(o)
     o.oPosY = o.oPosY + 10 --This gets the gibs off the floor, allowing the loop code to run.
     cur_obj_update_floor_height_and_get_floor()
 
+    o.oRandomSpinVelX = math.random(100, 13000)
+    o.oRandomSpinVelY = math.random(100, 13000)
+    o.oRandomSpinVelZ = math.random(100, 13000)
+
+
 end
 
 local function gib_loop(o)
     local m = gMarioStates[0]
     local s = gStateExtras[0]
-    local random = math.random(1,1500)
-
     if m.marioObj.oTimer < 10 and not s.iwbtg then --This protects from gib spam and low FPS
         obj_mark_for_deletion(o)
     end
@@ -1867,9 +1866,9 @@ local function gib_loop(o)
         cur_obj_move_using_fvel_and_gravity()
         cur_obj_move_using_vel()
         cur_obj_update_floor_height_and_get_floor()
-        o.oFaceAnglePitch = o.oFaceAnglePitch + random
-        o.oFaceAngleRoll = o.oFaceAngleRoll + random
-        o.oFaceAngleYaw = o.oFaceAngleYaw + random
+        o.oFaceAnglePitch = o.oFaceAnglePitch + o.oRandomSpinVelX
+        o.oFaceAngleRoll = o.oFaceAngleRoll + o.oRandomSpinVelY
+        o.oFaceAngleYaw = o.oFaceAngleYaw + o.oRandomSpinVelZ
     else
         o.oPosY = o.oFloorHeight
     end
@@ -3526,8 +3525,6 @@ function bhv_custom_swoop(o)
     if o.oPrevAction == 1 and o.oAction == 0 then
         o.oAction = 1
     end
-end
-
 end
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
