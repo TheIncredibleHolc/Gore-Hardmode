@@ -118,6 +118,11 @@ u8 secretroom_dl_chills_rgba16[] = {
 	#include "levels/secretroom/chills.rgba16.inc.c"
 };
 
+Gfx secretroom_dl_sherb2_rgba16_aligner[] = {gsSPEndDisplayList()};
+u8 secretroom_dl_sherb2_rgba16[] = {
+	#include "levels/secretroom/sherb2.rgba16.inc.c"
+};
+
 Gfx secretroom_dl_tillyn_rgba16_aligner[] = {gsSPEndDisplayList()};
 u8 secretroom_dl_tillyn_rgba16[] = {
 	#include "levels/secretroom/tillyn.rgba16.inc.c"
