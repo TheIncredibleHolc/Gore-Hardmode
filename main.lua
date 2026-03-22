@@ -5,18 +5,24 @@
 -------TESTING NOTES AND KNOWN BUGS-------------
 
 -- goombas can double squish while in "chase mode"
--- the player's velocity is carried over whentakign fall damage on a downwards slope
--- swoops will switch from rendering to not rendering when activated and too far away
-
+-- the player's velocity is carried over when taking fall damage on a downwards slope
+-- swoops will deal contact damage on top of custom damage
+-- hallway boo shouldn't be set to oAction 1 when entering from the courtyard
+-- standing within range of hallway boo while in another room causes it to switch between oAction 1 and 2, moving 1 unit every frame (presumably)
+-------EVENTUAL ADDITIONS/CHANGES-------------
+-- change thi's mini form to work like normal mario but mini (current mini doesnt provide any interesting gameplay changes other than novelty)
+-- change cork boxes to kill the player if held for too long
+-- allow cork boxes to be thrown
+-- maintain its size after being thrown before shrinking it back down to its normal size
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 function test()
     local m = gMarioStates[0]
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
-        --m.pos.x = -3601
-        --m.pos.y = -4279
-        --m.pos.z = 3591
-        --m.faceAngle.y = 16384
+        m.pos.x = -1024
+        m.pos.y = 74
+        m.pos.z = 58
+        m.faceAngle.y = 16384
         --m.numStars = 100
         --m.pos.x = m.pos.x - 200
     end
@@ -54,7 +60,7 @@ gBehaviorValues.KingBobombHealth = 6
 
 --Slide and Metal/Wing Cap timers
 gLevelValues.pssSlideStarTime = 420 -- 14 seconds
-gLevelValues.metalCapDuration = 1500 -- 45 seconds (only for JRH, it'll decrease in other levels)
+gLevelValues.metalCapDuration = 1800 -- 60 seconds (only for JRH, it'll decrease in other levels)
 gLevelValues.metalCapDurationCotmc = 1800 -- 60 seconds
 gLevelValues.wingCapDuration = 900 -- 30 seconds
 gLevelValues.wingCapDurationTotwc = 2250 -- 75 seconds (good luck running out of that)
@@ -323,30 +329,6 @@ function convert_s16(num)
     return num
 end
 
-function metalhit(o)
-    local m = nearest_mario_state_to_object(o)
-    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
-        set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
-        m.capTimer = 1
-        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
-        play_sound(SOUND_ACTION_METAL_BONK, m.pos)
-        stop_cap_music()
-    end
-end
-
-function metalhit_attack(o)
-    local m = nearest_mario_state_to_object(o)
-    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
-        if (m.action & ACT_FLAG_ATTACKING) ~= 0 then return else
-            set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
-            m.capTimer = 1
-            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
-            play_sound(SOUND_ACTION_METAL_BONK, m.pos)
-            stop_cap_music()
-        end
-    end
-end
-
 function mario_update(m) -- ALL Mario_Update hooked commands.,
     if is_player_active(m) == 0 then return end
     local m = gMarioStates[0] --MIGHT BREAK THINGS, I JUST ADDED THIS DUE TO SM64 EE ERRORS. BE WARNED!
@@ -610,7 +592,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
                 s.slIntro = true
             end
-            if not (network_player_connected_count() <= 1 and is_game_paused()) or (m.action ~= ACT_STAR_DANCE and m.action ~= ACT_STAR_DANCE_NO_EXIT) then
+            if not (network_player_connected_count() <= 1 and is_game_paused()) and (m.action ~= ACT_STAR_DANCE_WATER and m.action ~= ACT_STAR_DANCE_NO_EXIT) then
                 m.health = m.health - 2
             end
         end
@@ -974,7 +956,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     --When getting the 100 coin star, a bobomb nuke spawns on Mario.
     if (m.numCoins) == 100 then
         m.numCoins = m.numCoins + 1
-        spawn_sync_if_main(id_bhvBobomb, E_MODEL_BOBOMB_BUDDY, m.pos.x, m.pos.y, m.pos.z, nil, m.playerIndex)
+        spawn_sync_if_main(id_bhvBobomb, E_MODEL_BOBOMB_BUDDY, m.pos.x, m.pos.y + 50, m.pos.z, nil, m.playerIndex)
     end
  ----------------------------------------------------------------------------------------------------------------------------------
     --Switches snow landing to snow drowning
@@ -1074,6 +1056,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         end
     end
 
+    if np.currLevelNum == LEVEL_DDD and np.currAreaIndex == 2 then -- literally have to wait for Blocky's half broken pr to go through or else we get this 
+        --djui_chat_message_create(tostring(gNetworkPlayers[0].currAreaIndex))
+        set_water_level(0, -2810, false)
+    end
  ----------------------------------------------------------------------------------------------------------------------------------
     --Replaces the twirling action the player is in while in a tweester, instead flinging the player around.
     local spinX = 1
@@ -1110,24 +1096,39 @@ function hook_update()
         end
     end
     
+    local ignore = {
+    [ACT_GROUND_POUND] = true,
+    [ACT_GROUND_POUND_LAND] = true,
+    [ACT_BUTT_SLIDE_STOP] = true,
+    [ACT_LONG_JUMP] = true,
+    [ACT_LONG_JUMP_LAND] = true,
+    [ACT_LONG_JUMP_LAND] = true,
+    [ACT_FLYING] = true,
+    [ACT_FALL_AFTER_STAR_GRAB] = true,
+    [ACT_STAR_DANCE_EXIT] = true,
+    [ACT_STAR_DANCE_NO_EXIT] = true,
+    [ACT_LEDGE_GRAB] = true
+    }
+
     -- Prevents slow fall with WC by removing the player's cap when attempted.
-    if (m.flags & (MARIO_WING_CAP) ~= 0) and (m.controller.buttonDown & A_BUTTON ~= 0) and m.vel.y <= -35 and m.action ~= ACT_GROUND_POUND and m.action ~= ACT_GROUND_POUND_LAND and m.action ~= ACT_BUTT_SLIDE_STOP and m.action ~= ACT_LONG_JUMP and m.action ~= ACT_LONG_JUMP_LAND and 
-    m.action ~= ACT_LONG_JUMP_LAND and m.action ~= ACT_FLYING and m.action ~= ACT_FALL_AFTER_STAR_GRAB and m.action ~= ACT_STAR_DANCE and m.action ~= ACT_STAR_DANCE_NO_EXIT and m.action ~= ACT_LEDGE_GRAB and not gGlobalSyncTable.romhackcompatibility then
-        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
-        mario_blow_off_cap(m, 5)
-        stop_cap_music()
-    elseif (m.flags & (MARIO_WING_CAP) ~= 0) and (m.controller.buttonDown & A_BUTTON ~= 0) and m.action == ACT_GROUND_POUND and m.vel.y == -38 and m.action ~= ACT_GROUND_POUND_LAND and m.action ~= ACT_BUTT_SLIDE_STOP and m.action ~= ACT_LONG_JUMP and m.action ~= ACT_LONG_JUMP_LAND and 
-    m.action ~= ACT_LONG_JUMP_LAND and m.action ~= ACT_FLYING and m.action ~= ACT_FALL_AFTER_STAR_GRAB and m.action ~= ACT_STAR_DANCE and m.action ~= ACT_STAR_DANCE_NO_EXIT and m.action ~= ACT_LEDGE_GRAB and not gGlobalSyncTable.romhackcompatibility then
-        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
-        mario_blow_off_cap(m, 5)
-        stop_cap_music()
+    if (m.flags & (MARIO_WING_CAP) ~= 0) and (m.controller.buttonDown & A_BUTTON ~= 0) and not gGlobalSyncTable.romhackcompatibility then
+        if m.vel.y <= -37 and not ignore[m.action] then
+            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+            mario_blow_off_cap(m, 5)
+            stop_cap_music()
+        elseif m.vel.y == -38 and m.action == ACT_GROUND_POUND and m.actionTimer >= 15 then
+            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+            mario_blow_off_cap(m, 10)
+            stop_cap_music()
+        end
     end
+    djui_chat_message_create(tostring(m.actionTimer))
 
     -- WC buff (and TotWC buff because faster flying made it too easy somehow)
     if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON or m.action == ACT_THROWN_BACKWARD or m.action == ACT_THROWN_FORWARD then -- Makes flying gradually get FASTER!
         if np.currLevelNum == LEVEL_TOTWC and not gGlobalSyncTable.romhackcompatibility then
-            m.forwardVel = math.max(80, m.forwardVel)  
-            m.forwardVel = math.min(110, m.forwardVel)
+            m.forwardVel = math.max(60, m.forwardVel)  
+            m.forwardVel = math.min(90, m.forwardVel)
             s.flyingVel = m.forwardVel --This is to store Mario's last flying speed to check for splat-ability. 
         elseif np.currLevelNum ~= LEVEL_TOTWC and not gGlobalSyncTable.romhackcompatibility then
             m.forwardVel = math.max(85, m.forwardVel)
@@ -1435,7 +1436,7 @@ function hook_update()
 
     -- Adds a visual death counter beside all players on the player list.
     for i = 0, MAX_PLAYERS - 1 do
-        network_player_set_description(gNetworkPlayers[i], "Deaths: " ..tostring(gPlayerSyncTable[i].personaldeathcount), 175, 0, 0, 255)
+        network_player_set_description(gNetworkPlayers[i], "Deaths:  " ..tostring(gPlayerSyncTable[i].personaldeathcount), 175, 0, 0, 255)
     end
 end
 
@@ -1522,7 +1523,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
     --Skeeter insta-kill
     if obj_has_behavior_id(o, id_bhvSkeeter) ~= 0 then
         if (m.hurtCounter > 0) then
-            m.squishtimer = 50
+            m.squishTimer = 50
         elseif o.oInteractStatus & INT_STATUS_WAS_ATTACKED ~= 0 then -- Thx xLuigiGamerx
             squishblood(o)
             local_play(sSplatter, m.pos, 1)
@@ -1539,13 +1540,12 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
         end
     end
 
-
     --JRB falling pillar insta-kill
     if obj_has_behavior_id(o, id_bhvFallingPillarHitbox) ~= 0 and (m.hurtCounter > 0) then
         m.squishTimer = 50
     end
 
-    --Swoop insta-kill
+--[[     --Swoop insta-kill
     if obj_has_behavior_id(o, id_bhvSwoop) ~= 0 then 
         if (m.hurtCounter > 0) then
             m.squishtimer = 50
@@ -1553,7 +1553,7 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
             squishblood(o)
             local_play(sSplatter, m.pos, 1)
         end
-    end
+    end ]]
 
     --Others
     if (obj_has_behavior_id(o, id_bhvRacerHitbox) ~= 0
@@ -1777,7 +1777,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
         local np = gNetworkPlayers[0]
         local m = gMarioStates[0]
         if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC then
-            if m.action == ACT_WATER_DEATH or m.aciton == ACT_DROWNING then
+            if m.action == ACT_WATER_DEATH or m.action == ACT_DROWNING then
                 set_mario_action(m, ACT_GONE, 1)
                 network_play(sSplash, m.pos, 1, m.playerIndex)
                 play_sound(SOUND_OBJ_BULLY_EXPLODE_2, m.pos)
@@ -2691,20 +2691,6 @@ local function movesets_update(m)
     end
 end
 
--- there was an attempt at making Huge Goombas invulnerable when not being ground pounded, but there were bugs with them escaping squish deaths that i couldnt fix
---local function huge_goom_ded(o) 
-    --local m = gMarioStates[0] 
-    --if m.action == ACT_GROUND_POUND and (o.oAction == OBJ_ACT_VERTICAL_KNOCKBACK or o.oAction == OBJ_ACT_HORIZONTAL_KNOCKBACK or o.oAction == OBJ_ACT_SQUISHED) then
-    --    o.oVelX = 0
-    --    o.oVelY = 0
-    --    o.oVelZ = 0
-    --    o.oForwardVel = 0
-    --    o.oGoombaRelativeSpeed = 0
-    --    o.oAction = 0
-    ---end
---end
---hook_event(HOOK_ON_OBJECT_UNLOAD, huge_goom_ded)
-
 
 hook_mario_action(ACT_METAL_JUMP_SQUAT, act_metal_jump_squat)
 hook_event(HOOK_ON_SET_MARIO_ACTION, metal_jump_squat)
@@ -2740,7 +2726,7 @@ function level_obj_init() -- Moves the only Huge Triplet Goombas further from sp
         local f = obj_get_first_with_behavior_id(id_bhvFloorSwitchGrills)
         if np.currLevelNum == LEVEL_HMC then 
             f.oPosX = -4890
-            f.oPosY = -6327  
+            f.oPosY = -6327
             f.oPosZ = 4890
             --spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, nil)  --the issue
         end
@@ -2765,7 +2751,7 @@ function level_obj_init() -- Moves the only Huge Triplet Goombas further from sp
             end
         end    
 
-        -- Move the castle Boo further from the door to eventually begin the Boo race code (won't be too fancy because me coding noob)
+--[[         -- Move the castle Boo further from the door to eventually begin the Boo race code (won't be too fancy because me coding noob)
         local b = obj_get_first_with_behavior_id(id_bhvBooInCastle)
         if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 1 then
             while b do
@@ -2774,15 +2760,16 @@ function level_obj_init() -- Moves the only Huge Triplet Goombas further from sp
                 djui_chat_message_create(tostring(b.oPosZ))
                 b = obj_get_next_with_same_behavior_id(b)
             end
-        end
+        end ]]
     end
 end
 
 local function thi_mini() -- yea idk how to get this to work
+    local m = gMarioStates[0]
     local np = gNetworkPlayers[0]
     if np.currLevelNum == LEVEL_THI and np.currAreaIndex == 1 then
-        if m.action == ACT_EMERGE_FROM_PIPE then 
-            local_play(sMini, m.pos, 2) 
+        if m.action == ACT_EMERGE_FROM_PIPE then
+            local_play(sMini, m.pos, 2)
         end
     end
 end

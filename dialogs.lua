@@ -1733,8 +1733,8 @@ I'm out training now,\
 so come back later.\
 //--Koopa the Quick"))
 
-smlua_text_utils_dialog_replace(DIALOG_167,1,4,30,200, ("\
-Welcome to HARD MODE!\
+smlua_text_utils_dialog_replace(DIALOG_167,1,4,30,200, ("Welcome to HARD MODE!\
+\
 \
 \
 Be prepared to die\

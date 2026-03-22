@@ -194,12 +194,13 @@ gSamples = {
     audio_sample_load("toadsick.ogg"),
     audio_sample_load("elevatorbreak2.ogg"),
     audio_sample_load("shotgun.ogg"),
-    audio_sample_load("metal2.ogg"), 
-    audio_sample_load("floweylaugh.ogg"), 
-    audio_sample_load("fireworklaunch.ogg"), 
+    audio_sample_load("metal2.ogg"),
+    audio_sample_load("floweylaugh.ogg"),
+    audio_sample_load("fireworklaunch.ogg"),
     audio_sample_load("corkgrow.ogg"),
-    audio_sample_load("wehhh.ogg"), 
-    audio_sample_load("minithi.ogg")
+    audio_sample_load("wehhh.ogg"),
+    audio_sample_load("minithi.ogg"),
+    audio_sample_load("zoooooom.ogg")
 }
 
 sBoneBreak = 1
@@ -255,6 +256,7 @@ sFireworkLaunch = 50
 sMegaGrow = 51
 sThrowFail = 52
 sMini = 53
+sZooom = 54
 
 function loop(music) audio_stream_set_looping(music, true) end
 
@@ -1129,6 +1131,30 @@ end
 function check_trophyplate(m, np, sound)
     local trophyplate = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvTrophyPlate)
     return np.currLevelNum == LEVEL_SECRETHUB and sound == CHAR_SOUND_PUNCH_YAH and obj_check_hitbox_overlap(m.marioObj, trophyplate)
+end
+
+function metalhit(o)
+    local m = nearest_mario_state_to_object(o)
+    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
+        set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+        m.capTimer = 1
+        m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+        play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+        stop_cap_music()
+    end
+end
+
+function metalhit_attack(o)
+    local m = nearest_mario_state_to_object(o)
+    if dist_between_objects(m.marioObj, o) < 200 and m.flags & MARIO_METAL_CAP ~= 0 then
+        if (m.action & ACT_FLAG_ATTACKING) ~= 0 then return else
+            set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
+            m.capTimer = 1
+            m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
+            play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+            stop_cap_music()
+        end
+    end
 end
 
 local function has_any_behavior(obj, behaviors)

@@ -164,7 +164,13 @@ end
 
 local function bhv_custom_boulder(o) --Locks onto mario and homes-in on him.
     local m = nearest_player_to_object(o)
-    obj_turn_toward_object(o, m, 16, 0x800)
+    local m = nearest_mario_state_to_object(o)
+    local ignore = m.action == ACT_GONE
+    if not ignore then
+        if dist_between_objects(o, m.marioObj) < 1000 then
+            obj_turn_toward_object(o, m.marioObj, 16, 0x800)
+        end
+    end
 end
 
 local function bhv_custom_bowserbomb(o) --Oscillates up and down
@@ -500,6 +506,7 @@ end
 local function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredictable. Will lunge at Mario
     local m = nearest_mario_state_to_object(o)
     local np = gNetworkPlayers[0]
+    local ignore = m.action == ACT_GONE
     if o.oGoombaJumpCooldown >= 9 then
         o.oGoombaJumpCooldown = 8
         o.oVelY = o.oVelY + 10
@@ -514,9 +521,11 @@ local function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredicta
         cur_obj_rotate_yaw_toward(o.oGoombaTargetYaw, 0x200)
     end
 
-    o.oHomeX = m.pos.x
-    o.oHomeY = m.pos.y
-    o.oHomeZ = m.pos.z
+    if not ignore and dist_between_objects(o, m.marioObj) < 3000 then
+        o.oHomeX = m.pos.x
+        o.oHomeY = m.pos.y
+        o.oHomeZ = m.pos.z
+    end
 
     if obj_has_model_extended(o, E_MODEL_WOODEN_SIGNPOST) ~= 0 then
         if ia(m) and o.oAction > 2 and -- consider any action outside of the three goomba actions dead
@@ -528,35 +537,17 @@ local function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredicta
     if o.oTimer >= 16 and o.oAction == OBJ_ACT_SQUISHED then
         squishblood(o)
         local_play(sSplatter, m.pos, 1)
-        
-        local mo = m.marioObj --Spawns Goombas when Mario kills a Huge Goomba (may change spawned goombas to Tiny Goombas if I can figure out how to attach them to the player)
-        if obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and (o.oBehParams2ndByte & (GOOMBA_BP_TRIPLET_FLAG_MASK) ~= 0 or 
-        o.oBehParams2ndByte & GOOMBA_BP_SIZE_MASK == 1) then
-            spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, o.oPosX, o.oPosY, o.oPosZ, function(g) 
-                    g.oBehParams2ndByte = 0 
-                    g.oMoveAngleYaw = mo.oMoveAngleYaw + 16384
-                    g.oBehParams2ndByte = 4
-                end)
-            spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, o.oPosX, o.oPosY, o.oPosZ, function(g) 
-                    g.oBehParams2ndByte = 0
-                    g.oMoveAngleYaw = mo.oMoveAngleYaw - 16384
-                    g.oBehParams2ndByte = 4
-                end)
-
-                -- Initial plans were to make Huge Goombas immune to all squish attacks except for ground pounds, but there was a bug with themm escaping their squished state and entering an intangible state. pls fix
-                --if m.action ~= ACT_GROUND_POUND and (o.oAction == OBJ_ACT_VERTICAL_KNOCKBACK or o.oAction == OBJ_ACT_HORIZONTAL_KNOCKBACK or o.oAction == OBJ_ACT_SQUISHED) then
-                    --o.oVelX = 0
-                    --o.oVelY = 0
-                    --o.oVelZ = 0
-                    --o.oForwardVel = 0
-                    --o.oGoombaRelativeSpeed = 0
-                    --o.oAction = 0
-                --elseif m.action == ACT_GROUND_POUND and o.oAction == OBJ_ACT_SQUISHED then
-                    --whatever stops them from escaping ground pounds
-                --end
-            
-                --end
-            
+    
+        local mo = m.marioObj --Spawns Goombas when Mario kills a Huge Goomba.
+        if obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and (o.oBehParams2ndByte & GOOMBA_BP_SIZE_MASK == 1) then
+            spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, o.oPosX, o.oPosY, o.oPosZ, function(g)
+                g.oBehParams2ndByte = 4
+                g.oMoveAngleYaw = mo.oMoveAngleYaw + 16384
+            end)
+            spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, o.oPosX, o.oPosY, o.oPosZ, function(g)
+                g.oBehParams2ndByte = 4
+                g.oMoveAngleYaw = mo.oMoveAngleYaw - 16384
+            end)
         end
     end
 
@@ -660,7 +651,7 @@ local function bhv_custom_bullet_bill(o)
         --o.oForwardVel = 0
         obj_compute_vel_from_move_pitch(50.0)
         cur_obj_rotate_yaw_toward(o.oAngleToMario, 0xF00)
-        cur_obj_rotate_pitch_toward(o, pitchToMario, 0xF00)
+        cur_obj_rotate_pitch_toward(o, pitchToMario/2, 0xF00)
     end
     if o.oAction == 0 then
         o.oMoveAnglePitch = 0
@@ -3374,8 +3365,6 @@ function mrboneswildride(o) --The fun never ends!!
         --djui_chat_message_create("running!")
     end
 end
-
-
 hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
 
 
@@ -3391,11 +3380,11 @@ function bhv_custom_1up(o) -- Chases the nearest player for 5 seconds in a green
         local_play(sFloweyHa, o.header.gfx.pos, 1)
     end
 
-    if lateral_dist_between_objects(m.marioObj, o) <= 120 and o.oAction == 1 and o.oTimer < 120 then --Runs if Mario 'touches' the 1up hitbox. 120 is actually slightly before, but would be a better option imo.
+    if dist_between_objects(m.marioObj, o) <= 120 and o.oAction == 1 and o.oTimer < 120 then --Runs if Mario 'touches' the 1up hitbox. 120 is actually slightly before, but would be a better option imo.
         m.health = 0xff
         obj_mark_for_deletion(o)
         play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
-    elseif lateral_dist_between_objects(m.marioObj, o) > 120 and o.oAction == 1 and o.oTimer == 150 then
+    elseif dist_between_objects(m.marioObj, o) > 120 and o.oAction == 1 and o.oTimer == 150 then
         local_play(sFart, o.header.gfx.pos, 2)
         obj_mark_for_deletion(o)
     end
@@ -3403,34 +3392,34 @@ function bhv_custom_1up(o) -- Chases the nearest player for 5 seconds in a green
 end
 
 function bhv_custom_cork_box(o)
-    local n = nearest_mario_state_to_object(o)
-    local dist = dist_between_objects(o, n.marioObj)
+    local m = nearest_mario_state_to_object(o)
+    local dist = dist_between_objects(o, m.marioObj)
     
-    if n.heldObj == o and o.oAction ~= 2 then
+    if m.heldObj == o and o.oAction ~= 2 then
         o.oTimer = 0
         o.oAction = 2
-    elseif n.heldObj ~= o then
+    elseif m.heldObj ~= o then
         o.oAction = 0
         obj_scale(o, 0.4)
     end
 
     if o.oAction == 2 and o.oTimer == 12 then
-        local_play(sMegaGrow, n.pos, 2) 
-        set_mario_action(n, ACT_HOLD_HEAVY_IDLE, 0)
+        local_play(sMegaGrow, m.pos, 2) 
+        set_mario_action(m, ACT_HOLD_HEAVY_IDLE, 0)
     end
 
     if o.oAction == 2 and o.oTimer > 12 and o.oTimer <= 75 then
         obj_scale(o, math.max(0.4, o.oTimer / 30))
     end
 
-    if dist < 50 and n.action == ACT_HEAVY_THROW and n.actionTimer == 13 then
-        n.squishTimer = 50
-        local_play(sThrowFail, n.pos, 2)
-        obj_mark_for_deletion(o)
+    if dist < 50 and m.action == ACT_HEAVY_THROW and m.actionTimer == 13 then
+        m.squishTimer = 50
+        local_play(sThrowFail, m.pos, 2)
+
     elseif dist >= 50 and o.oAction == 2 and o.oTimer == 75 then
-        n.squishTimer = 50
-        local_play(sThrowFail, n.pos, 2)
-        obj_mark_for_deletion(o)
+        m.squishTimer = 50
+        local_play(sThrowFail, m.pos, 2)
+
     end
 
 end
@@ -3438,7 +3427,40 @@ end
 function castle_boo_init(o) -- Move the castle Boo further from the door to eventually start on the boo rushdown possession kill
     o.oPosX = -1000
     o.oPosY = 50
-    o.oPosZ = -1800 
+    o.oPosZ = -1800
+    o.oHomeX = -1000
+    o.oHomeZ = -32000
+    o.oAction = 1
+end
+
+function castle_boo_loop(o) -- tried rewriting source code, turns out thats harder than i thought itd be, but this works so im happy with it
+    obj_scale(o, 3)
+    cur_obj_move_using_fvel_and_gravity()
+    local m = nearest_mario_state_to_object(o)
+    if o.oAction == 2 and o.oAction ~= 1 and o.oPosZ <= 7000 and m.pos.z <= -3000 then
+        o.oAction = 3
+    elseif o.oAction == 3 then
+        o.oPosX = -1000
+        o.oPosZ = o.oPosZ + 256
+        o.oFaceAngleYaw = 0
+        o.oMoveAngleYaw = 0
+        cur_obj_forward_vel_approach_upward(64, 2) -- i have no idea why the speed only works when here, dont touch pls
+        if o.oTimer == 1 then
+            network_play(sZooom, m.pos, 3, m.playerIndex)
+        elseif o.oTimer < 35 then -- IT WORKSSSSSSSSS
+            o.oOpacity = 180
+            if lateral_dist_between_objects(o, m.marioObj) < 230 then
+                set_mario_action(m, ACT_SUFFOCATION, 0)
+            end
+        elseif o.oTimer >= 35 and o.oTimer < 40 then
+            o.oOpacity = math.max(o.oOpacity - 60, 0)
+        elseif o.oTimer >= 40 then
+            o.oAction = 4
+        end
+    elseif o.oAction == 4 then
+        o.oPosZ = -6500
+    end
+    djui_chat_message_create(tostring(o.oAction))
 end
 
 function custom_falling_pillar(o) -- theres an argument to be made that adding complex behavior to this would bloat JRH'S cave by a lot, so its being kept to something simple
@@ -3449,11 +3471,8 @@ function custom_falling_pillar(o) -- theres an argument to be made that adding c
         o.oFaceAngleYaw = angletomario
     end
     if o.oAction ~= 2 and dist <= 1300 then
-        --djui_chat_message_create("sword sfx")
         o.oAction = 2
         o.oAnimState = o.oTimer % 4
-
-        --o.oTimer = o.oTimer + 3 -- no idea if this is doing anything (i am coding noob)
     end
     metalhit(o)
 end
@@ -3485,17 +3504,24 @@ end
 
 function bhv_custom_swoop(o)
     local m = nearest_mario_state_to_object(o)
-    local pitchToMario = obj_pitch_to_object(o, gMarioStates[0].marioObj) --ty flipflop bell
+    local pitchToMario = obj_pitch_to_object(o, m.marioObj) --ty flipflop bell
     if o.oBehParams2ndByte == 50 and o.oAction == 1 then
         obj_scale(o, 0.5)
         obj_compute_vel_from_move_pitch(15)
         cur_obj_rotate_yaw_toward(o.oAngleToMario, 0xF00)
-        cur_obj_rotate_pitch_toward(o, pitchToMario, 0xF00)
+        cur_obj_rotate_pitch_toward(o, pitchToMario/2, 0xF00)
         if dist_between_objects(o, m.marioObj) < 100 and m.action & ACT_FLAG_ATTACKING == 0 then
+            obj_mark_for_deletion(o)
+            spawn_mist_particles()
+            play_sound(SOUND_OBJ_SWOOP_DEATH, m.pos)
             m.squishTimer = 50
         end
+        if o.oTimer > 240 then
+            obj_mark_for_deletion(o)
+            spawn_mist_particles()
+        end
     end
-    
+
     if o.oAction == 1 and o.oBehParams2ndByte ~= 50 then
         if o.oTimer < 30 then
             o.oVelY = 10
@@ -3503,7 +3529,7 @@ function bhv_custom_swoop(o)
             o.oVelY = 0
             o.oForwardVel = 25
         end
-        if o.oTimer % 35 == 0 and o.oBehParams2ndByte ~= 50 and o.oTimer ~= 0 then
+        if o.oTimer % 45 == 0 and o.oBehParams2ndByte ~= 50 and o.oTimer ~= 0 then
             spawn_sync_object(id_bhvSwoop, E_MODEL_SWOOP, o.oPosX, o.oPosY, o.oPosZ, function(s)
             s.oBehParams2ndByte = 50
             s.oAction = 1
@@ -3632,11 +3658,12 @@ hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
 hook_gore_behavior(id_bhvChuckya, false, nil, chuckya)
 hook_gore_behavior(id_bhvFlame, false, flame_loop)
 hook_gore_behavior(id_bhvBreakableBoxSmall, false, nil, bhv_custom_cork_box)
-hook_gore_behavior(id_bhvBooInCastle, false, nil, castle_boo_init)
+hook_gore_behavior(id_bhvBooInCastle, false, castle_boo_init, castle_boo_loop)
 hook_gore_behavior(id_bhvFallingPillar, false, nil, custom_falling_pillar)
 --hook_gore_behavior(id_bhvSnufit, false, nil, custom_snufit)
 hook_gore_behavior(id_bhvSwoop, false, nil, bhv_custom_swoop)
 --hook_gore_behavior(id_bhvLllSinkingRectangularPlatform, false, nil, custom_sinking_rectangular_plat_loop)
+hook_gore_behavior(id_bhvMontyMole, false, nil, custom_monty_mole)
 id_bhvHellEntrance = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, hell_entrance_init, hell_entrance_loop, "HellEntrance")
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
