@@ -200,7 +200,15 @@ gSamples = {
     audio_sample_load("corkgrow.ogg"),
     audio_sample_load("wehhh.ogg"),
     audio_sample_load("minithi.ogg"),
-    audio_sample_load("zoooooom.ogg")
+    audio_sample_load("zoooooom.ogg"),
+    audio_sample_load("coldwarning.ogg"),
+    audio_sample_load("coldescape.ogg"),
+    audio_sample_load("coldjump.ogg"),
+    audio_sample_load("slidedanger_Mario.ogg"),
+    audio_sample_load("slidedanger_Luigi.ogg"),
+    audio_sample_load("slidedanger_Toad.ogg"),
+    audio_sample_load("slidedanger_Wario.ogg"),
+    audio_sample_load("slidedanger_Waluigi.ogg")
 }
 
 sBoneBreak = 1
@@ -257,10 +265,18 @@ sMegaGrow = 51
 sThrowFail = 52
 sMini = 53
 sZooom = 54
+sCoWarn = 55
+sCoEscape = 56
+sCoJump = 57
+sSDangerMario = 58
+sSDangerLuigi = 59
+sSDangerToad = 60
+sSDangerWario = 61
+sSDangerWaluigi = 62
 
 function loop(music) audio_stream_set_looping(music, true) end
 
-highmusic = audio_stream_load("high.ogg")               loop (highmusic)
+highmusic = audio_stream_load("high.ogg")               loop(highmusic)
 smwbonusmusic = audio_stream_load("smwbonusloop.ogg")   loop(smwbonusmusic)
 boss = audio_stream_load("croppedcastle.ogg")
 backroomMusic = audio_stream_load("backroom.ogg")		loop(backroomMusic)
@@ -366,6 +382,35 @@ PACKET_UNLOCK = 0
 PACKET_SOUND = 1
 
 -------------------------------------------------------------------------------------------------------
+--! textures
+TEXTURES = 1
+if TEXTURES then
+TEX_MARIO_LESS_HIGH = get_texture_info('mariolesshigh')
+TEX_BLOOD_OVERLAY = get_texture_info('bloodoverlay')
+TEX_TRIPPY_OVERLAY = get_texture_info('trippy')
+TEX_PORTAL = get_texture_info("portal")
+TEX_GAMEOVER = get_texture_info("gameover")
+TEX_DIRT = get_texture_info("grass_09004800")
+TEX_NIGHTVISION = get_texture_info("nightvision")
+TEX_NIGHTVISION2 = get_texture_info("nightvision2")
+TEX_NIGHTVISION3 = get_texture_info("nightvision3")
+TEX_NIGHTVISION4 = get_texture_info("nightvision4")
+TEX_NIGHTVISION5 = get_texture_info("nightvision5")
+TEX_JRHLAVA = get_texture_info("jrhlava")
+TEX_MSKULL = get_texture_info("marioskull")
+TEX_LSKULL = get_texture_info("luigiskull")
+TEX_TSKULL = get_texture_info("toadskull")
+TEX_WMSKULL = get_texture_info("warioskull")
+TEX_WLSKULL = get_texture_info("waluigiskull")
+TEX_SNOW_BORDER = get_texture_info("snowborder")
+TEX_FIREWORK_SPARKLE_1A_2A = get_texture_info("sparkle_1a_2a")
+TEX_FIREWORK_SPARKLE_1B_2B = get_texture_info("sparkle_1b_2b")
+TEX_FIREWORK_SPARKLE_3A = get_texture_info("sparkle_3a")
+TEX_FIREWORK_SPARKLE_3B = get_texture_info("sparkle_3b")
+TEX_FIREWORK_SPARKLE_4A = get_texture_info("sparkle_4a")
+TEX_FIREWORK_SPARKLE_4B = get_texture_info("sparkle_4b")
+end
+
 --! models
 MODELS = 1
 if MODELS then
@@ -419,6 +464,7 @@ COL_STONEWALL = smlua_collision_util_get("stonewall_collision")
 E_MODEL_VOMIT = smlua_model_util_get_id("vomit_geo")
 E_MODEL_HELL_ENTRANCE = smlua_model_util_get_id("hellentrance_geo")
 E_MODEL_ROCK_SHRAPNEL = smlua_model_util_get_id("rock_shrapnel_geo")
+E_MODEL_SNOW_PILE = smlua_model_util_get_id("snowpile_geo")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -451,6 +497,7 @@ LEVEL_SECRETHUB = level_register('level_secretroom_entry', COURSE_NONE, 'Secret 
 
 smlua_audio_utils_replace_sequence(SEQ_EVENT_CUTSCENE_ENDING, 35, 76, "gorepeach") --Custom Audio for end cutscene
 
+smlua_text_utils_course_name_replace(COURSE_CCM, 'COLD, Cold Mountain')
 smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry World')
 smlua_text_utils_course_name_replace(COURSE_JRB, 'Jolly Roger Hell')
 smlua_text_utils_course_name_replace(COURSE_TTM, 'Dark Dark Mountain')
@@ -487,9 +534,13 @@ for i = 0, MAX_PLAYERS-1 do
         iwbtg = false,
         death = false,
         sslIntro = false,
-        slIntro = false,
+        ccmIntro = false,
         hasNightvision = false,
         sick = 0,
+        snowtimer = 0,
+        snowexpose = 0,
+        penguindaysnumbered = false,
+        imminentbabydeath = 0
     }
 end
 
@@ -517,6 +568,7 @@ loadingscreen = 0
 nightvisionnoise = 0
 iwbtgSongs = 1
 lives = 10
+initangle = 0
 
 --PlayerSync Variables (currently just the death count)
 gPlayerSyncTable[0].personaldeathcount = 0
@@ -825,6 +877,12 @@ sOnLvlInitToFunc = {
         set_fog_color(1, 127)
         set_fog_color(2, 100)
 
+    end,
+
+    [LEVEL_CCM] = function()
+        local s = gStateExtras[0]
+        s.snowtimer = 0
+        s.snowexpose = 0
     end
 }
 ----------------------------------------------------------------------------------------------------------------------
@@ -947,6 +1005,129 @@ function act_puke(m)
     end
 end
 hook_mario_action(ACT_PUKE, act_puke)
+_G.ACT_SNOWY_SLIDE = allocate_mario_action(ACT_GROUP_MOVING|ACT_FLAG_MOVING|ACT_FLAG_BUTT_OR_STOMACH_SLIDE|ACT_FLAG_ATTACKING)
+function act_snowy_slide(m)
+    m.actionTimer = m.actionTimer + 1
+
+    mario_drop_held_object(m)
+    custom_update_sliding(m, 4)
+    adjust_sound_for_speed(m)
+    play_sound(SOUND_MOVING_TERRAIN_SLIDE, m.marioObj.header.gfx.cameraToObject)
+
+    local stepResult = perform_ground_step(m)
+    if stepResult == GROUND_STEP_NONE then
+        if m.actionTimer == 2 then
+            if m.character.type == CT_MARIO then
+                network_play(sSDangerMario, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_LUIGI then
+                network_play(sSDangerLuigi, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_TOAD then
+                network_play(sSDangerToad, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_WARIO then
+                network_play(sSDangerWario, m.pos, 1, m.playerIndex)
+            elseif m.character.type == CT_WALUIGI then
+                network_play(sSDangerWaluigi, m.pos, 1, m.playerIndex)
+            end
+        elseif m.actionTimer >= 10 then
+        --[[if m.forwardVel == clamp(m.forwardVel, -8, 8) then
+                return set_mario_action(m, ACT_BUTT_SLIDE_STOP, 0)
+            end ]]
+            if m.controller.buttonPressed & A_BUTTON ~= 0 or m.controller.buttonPressed & B_BUTTON ~= 0 then
+                if m.forwardVel == clamp(m.forwardVel, -26, 0) then
+                    m.vel.y = 20
+                    return set_mario_action(m, ACT_BACKWARD_ROLLOUT, 0)
+                elseif m.forwardVel == clamp(m.forwardVel, 0, 26) or m.forwardVel == 0 then
+                    m.vel.y = 20
+                    return set_mario_action(m, ACT_FORWARD_ROLLOUT, 0)
+                end
+            end
+
+            if m.forwardVel < 1 then
+                return set_mario_action(m, ACT_BUTT_SLIDE_STOP, 0)
+            end
+        end
+
+        align_with_floor(m)
+        set_character_animation(m, 0x58)
+        set_mario_particle_flags(m, PARTICLE_SNOW, 0)
+    elseif stepResult == GROUND_STEP_HIT_WALL then
+        set_mario_particle_flags(m, PARTICLE_VERTICAL_STAR, 0)
+        return set_mario_action(m, ACT_BACKWARD_GROUND_KB, 0)
+
+    elseif stepResult == GROUND_STEP_LEFT_GROUND then
+        if m.forwardVel ~= clamp(m.forwardVel, -32, 32) then
+            play_character_sound(m, CHAR_SOUND_WAAAOOOW)
+            return set_mario_action(m, ACT_RAGDOLL, 0)
+        else
+            return set_mario_action(m, ACT_FREEFALL, 0)
+        end
+    end
+end
+hook_mario_action(ACT_SNOWY_SLIDE, act_snowy_slide)
+-- keeping this commented out in case i want to return to this
+--[[ _G.ACT_SNOWY_WALKING = allocate_mario_action(ACT_GROUP_MOVING|ACT_FLAG_ALLOW_FIRST_PERSON|ACT_FLAG_MOVING) 
+function act_snowy_walking(m) -- code basically ripped form ACT_WALKING
+    if m.playerIndex ~= 0 then return end
+    local startPos = {x = 0, y = 0, z = 0}
+    local startYaw = m.faceAngle.y
+
+    mario_drop_held_object(m)
+
+    if should_begin_sliding(m) then
+        return set_mario_action(m, ACT_BEGIN_SLIDING, 0)
+    end
+
+    if m.input & INPUT_FIRST_PERSON ~= 0 then
+        return begin_braking_action(m)
+    end
+
+    if m.input & INPUT_ZERO_MOVEMENT ~= 0 then
+        return begin_braking_action(m)
+    end
+
+    if m.input & INPUT_Z_PRESSED ~= 0 then
+        return set_mario_action(m, ACT_CROUCH_SLIDE, 0)
+    end
+
+    m.actionstate = 0
+
+    vec3f_copy(startPos, m.pos)
+    update_walking_speed(m)
+
+    local groundStep = perform_ground_step(m)
+    if groundStep == GROUND_STEP_LEFT_GROUND then
+        set_mario_action(m, ACT_FREEFALL, 0)
+        set_character_animation(m, CHAR_ANIM_GENERAL_FALL)
+    elseif groundStep == GROUND_STEP_NONE then
+        local val04 = (m.intendedMag > m.forwardVel) and m.intendedMag or m.forwardVel
+
+        if val04 < 4 then
+            val04 = 4
+        end
+
+        set_character_anim_with_accel(m, CHAR_ANIM_MOVE_IN_QUICKSAND, val04/4 * 0x10000)
+        play_step_sound(m, 19, 93)
+
+        if m.intendedMag - m.forwardVel > 16 then
+            set_mario_particle_flags(m, PARTICLE_SNOW, 0)
+        end
+    elseif GROUND_STEP_HIT_WALL then
+        push_or_sidle_wall(m, startPos)
+        m.actionTimer = 0
+    end
+
+    tilt_body_walking(m, startYaw)
+    djui_chat_message_create("works")
+    return false
+end
+hook_mario_action(ACT_SNOWY_WALKING, act_snowy_walking) ]]
+_G.ACT_BURIED = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
+function act_buried(m)
+    m.actionTimer = m.actionTimer + 1
+    common_death_handler(m, CHAR_ANIM_DYING_IN_QUICKSAND, 99)
+end
+hook_mario_action(ACT_BURIED, act_buried)
+
 
 local MC = PARTICLE_MIST_CIRCLE
 local T  = PARTICLE_TRIANGLE
@@ -1003,6 +1184,11 @@ _G.ACT_RAGDOLL = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|AC
 function act_ragdoll(m)
     local s = gStateExtras[0]
     local stepResult = perform_air_step(m, 0)
+    m.actionTimer = m.actionTimer + 1
+    if m.actionTimer == 1 then
+        initangle = m.faceAngle.y
+        --djui_chat_message_create(tostring(initangle))
+    end
 
     if stepResult == AIR_STEP_LANDED then
         if m.floor.type == SURFACE_BURNING then
@@ -1011,6 +1197,7 @@ function act_ragdoll(m)
             if m.vel.y < -70 then
                 s.disappear = 1
                 m.squishTimer = 50
+                m.faceAngle.y = initangle
                 set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
             else
                 m.squishTimer = 50
@@ -1028,14 +1215,14 @@ function act_ragdoll(m)
             o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
             o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
         end)
-        for i = 0, 50 do
+        for i = 0, gibAmount do
             local random = math.random()
             spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
                 obj_scale(gib, random)
             end)
         end
         if not s.iwbtg then
-            common_death_handler(m, 0, -1)
+            --common_death_handler(m, 0, -1)
         end
 
         return set_mario_action(m, ACT_GONE, 0)

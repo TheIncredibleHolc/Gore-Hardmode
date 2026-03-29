@@ -502,10 +502,11 @@ a flying bird!"))
 smlua_text_utils_dialog_replace(DIALOG_044,1,2,95,200, ("What...?! ...MY TREE!!\
 \
 What the hell did you\
-just do to my HOME??\
-My family... My KIDS...\
+do to my HOME??\
+My wife... My child...\
 \
-You're gonna pay for that!"))
+You're gonna pay for\
+that!"))
 
 smlua_text_utils_dialog_replace(DIALOG_045,1,6,95,200, ("Whew! I'm just about\
 flapped out. You should\
@@ -524,10 +525,12 @@ stroke in this weather!"))
 smlua_text_utils_dialog_replace(DIALOG_047,1,2,95,200, ("Hi! I'll prepare the\
 cannon for you!"))
 
-smlua_text_utils_dialog_replace(DIALOG_048,1,4,30,200, ("Snow Mountain Summit\
-Watch for slippery\
-conditions! Please enter\
-the cottage first."))
+smlua_text_utils_dialog_replace(DIALOG_048,1,2,30,200, ("Wowza! So much snow!\
+\
+You had go better find\
+some shelter.\
+Any ceiling will do!\
+Quickly!"))
 
 smlua_text_utils_dialog_replace(DIALOG_049,1,5,30,200, ("Remember that tricky Wall\
 Kick jump? It's a\
@@ -788,10 +791,13 @@ worlds. If you hit a wall\
 while flying, you'll bounce\
 back."))
 
-smlua_text_utils_dialog_replace(DIALOG_070,1,2,30,200, ("Wowza! It's freezing!!\
+smlua_text_utils_dialog_replace(DIALOG_070,1,2,30,200, ("if you find this\
 \
-You had go better find\
-a warm igloo quick!"))
+i have no idea what was\
+here previously\
+\
+\
+whoops"))
 
 smlua_text_utils_dialog_replace(DIALOG_071,1,3,30,200, ("Danger Ahead!\
 Beware of the strange\
@@ -1129,11 +1135,21 @@ body!\
 Brrr! My face might\
 freeze like this!"))
 
-smlua_text_utils_dialog_replace(DIALOG_110,1,5,95,200, ("I need a good head on my\
+smlua_text_utils_dialog_replace(DIALOG_110,1,4,95,200, ("I need a good head on my\
 shoulders. Do you know of\
 anybody in need of a good\
-body? Please! I'll follow\
-you if you do!"))
+body?\
+You think I should roll\
+down this slide to find\
+one?\
+\
+...\
+\
+\
+\
+But I have the perfect\
+body right in front of\
+me."))
 
 smlua_text_utils_dialog_replace(DIALOG_111,1,4,95,200, ("Perfect! What a great\
 new body! Here--this is a\

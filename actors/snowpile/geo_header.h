@@ -1,0 +1,10 @@
+extern const GeoLayout snowpile_geo[];
+extern Lights1 snowpile_f3dlite_material_lights;
+extern u8 snowpile_tex_snowpile_ci8[];
+extern u8 snowpile_tex_snowpile_pal_rgba16[];
+extern Vtx snowpile_Box001_mesh_layer_1_vtx_cull[8];
+extern Vtx snowpile_Box001_mesh_layer_1_vtx_0[252];
+extern Gfx snowpile_Box001_mesh_layer_1_tri_0[];
+extern Gfx mat_snowpile_f3dlite_material[];
+extern Gfx mat_revert_snowpile_f3dlite_material[];
+extern Gfx snowpile_Box001_mesh_layer_1[];

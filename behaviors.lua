@@ -163,7 +163,6 @@ local function bobomb_loop(o) -- makes bobombs SCARY fast (Thanks blocky.cmd!!)
 end
 
 local function bhv_custom_boulder(o) --Locks onto mario and homes-in on him.
-    local m = nearest_player_to_object(o)
     local m = nearest_mario_state_to_object(o)
     local ignore = m.action == ACT_GONE
     if not ignore then
@@ -842,28 +841,34 @@ local function bhv_custom_tree(o) -- Trees shoot into the sky until blowing up a
     local mObj = m.marioObj
     local grab_pole = m.action == ACT_GRAB_POLE_FAST or m.action == ACT_GRAB_POLE_SLOW
     local hoot_act = np.currLevelNum == LEVEL_WF and np.currActNum > 2
-    
-    if lateral_dist_between_objects(m.marioObj, o) < 150 and grab_pole and o.oAction ~= 2 then
+
+    if dist_between_objects(mObj, o) < 600 and grab_pole and o.oAction ~= 2 then
         o.oTimer = 0
         o.oAction = 2
     end
-    
+
     if o.oAction == 2 and o.oTimer == 1 then
         local_play(sFireworkLaunch, m.pos, 2)
     end
 
     if o.oAction == 2 and o.oTimer < 50 then
         o.oPosY = o.oPosY + 50
+        if o.oTimer % 5 == 0 then
+            spawn_non_sync_object(id_bhvFireworkSparkle, E_MODEL_YOSHI_EGG, o.oPosX, o.oPosY, o.oPosZ, nil)
+        end
     elseif o.oAction == 2 and o.oTimer == 50 then
         obj_spawn_yellow_coins(o, 3)
-        obj_mark_for_deletion(o)   
-        spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
+        obj_mark_for_deletion(o)
+        spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY + 240, o.oPosZ, function(e)
+            obj_scale(e, 4)
+        end)
         set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
-        if lateral_dist_between_objects(m.marioObj, o) < 250 then
+        if dist_between_object_and_point(mObj, o.oPosX, o.oPosY + 240, o.oPosZ) < 500 then
             if m.flags & MARIO_METAL_CAP == 0 then 
                 m.squishTimer = 50
+                djui_chat_message_create("works")
             elseif m.flags & MARIO_METAL_CAP ~= 0 then -- doesn't do anything and i have no idea why
-                set_mario_action(m, ACT_FLAG_AIRBORNE, 0)
+                set_mario_action(m, ACT_FLAG_AIR, 0)
                 set_mario_action(m, ACT_HARD_BACKWARD_AIR_KB, 0)
                 play_sound(SOUND_ACTION_METAL_BONK, m.pos)
                 stop_cap_music()
@@ -871,13 +876,118 @@ local function bhv_custom_tree(o) -- Trees shoot into the sky until blowing up a
         end
 
         if hoot_act and not gGlobalSyncTable.romhackcompatibility then
-            local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
+            local hoot = obj_get_nearest_object_with_behavior_id(mObj, id_bhvHoot)
             if hoot and hoot.oHootAvailability ~= HOOT_AVAIL_WANTS_TO_TALK then
                 hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
                 play_secondary_music(0,0,0,0)
             end
         end
     end
+end
+
+local function bhv_firework_sparkle_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+    o.header.gfx.skipInViewCheck = true
+    local randomfvel = math.random(1, 2) --Perhaps we can partially add Mario's velocity into this equation?
+    local randomyaw = math.random(1,65536)
+    o.oBounciness = 0
+    o.oGravity = 0
+    o.oVelY = -10
+    o.oForwardVel = randomfvel
+    o.oFaceAngleYaw = randomyaw
+    o.oMoveAngleYaw = o.oFaceAngleYaw
+    obj_scale(o, 0.7)
+    o.oAction = 0
+    --o.oPosY = o.oPosY + 20 --This gets the gibs off the floor, allowing the loop code to run.
+end
+
+local function bhv_firework_sparkle_loop(o)
+    local m = gMarioStates[0]
+    if m.marioObj.oTimer < 10 then --This protects from gib spam and low FPS
+        obj_mark_for_deletion(o)
+    end
+
+    if o.oVelY < 0 then
+        o.oVelY = o.oVelY + 0.1
+    end
+
+    -- (FIX BEFORE MERGING)
+
+    -- Firework sparkle animation, because I couldn't figure out how to make billboard animations in Blender. (praying I dont need yoshi egg for anything else) 
+    if o.oAction == 0 then
+        texture_override_set("yoshi_egg_seg5_texture_050057B8", TEX_FIREWORK_SPARKLE_1A_2A)
+        if o.oTimer == 5 then
+            o.oTimer = 0
+            o.oAction = 1
+        end
+    end
+
+    if o.oAction == 1 then
+        texture_override_set("yoshi_egg_seg5_texture_050057B8", TEX_FIREWORK_SPARKLE_1B_2B)
+        if o.oTimer == 5 then
+            o.oTimer = 0
+            o.oAction = 2
+        end
+    end
+
+    if o.oAction == 2 then
+        texture_override_set("yoshi_egg_seg5_texture_050057B8", TEX_FIREWORK_SPARKLE_1A_2A)
+        if o.oTimer == 5 then
+            o.oTimer = 0
+            o.oAction = 3
+        end
+    end
+
+    if o.oAction == 3 then
+        texture_override_set("yoshi_egg_seg5_texture_050057B8", TEX_FIREWORK_SPARKLE_1B_2B)
+        if o.oTimer == 5 then
+            o.oTimer = 0
+            o.oAction = 4
+        end
+    end
+
+    if o.oAction == 4 then
+        texture_override_set("yoshi_egg_seg5_texture_050057B8", TEX_FIREWORK_SPARKLE_3A)
+        if o.oTimer == 5 then
+            o.oTimer = 0
+            o.oAction = 5
+        end
+    end
+
+    if o.oAction == 5 then
+        texture_override_set("yoshi_egg_seg5_texture_050057B8", TEX_FIREWORK_SPARKLE_3B)
+        if o.oTimer == 5 then
+            o.oTimer = 0
+            o.oAction = 6
+        end
+    end
+
+    if o.oAction == 6 then
+        texture_override_set("yoshi_egg_seg5_texture_050057B8", TEX_FIREWORK_SPARKLE_4A)
+        if o.oTimer == 5 then
+            o.oTimer = 0
+            o.oAction = 7
+        end
+    end
+    if o.oAction == 7 then
+        texture_override_set("yoshi_egg_seg5_texture_050057B8", TEX_FIREWORK_SPARKLE_4B)
+        if o.oTimer == 5 then
+            o.oTimer = 0
+            o.oAction = 8
+        end
+    end
+
+    if o.oAction == 8 then
+        obj_mark_for_deletion(o)
+    end
+
+    cur_obj_move_using_fvel_and_gravity()
+    cur_obj_move_using_vel()
+    cur_obj_update_floor_height_and_get_floor()
+    o.oFaceAnglePitch = o.oFaceAnglePitch + o.oRandomSpinVelX
+    o.oFaceAngleRoll = o.oFaceAngleRoll + o.oRandomSpinVelY
+    o.oFaceAngleYaw = o.oFaceAngleYaw + o.oRandomSpinVelZ
 end
 
 local function bhv_custom_bowlball(bowlball) -- I've got big balls, oh I've got big balls. They're such BIG balls, fancy big balls! And he's got big balls, and she's got big balls!
@@ -1319,12 +1429,16 @@ local function bhv_custom_moving_plats(o)
 end
 
 local function bhv_custom_tuxie(o)
+    local s = gStateExtras[0]
     if o.oAction == 6 then
         if o.oTimer == 0 then
             o.oGravity = -2
             --o.oBounciness = 0
             o.oForwardVel = 45
             o.oVelY = 75
+        end
+        if s.penguindaysnumbered then --hopefully prevents weird sync issues
+            s.imminentbabydeath = s.imminentbabydeath + 1 -- used to prevent snow accumulation while the penguin is being kicked
         end
         o.oFaceAnglePitch = o.oFaceAnglePitch + 7500
         cur_obj_move_standard(-78)
@@ -1346,6 +1460,8 @@ local function bhv_custom_tuxie(o)
             spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
             cur_obj_shake_screen(SHAKE_POS_SMALL)
             obj_mark_for_deletion(o)
+            s.penguindaysnumbered = false
+            s.imminentbabydeath = 0
         end
     end
 end
@@ -1493,13 +1609,27 @@ local function bhv_custom_spindrift(o)
 end
 
 local function snowman_body_loop(o)
+    local m = nearest_mario_state_to_object(o)
     if o.oAction == 1 then
-        if o.oPosY < -700 then
-            o.oForwardVel = o.oForwardVel * 1.25
-        elseif o.oPosY > -40 then
-            o.oForwardVel = o.oForwardVel * 1.1
+        if o.oTimer < 30 then
+            o.oForwardVel = 0
+        else
+            o.oForwardVel = o.oForwardVel + (m.forwardVel/30)
         end
-        --djui_chat_message_create(tostring(o.oForwardVel))
+
+        cur_obj_rotate_yaw_toward(obj_angle_to_object(o, m.marioObj), 0x2000)
+
+        if dist_between_object_and_point(o, -4230, -1344, 1813) < 300 and o.oSnowmansBottomUnk1AC == 1 then
+            spawn_mist_particles_variable(0, 0, 70.0)
+            o.oMoveAngleYaw = atan2s(1813.0 - o.oPosZ, -4230 - o.oPosX)
+            o.oVelY = 80.0
+            o.oForwardVel = 15.0
+            o.oAction = 3
+
+            o.parentObj.oAction = 2
+            o.parentObj.oVelY = 100.0
+            cur_obj_play_sound_2(SOUND_OBJ_SNOWMAN_BOUNCE)
+        end
     end
 end
 
@@ -3065,7 +3195,7 @@ local function rock_shrapnel_loop(o)
     local m = nearest_mario_state_to_object(o)
     local mObj = m.marioObj
     local dist = dist_between_objects(mObj, o)
-    if dist < 200 * o.header.gfx.scale.x and m.flags & MARIO_METAL_CAP == 0 and (m.action ~= ACT_HARD_BACKWARD_GROUND_KB and m.action ~= ACT_BACKWARD_WATER_KB) then
+    if dist < 175 * o.header.gfx.scale.x and m.flags & MARIO_METAL_CAP == 0 and (m.action ~= ACT_HARD_BACKWARD_GROUND_KB and m.action ~= ACT_BACKWARD_WATER_KB) then
         m.squishTimer = 50
     elseif dist < 200 * o.header.gfx.scale.x and m.flags & MARIO_METAL_CAP ~= 0 and (m.action & ACT_FLAG_METAL_WATER == 0) then
         set_mario_action(m, ACT_HARD_BACKWARD_GROUND_KB, 0)
@@ -3080,14 +3210,18 @@ end
 
 function piranha_plant(o)
 	local m = nearest_mario_state_to_object(o)
-    if m ~= nil and o.oAction == PIRANHA_PLANT_ACT_BITING then
-        cur_obj_update_floor_and_walls()
-        o.oWallHitboxRadius = 40
-        o.oForwardVel = 30
-		--[[ Not sure if this is fair
-		cur_obj_rotate_yaw_toward(obj_angle_to_object(o, m.marioObj), 0x400) ]]
-        o.oPosY = o.oFloorHeight
-        cur_obj_move_using_fvel_and_gravity()
+    if m ~= nil then
+        if o.oAction == PIRANHA_PLANT_ACT_WOKEN_UP then
+            cur_obj_rotate_yaw_toward(obj_angle_to_object(o, m.marioObj), 0x400)   
+        elseif o.oAction == PIRANHA_PLANT_ACT_BITING then
+            cur_obj_update_floor_and_walls()
+            o.oWallHitboxRadius = 40
+            o.oForwardVel = 30
+            --[[ Not sure if this is fair
+            cur_obj_rotate_yaw_toward(obj_angle_to_object(o, m.marioObj), 0x400) ]]
+            o.oPosY = o.oFloorHeight
+            cur_obj_move_using_fvel_and_gravity()
+        end
     end
 
     if o.oAction == 5 or o.oAction == 6 or o.oAction == 7 then 
@@ -3272,7 +3406,7 @@ end
 STATIC_OBJ_FLICKER_TIMER = 40
 
 local function static_obj_loop(o)
-    if gNetworkPlayers[0].currLevelNum == LEVEL_RR and not gGlobalSyncTable.romhackcompatibility then
+    if gNetworkPlayers[0].currLevelNum == LEVEL_BITS and not gGlobalSyncTable.romhackcompatibility then
         if o.oAction == 0 then
             if o.oTimer == 1 then
                 cur_obj_unhide()
@@ -3451,6 +3585,7 @@ function castle_boo_loop(o) -- tried rewriting source code, turns out thats hard
             o.oOpacity = 180
             if lateral_dist_between_objects(o, m.marioObj) < 230 then
                 set_mario_action(m, ACT_SUFFOCATION, 0)
+                play_sound(SOUND_OBJ_BOO_LAUGH_LONG, m.pos)
             end
         elseif o.oTimer >= 35 and o.oTimer < 40 then
             o.oOpacity = math.max(o.oOpacity - 60, 0)
@@ -3460,7 +3595,6 @@ function castle_boo_loop(o) -- tried rewriting source code, turns out thats hard
     elseif o.oAction == 4 then
         o.oPosZ = -6500
     end
-    djui_chat_message_create(tostring(o.oAction))
 end
 
 function custom_falling_pillar(o) -- theres an argument to be made that adding complex behavior to this would bloat JRH'S cave by a lot, so its being kept to something simple
@@ -3545,6 +3679,133 @@ function bhv_custom_swoop(o)
         o.oAction = 1
     end
 end
+
+function snow_pile_init(o)
+    o.header.gfx.skipInViewCheck = true
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.oFaceAngleYaw = 0
+    o.oFaceAnglePitch = 0
+    o.oFaceAngleRoll = 0
+    obj_scale_xyz(o, 0.3, 0.3, 0.3)
+end
+
+function snow_pile_loop(o)
+    local m = gMarioStates[0]
+    local s = gStateExtras[0]
+    local grounded = {
+        [ACT_IDLE] = true,
+        [ACT_WALKING] = true,
+        [ACT_HOLD_WALKING] = true,
+        [ACT_CRAWLING] = true,
+        [ACT_CROUCHING] = true,
+        [ACT_DIVE_SLIDE] = true,
+        [ACT_BUTT_SLIDE] = true,
+        [ACT_STOMACH_SLIDE] = true,
+        [ACT_CROUCH_SLIDE] = true,
+        [ACT_SLIDE_KICK_SLIDE] = true,
+        [ACT_BUTT_SLIDE_STOP] = true,
+        [ACT_STOMACH_SLIDE_STOP] = true,
+        [ACT_SLIDE_KICK_SLIDE_STOP] = true,
+        [ACT_JUMP_LAND] = true,
+        [ACT_JUMP_LAND_STOP] = true,
+        [ACT_DOUBLE_JUMP_LAND] = true,
+        [ACT_DOUBLE_JUMP_LAND_STOP] = true,
+        [ACT_TRIPLE_JUMP_LAND] = true,
+        [ACT_TRIPLE_JUMP_LAND_STOP] = true,
+        [ACT_SIDE_FLIP_LAND] = true,
+        [ACT_SIDE_FLIP_LAND_STOP] = true,
+        [ACT_FREEFALL_LAND] = true,
+        [ACT_FREEFALL_LAND_STOP] = true,
+        [ACT_BACKFLIP_LAND] = true,
+        [ACT_BACKFLIP_LAND_STOP] = true,
+        [ACT_HOLD_JUMP_LAND] = true,
+        [ACT_HOLD_JUMP_LAND_STOP] = true,
+        [ACT_SNOWY_SLIDE] = true,
+        [ACT_QUICKSAND_JUMP_LAND] = true,
+        [ACT_HOLD_QUICKSAND_JUMP_LAND] = true
+    }
+    o.oPosX = m.pos.x
+    o.oPosZ = m.pos.z
+
+    --cur_obj_align_gfx_with_floor() --cant work due to mario not aligning to floor on slopes, causing worse visual issues
+
+    if grounded[m.action] then -- rewrite to align object with the floor
+        o.oPosY = (m.floorHeight + get_character_anim_offset(m))
+        --mtxf_align_terrain_triangle(sFloorAlignMatrix[o],m.pos, 0, 40)
+        --o.header.gfx.throwMatrix = sFloorAlignMatrix[o]
+    end
+
+    if m.action == ACT_SNOWY_SLIDE and s.snowtimer > 0 then
+        cur_obj_align_gfx_with_floor()
+    end
+
+    if s.snowtimer > 0 then --adjust scale y to reach its peak at s.snowtimer = 400
+        if m.character.type == CT_MARIO then
+            obj_scale_xyz(o, 0.6, -0.00002041 * s.snowtimer^2 + 0.025456 * s.snowtimer, 0.6)
+        elseif m.character.type == CT_LUIGI then
+            obj_scale_xyz(o, 0.6, -(21/928800) * s.snowtimer^2 + 0.0267816 * s.snowtimer, 0.6)
+        elseif m.character.type == CT_TOAD then
+            obj_scale_xyz(o, 0.6, -(59/27840000) * s.snowtimer^2 + 0.0133023 * s.snowtimer, 0.6) -- hes so small you cant see his hand
+        elseif m.character.type == CT_WARIO then
+            obj_scale_xyz(o, 0.7, -(91/5572800) * s.snowtimer^2 + (2311/92800) * s.snowtimer, 0.7)
+        elseif m.character.type == CT_WALUIGI then
+            obj_scale_xyz(o, 0.7, -(701/27856000) * s.snowtimer^2 + (2575/72000) * s.snowtimer, 0.7)
+        end
+    elseif s.snowtimer == 0 or m.action == ACT_STOMACH_SLIDE or m.action == ACT_SNOWY_SLIDE then
+        obj_mark_for_deletion(o)
+        for i = 0, 15 do -- i literally just ripped the gibs function for this
+            if m.playerIndex ~= 0 then return end
+            local random = math.random(5)
+            spawn_non_sync_object(id_bhvSnowGib, E_MODEL_WHITE_PARTICLE_SMALL, o.oPosX, o.oPosY, o.oPosZ, function(s)
+                obj_scale(s, random/2)
+            end)
+        end
+    end
+end
+
+-- fully ripping gibs behavior just to make them billboards, im not even gonna bother changing the comments
+local function snow_gib_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+    o.header.gfx.skipInViewCheck = true
+    local randomfvel = math.random(1,20) --Perhaps we can partially add Mario's velocity into this equation?
+    local random = math.random(20,50)
+    local randomyaw = math.random(1,65536)
+    o.oBounciness = 0
+    o.oGravity = -5
+    o.oVelY = random
+    o.oForwardVel = randomfvel
+    o.oFaceAngleYaw = randomyaw
+    o.oMoveAngleYaw = o.oFaceAngleYaw
+    o.oPosY = o.oPosY + 20 --This gets the gibs off the floor, allowing the loop code to run.
+    cur_obj_update_floor_height_and_get_floor()
+end
+
+local function snow_gib_loop(o)
+    local m = gMarioStates[0]
+    local s = gStateExtras[0]
+    if m.marioObj.oTimer < 10 then --This protects from gib spam and low FPS
+        obj_mark_for_deletion(o)
+    end
+
+    cur_obj_update_floor_height_and_get_floor()
+    if o.oPosY > o.oFloorHeight then
+        cur_obj_move_using_fvel_and_gravity()
+        cur_obj_move_using_vel()
+        cur_obj_update_floor_height_and_get_floor()
+        o.oFaceAnglePitch = o.oFaceAnglePitch + o.oRandomSpinVelX
+        o.oFaceAngleRoll = o.oFaceAngleRoll + o.oRandomSpinVelY
+        o.oFaceAngleYaw = o.oFaceAngleYaw + o.oRandomSpinVelZ
+    else
+        o.oPosY = o.oFloorHeight
+    end
+
+    if o.oTimer == 100 then -- 1.3 seconds before deletion
+        obj_mark_for_deletion(o)
+    end
+
+end
+
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
@@ -3691,3 +3952,6 @@ id_bhvVomit = hook_behavior(nil, OBJ_LIST_GENACTOR, true, vomit_init, vomit_loop
 id_bhvPokeySpike = hook_behavior(nil, OBJ_LIST_GENACTOR, true, pokey_spike_init, pokey_spike_loop)
 id_bhvRacerHitbox = hook_behavior(nil, OBJ_LIST_GENACTOR, true, RacerHitbox_init, RacerHitbox_loop)
 id_bhvFakeFire = hook_behavior(nil, OBJ_LIST_GENACTOR, true, fake_fire_init, fake_fire_loop, "bhvFakeFire")
+id_bhvSnowPile = hook_behavior(nil, OBJ_LIST_GENACTOR, true, snow_pile_init, snow_pile_loop, "bhvSnowPile")
+id_bhvSnowGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, snow_gib_init, snow_gib_loop, "bhvSnowGib")
+id_bhvFireworkSparkle = hook_behavior (nil, OBJ_LIST_UNIMPORTANT, true, bhv_firework_sparkle_init, bhv_firework_sparkle_loop, "bhvFireworkSpark")

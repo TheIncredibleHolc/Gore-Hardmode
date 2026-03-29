@@ -75,7 +75,7 @@ local function fog_loop(o)
         end
     end
 
-    if not np.currLevelNum == LEVEL_TTM or not np.currLevelNum == LEVEL_SL then
+    if not np.currLevelNum == LEVEL_TTM or not np.currLevelNum == LEVEL_CCM then --changed from SL to CCM
         obj_mark_for_deletion(o)
     end
 
@@ -114,11 +114,11 @@ function mario_update(m)
     local np = gNetworkPlayers[0]
     if m.playerIndex ~= 0 then return end
     if gGlobalSyncTable.romhackcompatibility then return end
-    if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
+    if np.currLevelNum == LEVEL_CCM and np.currAreaIndex <= 1 then -- changed from SL to CCM
         if not obj_get_first_with_behavior_id(id_bhvFog) then
             spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)
         end
-    elseif np.currLevelNum == LEVEL_SL and np.currAreaIndex ~= 1 then
+    elseif np.currLevelNum == LEVEL_CCM and np.currAreaIndex ~= 1 then -- changed from SL to CCM
         set_override_envfx(-1)
     elseif np.currLevelNum == LEVEL_TTM then
         if not obj_get_first_with_behavior_id(id_bhvFog) then

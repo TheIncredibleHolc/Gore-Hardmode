@@ -9,20 +9,24 @@
 -- swoops will deal contact damage on top of custom damage
 -- hallway boo shouldn't be set to oAction 1 when entering from the courtyard
 -- standing within range of hallway boo while in another room causes it to switch between oAction 1 and 2, moving 1 unit every frame (presumably)
+-- walking on slopes while buried in snow ignores slope deceleration (i do not know of a fix)
+-- ACT_SNOWY_SLIDE does not switch to ACT_BUTT_SLIDE_STOP when below 4 speed (couldnt figure this out but the solution feels obvious)
+
 -------EVENTUAL ADDITIONS/CHANGES-------------
+
 -- change thi's mini form to work like normal mario but mini (current mini doesnt provide any interesting gameplay changes other than novelty)
 -- change cork boxes to kill the player if held for too long
--- allow cork boxes to be thrown
--- maintain its size after being thrown before shrinking it back down to its normal size
+-- allow cork boxes to be thrown and maintain its size after being thrown before shrinking it back down to its normal size
+-- force players into ACT_GONE before they use in-level warps
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 function test()
     local m = gMarioStates[0]
     if m.controller.buttonPressed & Y_BUTTON ~= 0 then
-        m.pos.x = -1024
-        m.pos.y = 74
-        m.pos.z = 58
-        m.faceAngle.y = 16384
+        --m.pos.x = -1024
+        --m.pos.y = 74
+        --m.pos.z = 58
+        --m.faceAngle.y = 16384
         --m.numStars = 100
         --m.pos.x = m.pos.x - 200
     end
@@ -189,6 +193,25 @@ function spawn_sync_if_main(behaviorId, modelId, x, y, z, objSetupFunction, i)
     if get_network_player_smallest_global().localIndex + i == 0 then print("passed!") return spawn_sync_object(behaviorId, modelId, x, y, z, objSetupFunction) end
 end
 
+function mario_is_within_box(minX, maxX, minY, maxY, minZ, maxZ)
+    local gMarioObject = gMarioStates[0].marioObj
+    if  gMarioStates[0].playerIndex ~= 0 then return end
+
+    if gMarioObject.oPosX < minX or maxX < gMarioObject.oPosX then
+        return false
+    end
+
+    if gMarioObject.oPosY < minY or maxY < gMarioObject.oPosY then
+        return false
+    end
+
+    if gMarioObject.oPosZ < minZ or maxZ < gMarioObject.oPosZ then
+        return false
+    end
+
+    return true
+end
+
 ------Globals--------
 local function modsupport()
     for key,value in pairs(gActiveMods) do
@@ -209,25 +232,6 @@ local function modsupport()
         end
     end
 end
-
---Textures
-local TEX_MARIO_LESS_HIGH = get_texture_info('mariolesshigh')
-local TEX_BLOOD_OVERLAY = get_texture_info('bloodoverlay')
-local TEX_TRIPPY_OVERLAY = get_texture_info('trippy')
-local TEX_PORTAL = get_texture_info("portal")
-local TEX_GAMEOVER = get_texture_info("gameover")
-local TEX_DIRT = get_texture_info("grass_09004800")
-local TEX_NIGHTVISION = get_texture_info("nightvision")
-local TEX_NIGHTVISION2 = get_texture_info("nightvision2")
-local TEX_NIGHTVISION3 = get_texture_info("nightvision3")
-local TEX_NIGHTVISION4 = get_texture_info("nightvision4")
-local TEX_NIGHTVISION5 = get_texture_info("nightvision5")
-local TEX_JRHLAVA = get_texture_info("jrhlava")
-local TEX_MSKULL = get_texture_info("marioskull")
-local TEX_LSKULL = get_texture_info("luigiskull")
-local TEX_TSKULL = get_texture_info("toadskull")
-local TEX_WMSKULL = get_texture_info("warioskull")
-local TEX_WLSKULL = get_texture_info("waluigiskull")
 -----------------------------------------------------------------------------------------------------------------------------
 -------ACT_FUNCTIONS------------
 
@@ -271,10 +275,22 @@ end
 
 function splattertimer(m) --This timer is needed to prevent mario from immediately splatting again right after respawning. Adds some fluff to his death too.
     local s = gStateExtras[m.playerIndex]
+    local prevAction = 0
     if s.enablesplattimer == 1 then
         s.splattimer = s.splattimer + 1
     end
+    if s.splattimer == 0 and m.action == ACT_RAGDOLL then -- hacky fix to prevent initangle from reading as 0 outside of ACT_RAGDOLL (i have no idea ahow thix fixed it)
+        m.prevAction = prevAction
+    end
+    if s.splattimer == 1 then
+        -- keeps ACT_DEATH_ON_STOMACH from taking the players faceAngle.y during ACT_RAGDOLL
+        if m.prevAction == prevAction then
+            m.faceAngle.y = initangle
+        end
+        return m.faceAngle.y
+    end
     if s.splattimer == 2 then
+        initangle = 0
         m.health = 0xff
         gPlayerSyncTable[m.playerIndex].gold = false
         set_mario_action(m, ACT_THROWN_FORWARD, 0) --Throws mario forward more to "sell" the fall damage big impact.
@@ -327,6 +343,125 @@ function convert_s16(num)
         num = min + (num - max)
     end
     return num
+end
+
+function custom_update_sliding(m, stopSpeed) --specifically for ACT_SNOWY_SLIDE to increase speed
+    if m.playerIndex ~= 0 then return end
+    local lossFactor = 0
+    local accel = 0
+    local oldSpeed = 0
+    local newSpeed = 0
+
+    local stopped = false
+
+    local intendedDYaw = convert_s16(m.intendedYaw - m.slideYaw)
+    local forward = coss(intendedDYaw)
+    local sideward = sins(intendedDYaw)
+
+    if (forward < 0 and m.forwardVel >= 0) then
+        forward = forward * 0.5 + 0.5 * m.forwardVel / 100
+    end
+
+    local floorClass = mario_get_floor_class(m)
+    if floorClass == SURFACE_CLASS_VERY_SLIPPERY then
+        accel = 12
+        lossFactor = m.intendedMag / 32 * forward * 0.02 + 0.98
+
+    elseif floorClass == SURFACE_CLASS_SLIPPERY then
+        accel = 10
+        lossFactor = m.intendedMag / 32 * forward * 0.02 + 0.96
+
+    elseif floorClass == SURFACE_CLASS_DEFAULT then
+        accel = 9
+        lossFactor = m.intendedMag / 32 * forward * 0.02 + 0.92
+
+    elseif SURFACE_CLASS_NOT_SLIPPERY then
+        accel = 7
+        lossFactor = m.intendedMag / 32 * forward * 0.02 + 0.92
+
+    end
+
+    oldSpeed = math.sqrt(m.slideVelX * m.slideVelX + m. slideVelZ * m.slideVelZ)
+
+    m.slideVelX = m.slideVelX + m.slideVelZ * (m.intendedMag / 32) * sideward * 0.05
+    m.slideVelZ = m.slideVelZ - m.slideVelX * (m.intendedMag / 32) * sideward * 0.05
+
+    newSpeed = math.sqrt(m.slideVelX * m.slideVelX + m.slideVelZ * m.slideVelZ)
+
+    if (oldSpeed > 0 and newSpeed > 0) then
+        m.slideVelX = m.slideVelX * oldSpeed / newSpeed
+        m.slideVelZ = m.slideVelZ * oldSpeed / newSpeed
+    end
+
+    custom_update_sliding_angle(m, accel, lossFactor)
+
+    if (m.playerIndex == 0) and (not mario_floor_is_slope(m) and m.forwardVel * m.forwardVel < stopSpeed * stopSpeed) then
+        mario_set_forward_vel(m, 0)
+        stopped = true
+    end
+
+    return stopped
+end
+
+function custom_update_sliding_angle(m, accel, lossFactor) -- specifically for custom_update_sliding(m, stopSpeed) which is specifically for ACT_SNOWY_SLIDE
+    if m.playerIndex ~= 0 then return end
+    local newFacingDYaw = 0
+    local facingDYaw = 0
+
+    local floor = m.floor
+    if floor == nil then return end
+
+    local slopeAngle = convert_s16(atan2s(floor.normal.z, floor.normal.x))
+    local steepness = math.sqrt(floor.normal.x * floor.normal.x + floor.normal.z * floor.normal.z)
+    local normalY = floor.normal.y
+
+    m.slideVelX = m.slideVelX + accel * steepness * sins(slopeAngle)
+    m.slideVelZ = m.slideVelZ + accel * steepness * coss(slopeAngle)
+
+    m.slideVelX = m.slideVelX * lossFactor
+    m.slideVelZ = m.slideVelZ * lossFactor
+
+    m.slideYaw = atan2s(m.slideVelZ, m.slideVelX)
+
+    facingDYaw = convert_s16(m.faceAngle.y - m.slideYaw)
+    newFacingDYaw = facingDYaw
+
+    if newFacingDYaw > 0 and newFacingDYaw <= 0x4000 then
+        if (newFacingDYaw - 0x200) < 0 then
+            newFacingDYaw = 0
+        end
+    elseif newFacingDYaw > -0x4000 and newFacingDYaw < 0 then
+        if (newFacingDYaw + 0x200) > 0 then
+            newFacingDYaw = 0
+        end
+    elseif newFacingDYaw > 0x4000 and newFacingDYaw < 0x8000 then
+        if (newFacingDYaw + 0x200) > 0x8000 then
+            newFacingDYaw = 0x8000
+        end
+    elseif newFacingDYaw > -0x8000 and newFacingDYaw < -0x4000 then
+        if (newFacingDYaw - 0x200) < -0x8000 then
+            newFacingDYaw = -0x8000
+        end
+    end
+
+    m.faceAngle.y = m.slideYaw --[[ + newFacingDYaw ]] --im really not sure why removing this fixes the problem but it saves me a night of regrets
+
+    m.vel.x = m.slideVelX
+    m.vel.y = 0
+    m.vel.z = m.slideVelZ
+
+    mario_update_moving_sand(m)
+    mario_update_windy_ground(m)
+
+    m.forwardVel = math.sqrt(m.slideVelX * m.slideVelX + m.slideVelZ * m.slideVelZ)
+    if m.forwardVel > 130 then
+        m.slideVelX = m.slideVelX * 100 / m.forwardVel
+        m.slideVelZ = m.slideVelZ * 100 / m.forwardVel
+    end
+
+    if newFacingDYaw < -0x4000 or newFacingDYaw > 0x4000 then
+        m.forwardVel = m.forwardVel * -1
+    end
 end
 
 function mario_update(m) -- ALL Mario_Update hooked commands.,
@@ -478,9 +613,16 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end
         end
 
-        if np.currLevelNum == LEVEL_SL and np.currAreaIndex <= 1 then
-            set_override_envfx(ENVFX_SNOW_BLIZZARD)
-            cur_obj_play_sound_1(SOUND_ENV_WIND1)
+        if np.currLevelNum == LEVEL_CCM and np.currAreaIndex == 1 then
+            local ceilHeight = (m.ceilHeight - m.pos.y)
+            local within_wkww = mario_is_within_box(-4770, 715, -4950, -1255, -4370, -2500)
+            if ceilHeight <= 2000 or (within_wkww and m.ceil ~= nil)then
+                set_override_envfx(ENVFX_MODE_NONE)
+            else
+                set_override_envfx(ENVFX_SNOW_BLIZZARD)
+                cur_obj_play_sound_1(SOUND_ENV_WIND1)
+            end
+
             set_lighting_color(0, 100)
             set_lighting_color(1, 147)
             set_lighting_color(2, 200)
@@ -490,8 +632,21 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             set_fog_color(0, 100)
             set_fog_color(1, 147)
             set_fog_color(2, 200)
+        else
+            set_lighting_color(0, 255)
+            set_lighting_color(1, 255)
+            set_lighting_color(2, 255)
+            set_vertex_color(0, 255)
+            set_vertex_color(1, 255)
+            set_vertex_color(2, 255)
+            set_fog_color(0, 255)
+            set_fog_color(1, 255)
+            set_fog_color(2, 255)
+            set_lighting_dir(1,0)
+            set_override_skybox(-1)
+            set_override_envfx(-1)
         end
-    
+
         if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_COTMC then
             if gLakituState.pos.y < 944 then
                 --set_lighting_color(0, 255)
@@ -587,13 +742,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             s.ssldiethirst = 0
         end
 
-        if np.currLevelNum == LEVEL_SL and np.currAreaIndex == 1 then
-            if ia(m) and m.marioObj.oTimer == 30 and not s.slIntro then
-                cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_070)
-                s.slIntro = true
-            end
-            if not (network_player_connected_count() <= 1 and is_game_paused()) and (m.action ~= ACT_STAR_DANCE_WATER and m.action ~= ACT_STAR_DANCE_NO_EXIT) then
-                m.health = m.health - 2
+        if np.currLevelNum == LEVEL_CCM and np.currAreaIndex == 1 then
+            if ia(m) and m.marioObj.oTimer == 30 and not s.ccmIntro then
+                cutscene_object_with_dialog(CUTSCENE_DIALOG, m.marioObj, DIALOG_048)
+                s.ccmIntro = true
             end
         end
     end
@@ -686,7 +838,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     -- BONKING DEATHS!!
     if m.action == ACT_BACKWARD_AIR_KB or m.action == ACT_FORWARD_AIR_KB and s.flyingVel > 60 then -- Enables Mario to wall-splat when air-bonking objects.
         if m.prevAction == ACT_FLYING or m.prevAction == ACT_SHOT_FROM_CANNON then
-            
             mario_blow_off_cap(m, 45)
             m.forwardVel = m.forwardVel - 30
             m.action = ACT_SOFT_BONK --Needed to stop the first 'if' from running twice.
@@ -708,11 +859,11 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             else
                 bloodmist(m.marioObj)
             end
-            for i = 0, 50 do
+            for i = 0, gibAmount do
                 if not ia(m) then break end
                 local random = math.random()
                 spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
-                    obj_scale(gib, random)
+                    obj_scale(gib, random/2)
                 end)
             end
         end
@@ -739,6 +890,45 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
                 o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
                 o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
             end)
+        end
+    end
+
+    --  BONK DEATH but for ACT_SNOWY_SLIDE
+    if m.action == ACT_BACKWARD_GROUND_KB then
+        if m.prevAction == ACT_SNOWY_SLIDE then
+            if m.forwardVel ~= clamp(m.forwardVel, -48, 48) then return else -- bonk death only occurs when speed exceeds this range
+                mario_blow_off_cap(m, 45)
+                m.forwardVel = m.forwardVel - 30
+                m.action = ACT_SOFT_BONK --Needed to stop the first 'if' from running twice.
+                set_mario_action(m, ACT_GONE, 78)
+                m.health = 0xff
+                set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
+                m.particleFlags = PARTICLE_MIST_CIRCLE
+                local_play(sSplatter, m.pos, 1)
+                if m.wall then
+                    spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
+                        local z, normal = vec3f(), m.wall.normal
+                        local x, xnormal = vec3f(), m.wall.normal
+                        o.oFaceAnglePitch = 16384-calculate_pitch(x, xnormal)
+                        o.oFaceAngleYaw = calculate_yaw(z, normal)
+                        o.oFaceAngleRoll = obj_resolve_collisions_and_turn(o.oFaceAngleYaw, 0)
+                        o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
+                        o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
+                    end)
+                else
+                    bloodmist(m.marioObj)
+                end
+            end 
+            for i = 0, gibAmount do
+                if not ia(m) then break end
+                local random = math.random()
+                spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
+                    obj_scale(gib, random/2)
+                end)
+            end
+
+            s.snowexpose = 0
+            s.snowtimer = 0
         end
     end
  ----------------------------------------------------------------------------------------------------------------------------------
@@ -1122,7 +1312,6 @@ function hook_update()
             stop_cap_music()
         end
     end
-    djui_chat_message_create(tostring(m.actionTimer))
 
     -- WC buff (and TotWC buff because faster flying made it too easy somehow)
     if m.action == ACT_FLYING or m.action == ACT_SHOT_FROM_CANNON or m.action == ACT_THROWN_BACKWARD or m.action == ACT_THROWN_FORWARD then -- Makes flying gradually get FASTER!
@@ -1242,41 +1431,235 @@ function hook_update()
         end
     end
 ----------------------------------------------------------------------------------------------------------------------------------
-    -- (Cool Cool Mountain) Baby penguin gets thrown after 8 seconds of mario losing his patience.
+    -- Some Cool, Cool, Mountain additions.
+            -- to-do:
+            -- maybe replace fog effect with modern lighting??????? (steal fog code from nostalgia trip)
     if np.currLevelNum == LEVEL_CCM then
-        if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
-            s.penguinholding = 1
-        end
-        if (s.penguinholding) == 1 then
-            if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 and ia(m) then
-                s.penguintimer = s.penguintimer + 1
+        local cutscene = {
+            [ACT_STAR_DANCE_EXIT] = true,
+            [ACT_STAR_DANCE_NO_EXIT] = true,
+            [ACT_FALL_AFTER_STAR_GRAB] = true,
+            [ACT_READING_NPC_DIALOG] = true,
+            [ACT_READING_AUTOMATIC_DIALOG] = true,
+            [ACT_READING_SIGN] = true,
+            [ACT_TELEPORT_FADE_IN] = true,
+            [ACT_TELEPORT_FADE_OUT] = true,
+        }
+        local slide =  {
+            [ACT_DIVE_SLIDE] = true,
+            [ACT_BUTT_SLIDE] = true,
+            [ACT_STOMACH_SLIDE] = true,
+            [ACT_SLIDE_KICK_SLIDE] = true,
+            [ACT_CROUCH_SLIDE] = true
+        }
+
+        if np.currAreaIndex == 1 then
+            if not gGlobalSyncTable.romhackcompatibility then
+                local wait = false
+                local ceilHeight = (m.ceilHeight - m.pos.y)
+                local within_wkww = mario_is_within_box(-5050, 715, -4950, -1255, -4370, -2500)
+
+                local breakout = {
+                    [ACT_QUICKSAND_JUMP_LAND] = true,
+                    [ACT_HOLD_QUICKSAND_JUMP_LAND] = true,
+                    [ACT_HOLD_JUMP_LAND_STOP] = true,
+                    [ACT_JUMP_LAND_STOP] = true
+                }
+
+                local stall = {
+                    [ACT_JUMP] = true,
+                    [ACT_HOLD_JUMP] = true,
+                    [ACT_DOUBLE_JUMP] = true,
+                    [ACT_TRIPLE_JUMP] = true,
+                    [ACT_SIDE_FLIP] = true,
+                    [ACT_BACKFLIP] = true,
+                    [ACT_LONG_JUMP] = true,
+                    [ACT_JUMP_KICK] = true,
+                    [ACT_DIVE] = true,
+                    [ACT_SLIDE_KICK] = true,
+                    [ACT_WALL_KICK_AIR] = true,
+                    [ACT_GROUND_POUND] = true,
+                    [ACT_FORWARD_ROLLOUT] = true,
+                    [ACT_BACKWARD_ROLLOUT] = true,
+                    [ACT_FREEFALL] = true,
+                    [ACT_GRAB_POLE_FAST] = true,
+                    [ACT_GRAB_POLE_SLOW] = true,
+                    [ACT_HOLDING_POLE] = true,
+                    [ACT_CLIMBING_POLE] = true,
+                    [ACT_TOP_OF_POLE_TRANSITION] = true,
+                    [ACT_TOP_OF_POLE] = true,
+                    [ACT_TOP_OF_POLE_JUMP] = true,
+                    [ACT_AIR_HIT_WALL] = true,
+                    [ACT_SOFT_BONK] = true,
+                    [ACT_BACKWARD_AIR_KB] = true,
+                    [ACT_LEDGE_GRAB] = true,
+                    [ACT_LEDGE_CLIMB_SLOW_1] = true,
+                    [ACT_LEDGE_CLIMB_SLOW_2] = true,
+                    [ACT_LEDGE_CLIMB_FAST] = true,
+                    [ACT_LEDGE_CLIMB_DOWN] = true,
+                    [ACT_BUTT_SLIDE_AIR] = true,
+                    [ACT_HOLD_BUTT_SLIDE_AIR] = true
+                }
+
+                -- Have snow accumulate on the player when no ceiling is above them, slowing them down and eventually burying them.
+                if not (network_player_connected_count() <= 1 and is_game_paused()) then
+                    if ceilHeight <= 2000 or (within_wkww and m.ceil ~= nil)then 
+                        s.snowtimer = math.max(0, s.snowtimer - 5) -- safe while under ceiling
+                        if s.snowtimer == 0 and m.action ~= ACT_SNOWY_SLIDE then -- ceiling is safer than previous iteration
+                            s.snowexpose = math.max(0, s.snowexpose - 20)
+                        end
+                    else
+                        if get_dialog_id() >= 0 then return end -- dialog check (ty Blocky)
+                        if m.area.camera and m.area.camera.cutscene == CUTSCENE_STAR_SPAWN then return end
+
+                        if not s.snowtimer == -1 or not s.snowexpose == -1 or not cutscene[m.action] then
+                            if s.snowexpose == 300 then 
+                                if s.snowtimer == 0 and stall[m.action] then -- checks f player is airborne before applying snow
+                                    wait = true
+                                end
+                                if not wait and s.imminentbabydeath == 0 then
+                                    s.snowtimer = math.min(s.snowtimer + 2, 516) -- 300 frames (10s) timer before buried in snow, 216 frames (7.2s) before player dies
+                                else
+                                    return
+                                end
+                            else
+                                s.snowexpose = math.min(s.snowexpose + 1, 300) -- 300 frames (10s) timer before snow appears
+                            end
+                        end
+                    end
+                end
+
+                -- All events that occur once s.snowtimer is active
+                if s.snowexpose == 300 and s.snowtimer > 0 and not wait then
+                    if m.action == ACT_WALKING then -- gradually slows player down the longer theyre exposed to snow
+                        m.forwardVel =  math.max(0, -7/150 * (s.snowtimer) + 16)
+                    end
+
+                    if m.action == ACT_HOLD_WALKING then -- specifically for baby penguin
+                        m.forwardVel = math.max(0, 12 + ((-1/30) * s.snowtimer))
+                    end
+
+                    if m.action == ACT_HOLD_JUMP then -- like the previous if then statement but for when holding penguin
+                        return set_mario_action(m, ACT_HOLD_QUICKSAND_JUMP_LAND, 0)
+                    end
+
+                    if slide[m.action] then
+                        return set_mario_action(m, ACT_SNOWY_SLIDE, 0)
+                    end
+
+                    if m.action == ACT_HOLD_BUTT_SLIDE then -- ditto for penguin
+                        return set_mario_action(m, ACT_SNOWY_SLIDE, 0)
+                    end
+
+                    if m.controller.buttonPressed & A_BUTTON ~= 0 and breakout[m.action] then -- Mash A to break out of the snow!
+                        premashamount = premashamount == nil and 5 or math.max(0, premashamount - 1)
+                        m.actionTimer = 5
+                        if premashamount == 0 then
+                            mashamount = mashamount == nil and 0 or mashamount + 1.5 -- how did teru find this shit bruh
+                            s.snowtimer = math.max(0, s.snowtimer - mashamount)
+                            m.actionTimer = 5
+                            if s.snowtimer <= 15 then
+                                premashamount = 0
+                                mashamount = 0
+                                s.snowtimer = 0
+                                s.snowexpose = 150
+                                m.hurtCounter = 8
+                                play_character_sound(m, CHAR_SOUND_ATTACKED)
+                                network_play(sCoEscape, m.pos, 1, m.playerIndex)
+                            else
+                                network_play(sCoJump, m.pos, 1, m.playerIndex)
+                            end
+                        else
+                            network_play(sCoJump, m.pos, 1, m.playerIndex)
+                        end
+                    end
+
+                    if m.action == ACT_LEDGE_GRAB then
+                        m.forwardVel = -20
+                        m.action = ACT_SOFT_BONK
+                    end
+
+                    if m.action == ACT_FREEFALL or m.action == ACT_SOFT_BONK then
+                        s.snowtimer = 0
+                        s.snowexpose = 150
+                        network_play(sCoEscape, m.pos, 1, m.playerIndex)
+                    end
+
+                    if s.snowtimer == 300 then
+                        set_mario_action(m, ACT_BURIED, 0) -- inescapable death action (you're never getting out of this)
+                    end
+                end
+
+                if s.snowtimer == 0 and s.snowexpose < 300 then
+                    wait = false
+                end
+
+                if m.action == ACT_SNOWY_SLIDE or m.action == ACT_RAGDOLL or m.action == ACT_GONE then
+                    s.snowtimer = math.max(0, s.snowtimer - 10)
+                    premashamount = 0
+                    mashamount = 0
+                end
+
+                if s.snowtimer == 2 then -- snow indicator
+                    if ceilHeight <= 2000 or (within_wkww and m.ceil ~= nil) then return else
+                        spawn_sync_object(id_bhvSnowPile, E_MODEL_SNOW_PILE, m.pos.x, m.pos.y, m.pos.z, nil)
+                        network_play(sCoWarn, m.pos, 1, m.playerIndex)
+                    end
+                end
+
+                --djui_chat_message_create(tostring(s.snowexpose))
+                --djui_chat_message_create(tostring(s.snowtimer))
             end
-        end
-        if (s.penguintimer) == 230 then
-            if m.character.type == CT_MARIO then
-                network_play(sAngryMario, m.pos, 1, m.playerIndex)
-            elseif m.character.type == CT_LUIGI then
-                network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
-            elseif m.character.type == CT_TOAD then
-                network_play(sAngryToad, m.pos, 1, m.playerIndex)
-            elseif m.character.type == CT_WARIO then
-                network_play(sAngryWario, m.pos, 1, m.playerIndex)
-            elseif m.character.type == CT_WALUIGI then
-                network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
+
+            -- Baby penguin gets thrown after 8 seconds of mario losing his patience.
+            if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 then
+                s.penguinholding = 1
             end
-        end
-        if (s.penguintimer) == 280 then
-            m.heldObj.oAction = 6
-            mario_drop_held_object(m)
-            set_mario_action(m, ACT_JUMP_KICK, 0)
-            m.particleFlags = PARTICLE_MIST_CIRCLE|PARTICLE_TRIANGLE
-            play_sound(SOUND_ACTION_BONK, m.marioObj.header.gfx.cameraToObject)
+            if (s.penguinholding) == 1 then
+                if m.heldObj and obj_has_behavior_id(m.heldObj, id_bhvSmallPenguin) ~= 0 and ia(m) and not (network_player_connected_count() <= 1 and is_game_paused()) then
+                    if m.area.camera and m.area.camera.cutscene == CUTSCENE_STAR_SPAWN | CUTSCENE_DIALOG then return end
+                    if not cutscene[m.action] then
+                        s.penguintimer = s.penguintimer + 1
+                    end
+                else
+                    s.penguintimer = 0
+                end
+            end
+            if (s.penguintimer) == 230 then
+                if m.character.type == CT_MARIO then
+                    network_play(sAngryMario, m.pos, 1, m.playerIndex)
+                elseif m.character.type == CT_LUIGI then
+                    network_play(sAngryLuigi, m.pos, 1, m.playerIndex)
+                elseif m.character.type == CT_TOAD then
+                    network_play(sAngryToad, m.pos, 1, m.playerIndex)
+                elseif m.character.type == CT_WARIO then
+                    network_play(sAngryWario, m.pos, 1, m.playerIndex)
+                elseif m.character.type == CT_WALUIGI then
+                    network_play(sAngryWaluigi, m.pos, 1, m.playerIndex)
+                end
+            end
+            if (s.penguintimer) == 280 then
+                m.heldObj.oAction = 6
+                mario_drop_held_object(m)
+                set_mario_action(m, ACT_JUMP_KICK, 0)
+                m.particleFlags = PARTICLE_MIST_CIRCLE|PARTICLE_TRIANGLE
+                play_sound(SOUND_ACTION_BONK, m.marioObj.header.gfx.cameraToObject)
+                s.penguinholding = 0
+                s.penguintimer = 0
+                s.snowtimer = 0
+                s.penguindaysnumbered = true -- activates s.imminentbabydeath
+            end
+        else
+            --All events that occur in CCM Area 2.
+            if not gGlobalSyncTable.romhackcompatibility and slide[m.action] and m.forwardVel ~= clamp(m.forwardVel, -101, 101) then
+                return set_mario_action(m, ACT_SNOWY_SLIDE, 0)
+            end
+
             s.penguinholding = 0
             s.penguintimer = 0
+            s.snowtimer = 0
+            s.snowexpose = 0
         end
-    else
-        s.penguinholding = 0
-        s.penguintimer = 0
     end
 ----------------------------------------------------------------------------------------------------------------------------------
     -- Jolly Roger Hell rework (Metal Cap required)
@@ -1418,7 +1801,7 @@ function hook_update()
             s.isdead = true
         end
     end
-    
+ 
     -- Removes any instances of gas effects after leaving HMC.
     if np.currLevelNum ~= LEVEL_HMC and s.highdeathtimer > 0 and s.ishigh and not gGlobalSyncTable.romhackcompatibility then
         s.ishigh = false
@@ -1757,6 +2140,8 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
     --Will also reset other functions as well.
     local s = gStateExtras[0]
 
+    s.snowexpose = 0 -- resets the snow exposure timer
+    s.snowtimer = 0 -- resets the snow accumulation timer
     s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
     audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
     audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
@@ -1821,6 +2206,8 @@ function marioalive() -- Resumes the death counter to accept death counts.
     --Resets the baby penguin timer on warp so it doesn't glitch out if mario leaves the level without fully killing the baby penguin.
     s.penguinholding = 0
     s.penguintimer = 0
+    s.snowexpose = 0 -- resets the snow exposure timer
+    s.snowtimer = 0 -- resets the snow accumulation timer
 end
 
 function toaddeath(o)
@@ -1847,10 +2234,10 @@ end
 
 
 
-function hud_render() -- Displays the total amount of mario deaths a server has incurred since opening. 
+function hud_render_behind() -- Displays the total amount of mario deaths a server has incurred since opening. 
     local s = gStateExtras[0]
     local m = gMarioStates[0]
-    local n = gNetworkPlayers[0]
+    local np = gNetworkPlayers[0]
     if m.floor and m.floor.object and obj_has_behavior_id(m.floor.object, id_bhvBackroom) ~= 0 then return end
 
     djui_hud_set_resolution(RESOLUTION_DJUI)
@@ -1916,8 +2303,6 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
         m.numStars = 0
         s.iwbtg = true
     end
-
-   
 
     if s.timeattack then
         --djui_hud_set_resolution(RESOLUTION)
@@ -2033,83 +2418,96 @@ function hud_render() -- Displays the total amount of mario deaths a server has 
         end
     end
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    
+    --Adds a death counter to replace the lives counter. (ty sunk)
     if (not s.iwbtg and s.death) or not gGlobalSyncTable.iwbtgGameoverEveryone then
-        --Adds a death counter to replace the lives counter. (ty sunk)
         djui_hud_set_font(FONT_RECOLOR_HUD)
         djui_hud_set_resolution(RESOLUTION_N64)
 
-        if not gGlobalSyncTable.hellenabled then
-            if m.character.type == CT_MARIO then
-                djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_MSKULL, 21, 14.5, 1.1, 1)
-            elseif m.character.type == CT_LUIGI then
-                djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_LSKULL, 21, 14.5, 1.1, 1)
-            elseif m.character.type == CT_TOAD then
-                djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_TSKULL, 21, 14.5, 1.1, 1)
-            elseif m.character.type == CT_WARIO then
-                djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_WMSKULL, 21, 14.5, 1.1, 1)
-            elseif m.character.type == CT_WALUIGI then
+        if not obj_get_first_with_behavior_id(id_bhvActSelector) then
+            if not gGlobalSyncTable.hellenabled then
+                if m.character.type == CT_MARIO then
                     djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_WLSKULL, 21, 14.5, 1.1, 1)
+                    djui_hud_render_texture(TEX_MSKULL, 21, 14.5, 1.1, 1)
+                elseif m.character.type == CT_LUIGI then
+                    djui_hud_set_color(255, 255, 255, 255)
+                    djui_hud_render_texture(TEX_LSKULL, 21, 14.5, 1.1, 1)
+                elseif m.character.type == CT_TOAD then
+                    djui_hud_set_color(255, 255, 255, 255)
+                    djui_hud_render_texture(TEX_TSKULL, 21, 14.5, 1.1, 1)
+                elseif m.character.type == CT_WARIO then
+                    djui_hud_set_color(255, 255, 255, 255)
+                    djui_hud_render_texture(TEX_WMSKULL, 21, 14.5, 1.1, 1)
+                elseif m.character.type == CT_WALUIGI then
+                        djui_hud_set_color(255, 255, 255, 255)
+                    djui_hud_render_texture(TEX_WLSKULL, 21, 14.5, 1.1, 1)
+                end
+            else
+                if m.character.type == CT_MARIO then
+                    djui_hud_set_color(255, 255, 255, 255)
+                    djui_hud_render_texture(TEX_MSKULL, 21, 32, 1.1, 1)
+                elseif m.character.type == CT_LUIGI then
+                    djui_hud_set_color(255, 255, 255, 255)
+                    djui_hud_render_texture(TEX_LSKULL, 21, 32, 1.1, 1)
+                elseif m.character.type == CT_TOAD then
+                    djui_hud_set_color(255, 255, 255, 255)
+                    djui_hud_render_texture(TEX_TSKULL, 21, 32, 1.1, 1)
+                elseif m.character.type == CT_WARIO then
+                    djui_hud_set_color(255, 255, 255, 255)
+                    djui_hud_render_texture(TEX_WMSKULL, 21, 32, 1.1, 1)
+                elseif m.character.type == CT_WALUIGI then
+                    djui_hud_set_color(255, 255, 255, 255)
+                    djui_hud_render_texture(TEX_WLSKULL, 21, 32, 1.1, 1)
+                end
             end
-        else
-            if m.character.type == CT_MARIO then
-                djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_MSKULL, 21, 32, 1.1, 1)
-            elseif m.character.type == CT_LUIGI then
-                djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_LSKULL, 21, 32, 1.1, 1)
-            elseif m.character.type == CT_TOAD then
-                djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_TSKULL, 21, 32, 1.1, 1)
-            elseif m.character.type == CT_WARIO then
-                djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_WMSKULL, 21, 32, 1.1, 1)
-            elseif m.character.type == CT_WALUIGI then
-                djui_hud_set_color(255, 255, 255, 255)
-                djui_hud_render_texture(TEX_WLSKULL, 21, 32, 1.1, 1)
+
+            if not gGlobalSyncTable.hellenabled then
+                djui_hud_set_color(75, 30, 30, 255)
+                djui_hud_print_text("x", 39, 15, 0.95)
+            else
+                djui_hud_set_color(75, 30, 30, 255)
+                djui_hud_print_text("x", 39, 33, 0.95)
             end
-        end
 
-        if not gGlobalSyncTable.hellenabled then
-            djui_hud_set_color(75, 30, 30, 255)
-            djui_hud_print_text("x", 39, 15, 0.95)
-        else
-            djui_hud_set_color(75, 30, 30, 255)
-            djui_hud_print_text("x", 39, 33, 0.95)
-        end
 
-        local s = gStateExtras[0]
-        local x = 53
-        djui_hud_set_color(205, 0, 0, 255)
-        if not gGlobalSyncTable.hellenabled then
-            djui_hud_print_text(tostring(gPlayerSyncTable[0].personaldeathcount), x, 15, 1)
-        else
-            djui_hud_print_text(tostring(gPlayerSyncTable[0].personaldeathcount), x, 33, 1)
-        end
+            local s = gStateExtras[0]
+            local x = 53
+            djui_hud_set_color(205, 0, 0, 255)
+            if not gGlobalSyncTable.hellenabled then
+                djui_hud_print_text(tostring(gPlayerSyncTable[0].personaldeathcount), x, 15, 1)
+            else
+                djui_hud_print_text(tostring(gPlayerSyncTable[0].personaldeathcount), x, 33, 1)
+            end
 
-        if gPlayerSyncTable[0].personaldeathcount >= 100 then
-            x = x + 5
+            if gPlayerSyncTable[0].personaldeathcount >= 100 then
+                x = x + 5
+            end
         end
         
         local flags = hud_get_value(HUD_DISPLAY_FLAGS)
         if not gGlobalSyncTable.hellenabled then
             if flags & HUD_DISPLAY_FLAG_LIVES ~= 0 then
-                hud_set_value(HUD_DISPLAY_FLAGS, flags & ~HUD_DISPLAY_FLAG_LIVES) 
+                hud_set_value(HUD_DISPLAY_FLAGS, flags & ~HUD_DISPLAY_FLAG_LIVES)
             end
         else 
             if flags & HUD_DISPLAY_FLAG_LIVES == 0 then
-                hud_set_value(HUD_DISPLAY_FLAGS, flags | HUD_DISPLAY_FLAG_LIVES) 
+                hud_set_value(HUD_DISPLAY_FLAGS, flags | HUD_DISPLAY_FLAG_LIVES)
             end    
         end
     else return end
-end
 
--- Adds a visual death counter beside all players on the player list.
+    -- In CCM, Adds a snow border that increases in opacity as s.snowexpose increases.
+    if np.currLevelNum == LEVEL_CCM and np.currAreaIndex == 1 and not gGlobalSyncTable.romhackcompatibility then
+        if s.snowexpose > 150 then
+        local alpha = 1.695 * s.snowexpose - 254.395
+            djui_hud_set_resolution(RESOLUTION_N64)
+            djui_hud_set_color(255, 255, 255, alpha)
+
+            local screen_width = djui_hud_get_screen_width()
+            local screen_height = djui_hud_get_screen_height()
+            djui_hud_render_texture(TEX_SNOW_BORDER, screen_width * 0.002 - 5, screen_height * 0.002 - 5, screen_width * 0.002, screen_height * 0.002)
+        end
+    end
+end
 
 
 -- prevent warp transition after loading finishes
@@ -2180,7 +2578,7 @@ end
 
 -- Prevents pause exiting if you aren't idle.
 local function on_pause_exit(m)
-    local idle = gMarioStates[0].action == ACT_IDLE or gMarioStates[0].action == ACT_WATER_IDLE
+    local idle = gMarioStates[0].action == ACT_IDLE or gMarioStates[0].action == ACT_WATER_IDLE or gMarioStates[0].action == ACT_PANTING
     if not idle then 
         djui_popup_create("You cannot exit the level in this state!", 1)
         return false 
@@ -2225,7 +2623,7 @@ hook_event(HOOK_ON_SET_MARIO_ACTION, action_start)
 hook_event(HOOK_ON_DEATH, mariodeath)
 hook_event(HOOK_ON_OBJECT_UNLOAD, toaddeath)
 hook_event(HOOK_ON_INTERACT, on_interact)
-hook_event(HOOK_ON_HUD_RENDER, hud_render)
+hook_event(HOOK_ON_HUD_RENDER_BEHIND, hud_render_behind)
 hook_event(HOOK_BEFORE_PHYS_STEP, before_phys_step) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
 hook_event(HOOK_ON_PAUSE_EXIT, on_pause_exit)
 hook_event(HOOK_MARIO_UPDATE, function (m) -- Prevents players from attempting to reset their life counter by toggling Hell on Gameover(THANK YOU SUNK i am too dumb to figure this out)
@@ -2636,12 +3034,50 @@ local function movesets_on_set_action(m)
         if jumps[m.action] or m.action == ACT_JUMP_KICK or m.action == ACT_LONG_JUMP or m.action == ACT_DIVE or ((m.action & ACT_FLAG_ALLOW_VERTICAL_WIND_ACTION) ~= 0 and (m.action & ACT_FLAG_CUSTOM_ACTION) ~= 0 and m.vel.y > 0) then
             m.vel.y = m.vel.y * 0.8
         end
-
     end
+---------------------------------------------------------------------------------------------------------------------------------------------
+    -- Extensione of the CCM overhaul, prevents players from bypassing ACT_STOMACH_SLIDE, similar to irl avalanches.
+    if np.currLevelNum == LEVEL_CCM and np.currAreaIndex == 1 and gStateExtras[0].snowtimer > 0 and not gGlobalSyncTable.romhackcompatibility then
+        local slide =  {
+            [ACT_DIVE_SLIDE] = true,
+            [ACT_BUTT_SLIDE] = true,
+            [ACT_STOMACH_SLIDE] = true,
+            [ACT_SLIDE_KICK_SLIDE] = true,
+            [ACT_CROUCH_SLIDE] = true
+        }
+        local jumps = {
+            [ACT_JUMP] = true,
+            [ACT_DOUBLE_JUMP] = true,
+            [ACT_TRIPLE_JUMP] = true,
+            [ACT_SIDE_FLIP] = true,
+            [ACT_BACKFLIP] = true,
+            [ACT_LONG_JUMP] = true
+        }
+--[[         if m.action == ACT_WALKING then
+            return set_mario_action(m, ACT_SNOWY_WALKING, 0)
+        end ]]
+
+        if slide[m.action] then
+            return set_mario_action(m, ACT_SNOWY_SLIDE, 0)
+        end
+        if m.action == ACT_GRAB_POLE_FAST or m.action == ACT_GRAB_POLE_SLOW then
+            return false
+        end
+        if m.action == ACT_STEEP_JUMP then
+            return set_mario_action(m, ACT_QUICKSAND_JUMP_LAND, 0)
+        end
+        if m.action == ACT_JUMP_KICK then
+            return set_mario_action(m, ACT_PUNCHING, 0)
+        end
+        if jumps[m.action] then --need to fix burst of speed when jumping (bug where player will be set to quicksand jump if s.snowtimer hits 300+ while in midair)
+            return set_mario_action(m, ACT_QUICKSAND_JUMP_LAND, 0)
+        end
+    end
+---------------------------------------------------------------------------------------------------------------------------------------------
 end
 
 local function movesets_update(m)
-    local np = gNetworkPlayers[0]        
+    local np = gNetworkPlayers[0]
     local actions = {
             [ACT_STEEP_JUMP] = true,
             [ACT_WATER_JUMP] = true,
@@ -2685,7 +3121,7 @@ local function movesets_update(m)
         m.marioObj.hurtboxHeight = 25
         m.marioObj.hurtboxRadius = 10
     end
-    
+
     if m.flags & MARIO_METAL_CAP ~= 0 and actions[m.action] or ((m.action & ACT_FLAG_ALLOW_VERTICAL_WIND_ACTION) ~= 0 and (m.action & ACT_FLAG_CUSTOM_ACTION) ~= 0 and m.vel.y > 0) then
         m.vel.y = m.vel.y - 2
     end
@@ -2749,18 +3185,7 @@ function level_obj_init() -- Moves the only Huge Triplet Goombas further from sp
                 obj_mark_for_deletion(f)
                 f = obj_get_next_with_same_behavior_id(f)
             end
-        end    
-
---[[         -- Move the castle Boo further from the door to eventually begin the Boo race code (won't be too fancy because me coding noob)
-        local b = obj_get_first_with_behavior_id(id_bhvBooInCastle)
-        if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 1 then
-            while b do
-                djui_chat_message_create(tostring(b.oPosX))
-                djui_chat_message_create(tostring(b.oPosY))
-                djui_chat_message_create(tostring(b.oPosZ))
-                b = obj_get_next_with_same_behavior_id(b)
-            end
-        end ]]
+        end
     end
 end
 
