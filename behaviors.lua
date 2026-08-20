@@ -866,7 +866,6 @@ local function bhv_custom_tree(o) -- Trees shoot into the sky until blowing up a
         if dist_between_object_and_point(mObj, o.oPosX, o.oPosY + 240, o.oPosZ) < 500 then
             if m.flags & MARIO_METAL_CAP == 0 then 
                 m.squishTimer = 50
-                djui_chat_message_create("works")
             elseif m.flags & MARIO_METAL_CAP ~= 0 then -- doesn't do anything and i have no idea why
                 set_mario_action(m, ACT_FLAG_AIR, 0)
                 set_mario_action(m, ACT_HARD_BACKWARD_AIR_KB, 0)
@@ -1614,7 +1613,7 @@ local function snowman_body_loop(o)
         if o.oTimer < 30 then
             o.oForwardVel = 0
         else
-            o.oForwardVel = o.oForwardVel + (m.forwardVel/30)
+            o.oForwardVel = o.oForwardVel + (m.forwardVel/50)
         end
 
         cur_obj_rotate_yaw_toward(obj_angle_to_object(o, m.marioObj), 0x2000)
@@ -2414,10 +2413,10 @@ local function star_door_loop_1(o)
             network_send_object(o, true)
             --camera_unfreeze()
         end
-        
+
         cur_obj_set_pos_to_home()
     end
-    
+
     if m.controller.stickMag > 0 and o.oAction >= STAR_DOOR_ACT_OPENED and o.oAction <= STAR_DOOR_ACT_CLOSING then
         m.pos.x = m.pos.x + m.marioObj.oMarioReadingSignDPosX
         m.pos.z = m.pos.z + m.marioObj.oMarioReadingSignDPosZ
@@ -2576,9 +2575,6 @@ local function lantern_loop(o)
             spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, o.oPosX, o.oPosY, o.oPosZ, nil)
         end
     end
-
-
-
 end
 
 --[[
@@ -3505,7 +3501,7 @@ hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
 function bhv_custom_1up(o) -- Chases the nearest player for 5 seconds in a green demon state before despawning.
     local m = gMarioStates[0]
     local mObj = m.marioObj
-    
+
     --if o.oAction == 1 then --1up should be chasing the player.
         --o.oTimer = 0
     --end
@@ -3522,40 +3518,148 @@ function bhv_custom_1up(o) -- Chases the nearest player for 5 seconds in a green
         local_play(sFart, o.header.gfx.pos, 2)
         obj_mark_for_deletion(o)
     end
-    
 end
 
 function bhv_custom_cork_box(o)
+    local m = gMarioStates[0]
+
+    if m.heldObj == o then
+        o.parentObj = m.marioObj
+    end
+
+    if o.parentObj == nil then
+        o.parentObj = o.parentObj
+    end
+
+    if o.parentObj == m.marioObj then
+        o.oRouletteRoll = 1
+    end
+
+    if o.oRouletteRoll == 1 then
+        o.oRouletteTimer = math.max(0, o.oRouletteTimer - 1)
+        if o.oRouletteTimer == 81 then
+            network_play(sRouletteRoll, m.pos, 1, m.playerIndex)
+        end
+
+        -- BRUHHHH WHY WONT TABLES WORK
+        if o.oRouletteTimer == 81 or
+        o.oRouletteTimer == 61 or
+        o.oRouletteTimer == 41 or
+        o.oRouletteTimer == 21 or
+        o.oRouletteTimer == 1 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_CHUCKYA)
+            o.oAnimations = gObjectAnimations.chuckya_seg8_anims_0800C070
+            --o.animIndex = 4
+        elseif o.oRouletteTimer == 79 or
+        o.oRouletteTimer == 59 or
+        o.oRouletteTimer == 39 or
+        o.oRouletteTimer == 19 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_1UP)
+        elseif o.oRouletteTimer == 77 or
+        o.oRouletteTimer == 57 or
+        o.oRouletteTimer == 37 or
+        o.oRouletteTimer == 17 then
+            obj_set_model_extended(o, E_MODEL_RED_COIN)
+            elseif o.oRouletteTimer == 75 or
+        o.oRouletteTimer == 55 or
+        o.oRouletteTimer == 35 or
+        o.oRouletteTimer == 15 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_FLYGUY)
+            elseif o.oRouletteTimer == 73 or
+        o.oRouletteTimer == 53 or
+        o.oRouletteTimer == 33 or
+        o.oRouletteTimer == 13 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_BACKROOM_SMILER)
+            elseif o.oRouletteTimer == 71 or
+        o.oRouletteTimer == 51 or
+        o.oRouletteTimer == 31 or
+        o.oRouletteTimer == 11 then
+            obj_set_model_extended(o, E_MODEL_YELLOW_COIN)
+            elseif o.oRouletteTimer == 69 or
+        o.oRouletteTimer == 49 or
+        o.oRouletteTimer == 29 or
+        o.oRouletteTimer == 9 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_STAR)
+            elseif o.oRouletteTimer == 67 or
+        o.oRouletteTimer == 47 or
+        o.oRouletteTimer == 27 or
+        o.oRouletteTimer == 7 then
+             obj_scale(o, 0.5)
+            obj_set_model_extended(o, E_MODEL_THWOMP)
+            elseif o.oRouletteTimer == 65 or
+        o.oRouletteTimer == 45 or
+        o.oRouletteTimer == 25 or
+        o.oRouletteTimer == 5 then
+             obj_scale(o, 1)
+            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_BLACK_BOBOMB)
+            elseif o.oRouletteTimer == 63 or
+        o.oRouletteTimer == 43 or
+        o.oRouletteTimer == 23 or
+        o.oRouletteTimer == 3 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_TRANSPARENT_STAR)
+        end
+
+        if o.oRouletteTimer == 1 then
+            network_play(sRouletteEnd, m.pos, 1, m.playerIndex)
+        end
+    else
+        o.oRouletteTimer = 82
+    end
+
+    if o.oRouletteTimer == 0 then
+        if m.heldObj == nil then
+            mario_drop_held_object(m)
+        end
+        spawn_mist_particles()
+        spawn_triangle_break_particles(20, 138, 0.7, 3)
+        create_sound_spawner(SOUND_GENERAL_BREAK_BOX)
+        o.activeFlags = ACTIVE_FLAG_DEACTIVATED
+
+        local rng = 10
+        if rng == 1 then -- SPAWNS CHUCKYA
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 2 then -- SPAWNS GREEN DEMON
+            spawn_non_sync_object(id_bhvHidden1upInPole, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 3 then -- MOVES ALL RED COINS TO PLAYER POSITION
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 4 then -- SPAWNS FLYGUY
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 5 then -- REDUCE VISION AND SPAWNS SMILER (maybe use for difficulty choice as well)
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 6 then -- JACKPOT
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 7 then -- MOVES ONE STAR TO PLAYER POSITION
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 8 then -- SPAWNS A THWOMP ABOVE THE PLAYER (yes its an instakil)
+            spawn_non_sync_object(id_bhvThwomp, E_MODEL_THWOMP, m.pos.x, m.pos.y + 600, m.pos.z, function() end)
+        elseif rng == 9 then -- SPAWNS A PRIMED BOB-OMB
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 10 then -- SPAWN A DEADLY STAR (romhack fake stars but it kills you (double gamba))
+            spawn_non_sync_object(id_bhvDeadlyStar, E_MODEL_STAR,  m.pos.x, m.pos.y + 300, m.pos.z, function() end)
+        end
+    end
+--[[     djui_chat_message_create(tostring(o.oRouletteRoll))
+    djui_chat_message_create(tostring(o.oRouletteTimer)) ]]
+end
+
+local function custom_deadly_star_init(o)
+
+end
+
+local function custom_deadly_star_loop(o)
     local m = nearest_mario_state_to_object(o)
     local dist = dist_between_objects(o, m.marioObj)
-    
-    if m.heldObj == o and o.oAction ~= 2 then
-        o.oTimer = 0
-        o.oAction = 2
-    elseif m.heldObj ~= o then
-        o.oAction = 0
-        obj_scale(o, 0.4)
+    if dist < 150 then
+        set_mario_action(m, ACT_SHOCKED_DEATH, 0)
+        m.vel.y = -45
     end
-
-    if o.oAction == 2 and o.oTimer == 12 then
-        local_play(sMegaGrow, m.pos, 2) 
-        set_mario_action(m, ACT_HOLD_HEAVY_IDLE, 0)
-    end
-
-    if o.oAction == 2 and o.oTimer > 12 and o.oTimer <= 75 then
-        obj_scale(o, math.max(0.4, o.oTimer / 30))
-    end
-
-    if dist < 50 and m.action == ACT_HEAVY_THROW and m.actionTimer == 13 then
-        m.squishTimer = 50
-        local_play(sThrowFail, m.pos, 2)
-
-    elseif dist >= 50 and o.oAction == 2 and o.oTimer == 75 then
-        m.squishTimer = 50
-        local_play(sThrowFail, m.pos, 2)
-
-    end
-
 end
 
 function castle_boo_init(o) -- Move the castle Boo further from the door to eventually start on the boo rushdown possession kill
@@ -3806,6 +3910,165 @@ local function snow_gib_loop(o)
 
 end
 
+local function bhv_custom_bobomb_buddy(o)
+    if o.oPrevAction == 3 and o.oAction == 0 then
+        spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
+        obj_mark_for_deletion(o)
+    end
+end
+
+local function water_bomb_spawn_explode_particles_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+    o.header.gfx.skipInViewCheck = true
+    local randomFVel = math.random(5,15)
+    local randomVelY = math.random(10, 35)
+    local randomyaw = math.random(1,65536)
+    o.oGravity = -2
+    o.oVelY = randomVelY
+    o.oForwardVel = randomFVel
+    o.oFaceAngleYaw = randomyaw
+    o.oMoveAngleYaw = o.oFaceAngleYaw
+    o.oPosY = o.oPosY - 25
+    obj_scale(o, math.random(2, 4))
+end
+
+local function water_bomb_spawn_explode_particles_loop(o)
+    local m = gMarioStates[0]
+    local s = gStateExtras[0]
+    if m.marioObj.oTimer < 10 then --This protects from gib spam and low FPS
+        obj_mark_for_deletion(o)
+    end
+
+    if o.oPosY > o.oFloorHeight then
+        cur_obj_move_using_fvel_and_gravity()
+        cur_obj_move_using_vel()
+        o.oFaceAnglePitch = o.oFaceAnglePitch + o.oRandomSpinVelX
+        o.oFaceAngleRoll = o.oFaceAngleRoll + o.oRandomSpinVelY
+        o.oFaceAngleYaw = o.oFaceAngleYaw + o.oRandomSpinVelZ
+    else
+        o.oPosY = o.oFloorHeight
+    end
+
+    if o.oTimer == 20 then
+        obj_mark_for_deletion(o)
+    end
+end
+
+-- had to manually recreate the water bomb bubble particles since cur_obj_spawn_particles is confusing
+local function custom_water_bomb_explosion_particles(o, amount)
+    local m = gMarioStates[0]
+    for i = 0, amount do
+        if m.playerIndex ~= 0 then return end
+        spawn_non_sync_object(id_bhvWaterBombExplosionParticles, E_MODEL_BUBBLE, o.oPosX, o.oPosY, o.oPosZ, nil)
+    end
+end
+
+local function bhv_custom_water_bomb_init(o)
+    if o.oAction == 5 then
+        local parentObj = obj_get_nearest_object_with_behavior_id(o, id_bhvCannonBarrelBubbles)
+        --o.oPosX = parentObj.oPosX - 300
+    end
+end
+
+local function bhv_custom_water_bomb_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    local parentObj = obj_get_nearest_object_with_behavior_id(o, id_bhvCannonBarrelBubbles)
+
+    if o.oAction == 5 then
+        o.oForwardVel = 100
+        cur_obj_set_pos_via_transform()
+        if o.oTimer == 1 then
+            o.oMoveAngleYaw = parentObj.oMoveAngleYaw
+            o.oMoveAnglePitch = parentObj.oFaceAnglePitch - 0x4000
+            custom_water_bomb_explosion_particles(o, 10)
+        end
+
+        if o.oTimer >= 90 or o.oMoveFlags & OBJ_MOVE_HIT_WALL ~= 0 then
+            obj_mark_for_deletion(o)
+            create_sound_spawner(SOUND_OBJ_DIVING_IN_WATER)
+            custom_water_bomb_explosion_particles(o, 15)
+        end
+
+        if dist_between_objects(o, m.marioObj) < 150 and m.action ~= ACT_GONE then
+            m.squishTimer = 50
+            obj_mark_for_deletion(o)
+            create_sound_spawner(SOUND_OBJ_DIVING_IN_WATER)
+            custom_water_bomb_explosion_particles(o, 15)
+        end
+    end
+end
+
+-- SOUND_OBJ_CANNON1 is cannon activating
+-- SOUND_OBJ_CANNON2 is cannon priming
+-- SOUND_OBJ_CANNON3 is cannon locking on target
+-- SOUND_OBJ_CANNON4 is shots fired
+-- ADD SFX FOR CANNON ACTIONS
+-- recreate cannon act 0 + 1 to allow for custom cannon angles AAAAAAAAAAAAAAAAAAAAAAAAAA
+local function bhv_custom_cannon_barrel_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    local oPos = {
+        x = o.oPosX,
+        y = o.oPosY,
+        z = o.oPosZ
+    }
+
+    if o.parentObj.oAction == 5 then
+        local angleToMario = obj_pitch_to_object(o, m.marioObj)
+        local approachPitch = approach_s16_asymptotic_bool(o.oFaceAnglePitch, angleToMario + 0x4000, 0x300) -- i hate whatever limitation is preventing me from using this
+
+        --hopefully this prevents the cannon from trying to aim below the floor and breaking itself (it would be 16384 but that still puts the bomb under teh cannon sometimes)
+        if angleToMario + 0x4000 > 16000 then
+            o.oFaceAnglePitch = 16000
+        else
+            o.oFaceAnglePitch = angleToMario + 0x4000
+        end
+
+        o.oMoveAngleYaw = o.parentObj.oFaceAngleYaw
+
+        if o.parentObj.oTimer % 40 == 0 and o.parentObj.oTimer > 0 then
+            o.oForwardVel = 18
+            spawn_non_sync_object(id_bhvWaterBomb, E_MODEL_WATER_BOMB, o.oPosX, o.oPosY + 20, o.oPosZ, function(w)
+                w.parentObj = o
+                w.oAction = 5
+                obj_copy_angle(w, o)
+            end)
+            cur_obj_play_sound_2(SOUND_OBJ_CANNON4)
+            set_camera_shake_from_point(SHAKE_POS_MEDIUM, o.oPosX, o.oPosY, o.oPosZ)
+        end
+    end
+end
+
+local function bhv_custom_waterbomb_cannon_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    local dist = dist_between_objects(o, m.marioObj)
+    local immune = {
+        [ACT_SPAWN_SPIN_AIRBORNE] = true,
+        [ACT_GONE] = true,
+        [ACT_WAITING_FOR_DIALOG] = true,
+        [ACT_READING_NPC_DIALOG] = true
+    }
+
+    if o.oAction == 1 and dist < 1500 and o.oAction ~= 5 and not immune[m.action] then
+        if m.area.camera and m.area.camera.cutscene == CUTSCENE_DIALOG then return end
+        o.oAction = 5
+        o.oTimer = 0
+        cur_obj_play_sound_2(SOUND_OBJ_CANNON3)
+    end
+
+    if (dist >= 1500 or immune[m.action]) and o.oAction == 5 then
+        if m.area.camera and m.area.camera.cutscene == CUTSCENE_DIALOG then return end
+        o.oAction = 1
+    end
+
+    if o.oAction == 5 then
+        local angleToMario = obj_angle_to_object(o, m.marioObj)
+        if o.oFaceAngleYaw ~= angleToMario and (m.action ~= ACT_READING_NPC_DIALOG or m.action ~= ACT_WAITING_FOR_DIALOG) then
+            obj_face_yaw_approach(angleToMario, 0x300)
+        end
+    end
+end
+
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
@@ -3925,6 +4188,10 @@ hook_gore_behavior(id_bhvFallingPillar, false, nil, custom_falling_pillar)
 hook_gore_behavior(id_bhvSwoop, false, nil, bhv_custom_swoop)
 --hook_gore_behavior(id_bhvLllSinkingRectangularPlatform, false, nil, custom_sinking_rectangular_plat_loop)
 hook_gore_behavior(id_bhvMontyMole, false, nil, custom_monty_mole)
+hook_gore_behavior(id_bhvWaterBomb, false, bhv_custom_water_bomb_init, bhv_custom_water_bomb_loop)
+hook_gore_behavior(id_bhvWaterBombCannon, false, nil, bhv_custom_waterbomb_cannon_loop)
+hook_gore_behavior(id_bhvCannonBarrelBubbles, false, nil, bhv_custom_cannon_barrel_loop)
+hook_gore_behavior(id_bhvBobombBuddy, false, nil, bhv_custom_bobomb_buddy)
 id_bhvHellEntrance = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, hell_entrance_init, hell_entrance_loop, "HellEntrance")
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
@@ -3955,3 +4222,5 @@ id_bhvFakeFire = hook_behavior(nil, OBJ_LIST_GENACTOR, true, fake_fire_init, fak
 id_bhvSnowPile = hook_behavior(nil, OBJ_LIST_GENACTOR, true, snow_pile_init, snow_pile_loop, "bhvSnowPile")
 id_bhvSnowGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, snow_gib_init, snow_gib_loop, "bhvSnowGib")
 id_bhvFireworkSparkle = hook_behavior (nil, OBJ_LIST_UNIMPORTANT, true, bhv_firework_sparkle_init, bhv_firework_sparkle_loop, "bhvFireworkSpark")
+id_bhvWaterBombExplosionParticles = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, water_bomb_spawn_explode_particles_init, water_bomb_spawn_explode_particles_loop, "bhvWaterBombExplosionParticles")
+id_bhvDeadlyStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, custom_deadly_star_init, custom_deadly_star_loop, "bhvDeadlyStar")

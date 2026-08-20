@@ -1148,13 +1148,24 @@ one?\
 \
 \
 But I have the perfect\
-body right in front of\
+head right in front of\
 me."))
 
-smlua_text_utils_dialog_replace(DIALOG_111,1,4,95,200, ("Perfect! What a great\
-new body! Here--this is a\
-present for you. It's sure\
-to warm you up."))
+smlua_text_utils_dialog_replace(DIALOG_111,1,4,95,200, ("I was tricked! C'mon\
+man...\
+\
+\
+...\
+\
+\
+\
+...I guess this could\
+work.\
+\
+\
+Take this star before I\
+change my mind and search\
+for you relentlessly."))
 
 smlua_text_utils_dialog_replace(DIALOG_112,1,4,30,200, ("Collect as many coins as\
 possible! They'll refill\
@@ -1321,14 +1332,18 @@ into metal with the Metal\
 Cap, you can walk\
 underwater! Try it!"))
 
-smlua_text_utils_dialog_replace(DIALOG_131,1,5,30,200, ("Woah! You're going pretty\
+smlua_text_utils_dialog_replace(DIALOG_131,1,3,30,200, ("Woah! You're going pretty\
 fast there bud.\
 \
 Don't you wanna slooooow\
 down a bit?\
+\
 You can't?\
 \
+\
 Awwwww...\
+\
+\
 What a shame."))
 
 smlua_text_utils_dialog_replace(DIALOG_132,1,4,30,200, ("Whoa, Mario, pal, you\

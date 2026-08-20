@@ -197,8 +197,8 @@ gSamples = {
     audio_sample_load("metal2.ogg"),
     audio_sample_load("floweylaugh.ogg"),
     audio_sample_load("fireworklaunch.ogg"),
-    audio_sample_load("corkgrow.ogg"),
-    audio_sample_load("wehhh.ogg"),
+    audio_sample_load("mkroulette.ogg"),
+    audio_sample_load("rouletteend.ogg"), 
     audio_sample_load("minithi.ogg"),
     audio_sample_load("zoooooom.ogg"),
     audio_sample_load("coldwarning.ogg"),
@@ -261,8 +261,8 @@ sShotgun = 47
 sMetal2 = 48
 sFloweyHa = 49
 sFireworkLaunch = 50
-sMegaGrow = 51
-sThrowFail = 52
+sRouletteRoll = 51
+sRouletteEnd = 52
 sMini = 53
 sZooom = 54
 sCoWarn = 55
@@ -540,7 +540,10 @@ for i = 0, MAX_PLAYERS-1 do
         snowtimer = 0,
         snowexpose = 0,
         penguindaysnumbered = false,
-        imminentbabydeath = 0
+        imminentbabydeath = 0,
+        rouletteRoll = false,
+        rouletteTimer = 81,
+        rouletteStop = false
     }
 end
 
@@ -598,7 +601,10 @@ define_custom_obj_fields({
     oFlyGuyMoveYaw = "f32",
     oRandomSpinVelX = "f32",
     oRandomSpinVelY = "f32",
-    oRandomSpinVelZ = "f32"
+    oRandomSpinVelZ = "f32",
+    oRouletteRoll = "f32",
+    oRouletteTimer = "f32",
+    oRouletteEnd = "f32",
 })
 end
 
@@ -772,6 +778,16 @@ sOnWarpToFunc = {
         else
             set_water_level(0, -2710, false)
         end
+    end,
+
+    [LEVEL_THI] = function()
+        local np = gNetworkPlayers[0]
+        local m = gMarioStates[0]
+        if np.currAreaIndex == 1 then
+            if m.action == ACT_EMERGE_FROM_PIPE then
+                local_play(sMini, m.pos, 2)
+            end
+        end
     end
 }
 
@@ -861,28 +877,79 @@ sOnLvlInitToFunc = {
         --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 5910, 1050, 4412, nil)
         local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
         o.oPosY = o.oPosY + 21
-
-        -- Apply environment effects and lighting settings
-        set_override_envfx(ENVFX_LAVA_BUBBLES)
-        set_override_skybox(BACKGROUND_FLAMING_SKY)
-        set_lighting_color(0, 255)
-        set_lighting_color(1, 127)
-        set_lighting_color(2, 100)
-        set_lighting_dir(1, -128)
-
-        set_vertex_color(0, 255)
-        set_vertex_color(1, 127)
-        set_vertex_color(2, 100)
-        set_fog_color(0, 255)
-        set_fog_color(1, 127)
-        set_fog_color(2, 100)
-
     end,
 
     [LEVEL_CCM] = function()
         local s = gStateExtras[0]
         s.snowtimer = 0
         s.snowexpose = 0
+    end,
+
+    [LEVEL_LLL] = function()
+        local e = obj_get_first_with_behavior_id(id_bhvExclamationBox)
+        local r = obj_get_first_with_behavior_id(id_bhvRedCoin)
+        local f = obj_get_first_with_behavior_id(id_bhvFadingWarp)
+        while e do
+            obj_mark_for_deletion(e)
+            e = obj_get_next_with_same_behavior_id(e)
+        end
+        if r.oPosY < 250 and r.oPosX < -4000 then
+            while r do
+                obj_mark_for_deletion(r)
+                r = obj_get_next_with_same_behavior_id(r)
+            end
+        end
+        while f do
+            obj_mark_for_deletion(f)
+            f = obj_get_next_with_same_behavior_id(f)
+        end
+    end,
+
+    [LEVEL_HMC] = function()
+        -- Moves the Floor Switch deeper within the lava pool.
+        local o = obj_get_first_with_behavior_id(id_bhvFloorSwitchGrills)
+        o.oPosX = -4890
+        o.oPosY = -6327
+        o.oPosZ = 4890
+    end,
+
+    [LEVEL_THI] = function()
+        local o = obj_get_first_with_behavior_id(id_bhvGoombaTripletSpawner)
+        while o do 
+            obj_move_xyz(o, 500, 0, -500)
+            o = obj_get_next_with_same_behavior_id(o)
+        end
+    end,
+
+    [LEVEL_BOB] = function()
+        local o = obj_get_first_with_behavior_id(id_bhvWaterBombCannon)
+        local c = obj_get_first_with_behavior_id(id_bhvCannonClosed)
+        local m = obj_get_first_with_behavior_id(id_bhvCannon)
+        local n = obj_get_first_with_behavior_id(id_bhvCannonBarrel)
+
+        while o do
+            obj_move_xyz(o, 0, 50, 0)
+            o = obj_get_next_with_same_behavior_id(o)
+        end
+        if c.oPosY < 3062 then
+            while c do
+                obj_mark_for_deletion(c)
+                c = obj_get_next_with_same_behavior_id(c)
+            end
+        end
+        --if m.oPosY < 2732 then
+            while m do
+                obj_mark_for_deletion(m)
+                m = obj_get_next_with_same_behavior_id(m)
+            end
+        --end
+        --if n.oPosY < 2732 then
+            while n do
+                obj_mark_for_deletion(n)
+                n = obj_get_next_with_same_behavior_id(n)
+            end
+        --end
+
     end
 }
 ----------------------------------------------------------------------------------------------------------------------
@@ -1032,18 +1099,8 @@ function act_snowy_slide(m)
         --[[if m.forwardVel == clamp(m.forwardVel, -8, 8) then
                 return set_mario_action(m, ACT_BUTT_SLIDE_STOP, 0)
             end ]]
-            if m.controller.buttonPressed & A_BUTTON ~= 0 or m.controller.buttonPressed & B_BUTTON ~= 0 then
-                if m.forwardVel == clamp(m.forwardVel, -26, 0) then
-                    m.vel.y = 20
-                    return set_mario_action(m, ACT_BACKWARD_ROLLOUT, 0)
-                elseif m.forwardVel == clamp(m.forwardVel, 0, 26) or m.forwardVel == 0 then
-                    m.vel.y = 20
-                    return set_mario_action(m, ACT_FORWARD_ROLLOUT, 0)
-                end
-            end
-
-            if m.forwardVel < 1 then
-                return set_mario_action(m, ACT_BUTT_SLIDE_STOP, 0)
+            if m.forwardVel == clamp(m.forwardVel, -32, 32) then
+                return set_mario_action (m, ACT_BUTT_SLIDE, 0)
             end
         end
 
@@ -1064,69 +1121,59 @@ function act_snowy_slide(m)
     end
 end
 hook_mario_action(ACT_SNOWY_SLIDE, act_snowy_slide)
--- keeping this commented out in case i want to return to this
---[[ _G.ACT_SNOWY_WALKING = allocate_mario_action(ACT_GROUP_MOVING|ACT_FLAG_ALLOW_FIRST_PERSON|ACT_FLAG_MOVING) 
-function act_snowy_walking(m) -- code basically ripped form ACT_WALKING
-    if m.playerIndex ~= 0 then return end
-    local startPos = {x = 0, y = 0, z = 0}
-    local startYaw = m.faceAngle.y
-
-    mario_drop_held_object(m)
-
-    if should_begin_sliding(m) then
-        return set_mario_action(m, ACT_BEGIN_SLIDING, 0)
-    end
-
-    if m.input & INPUT_FIRST_PERSON ~= 0 then
-        return begin_braking_action(m)
-    end
-
-    if m.input & INPUT_ZERO_MOVEMENT ~= 0 then
-        return begin_braking_action(m)
-    end
-
-    if m.input & INPUT_Z_PRESSED ~= 0 then
-        return set_mario_action(m, ACT_CROUCH_SLIDE, 0)
-    end
-
-    m.actionstate = 0
-
-    vec3f_copy(startPos, m.pos)
-    update_walking_speed(m)
-
-    local groundStep = perform_ground_step(m)
-    if groundStep == GROUND_STEP_LEFT_GROUND then
-        set_mario_action(m, ACT_FREEFALL, 0)
-        set_character_animation(m, CHAR_ANIM_GENERAL_FALL)
-    elseif groundStep == GROUND_STEP_NONE then
-        local val04 = (m.intendedMag > m.forwardVel) and m.intendedMag or m.forwardVel
-
-        if val04 < 4 then
-            val04 = 4
-        end
-
-        set_character_anim_with_accel(m, CHAR_ANIM_MOVE_IN_QUICKSAND, val04/4 * 0x10000)
-        play_step_sound(m, 19, 93)
-
-        if m.intendedMag - m.forwardVel > 16 then
-            set_mario_particle_flags(m, PARTICLE_SNOW, 0)
-        end
-    elseif GROUND_STEP_HIT_WALL then
-        push_or_sidle_wall(m, startPos)
-        m.actionTimer = 0
-    end
-
-    tilt_body_walking(m, startYaw)
-    djui_chat_message_create("works")
-    return false
-end
-hook_mario_action(ACT_SNOWY_WALKING, act_snowy_walking) ]]
 _G.ACT_BURIED = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_buried(m)
     m.actionTimer = m.actionTimer + 1
     common_death_handler(m, CHAR_ANIM_DYING_IN_QUICKSAND, 99)
 end
 hook_mario_action(ACT_BURIED, act_buried)
+_G.ACT_METAL_JUMP_SQUAT = allocate_mario_action(ACT_GROUP_AIRBORNE | ACT_FLAG_AIR)
+
+--used for Metal Cap's moveset to add 'lag'
+local squatActions = {
+    [ACT_JUMP]               = {action = ACT_JUMP,               animation = CHAR_ANIM_LAND_FROM_SINGLE_JUMP},
+    [ACT_DOUBLE_JUMP]        = {action = ACT_DOUBLE_JUMP,        animation = CHAR_ANIM_LAND_FROM_DOUBLE_JUMP},
+    [ACT_TRIPLE_JUMP]        = {action = ACT_TRIPLE_JUMP,        animation = CHAR_ANIM_LAND_FROM_DOUBLE_JUMP},
+    [ACT_FLYING_TRIPLE_JUMP] = {action = ACT_FLYING_TRIPLE_JUMP, animation = CHAR_ANIM_LAND_FROM_DOUBLE_JUMP},
+    [ACT_SIDE_FLIP]          = {action = ACT_SIDE_FLIP,          animation = CHAR_ANIM_SLIDEFLIP_LAND, vel = 10},
+    [ACT_BACKFLIP]           = {action = ACT_BACKFLIP,           animation = CHAR_ANIM_LAND_FROM_DOUBLE_JUMP},
+    [ACT_LONG_JUMP]          = {action = ACT_LONG_JUMP,          animation = CHAR_ANIM_CROUCH_FROM_SLOW_LONGJUMP},
+    [ACT_HOLD_JUMP]          = {action = ACT_HOLD_JUMP,          animation = CHAR_ANIM_JUMP_LAND_WITH_LIGHT_OBJ},
+    [ACT_SLIDE_KICK]         = {action = ACT_SLIDE_KICK,         animation = CHAR_ANIM_SLIDE_KICK},
+    [ACT_JUMP_KICK]          = {action = ACT_JUMP_KICK,          animation = CHAR_ANIM_GENERAL_LAND},
+    [ACT_WALL_KICK_AIR]      = {action = ACT_WALL_KICK_AIR,      animation = CHAR_ANIM_SLIDEJUMP, delay = 3},
+    [ACT_STEEP_JUMP]         = {action = ACT_STEEP_JUMP,         animation = CHAR_ANIM_LAND_FROM_SINGLE_JUMP},
+}
+
+local function act_metal_jump_squat(m) -- thank you erick for being moveset pro
+    local squat = squatActions[m.prevAction]
+    if (m.flags & (MARIO_METAL_CAP) ~= 0) and squat then
+        if m.actionTimer > (squat.delay or 5) then
+            set_mario_action(m, squat.action, 0)
+        end
+        set_mario_animation(m, squat.animation)
+        if squat.vel then
+            mario_set_forward_vel(m, squat.vel)
+        end
+    end
+
+    perform_ground_step(m)
+    m.actionTimer = m.actionTimer + 1
+
+    if ACT_METAL_JUMP_SQUAT and m.flags & MARIO_METAL_CAP == 0 then -- added to fix instances of the custom action carrying over to non-MC states
+        set_mario_action(m, ACT_FREEFALL, 0)
+    end
+end
+
+local function metal_jump_squat(m) -- thank you again erick for being moveset pro
+    local isJumping = ((squatActions[m.action] and m.pos.y < m.floorHeight + 50) or m.action == ACT_WALL_KICK_AIR and m.prevAction ~= ACT_HOLDING_POLE 
+    and m.prevAction ~= ACT_CLIMBING_POLE) and m.prevAction ~= ACT_METAL_JUMP_SQUAT
+    if (m.flags & (MARIO_METAL_CAP) ~= 0) and isJumping then
+        set_mario_action(m, ACT_METAL_JUMP_SQUAT, 0)
+    end
+end
+hook_mario_action(ACT_METAL_JUMP_SQUAT, act_metal_jump_squat)
+hook_event(HOOK_ON_SET_MARIO_ACTION, metal_jump_squat)
 
 
 local MC = PARTICLE_MIST_CIRCLE
@@ -1157,8 +1204,8 @@ local particleTimings = {
 }
 
 --Electricutes the F out of Mario
-function act_shocked(m)
-    local s = gStateExtras[m.playerIndex]
+_G.ACT_SHOCKED_DEATH = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
+function act_shocked_death(m)
     gPlayerSyncTable[m.playerIndex].gold = false
     m.actionTimer = m.actionTimer + 1
     set_mario_animation(m, MARIO_ANIM_SHOCKED)
@@ -1176,8 +1223,10 @@ function act_shocked(m)
     if m.actionTimer == 120 then
         m.squishTimer = 50
     end
+
+    stop_and_set_height_to_floor(m)
 end
-hook_mario_action(ACT_SHOCKED, act_shocked)
+hook_mario_action(ACT_SHOCKED_DEATH, act_shocked_death)
 
 --If Mario takes damage mid-air, he will ragdoll down to his death.
 _G.ACT_RAGDOLL = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
@@ -1356,7 +1405,6 @@ end
 function handle_object_interaction(m, o)
     local behaviors = {
         id_bhvBigBoulder,
-        id_bhvChainChomp,
         id_bhvPitBowlingBall,
         id_bhvBowlingBall,
         id_bhvSpindrift,
@@ -1367,29 +1415,46 @@ function handle_object_interaction(m, o)
         id_bhvWfElevatorTowerPlatform
     }
 
-    if m.hurtCounter > 0 and has_any_behavior(o, behaviors) then
-        if m.action & ACT_FLAG_AIR > 0 then
-            if m.action == ACT_DEATH_ON_STOMACH then return end
+    if m.hurtCounter > 0 then
+        if has_any_behavior(o, behaviors) then
+            if m.action & ACT_FLAG_AIR > 0 then
+                if m.action == ACT_DEATH_ON_STOMACH then return end
 
-            if m.pos.y > m.floorHeight then
-                local angle = obj_angle_to_object(m.marioObj, o)
-                m.vel.x = m.vel.x + sins(o.oMoveAngleYaw) * o.oForwardVel / 2
-                m.vel.z = m.vel.z + coss(o.oMoveAngleYaw) * o.oForwardVel / 2
-                m.vel.y = 65
+                if m.pos.y > m.floorHeight then
+                    local angle = obj_angle_to_object(m.marioObj, o)
+                    m.vel.x = m.vel.x + sins(o.oMoveAngleYaw) * o.oForwardVel / 2
+                    m.vel.z = m.vel.z + coss(o.oMoveAngleYaw) * o.oForwardVel / 2
+                    m.vel.y = 65
 
-                m.marioObj.oFaceAngleYaw = angle
-                m.marioObj.oMoveAngleYaw = angle
+                    m.marioObj.oFaceAngleYaw = angle
+                    m.marioObj.oMoveAngleYaw = angle
 
-                spawn_mist_particles()
-                play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
-                set_mario_action(m, ACT_RAGDOLL, 0)
-            end
-        else
-            if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 then
-                -- Optionally handle Chain Chomp interaction here
-                -- djui_chat_message_create("Doing nothing (you hit chain chomp and lost yer legs!!)")
+                    spawn_mist_particles()
+                    play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
+                    set_mario_action(m, ACT_RAGDOLL, 0)
+                end
             else
                 m.squishTimer = 50
+            end
+        else
+            if m.action & ACT_FLAG_AIR > 0 then
+                if obj_has_behavior_id(o, id_bhvChainChomp) ~= 0 then
+                    if m.action == ACT_DEATH_ON_STOMACH then return end
+
+                    if m.pos.y > m.floorHeight then
+                        local angle = obj_angle_to_object(m.marioObj, o)
+                        m.vel.x = m.vel.x + sins(o.oMoveAngleYaw) * o.oForwardVel / 4
+                        m.vel.z = m.vel.z + coss(o.oMoveAngleYaw) * o.oForwardVel / 4
+                        m.vel.y = 65
+
+                        m.marioObj.oFaceAngleYaw = angle
+                        m.marioObj.oMoveAngleYaw = angle
+
+                        spawn_mist_particles()
+                        play_sound(SOUND_ACTION_BOUNCE_OFF_OBJECT, m.marioObj.header.gfx.cameraToObject)
+                        set_mario_action(m, ACT_RAGDOLL, 0)
+                    end
+                end
             end
         end
     end
