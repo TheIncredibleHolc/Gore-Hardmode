@@ -293,6 +293,7 @@ tetrisphere = audio_stream_load("iwbtg2.ogg")           loop(tetrisphere)
 tetrisphere2 = audio_stream_load("iwbtg3.ogg")          loop(tetrisphere2)
 finalegg = audio_stream_load("iwbtg4.ogg")              loop(finalegg)
 millionaire = audio_stream_load("millionaire.ogg")      loop(millionaire)
+jackpotShort = audio_stream_load("jackpotCork.ogg")
 
 iwbtgMusic = {
     iwbtg,
@@ -605,6 +606,9 @@ define_custom_obj_fields({
     oRouletteRoll = "f32",
     oRouletteTimer = "f32",
     oRouletteEnd = "f32",
+    oFountainSpawned = "f32",
+    oFountainChosenID = "f32",
+    oFountainChosenModel = "f32",
 })
 end
 

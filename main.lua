@@ -646,7 +646,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             set_fog_color(0, 100)
             set_fog_color(1, 147)
             set_fog_color(2, 200)
-        else
+        elseif np.currLevelNum == LEVEL_CCM and np.currAreaIndex == 2 then
             set_lighting_color(0, 255)
             set_lighting_color(1, 255)
             set_lighting_color(2, 255)

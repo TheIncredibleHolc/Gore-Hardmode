@@ -3602,11 +3602,13 @@ function bhv_custom_swoop(o)
         obj_compute_vel_from_move_pitch(15)
         cur_obj_rotate_yaw_toward(o.oAngleToMario, 0xF00)
         cur_obj_rotate_pitch_toward(o, pitchToMario/2, 0xF00)
-        if dist_between_objects(o, m.marioObj) < 100 and m.action & ACT_FLAG_ATTACKING == 0 then
-            obj_mark_for_deletion(o)
-            spawn_mist_particles()
-            play_sound(SOUND_OBJ_SWOOP_DEATH, m.pos)
-            m.squishTimer = 50
+        if m.action ~= ACT_GONE then
+            if dist_between_objects(o, m.marioObj) < 100 and m.action & ACT_FLAG_ATTACKING == 0 then
+                obj_mark_for_deletion(o)
+                spawn_mist_particles()
+                play_sound(SOUND_OBJ_SWOOP_DEATH, m.pos)
+                m.squishTimer = 50
+            end
         end
         if o.oTimer > 240 then
             obj_mark_for_deletion(o)
@@ -4033,9 +4035,23 @@ function bhv_custom_cork_box(o)
         create_sound_spawner(SOUND_GENERAL_BREAK_BOX)
         o.activeFlags = ACTIVE_FLAG_DEACTIVATED
 
-        local rng = 7 --math.random(10)
+        if m.heldObj == o then
+            o.oPosX = m.pos.x
+            o.oPosY = m.pos.y
+            o.oPosZ = m.pos.z
+        end
+
+        obj_mark_for_deletion(o)
+        m.action = ACT_IDLE
+
+
+        local rng = math.random(10)
+
+
         if rng == 1 then -- SPAWNS CHUCKYA
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, m.pos.x, m.pos.y + 500, m.pos.z, function(obj)
+                obj.oFaceAngleYaw = obj_angle_to_object(o, m.marioObj)
+             end)
         elseif rng == 2 then -- SPAWNS GREEN DEMON
             spawn_non_sync_object(id_bhvHidden1upInPole, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, function() end)
         elseif rng == 3 then -- MOVES ALL RED COINS TO PLAYER POSITION
@@ -4048,37 +4064,63 @@ function bhv_custom_cork_box(o)
                 obj = obj_get_next_with_same_behavior_id(obj)
             end
         elseif rng == 4 then -- SPAWNS 2 FLYGUYS (i dont understanad why they wont spit fire)
-            spawn_non_sync_object(id_bhvFlyGuy, E_MODEL_FLYGUY, o.oPosX, o.oPosY + 500, o.oPosZ, function(f) end)
-            spawn_non_sync_object(id_bhvFlyGuy, E_MODEL_FLYGUY, o.oPosX, o.oPosY + 700, o.oPosZ, function(f) end)
-        elseif rng == 5 then -- REDUCE VISION AND SPAWNS SMILER (maybe use for difficulty choice as well)
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 6 then -- JACKPOT
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 7 then -- MOVES ONE STAR TO PLAYER POSITION
-            local obj = behavior_id
-            if obj and obj.oBehParams2ndByte == 11 then
-                obj.oPosX = m.pos.x
-                obj.oPosY = m.pos.y + 500
-                obj.oPosZ = m.pos.z
-            end
+            spawn_non_sync_object(id_bhvFlyGuy, E_MODEL_FLYGUY, o.oPosX, o.oPosY + 500, o.oPosZ, function(obj)
+                obj.oForwardVel = 100
+                obj.oFaceAngleYaw = obj_angle_to_object(o, m.marioObj)
+            end)
+            spawn_non_sync_object(id_bhvFlyGuy, E_MODEL_FLYGUY, o.oPosX, o.oPosY + 700, o.oPosZ, function(obj)
+                obj.oForwardVel = 100
+                obj.oFaceAngleYaw = obj_angle_to_object(o, m.marioObj)
+            end)
+        elseif rng == 5 then -- ROCK RING (all my ideas dont work too well here)
+            local xzOffset = 750
+            local yOffset = 300
+            spawn_non_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, m.pos.x + xzOffset, m.pos.y + yOffset, m.pos.z, function() end)
+            spawn_non_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, m.pos.x - xzOffset, m.pos.y + yOffset, m.pos.z, function() end)
+            spawn_non_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, m.pos.x, m.pos.y + yOffset, m.pos.z + xzOffset, function() end)
+            spawn_non_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, m.pos.x, m.pos.y + yOffset, m.pos.z - xzOffset, function() end)
+            spawn_non_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, m.pos.x + xzOffset, m.pos.y + yOffset, m.pos.z + xzOffset, function() end)
+            spawn_non_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, m.pos.x - xzOffset, m.pos.y + yOffset, m.pos.z - xzOffset, function() end)
+            spawn_non_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, m.pos.x - xzOffset, m.pos.y + yOffset, m.pos.z + xzOffset, function() end)
+            spawn_non_sync_object(id_bhvRockSolid, E_MODEL_JRB_ROCK, m.pos.x + xzOffset, m.pos.y + yOffset, m.pos.z - xzOffset, function() end)
+        elseif rng == 6 then -- JACKPOT (20% chance to thwomp)
+            spawn_non_sync_object(id_bhvCoinFountain, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(obj) end)
+        elseif rng == 7 then -- MOVES STAR BOX TO PLAYER POS, ELSE SPAWNS RANDOM STAR AT PLAYER POS
+            spawn_mist_particles()
+            spawn_non_sync_object(id_bhvStar, E_MODEL_STAR, o.oPosX, o.oPosY + 250, o.oPosZ, function(star)
+                local random = math.random(0, 6)
+                star.oBehParams = random << 24
+            end)
         elseif rng == 8 then -- SPAWNS A THWOMP ABOVE THE PLAYER (yes its an instakil)
             spawn_non_sync_object(id_bhvThwompEvent, E_MODEL_THWOMP, m.pos.x, m.pos.y + 1500, m.pos.z, function() end)
         elseif rng == 9 then -- SPAWNS A PRIMED BOB-OMB
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+            spawn_non_sync_object(id_bhvBobomb, E_MODEL_BLACK_BOBOMB, o.oPosX, o.oPosY, o.oPosZ, function(obj)
+                obj.oBobombFuseLit = 1
+                obj.oAction = BOBOMB_ACT_CHASE_MARIO
+                obj_scale(obj, 3)
+            end)
         elseif rng == 10 then -- SPAWN A DEADLY STAR (romhack fake stars but it kills you (double gamba))
-            spawn_non_sync_object(id_bhvDeadlyStar, E_MODEL_STAR,  m.pos.x, m.pos.y + 300, m.pos.z, function() end)
+            spawn_non_sync_object(id_bhvDeadlyStar, E_MODEL_STAR, o.oPosX, o.oPosY + 250, o.oPosZ, function() end)
         end
     end
---[[     djui_chat_message_create(tostring(o.oRouletteRoll))
-    djui_chat_message_create(tostring(o.oRouletteTimer)) ]]
 end
 
-local function custom_deadly_star_loop(o)
+local function deadly_star_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+    o.oFaceAngleYaw = 0
+    o.oFaceAnglePitch = 0
+    o.oFaceAngleRoll = 0
+
+    spawn_mist_particles()
+end
+
+local function deadly_star_loop(o)
     local m = nearest_mario_state_to_object(o)
     local dist = dist_between_objects(o, m.marioObj)
+    o.oFaceAngleYaw = o.oFaceAngleYaw + 2048
     if dist < 150 then
         set_mario_action(m, ACT_SHOCKED_DEATH, 0)
-        m.vel.y = -45
     end
 end
 
@@ -4106,9 +4148,51 @@ local function cork_thwomp_loop(o)
             m.squishTimer = 50
         end
         if o.oPosY == o.oHomeY then
-            local m = gMarioStates[0]
-            play_sound(SOUND_OBJ_THWOMP, m.marioObj.header.gfx.cameraToObject)
+            local mAll = gMarioStates[0]
+            set_camera_shake_from_hit(SHAKE_POS_LARGE)
+            play_sound(SOUND_OBJ_THWOMP, mAll.marioObj.header.gfx.cameraToObject)
             spawn_triangle_break_particles(20, 138, 3, 2)
+            obj_mark_for_deletion(o)
+        end
+    end
+end
+
+local function fountain_rng(o)
+    if o.oFountainSpawned == 0 then
+        local randomObj = math.random(1, 5)
+        --djui_chat_message_create(tostring(randomObj))
+        if randomObj == 5 then
+            o.oFountainChosenID = id_bhvThwompEvent
+            o.oFountainChosenModel = E_MODEL_THWOMP
+        else
+            o.oFountainChosenID = id_bhvSingleCoinGetsSpawned
+            o.oFountainChosenModel = E_MODEL_YELLOW_COIN
+        end
+
+        o.oFountainSpawned = 1
+    end
+    return o.oFountainChosenID, o.oFountainChosenModel
+end
+
+
+local function coin_fountain_loop(o)
+    -- MUSIC, test in multiplayer
+    if o.oTimer == 1 then
+        fadeout_level_music(0)
+        stream_play(jackpotShort)
+    elseif o.oTimer == 100 then
+        stream_stop_all()
+        set_background_music(0, get_current_background_music(), 0)
+    end
+
+    local chosenObj, chosenModel = fountain_rng(o)
+
+    if o.oTimer % 2 == 0 then
+        local randomX = math.random(-500, 500)
+        local randomZ = math.random(-500, 500)
+        spawn_non_sync_object(chosenObj, chosenModel, o.oPosX + randomX, o.oPosY + 1500, o.oPosZ + randomZ, function() end)
+        
+        if o.oTimer >= 100 then
             obj_mark_for_deletion(o)
         end
     end
@@ -4210,7 +4294,6 @@ hook_gore_behavior(id_bhvTree, false, nil, bhv_custom_tree)
 hook_gore_behavior(id_bhvWhompKingBoss, false, nil, bhv_custom_kingwhomp)
 hook_gore_behavior(id_bhvKingBobomb, false, nil, bhv_custom_kingbobomb)
 hook_gore_behavior(id_bhvSmallWhomp, false, nil, bhv_custom_whomp)
-hook_gore_behavior(id_bhvThwomp, false, bhv_custom_thwomp_init, bhv_custom_thwomp)
 hook_gore_behavior(id_bhvThwomp, false, nil, bhv_custom_thwomp)
 hook_gore_behavior(id_bhvThwomp2, false, nil, bhv_custom_thwomp)
 hook_gore_behavior(id_bhvPitBowlingBall, false, nil, bhv_custom_pitbowlball)
@@ -4269,5 +4352,6 @@ id_bhvSnowPile = hook_behavior(nil, OBJ_LIST_GENACTOR, true, snow_pile_init, sno
 id_bhvSnowGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, snow_gib_init, snow_gib_loop, "bhvSnowGib")
 id_bhvFireworkSparkle = hook_behavior (nil, OBJ_LIST_UNIMPORTANT, true, bhv_firework_sparkle_init, bhv_firework_sparkle_loop, "bhvFireworkSpark")
 id_bhvWaterBombExplosionParticles = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, water_bomb_spawn_explode_particles_init, water_bomb_spawn_explode_particles_loop, "bhvWaterBombExplosionParticles")
-id_bhvDeadlyStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, nil, custom_deadly_star_loop, "bhvDeadlyStar")
+id_bhvDeadlyStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, deadly_star_init, deadly_star_loop, "bhvDeadlyStar")
 id_bhvThwompEvent = hook_behavior(nil, OBJ_LIST_SURFACE, true, cork_thwomp_init, cork_thwomp_loop, "bhvThwompEvent")
+id_bhvCoinFountain = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, nil, coin_fountain_loop, "bhvCoinFountain")
