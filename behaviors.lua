@@ -192,9 +192,6 @@ local sFlyGuyOverrideVelActions = {
     [FLY_GUY_ACT_SHOOT_FIRE] = 0
 }
 
--- local function bhv_custom_flyguy_init(o)
--- 	o.oDistanceToMario
--- end
 ---@param o Object
 local function bhv_custom_flyguy(o)
     local m = nearest_mario_state_to_object(o)
@@ -588,7 +585,6 @@ local function bhv_custom_thwomp(o)
         if o.oAction == 3 and o.oTimer > 1 and lateral_dist_between_objects(m, o) < 150 then
             o.oAction = 4
         end
-
     end
 end
 
@@ -3499,8 +3495,7 @@ hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
 
 
 function bhv_custom_1up(o) -- Chases the nearest player for 5 seconds in a green demon state before despawning.
-    local m = gMarioStates[0]
-    local mObj = m.marioObj
+    local m = nearest_mario_state_to_object(o)
 
     --if o.oAction == 1 then --1up should be chasing the player.
         --o.oTimer = 0
@@ -3510,156 +3505,15 @@ function bhv_custom_1up(o) -- Chases the nearest player for 5 seconds in a green
         local_play(sFloweyHa, o.header.gfx.pos, 1)
     end
 
-    if dist_between_objects(m.marioObj, o) <= 120 and o.oAction == 1 and o.oTimer < 120 then --Runs if Mario 'touches' the 1up hitbox. 120 is actually slightly before, but would be a better option imo.
+    if obj_check_if_collided_with_object(o, m.marioObj) == 1 and o.oAction == 1 and o.oTimer < 120 then
         m.health = 0xff
         obj_mark_for_deletion(o)
         play_sound(SOUND_GENERAL_COLLECT_1UP, gGlobalSoundSource)
-    elseif dist_between_objects(m.marioObj, o) > 120 and o.oAction == 1 and o.oTimer == 150 then
+    elseif o.oAction == 1 and o.oTimer == 150 then
         local_play(sFart, o.header.gfx.pos, 2)
         obj_mark_for_deletion(o)
     end
-end
 
-function bhv_custom_cork_box(o)
-    local m = gMarioStates[0]
-
-    if m.heldObj == o then
-        o.parentObj = m.marioObj
-    end
-
-    if o.parentObj == nil then
-        o.parentObj = o.parentObj
-    end
-
-    if o.parentObj == m.marioObj then
-        o.oRouletteRoll = 1
-    end
-
-    if o.oRouletteRoll == 1 then
-        o.oRouletteTimer = math.max(0, o.oRouletteTimer - 1)
-        if o.oRouletteTimer == 81 then
-            network_play(sRouletteRoll, m.pos, 1, m.playerIndex)
-        end
-
-        -- BRUHHHH WHY WONT TABLES WORK
-        if o.oRouletteTimer == 81 or
-        o.oRouletteTimer == 61 or
-        o.oRouletteTimer == 41 or
-        o.oRouletteTimer == 21 or
-        o.oRouletteTimer == 1 then
-            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
-            obj_set_model_extended(o, E_MODEL_CHUCKYA)
-            o.oAnimations = gObjectAnimations.chuckya_seg8_anims_0800C070
-            --o.animIndex = 4
-        elseif o.oRouletteTimer == 79 or
-        o.oRouletteTimer == 59 or
-        o.oRouletteTimer == 39 or
-        o.oRouletteTimer == 19 then
-            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
-            obj_set_model_extended(o, E_MODEL_1UP)
-        elseif o.oRouletteTimer == 77 or
-        o.oRouletteTimer == 57 or
-        o.oRouletteTimer == 37 or
-        o.oRouletteTimer == 17 then
-            obj_set_model_extended(o, E_MODEL_RED_COIN)
-            elseif o.oRouletteTimer == 75 or
-        o.oRouletteTimer == 55 or
-        o.oRouletteTimer == 35 or
-        o.oRouletteTimer == 15 then
-            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
-            obj_set_model_extended(o, E_MODEL_FLYGUY)
-            elseif o.oRouletteTimer == 73 or
-        o.oRouletteTimer == 53 or
-        o.oRouletteTimer == 33 or
-        o.oRouletteTimer == 13 then
-            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
-            obj_set_model_extended(o, E_MODEL_BACKROOM_SMILER)
-            elseif o.oRouletteTimer == 71 or
-        o.oRouletteTimer == 51 or
-        o.oRouletteTimer == 31 or
-        o.oRouletteTimer == 11 then
-            obj_set_model_extended(o, E_MODEL_YELLOW_COIN)
-            elseif o.oRouletteTimer == 69 or
-        o.oRouletteTimer == 49 or
-        o.oRouletteTimer == 29 or
-        o.oRouletteTimer == 9 then
-            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
-            obj_set_model_extended(o, E_MODEL_STAR)
-            elseif o.oRouletteTimer == 67 or
-        o.oRouletteTimer == 47 or
-        o.oRouletteTimer == 27 or
-        o.oRouletteTimer == 7 then
-             obj_scale(o, 0.5)
-            obj_set_model_extended(o, E_MODEL_THWOMP)
-            elseif o.oRouletteTimer == 65 or
-        o.oRouletteTimer == 45 or
-        o.oRouletteTimer == 25 or
-        o.oRouletteTimer == 5 then
-             obj_scale(o, 1)
-            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
-            obj_set_model_extended(o, E_MODEL_BLACK_BOBOMB)
-            elseif o.oRouletteTimer == 63 or
-        o.oRouletteTimer == 43 or
-        o.oRouletteTimer == 23 or
-        o.oRouletteTimer == 3 then
-            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
-            obj_set_model_extended(o, E_MODEL_TRANSPARENT_STAR)
-        end
-
-        if o.oRouletteTimer == 1 then
-            network_play(sRouletteEnd, m.pos, 1, m.playerIndex)
-        end
-    else
-        o.oRouletteTimer = 82
-    end
-
-    if o.oRouletteTimer == 0 then
-        if m.heldObj == nil then
-            mario_drop_held_object(m)
-        end
-        spawn_mist_particles()
-        spawn_triangle_break_particles(20, 138, 0.7, 3)
-        create_sound_spawner(SOUND_GENERAL_BREAK_BOX)
-        o.activeFlags = ACTIVE_FLAG_DEACTIVATED
-
-        local rng = 10
-        if rng == 1 then -- SPAWNS CHUCKYA
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 2 then -- SPAWNS GREEN DEMON
-            spawn_non_sync_object(id_bhvHidden1upInPole, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 3 then -- MOVES ALL RED COINS TO PLAYER POSITION
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 4 then -- SPAWNS FLYGUY
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 5 then -- REDUCE VISION AND SPAWNS SMILER (maybe use for difficulty choice as well)
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 6 then -- JACKPOT
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 7 then -- MOVES ONE STAR TO PLAYER POSITION
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 8 then -- SPAWNS A THWOMP ABOVE THE PLAYER (yes its an instakil)
-            spawn_non_sync_object(id_bhvThwomp, E_MODEL_THWOMP, m.pos.x, m.pos.y + 600, m.pos.z, function() end)
-        elseif rng == 9 then -- SPAWNS A PRIMED BOB-OMB
-            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
-        elseif rng == 10 then -- SPAWN A DEADLY STAR (romhack fake stars but it kills you (double gamba))
-            spawn_non_sync_object(id_bhvDeadlyStar, E_MODEL_STAR,  m.pos.x, m.pos.y + 300, m.pos.z, function() end)
-        end
-    end
---[[     djui_chat_message_create(tostring(o.oRouletteRoll))
-    djui_chat_message_create(tostring(o.oRouletteTimer)) ]]
-end
-
-local function custom_deadly_star_init(o)
-
-end
-
-local function custom_deadly_star_loop(o)
-    local m = nearest_mario_state_to_object(o)
-    local dist = dist_between_objects(o, m.marioObj)
-    if dist < 150 then
-        set_mario_action(m, ACT_SHOCKED_DEATH, 0)
-        m.vel.y = -45
-    end
 end
 
 function castle_boo_init(o) -- Move the castle Boo further from the door to eventually start on the boo rushdown possession kill
@@ -4069,6 +3923,197 @@ local function bhv_custom_waterbomb_cannon_loop(o)
     end
 end
 
+function bhv_custom_cork_box(o)
+    local m = nearest_mario_state_to_object(o)
+
+    if m.heldObj == o then
+        o.parentObj = m.marioObj
+    end
+
+    if o.parentObj == nil then
+        o.parentObj = o.parentObj
+    end
+
+    if o.parentObj == m.marioObj then
+        o.oRouletteRoll = 1
+    end
+
+    if o.oRouletteRoll == 1 then
+        o.oRouletteTimer = math.max(0, o.oRouletteTimer - 1)
+        if o.oRouletteTimer == 81 then
+            network_play(sRouletteRoll, m.pos, 1, m.playerIndex)
+        end
+
+        -- BRUHHHH WHY WONT TABLES WORK
+        if o.oRouletteTimer == 81 or
+        o.oRouletteTimer == 61 or
+        o.oRouletteTimer == 41 or
+        o.oRouletteTimer == 21 or
+        o.oRouletteTimer == 1 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_CHUCKYA)
+            o.oAnimations = gObjectAnimations.chuckya_seg8_anims_0800C070
+            --o.animIndex = 4
+        elseif o.oRouletteTimer == 79 or
+        o.oRouletteTimer == 59 or
+        o.oRouletteTimer == 39 or
+        o.oRouletteTimer == 19 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_1UP)
+        elseif o.oRouletteTimer == 77 or
+        o.oRouletteTimer == 57 or
+        o.oRouletteTimer == 37 or
+        o.oRouletteTimer == 17 then
+            obj_set_model_extended(o, E_MODEL_RED_COIN)
+            elseif o.oRouletteTimer == 75 or
+        o.oRouletteTimer == 55 or
+        o.oRouletteTimer == 35 or
+        o.oRouletteTimer == 15 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_FLYGUY)
+            elseif o.oRouletteTimer == 73 or
+        o.oRouletteTimer == 53 or
+        o.oRouletteTimer == 33 or
+        o.oRouletteTimer == 13 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_BACKROOM_SMILER)
+            elseif o.oRouletteTimer == 71 or
+        o.oRouletteTimer == 51 or
+        o.oRouletteTimer == 31 or
+        o.oRouletteTimer == 11 then
+            obj_set_model_extended(o, E_MODEL_YELLOW_COIN)
+            elseif o.oRouletteTimer == 69 or
+        o.oRouletteTimer == 49 or
+        o.oRouletteTimer == 29 or
+        o.oRouletteTimer == 9 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_STAR)
+            elseif o.oRouletteTimer == 67 or
+        o.oRouletteTimer == 47 or
+        o.oRouletteTimer == 27 or
+        o.oRouletteTimer == 7 then
+             obj_scale(o, 0.5)
+            obj_set_model_extended(o, E_MODEL_THWOMP)
+            elseif o.oRouletteTimer == 65 or
+        o.oRouletteTimer == 45 or
+        o.oRouletteTimer == 25 or
+        o.oRouletteTimer == 5 then
+             obj_scale(o, 1)
+            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_BLACK_BOBOMB)
+            elseif o.oRouletteTimer == 63 or
+        o.oRouletteTimer == 43 or
+        o.oRouletteTimer == 23 or
+        o.oRouletteTimer == 3 then
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_BILLBOARD
+            obj_set_model_extended(o, E_MODEL_TRANSPARENT_STAR)
+        end
+    else
+        o.oRouletteTimer = 82
+    end
+
+    -- wall collision also triggers roulette to end
+    local objX = o.oPosX
+    local objY = o.oPosY
+    local objZ = o.oPosZ
+    local objVelX = o.oForwardVel * sins(o.oMoveAngleYaw)
+    local objVelZ = o.oForwardVel * coss(o.oMoveAngleYaw)
+    if obj_find_wall(objX + objVelX, objY, objZ + objVelZ, objVelX, objVelZ) == 0 then
+        o.oRouletteTimer = 0
+        audio_sample_stop(gSamples[sRouletteRoll])
+    end
+
+    if o.oRouletteTimer == 0 then
+        if m.heldObj == nil then
+            mario_drop_held_object(m)
+        end
+        network_play(sRouletteEnd, m.pos, 1, m.playerIndex)
+        spawn_mist_particles()
+        spawn_triangle_break_particles(20, 138, 0.7, 3)
+        create_sound_spawner(SOUND_GENERAL_BREAK_BOX)
+        o.activeFlags = ACTIVE_FLAG_DEACTIVATED
+
+        local rng = 7 --math.random(10)
+        if rng == 1 then -- SPAWNS CHUCKYA
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 2 then -- SPAWNS GREEN DEMON
+            spawn_non_sync_object(id_bhvHidden1upInPole, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 3 then -- MOVES ALL RED COINS TO PLAYER POSITION
+            local obj = obj_get_first_with_behavior_id(id_bhvRedCoin)
+            while obj do
+                obj.oPosX = m.pos.x
+                obj.oPosY = m.pos.y + 300
+                obj.oPosZ = m.pos.z
+                spawn_mist_particles()
+                obj = obj_get_next_with_same_behavior_id(obj)
+            end
+        elseif rng == 4 then -- SPAWNS 2 FLYGUYS (i dont understanad why they wont spit fire)
+            spawn_non_sync_object(id_bhvFlyGuy, E_MODEL_FLYGUY, o.oPosX, o.oPosY + 500, o.oPosZ, function(f) end)
+            spawn_non_sync_object(id_bhvFlyGuy, E_MODEL_FLYGUY, o.oPosX, o.oPosY + 700, o.oPosZ, function(f) end)
+        elseif rng == 5 then -- REDUCE VISION AND SPAWNS SMILER (maybe use for difficulty choice as well)
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 6 then -- JACKPOT
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 7 then -- MOVES ONE STAR TO PLAYER POSITION
+            local obj = behavior_id
+            if obj and obj.oBehParams2ndByte == 11 then
+                obj.oPosX = m.pos.x
+                obj.oPosY = m.pos.y + 500
+                obj.oPosZ = m.pos.z
+            end
+        elseif rng == 8 then -- SPAWNS A THWOMP ABOVE THE PLAYER (yes its an instakil)
+            spawn_non_sync_object(id_bhvThwompEvent, E_MODEL_THWOMP, m.pos.x, m.pos.y + 1500, m.pos.z, function() end)
+        elseif rng == 9 then -- SPAWNS A PRIMED BOB-OMB
+            spawn_non_sync_object(id_bhvChuckya, E_MODEL_CHUCKYA, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        elseif rng == 10 then -- SPAWN A DEADLY STAR (romhack fake stars but it kills you (double gamba))
+            spawn_non_sync_object(id_bhvDeadlyStar, E_MODEL_STAR,  m.pos.x, m.pos.y + 300, m.pos.z, function() end)
+        end
+    end
+--[[     djui_chat_message_create(tostring(o.oRouletteRoll))
+    djui_chat_message_create(tostring(o.oRouletteTimer)) ]]
+end
+
+local function custom_deadly_star_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    local dist = dist_between_objects(o, m.marioObj)
+    if dist < 150 then
+        set_mario_action(m, ACT_SHOCKED_DEATH, 0)
+        m.vel.y = -45
+    end
+end
+
+local function cork_thwomp_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+    --o.collisionData = gGlobalObjectCollisionData.thwomp_seg5_collision_0500B7D0 -- i have no idea how to get collision to work
+    o.oAction = 0
+
+    o.oHomeX = o.oPosX
+    o.oHomeY = o.oPosY - 1500
+    o.oHomeZ = o.oPosZ
+
+    obj_scale(o, 1.75)
+end
+
+local function cork_thwomp_loop(o)
+    local m = nearest_mario_state_to_object(o)
+    if o.oAction == 0 then
+        o.oAction = 1
+    end
+    if o.oAction == 1 then
+        o.oPosY = o.oPosY - 150
+        if dist_between_objects(m.marioObj, o) < 400 and m.pos.y < o.oPosY then
+            m.squishTimer = 50
+        end
+        if o.oPosY == o.oHomeY then
+            local m = gMarioStates[0]
+            play_sound(SOUND_OBJ_THWOMP, m.marioObj.header.gfx.cameraToObject)
+            spawn_triangle_break_particles(20, 138, 3, 2)
+            obj_mark_for_deletion(o)
+        end
+    end
+end
+
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
@@ -4165,7 +4210,7 @@ hook_gore_behavior(id_bhvTree, false, nil, bhv_custom_tree)
 hook_gore_behavior(id_bhvWhompKingBoss, false, nil, bhv_custom_kingwhomp)
 hook_gore_behavior(id_bhvKingBobomb, false, nil, bhv_custom_kingbobomb)
 hook_gore_behavior(id_bhvSmallWhomp, false, nil, bhv_custom_whomp)
-hook_gore_behavior(id_bhvThwomp, false, nil, bhv_custom_thwomp)
+hook_gore_behavior(id_bhvThwomp, false, bhv_custom_thwomp_init, bhv_custom_thwomp)
 hook_gore_behavior(id_bhvThwomp2, false, nil, bhv_custom_thwomp)
 hook_gore_behavior(id_bhvPitBowlingBall, false, nil, bhv_custom_pitbowlball)
 hook_gore_behavior(id_bhvBowlingBall, false, nil, bhv_custom_bowlball)
@@ -4223,4 +4268,5 @@ id_bhvSnowPile = hook_behavior(nil, OBJ_LIST_GENACTOR, true, snow_pile_init, sno
 id_bhvSnowGib = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, snow_gib_init, snow_gib_loop, "bhvSnowGib")
 id_bhvFireworkSparkle = hook_behavior (nil, OBJ_LIST_UNIMPORTANT, true, bhv_firework_sparkle_init, bhv_firework_sparkle_loop, "bhvFireworkSpark")
 id_bhvWaterBombExplosionParticles = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, water_bomb_spawn_explode_particles_init, water_bomb_spawn_explode_particles_loop, "bhvWaterBombExplosionParticles")
-id_bhvDeadlyStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, custom_deadly_star_init, custom_deadly_star_loop, "bhvDeadlyStar")
+id_bhvDeadlyStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, nil, custom_deadly_star_loop, "bhvDeadlyStar")
+id_bhvThwompEvent = hook_behavior(nil, OBJ_LIST_SURFACE, true, cork_thwomp_init, cork_thwomp_loop, "bhvThwompEvent")
