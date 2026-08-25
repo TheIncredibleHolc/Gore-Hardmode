@@ -53,7 +53,7 @@ local function bhv_custom_kingwhomp(o)
         cur_obj_scale(.2)
     end
     if o.oHealth == 2 then
-        local whompblood = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, o.oPosX, o.oPosY + 1, o.oPosZ, nil)
+        local whompblood = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, o.oPosX, o.oPosY + 1, o.oPosZ, function() end)
         obj_scale(whompblood, .4)
         local_play(sSplatter, m.pos, 1)
         --play_sound_with_freq_scale(SOUND_OBJ_KING_WHOMP_DEATH, m.marioObj.header.gfx.cameraToObject, 3.0)
@@ -62,7 +62,7 @@ local function bhv_custom_kingwhomp(o)
         spawn_default_star(m.pos.x, m.pos.y + 200, m.pos.z)
     end
     if o.oMoveFlags & OBJ_MOVE_LANDED ~= 0 and o.oHealth >= 2 then
-        spawn_sync_object(id_bhvBowserShockWave, E_MODEL_BOWSER_WAVE, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_sync_object(id_bhvBowserShockWave, E_MODEL_BOWSER_WAVE, o.oPosX, o.oPosY, o.oPosZ, function() end)
     end
     
     if o.oAction == 6 and o.oTimer == 35 then
@@ -92,11 +92,11 @@ local function bhv_custom_kingbobomb(o)
         gBehaviorValues.KingBobombFVel = fVelocities[index]
         gBehaviorValues.KingBobombYawVel = yawVelocities[index]
     elseif o.oHealth == 1 then
-        local bobsplat = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, o.oPosX, o.oPosY + 1, o.oPosZ, nil)
+        local bobsplat = spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, o.oPosX, o.oPosY + 1, o.oPosZ, function() end)
         obj_scale(bobsplat, .4)
         local_play(sSplatter, m.pos, 1)
-        spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
-        spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, function() end)
         o.oTimer = 0
         cur_obj_disable_rendering_and_become_intangible(o)
         o.oHealth = 8
@@ -298,7 +298,7 @@ end
 local function bhv_coin_sparkles_init(o)
     --if o == nil then return end
     if (o.oInteractStatus & INT_STATUS_INTERACTED and (o.oInteractStatus & INT_STATUS_TOUCHED_BOB_OMB) ~= true) then
-        --spawn_sync_object(id_bhvGoldenCoinSparkles, E_MODEL_SPARKLES, o.oPosX, o.oPosY, o.oPosZ, nil)
+        --spawn_sync_object(id_bhvGoldenCoinSparkles, E_MODEL_SPARKLES, o.oPosX, o.oPosY, o.oPosZ, function() end)
         --obj_mark_for_deletion(o)
         return 1
     end
@@ -342,7 +342,7 @@ local function bhv_custom_coins(o)
     local mObj = m.marioObj
     local dist = dist_between_objects(mObj, o)
     if dist < 500 and obj_has_behavior_id(o, id_bhvCoinFormationSpawn) ~= 0 then
-        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, o.oPosX, o.oPosY, o.oPosZ, function() end)
         obj_mark_for_deletion(o)
         local_play(sFart, m.pos, 1)
     end
@@ -479,7 +479,7 @@ local function bhv_custom_chain_chomp(o)
             play_puzzle_jingle()
             network_play(sBurp, m.pos, 1, m.playerIndex)
             play_sound(SOUND_MENU_COLLECT_SECRET, m.pos)
-            spawn_non_sync_object(id_bhvMistParticleSpawner, E_MODEL_MIST, 272, 975, 1914, nil)
+            spawn_non_sync_object(id_bhvMistParticleSpawner, E_MODEL_MIST, 272, 975, 1914, function() end)
             spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 272, 975, 1914, function(t)
                 t.oBehParams = 7 << 16 | 1
             end)
@@ -489,7 +489,7 @@ local function bhv_custom_chain_chomp(o)
         if o.oTimer >= 117 then
             local m = nearest_mario_state_to_object(o)
             squishblood(o)
-            local chompmist = spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+            local chompmist = spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, function() end)
             obj_scale(chompmist, 3)
             set_camera_shake_from_hit(SHAKE_LARGE_DAMAGE)
             local_play(sSplatter, m.pos, 1)
@@ -850,7 +850,7 @@ local function bhv_custom_tree(o) -- Trees shoot into the sky until blowing up a
     if o.oAction == 2 and o.oTimer < 50 then
         o.oPosY = o.oPosY + 50
         if o.oTimer % 5 == 0 then
-            spawn_non_sync_object(id_bhvFireworkSparkle, E_MODEL_YOSHI_EGG, o.oPosX, o.oPosY, o.oPosZ, nil)
+            spawn_non_sync_object(id_bhvFireworkSparkle, E_MODEL_YOSHI_EGG, o.oPosX, o.oPosY, o.oPosZ, function() end)
         end
     elseif o.oAction == 2 and o.oTimer == 50 then
         obj_spawn_yellow_coins(o, 3)
@@ -1288,7 +1288,7 @@ local function bhv_backroom_loop(o)
         local_play(sSmiler, o.header.gfx.pos, .6)
     end
     if o.oTimer == 1300 then
-        spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, 0, 10700, 0, nil)
+        spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, 0, 10700, 0, function() end)
     end
     if cur_obj_is_any_player_on_platform() ~= 0 then
         o.oSubAction = 0
@@ -1452,7 +1452,7 @@ local function bhv_custom_tuxie(o)
                 squishblood(o)
                 local_play(sSplatter, o.header.gfx.pos, 1)
             end
-            spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+            spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, function() end)
             cur_obj_shake_screen(SHAKE_POS_SMALL)
             obj_mark_for_deletion(o)
             s.penguindaysnumbered = false
@@ -1563,7 +1563,7 @@ local function bhv_goalpost_loop(o)
     if tuxie and o.oTimer > 60 and obj_check_hitbox_overlap(o, tuxie) then --GRANT TROPHY #9
         local troph = obj_get_first_with_behavior_id(id_bhvTrophy)
         if troph == nil then
-            spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, nil)
+            spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, 5104, -4577, 1435, function() end)
             spawn_sync_object(id_bhvTrophy, E_MODEL_GOALPOST, 5104, -4577, 1435, function(t)
                 t.oBehParams = 9 << 16 | 1
                 if mod_storage_load("fieldgoal") == "1" then
@@ -1746,7 +1746,7 @@ local function bhv_custom_yoshi(o)
                 squishblood(o)
                 local_play(sSplatter, o.header.gfx.pos, 1)
             end
-            spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+            spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, function() end)
             cur_obj_shake_screen(SHAKE_POS_SMALL)
             obj_mark_for_deletion(o)
         end
@@ -1876,7 +1876,7 @@ local function stopwatch_loop(o)
     o.oFaceAngleYaw = o.oFaceAngleYaw + 1500
     cur_obj_wait_then_blink(120, 20)
     if o.oTimer >= 180 and o.oAction == 0 then
-        spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, function() end)
         obj_mark_for_deletion(o)
         local_play(sFart, m.pos, 1)
     end
@@ -1885,7 +1885,7 @@ local function stopwatch_loop(o)
         play_sound(SOUND_GENERAL_RACE_GUN_SHOT, m.pos)
         play_secondary_music(0, 0, 0, 20)
         stream_play(timeattack)
-        spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, function() end)
         cur_obj_disable_rendering()
         o.oTimer = 0
         o.oAction = 1
@@ -1903,7 +1903,7 @@ local function stopwatch_loop(o)
         t = obj_get_nearest_object_with_behavior_id(o, id_bhvTrophy)
         if t then
             local_play(sFart, m.pos, 1)
-            spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, t.oPosX, t.oPosY, t.oPosZ, nil)
+            spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, t.oPosX, t.oPosY, t.oPosZ, function() end)
             s.timeattack = false
             obj_mark_for_deletion(t.parentObj)
             obj_mark_for_deletion(t)
@@ -2392,7 +2392,7 @@ local function star_door_loop_1(o)
             o.oBloody = 1
             --play_sound(SOUND_MARIO_ATTACKED, {x=0,y=0,z=0})
             --local_play(sSplatter, m.pos, 0.5)
-            --spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+            --spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, function() end)
             --squishblood(m.marioObj)
             --set_mario_action(m, ACT_DISAPPEARED, 0)
             m.squishTimer = 50
@@ -2488,7 +2488,7 @@ local function lantern_init(o)
     o.oBounciness = 1
     o.oBuoyancy = 1.4
     --network_init_object(o, true, nil)
-    spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, nil)
+    spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, function() end)
 end
 
 local function lantern_loop(o)
@@ -2568,7 +2568,7 @@ local function lantern_loop(o)
         local smiler = obj_get_nearest_object_with_behavior_id(o, id_bhvBackroomSmiler)
         if smiler == nil and not s.hasNightvision and m.action ~= ACT_BITTEN_IN_HALF then
             play_secondary_music(0,0,0,60)
-            spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, o.oPosX, o.oPosY, o.oPosZ, nil)
+            spawn_non_sync_object(id_bhvBackroomSmiler, E_MODEL_BACKROOM_SMILER, o.oPosX, o.oPosY, o.oPosZ, function() end)
         end
     end
 end
@@ -2578,7 +2578,7 @@ function bobomb_lantern_init(o)
     if o.oBehParams == 20 then
         o.oFlags = OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_HOLDABLE | OBJ_COL_FLAG_GROUNDED | OBJ_FLAG_HOLDABLE
         o.oInteractType = INTERACT_GRABBABLE
-        spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_non_sync_object(id_bhvGlow, E_MODEL_GSCHARGE, o.oPosX, o.oPosY, o.oPosZ, function() end)
     end
 end
 
@@ -2955,7 +2955,7 @@ local function HackerSM64_mr_i_pitch_shooting(particle, o) --Thx HackerSM64 devs
 end
 
 local function spawn_more_mr_i_particles(index, o)
-    local particle = spawn_sync_object(id_bhvMrIParticle, E_MODEL_PURPLE_MARBLE, o.oPosX, o.oPosY, o.oPosZ, nil)
+    local particle = spawn_sync_object(id_bhvMrIParticle, E_MODEL_PURPLE_MARBLE, o.oPosX, o.oPosY, o.oPosZ, function() end)
     particle.oMoveAngleYaw = o.oMoveAngleYaw
     particle.oMoveAnglePitch = o.oMoveAnglePitch
     HackerSM64_mr_i_pitch_shooting(particle, o)
@@ -2990,7 +2990,7 @@ local function mr_i(o)
             --end
             if o.oUnk1A8 == --[[o.oMrIUnk108 +]] 20 then
                 --spawn_mr_i_particle()
-                particle = spawn_sync_object(id_bhvMrIParticle, E_MODEL_PURPLE_MARBLE, o.oPosX, o.oPosY, o.oPosZ, nil)
+                particle = spawn_sync_object(id_bhvMrIParticle, E_MODEL_PURPLE_MARBLE, o.oPosX, o.oPosY, o.oPosZ, function() end)
                 particle.oMoveAngleYaw = o.oMoveAngleYaw
                 particle.oMoveAnglePitch = o.oMoveAnglePitch
                 HackerSM64_mr_i_pitch_shooting(particle, o)
@@ -3066,7 +3066,7 @@ local function koopatheQUICC(o)
     end
     if o.oForwardVel >= 50 and o.oKoopaMovementType >= KOOPA_BP_KOOPA_THE_QUICK_BASE and
     obj_get_nearest_object_with_behavior_id(o, id_bhvRacerHitbox) == nil then
-        spawn_non_sync_object(id_bhvRacerHitbox, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_non_sync_object(id_bhvRacerHitbox, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function() end)
     -- Normal Koopa
     -- It will run away from mario without stopping if mario is near enough
     elseif o.oKoopaMovementType == KOOPA_BP_NORMAL then
@@ -3161,7 +3161,7 @@ local function exploding_jrb_rock_loop(o)
             play_sound(SOUND_GENERAL_LOUD_POUND, pos)
         end
         for i = 0, math.random(10, 20) do
-            spawn_sync_object(id_bhvRockShrapnel, E_MODEL_ROCK_SHRAPNEL, o.oPosX, o.oPosY - 200, o.oPosZ, nil)
+            spawn_sync_object(id_bhvRockShrapnel, E_MODEL_ROCK_SHRAPNEL, o.oPosX, o.oPosY - 200, o.oPosZ, function() end)
         end
         obj_mark_for_deletion(o)
     end
@@ -3237,7 +3237,7 @@ function pokey_body_part(o)
             o.oTimer = 0
             if o.oPosY + 60 >= m.pos.y and o.oPosY + 60 <= m.pos.y + 160 then
                 cur_obj_play_sound_2(SOUND_OBJ_SNUFIT_SHOOT)
-                spawn_non_sync_object(id_bhvPokeySpike, E_MODEL_SPINY_BALL, o.oPosX, o.oPosY + 60, o.oPosZ, nil)
+                spawn_non_sync_object(id_bhvPokeySpike, E_MODEL_SPINY_BALL, o.oPosX, o.oPosY + 60, o.oPosZ, function() end)
             end
         end
     end
@@ -3773,7 +3773,7 @@ end
 
 local function bhv_custom_bobomb_buddy(o)
     if o.oPrevAction == 3 and o.oAction == 0 then
-        spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_sync_object(id_bhvExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, function() end)
         obj_mark_for_deletion(o)
     end
 end
@@ -3821,7 +3821,7 @@ local function custom_water_bomb_explosion_particles(o, amount)
     local m = gMarioStates[0]
     for i = 0, amount do
         if m.playerIndex ~= 0 then return end
-        spawn_non_sync_object(id_bhvWaterBombExplosionParticles, E_MODEL_BUBBLE, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_non_sync_object(id_bhvWaterBombExplosionParticles, E_MODEL_BUBBLE, o.oPosX, o.oPosY, o.oPosZ, function() end)
     end
 end
 
@@ -4196,7 +4196,6 @@ local function coin_fountain_loop(o)
         local randomX = math.random(-500, 500)
         local randomZ = math.random(-500, 500)
         spawn_non_sync_object(chosenObj, chosenModel, o.oPosX + randomX, o.oPosY + 1500, o.oPosZ + randomZ, function() end)
-        
 
         if o.oTimer >= 100 then
             obj_mark_for_deletion(o)
@@ -4264,7 +4263,7 @@ hook_gore_behavior(id_bhvPiranhaPlant, false, nil, piranha_plant)
 hook_gore_behavior(id_bhvPokeyBodyPart, false, nil, pokey_body_part)
 hook_gore_behavior(id_bhvWaterLevelDiamond, false, nil, waterdiamond)
 hook_gore_behavior(id_bhvClamShell, false, nil, clam_shell_loop)
-hook_gore_behavior(id_bhvTreasureChestBottom, false, chest_bottom_init, nil)
+hook_gore_behavior(id_bhvTreasureChestBottom, false, chest_bottom_init, function() end)
 hook_gore_behavior(id_bhvRockSolid, false, nil, exploding_jrb_rock_loop)
 hook_gore_behavior(id_bhvKoopa, false, nil, koopatheQUICC)
 hook_gore_behavior(id_bhvBitfsTiltingInvertedPyramid, false, nil, invertedpyramid)
@@ -4354,7 +4353,7 @@ hook_gore_behavior(id_bhvThwomp2, false, nil, bhv_custom_thwomp)
 hook_gore_behavior(id_bhvPitBowlingBall, false, nil, bhv_custom_pitbowlball)
 hook_gore_behavior(id_bhvBowlingBall, false, nil, bhv_custom_bowlball)
 hook_gore_behavior(id_bhvBobBowlingBallSpawner, false, nil, bhv_custom_bowlballspawner)
-hook_gore_behavior(id_bhvExplosion, false, bhv_custom_explosion, nil)
+hook_gore_behavior(id_bhvExplosion, false, bhv_custom_explosion, function() end)
 hook_gore_behavior(id_bhvBobomb, false, nil, bobomb_loop)
 hook_gore_behavior(id_bhvGoomba, false, nil, bhv_custom_goomba_loop)
 hook_event(HOOK_ALLOW_INTERACT, goom_int)

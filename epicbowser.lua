@@ -104,12 +104,12 @@ function grand_star_init(o)
 
     o.oFlags = (OBJ_FLAG_MOVE_XZ_USING_FVEL | OBJ_FLAG_ACTIVE_FROM_AFAR | OBJ_FLAG_COMPUTE_DIST_TO_MARIO | OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE)
     --o.oInteractType = INTERACT_DAMAGE
-    spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, 0, 0, 0, nil)
+    spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, 0, 0, 0, function() end)
     set_override_envfx(ENVFX_LAVA_BUBBLES)
-    --spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, o.oPosX, 250, o.oPosY, nil) 
-    spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, offset - 9500, 0, nil)
-    spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, offset + 500, 0, nil)
-    spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, nil)
+    --spawn_non_sync_object(id_bhvGrandStarShadow, E_MODEL_GSSHADOW, o.oPosX, 250, o.oPosY, function() end) 
+    spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, offset - 9500, 0, function() end)
+    spawn_non_sync_object(id_bhvSkybox2, E_MODEL_SKYBOX2, 0, offset + 500, 0, function() end)
+    spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, function() end)
     spawn_non_sync_object(id_bhvStaticObject, E_MODEL_RING, 0, offset - 300, 0, function(obj)
         obj_scale(obj, 0.6)
         obj.header.gfx.skipInViewCheck = true
@@ -156,7 +156,7 @@ function act_intro(o) --Spawns GS, starts the fight.
     obj_move(o)
     if o.oTimer <= 1 then
         spawn_mist_particles()
-        spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX - 15, o.oPosY, o.oPosZ, nil)
+        spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX - 15, o.oPosY, o.oPosZ, function() end)
         cur_obj_play_sound_2(SOUND_GENERAL_GRAND_STAR)
         o.oForwardVel = 0
         o.oVelY = 60
@@ -628,7 +628,7 @@ end
 function minion_act_shockwave(o)
     if o.oAction == STAR_MINION_ACT_SHOCKWAVE then
         if o.oTimer == 1 then
-            spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, nil)
+            spawn_non_sync_object(id_bhvLightning, E_MODEL_LIGHTNING, o.oPosX, o.oPosY + 550, o.oPosZ, function() end)
         end
         obj_move(o)
         o.oFaceAngleYaw = o.oFaceAngleYaw + 0x800
@@ -638,7 +638,7 @@ function minion_act_shockwave(o)
         end
         if o.oPosY <= o.oFloorHeight and o.oTimer >= 2.5 then
             -- Create a shockwave when landing
-            spawn_non_sync_object(id_bhvBowserShockWave, E_MODEL_BOWSER_WAVE, o.oPosX, 320, o.oPosZ, nil)
+            spawn_non_sync_object(id_bhvBowserShockWave, E_MODEL_BOWSER_WAVE, o.oPosX, 320, o.oPosZ, function() end)
             spawn_mist_particles_variable(0, 0, 200.0)
             spawn_triangle_break_particles(20, 138, 3.0, 4)
             cur_obj_shake_screen(SHAKE_POS_LARGE)
@@ -665,7 +665,7 @@ function spawn_explosion_ring(o, x, z, radius, numSegments)
         local angle = (i * (2 * math.pi) / numSegments)
         local spawnX = x + radius * math.cos(angle)
         local spawnZ = z + radius * math.sin(angle)
-        spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, spawnX, o.oPosY, spawnZ, nil)
+        spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, spawnX, o.oPosY, spawnZ, function() end)
 
     end
 end
@@ -729,7 +729,7 @@ end
 
 function small_explosion_loop(o)
     -- local m = nearest_mario_state_to_object(o)
-    spawn_sync_object(id_bhvSmoke, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, nil)
+    spawn_sync_object(id_bhvSmoke, E_MODEL_EXPLOSION, o.oPosX, o.oPosY, o.oPosZ, function() end)
     obj_mark_for_deletion(o)
 end
 

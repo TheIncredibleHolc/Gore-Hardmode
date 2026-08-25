@@ -252,7 +252,7 @@ end
 function squishblood(o) -- Creates instant pool of impact-blood under an object.
     local m = gMarioStates[0].playerIndex
     --local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
-    spawn_non_sync_object(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil)
+    spawn_non_sync_object(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, function() end)
     bloodmist(o)
     --djui_chat_message_create(tostring(count))
 
@@ -284,7 +284,7 @@ function gibs(o)
 end
 
 function bloodmist(o) -- Creates instant pool of impact-blood under mario.
-    spawn_non_sync_object(id_bhvBloodMist, E_MODEL_BLOOD_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+    spawn_non_sync_object(id_bhvBloodMist, E_MODEL_BLOOD_MIST, o.oPosX, o.oPosY, o.oPosZ, function() end)
 end
 
 function splattertimer(m) --This timer is needed to prevent mario from immediately splatting again right after respawning. Adds some fluff to his death too.
@@ -1123,7 +1123,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             m.health = 0xff
         end
         if racepen.oForwardVel >= 50 and obj_get_nearest_object_with_behavior_id(racepen, id_bhvRacerHitbox) == nil then
-            spawn_non_sync_object(id_bhvRacerHitbox, E_MODEL_NONE, racepen.oPosX, racepen.oPosY, racepen.oPosZ, nil)
+            spawn_non_sync_object(id_bhvRacerHitbox, E_MODEL_NONE, racepen.oPosX, racepen.oPosY, racepen.oPosZ, function() end)
         end
     end
   ----------------------------------------------------------------------------------------------------------------------------------
@@ -1574,7 +1574,7 @@ function hook_update()
 
                 if s.snowtimer == 3 then -- snow indicator
                     if ceilHeight <= 2000 or (within_wkww and m.ceil ~= nil) then return else
-                        spawn_sync_object(id_bhvSnowPile, E_MODEL_SNOW_PILE, m.pos.x, m.pos.y, m.pos.z, nil)
+                        spawn_sync_object(id_bhvSnowPile, E_MODEL_SNOW_PILE, m.pos.x, m.pos.y, m.pos.z, function() end)
                         network_play(sCoWarn, m.pos, 1, m.playerIndex)
                     end
                 end
@@ -1656,7 +1656,7 @@ function hook_update()
                     m.health = m.health - 6
                 end   
                 while fire ~= nil do
-                    spawn_non_sync_object(id_bhvFakeFire, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, nil)  -- this is doing nothing
+                    spawn_non_sync_object(id_bhvFakeFire, E_MODEL_RED_FLAME, m.pos.x, m.pos.y, m.pos.z, function() end)  -- this is doing nothing
                 end
             elseif np.currLevelNum == LEVEL_COTMC and m.flags & MARIO_METAL_CAP == 0 then
                 m.health = m.health - 16
@@ -1722,7 +1722,7 @@ function hook_update()
             if (s.highdeathtimer) == 1 and ia(m) then --initiates the 'high' music
                 fadeout_level_music(900)
                 stream_play(highmusic)
-                spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
+                spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, function() end)
             end
 
             --* need to rewrite this later
@@ -1736,8 +1736,8 @@ function hook_update()
                 s.highdeathtimer == 1000 or
                 s.highdeathtimer == 1100 or
                 s.highdeathtimer == 1200 then
-                    spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x + 5, m.pos.y - 5, m.pos.z + 5, nil)
-                    spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, nil)
+                    spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x + 5, m.pos.y - 5, m.pos.z + 5, function() end)
+                    spawn_non_sync_object(id_bhvButterfly, E_MODEL_BUTTERFLY, m.pos.x, m.pos.y, m.pos.z, function() end)
                 end
                 if s.highdeathtimer == 100 or --Spawns occasional coins spawn to keep Mario alive
                 s.highdeathtimer == 300 or
@@ -1855,9 +1855,9 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
         local_play(sSplatter, m.pos, 1)
         local_play(sKillYoshi, m.pos, 1)
         for i = 0, 100 do
-            spawn_sync_object(id_bhvBouncy1up, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, nil)
+            spawn_sync_object(id_bhvBouncy1up, E_MODEL_1UP, o.oPosX, o.oPosY, o.oPosZ, function() end)
         end
-        spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, nil)
+        spawn_sync_object(id_bhvMistCircParticleSpawner, E_MODEL_MIST, o.oPosX, o.oPosY, o.oPosZ, function() end)
         spawn_sync_object(id_bhvTrophy, E_MODEL_YOSHI, o.oPosX, o.oPosY, o.oPosZ, function(t)
             t.oBehParams = 18 << 16 | 1
         end)
@@ -2056,7 +2056,7 @@ function before_mario_action(m, action)
          end)
         set_mario_action(m, ACT_GONE, 1)
         network_play(sSplash, m.pos, 1, m.playerIndex)
-        spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
+        spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, function() end)
         m.health = 0xff
         
         return 1
@@ -2140,7 +2140,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
                 set_mario_action(m, ACT_GONE, 1)
                 network_play(sSplash, m.pos, 1, m.playerIndex)
                 play_sound(SOUND_OBJ_BULLY_EXPLODE_2, m.pos)
-                spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, nil)
+                spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, function() end)
             end
         end
     end
@@ -2516,7 +2516,7 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
     local s1up = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1Up)
     local dist = dist_between_objects(mObj, s1up)
     if s1up and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --if local mario is touching 1up then
-        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, s1up.oPosX, s1up.oPosY, s1up.oPosZ, nil)
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, s1up.oPosX, s1up.oPosY, s1up.oPosZ, function() end)
         obj_mark_for_deletion(s1up)
         local_play(sFart, m.pos, 2)
     end 
@@ -2525,7 +2525,7 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
     local w1up = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1upWalking)
     local dist = dist_between_objects(mObj, w1up)
     if w1up and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x2
-        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, w1up.oPosX, w1up.oPosY, w1up.oPosZ, nil)
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, w1up.oPosX, w1up.oPosY, w1up.oPosZ, function() end)
         obj_mark_for_deletion(w1up)
         local_play(sFart, m.pos, 2)
     end
@@ -2534,7 +2534,7 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
     local r1up = obj_get_nearest_object_with_behavior_id(mObj, id_bhv1upRunningAway)
     local dist = dist_between_objects(mObj, r1up)
     if r1up and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x3
-        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, r1up.oPosX, r1up.oPosY, r1up.oPosZ, nil)
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, r1up.oPosX, r1up.oPosY, r1up.oPosZ, function() end)
         obj_mark_for_deletion(r1up)
         local_play(sFart, m.pos, 2)
     end
@@ -2543,7 +2543,7 @@ local function before_phys_step(m,stepType) --Called once per player per frame b
     local h1up = obj_get_nearest_object_with_behavior_id(mObj, id_bhvHidden1up)
     local dist = dist_between_objects(mObj, h1up)
     if h1up and np.currLevelNum ~= LEVEL_HELL and dist < 200 then --x4
-        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, h1up.oPosX, h1up.oPosY, h1up.oPosZ, nil)
+        spawn_sync_object(id_bhvWhitePuff1, E_MODEL_WHITE_PUFF, h1up.oPosX, h1up.oPosY, h1up.oPosZ, function() end)
         obj_mark_for_deletion(h1up)
         local_play(sFart, m.pos, 2)
     end
@@ -2693,87 +2693,14 @@ hook_event(HOOK_ON_LEVEL_INIT, function()
     end
 end)
 
-local function level_init_spawns()
-    if gGlobalSyncTable.romhackcompatibility then return end
-    local m = gMarioStates[0]
+hook_event(HOOK_ON_SYNC_VALID, function()
     local np = gNetworkPlayers[0]
-    local gorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
-    --local stonewall = obj_get_first_with_behavior_id(id_bhvStonewall)
-    local hellentrance = obj_get_first_with_behavior_id(id_bhvHellEntrance)
-    if np.currLevelNum == LEVEL_JRB then   
+    local syncFunc = sOnSyncValidtoFunc[np.currLevelNum]
 
-        if gorrie ~= nil then
-            --djui_chat_message_create('dorrie exists')
-        else
-            spawn_sync_object(id_bhvGorrie, E_MODEL_RED_DORRIE, -5269, 1050, 3750, nil)
-        end
-        --if stonewall ~= nil then
-            --djui_chat_message_create('stonewall exists')
-        --else
-            --spawn_sync_object(id_bhvStonewall, E_MODEL_STONEWALL, 6307, 1090, 2600, function (wall) 
-                --wall.oFaceAngleYaw = 0
-                --wall.oMoveAngleYaw = wall.oFaceAngleYaw
-                --obj_scale(wall, 1.4)
-            --end)
-        --end
+    if syncFunc and not gGlobalSyncTable.romhackcompatibility then
+        syncFunc()
     end
-    if np.currLevelNum == LEVEL_SECRETHUB and np.currAreaIndex == 1 then
-        if not hellentrance then
-            spawn_non_sync_object(id_bhvHellEntrance, E_MODEL_HELL_ENTRANCE, 895, 195, 388, nil)
-        end
-    end
-
-    if np.currLevelNum == LEVEL_HMC then
-        -- spawns coins to hint towards the new floor switch location
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4460, 4890, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4260, 4890, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -5321, -6327, 3500, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4900, -6327, 2220, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3500, -6327, 1750, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 2150, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -1760, -6327, 3630, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 4910, nil)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3560, -6327, 5330, nil)
-        spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3580, -5221, -825, function(f)
-            f.oBehParams2ndByte = 4
-            f.oFaceAngleYaw = 0
-            end)
-    elseif np.currLevelNum == LEVEL_BOB then
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6233, 975, 3337, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 3337, 791, 3265, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 4499, 768, 6669, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 5294, 1020, 5154, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6948, 873, 5019, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6394, 768, 6766, nil)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 2586, 768, 6719, nil)
-
-        spawn_sync_object(id_bhvCannonClosed, E_MODEL_DL_CANNON_LID, 4348, 3071, 1230, function(obj) obj.oFaceAngleYaw = 0 end)
-        spawn_sync_object(id_bhvCannon, E_MODEL_CANNON_BASE, 4352, 2732, 1229, function(obj) obj.oFaceAngleYaw = -32768 end)
-
-        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 5389, 1597, 4617, function(obj) obj.oWaterCannonUnk100 = -16384 obj.oMoveAngleYaw = -16384 end)
-        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, -5008, 1402, -3521, function(obj) obj.oWaterCannonUnk100 = 8192 obj.oMoveAngleYaw = 8192 end)
-        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 6350, 2150, -7072,  function(obj) obj.oWaterCannonUnk100 = -8192 obj.oMoveAngleYaw = -8192 end)
-        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 4248, 3141, -2456, function(obj) obj.oWaterCannonUnk100 = -4096 obj.oMoveAngleYaw = -4096 end)
-        if gNetworkPlayers[0].currActNum > 1 then
-            spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, -5694, 198, 5600, function(obj) obj.oWaterCannonUnk100 = 24576 obj.oMoveAngleYaw = 24576 end)
-        end
-    elseif np.currLevelNum == LEVEL_DDD then
-        --spawn_sync_object(id_bhvSwoop, E_MODEL_SWOOP, 4134, 1374, 394, nil)
-    elseif np.currLevelNum == LEVEL_LLL and np.currAreaIndex == 1 then 
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -5130, 560, -4080, nil)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 840, -7110, nil)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 6300, 740, -6565, nil)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 7168, 1000, 1400, nil)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 4064, 670, 6878, nil)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -3210, 80, 3460, function(r) r.oBehParams2ndByte = 10 end)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 1200, 6170, nil)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 720, -2330, nil)
-        spawn_sync_object(id_bhvBouncingFireball, E_MODEL_RED_FLAME, -760, 355, 5045, nil)
-    end
-end
-
-hook_event(HOOK_ON_SYNC_VALID, level_init_spawns)
+end)
 
 hook_event(HOOK_ON_WARP, function()
     local m = gMarioStates[0]
@@ -2902,7 +2829,7 @@ local function movesets_before_phys_step(m, stepType)
         if m.action == ACT_WALKING then
             m.forwardVel = math.min(m.forwardVel, 22)
         end
-        if m.action == ACT_LONG_JUMP or m.action == ACT_SLIDEKICK then
+        if m.action == ACT_LONG_JUMP or m.action == ACT_SLIDE_KICK then
             m.forwardVel = math.min(m.forwardVel, 32)
         end
         if m.action == ACT_DIVE then
@@ -3038,7 +2965,7 @@ local function movesets_update(m)
         if m.action == ACT_SIDE_FLIP and m.vel.y > 0 then
             m.vel.y = m.vel.y - 0.5
         end
-        if m.action == ACT_SLIDEKICK then
+        if m.action == ACT_SLIDE_KICK then
             m.vel.y = m.vel.y + 4
         end
 

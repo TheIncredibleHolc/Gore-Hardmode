@@ -651,15 +651,15 @@ sOnWarpToFunc = {
         --   dorrie.oPosY = dorrie.oPosY + 200
         --end
         set_water_level(0, -4900, false)
-        --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, -4897, gMarioStates[0].pos.z, nil)
+        --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, -4897, gMarioStates[0].pos.z, function() end)
     end,
 
     [LEVEL_LLL] = function()
         local np = gNetworkPlayers[0]
         if np.currAreaIndex == 2 and gGlobalSyncTable.gameisbeat then
             -- GRANT TROPHY #15
-            spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 1331, 4032, 1281, nil)
-            spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 493, 4532, 652, nil)
+            spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 1331, 4032, 1281, function() end)
+            spawn_non_sync_object(id_bhvHellPlatform1, E_MODEL_HELLPLATFORM, 493, 4532, 652, function() end)
             spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 493, 4640, 652, function(t)
                 t.oBehParams = 15 << 16 | 1
             end)
@@ -669,7 +669,7 @@ sOnWarpToFunc = {
     [LEVEL_SSL] = function()
         local np = gNetworkPlayers[0]
         if np.currAreaIndex == 2 and gMarioStates[0].playerIndex == 0 then
-            spawn_non_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 686, -1530, -2157, nil)
+            spawn_non_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 686, -1530, -2157, function() end)
         end
     end,
 
@@ -684,12 +684,12 @@ sOnWarpToFunc = {
         local np = gNetworkPlayers[0]
         if np.currAreaIndex == 1 then
             -- Spawns lava over water, unless inside the pirate ship.
-            --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1020, gMarioStates[0].pos.z, nil)
-            spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 1600, 1050, 5700, nil)
+            --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1020, gMarioStates[0].pos.z, function() end)
+            spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 1600, 1050, 5700, function() end)
             --if np.currActNum == 1 then
-                --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 6710, 1050, 4512, nil)
+                --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 6710, 1050, 4512, function() end)
             --else
-                --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 1976, 1050, 5734, nil)
+                --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 1976, 1050, 5734, function() end)
             --end 
             local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
             o.oPosY = o.oPosY + 21
@@ -775,7 +775,7 @@ sOnWarpToFunc = {
             spawn_non_sync_object(id_bhvTrophy, E_MODEL_NONE, 5514, 1613, 3159, function(t)
                 t.oBehParams = 12 << 16 | 1
             end)
-            spawn_non_sync_object(id_bhvQuickWarp, E_MODEL_NONE, 3158, 1613, 3172, nil)
+            spawn_non_sync_object(id_bhvQuickWarp, E_MODEL_NONE, 3158, 1613, 3172, function() end)
         end
     end,
 
@@ -845,18 +845,18 @@ sOnLvlInitToFunc = {
         local np = gNetworkPlayers[0]
         --Lantern spawns with Mario. If you were to disable this spawn, light bubble will naturally follow Mario.
         if not gGlobalSyncTable.floodenabled then
-            spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, nil)
+            spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, function() end)
         end
 
         if np.currActNum > 1 then --Secret lantern spawns near beginning of level
-            spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 342, -2556, 5812, nil)
+            spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 342, -2556, 5812, function() end)
         end
 
         spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 434, -2000, 3704, function (nvg) 
             nvg.oFaceAngleYaw = -2600
             nvg.oMoveAngleYaw = nvg.oFaceAngleYaw
         end)
-        --spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, -3492, -4100, 3705, nil)
+        --spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, -3492, -4100, 3705, function() end)
     end,
 
     [LEVEL_BBH] = function()
@@ -868,13 +868,13 @@ sOnLvlInitToFunc = {
 
     [LEVEL_BITFS] = function()
         if gGlobalSyncTable.gameisbeat and not trophy_unlocked(10) then
-            spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, -7135, -2764, -3, nil)
+            spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, -7135, -2764, -3, function() end)
         end
     end,
 
     [LEVEL_CASTLE_GROUNDS] = function()
-        spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -37, 808, 545, nil)
-        spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -37, 811, 545, nil)
+        spawn_non_sync_object(id_bhvSecretWarp, E_MODEL_GOLD_RING, -37, 808, 545, function() end)
+        spawn_non_sync_object(id_bhvFlatStar, E_MODEL_STAR, -37, 811, 545, function() end)
         set_lighting_color(0, 255)
         set_lighting_color(1, 255)
         set_lighting_color(2, 255)
@@ -905,7 +905,7 @@ sOnLvlInitToFunc = {
         --spawn_non_sync_object(id_bhvLava, E_MODEL_LAVA, gMarioStates[0].pos.x, 1050, gMarioStates[0].pos.z, function(o)
             -- obj_scale(o, 4)
         --end)
-        --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 5910, 1050, 4412, nil)
+        --spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, 5910, 1050, 4412, function() end)
         local o = obj_get_first_with_behavior_id(id_bhvCannonClosed)
         o.oPosY = o.oPosY + 21
     end,
@@ -983,6 +983,7 @@ sOnLvlInitToFunc = {
 
     end,
     [LEVEL_WDW] = function()
+        -- Deletes all floating platforms
         local sq = obj_get_first_with_behavior_id(id_bhvWdwSquareFloatingPlatform)
         local rect = obj_get_first_with_behavior_id(id_bhvWdwRectangularFloatingPlatform)
 
@@ -994,7 +995,93 @@ sOnLvlInitToFunc = {
             obj_mark_for_deletion(rect)
             rect = obj_get_next_with_same_behavior_id(rect)
         end
+
+        -- Deletes all secrets under Y: 900
+        local secrets = obj_get_first_with_behavior_id(id_bhvHiddenStarTrigger)
     end
+}
+
+sOnSyncValidtoFunc = {
+    [LEVEL_BOB] = function()
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6233, 975, 3337, function() end)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 3337, 791, 3265, function() end)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 4499, 768, 6669, function() end)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 5294, 1020, 5154, function() end)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6948, 873, 5019, function() end)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6394, 768, 6766, function() end)
+        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 2586, 768, 6719, function() end)
+
+        spawn_sync_object(id_bhvCannonClosed, E_MODEL_DL_CANNON_LID, 4348, 3071, 1230, function(obj) obj.oFaceAngleYaw = 0 end)
+        spawn_sync_object(id_bhvCannon, E_MODEL_CANNON_BASE, 4352, 2732, 1229, function(obj) obj.oFaceAngleYaw = -32768 end)
+
+        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 5389, 1597, 4617, function(obj) obj.oWaterCannonUnk100 = -16384 obj.oMoveAngleYaw = -16384 end)
+        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, -5008, 1402, -3521, function(obj) obj.oWaterCannonUnk100 = 8192 obj.oMoveAngleYaw = 8192 end)
+        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 6350, 2150, -7072,  function(obj) obj.oWaterCannonUnk100 = -8192 obj.oMoveAngleYaw = -8192 end)
+        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 4248, 3141, -2456, function(obj) obj.oWaterCannonUnk100 = -4096 obj.oMoveAngleYaw = -4096 end)
+        if gNetworkPlayers[0].currActNum > 1 then
+            spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, -5694, 198, 5600, function(obj) obj.oWaterCannonUnk100 = 24576 obj.oMoveAngleYaw = 24576 end)
+        end
+    end,
+    [LEVEL_JRB] = function()
+        local np = gNetworkPlayers[0]
+        local gorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
+        --local stonewall = obj_get_first_with_behavior_id(id_bhvStonewall)
+        
+        if np.currLevelNum == LEVEL_JRB then   
+
+            if gorrie ~= nil then
+                --djui_chat_message_create('dorrie exists')
+            else
+                spawn_sync_object(id_bhvGorrie, E_MODEL_RED_DORRIE, -5269, 1050, 3750, function() end)
+            end
+            --if stonewall ~= nil then
+                --djui_chat_message_create('stonewall exists')
+            --else
+                --spawn_sync_object(id_bhvStonewall, E_MODEL_STONEWALL, 6307, 1090, 2600, function (wall) 
+                    --wall.oFaceAngleYaw = 0
+                    --wall.oMoveAngleYaw = wall.oFaceAngleYaw
+                    --obj_scale(wall, 1.4)
+                --end)
+            --end
+        end
+    end,
+    [LEVEL_HMC] = function()
+        -- spawns coins to hint towards the new floor switch location
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, function() end)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4460, 4890, function() end)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4260, 4890, function() end)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -5321, -6327, 3500, function() end)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4900, -6327, 2220, function() end)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3500, -6327, 1750, function() end)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 2150, function() end)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -1760, -6327, 3630, function() end)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 4910, function() end)
+        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3560, -6327, 5330, function() end)
+        spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3580, -5221, -825, function(f)
+            f.oBehParams2ndByte = 4
+            f.oFaceAngleYaw = 0
+        end)
+    end,
+    [LEVEL_LLL] = function()
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -5130, 560, -4080, function() end)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 840, -7110, function() end)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 6300, 740, -6565, function() end)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 7168, 1000, 1400, function() end)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 4064, 670, 6878, function() end)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -3210, 80, 3460, function(r) r.oBehParams2ndByte = 10 end)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 1200, 6170, function() end)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 720, -2330, function() end)
+        spawn_sync_object(id_bhvBouncingFireball, E_MODEL_RED_FLAME, -760, 355, 5045, function() end)
+    end,
+    [LEVEL_SECRETHUB] = function()
+        local np = gNetworkPlayers[0]
+        local hellentrance = obj_get_first_with_behavior_id(id_bhvHellEntrance)
+        if np.currLevelNum == LEVEL_SECRETHUB and np.currAreaIndex == 1 then
+            if not hellentrance then
+                spawn_non_sync_object(id_bhvHellEntrance, E_MODEL_HELL_ENTRANCE, 895, 195, 388, function() end)
+            end
+        end
+    end,
 }
 ----------------------------------------------------------------------------------------------------------------------
 --! actions
@@ -1097,15 +1184,15 @@ function act_puke(m)
     if s.sick > 130 and s.sick < 155 then
         if m.playerIndex ~= 0 then return end
         if m.character.type == CT_MARIO then
-            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 50, m.pos.z, nil)
+            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 50, m.pos.z, function() end)
         elseif m.character.type == CT_LUIGI then
-            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 60, m.pos.z, nil)
+            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 60, m.pos.z, function() end)
         elseif m.character.type == CT_TOAD then
-            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 20, m.pos.z, nil)
+            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 20, m.pos.z, function() end)
         elseif m.character.type == CT_WARIO then
-            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 60, m.pos.z, nil)
+            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 60, m.pos.z, function() end)
         elseif m.character.type == CT_WALUIGI then
-            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 110, m.pos.z, nil)
+            spawn_sync_object(id_bhvVomit, E_MODEL_VOMIT, m.pos.x, m.pos.y + 110, m.pos.z, function() end)
 
         end
     end
