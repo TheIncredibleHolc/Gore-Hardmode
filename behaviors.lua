@@ -2867,7 +2867,12 @@ end
 
 local function skeeter_loop(o)
     local m = nearest_mario_state_to_object(o)
-    if is_point_within_radius_of_mario(o.oPosX, o.oPosY, o.oPosZ, 1200) ~= 0 and m.action ~= ACT_GONE then
+    local ignore = {
+        [ACT_GONE] = true,
+        [ACT_SPAWN_SPIN_AIRBORNE] = true,
+        [ACT_SPAWN_SPIN_LANDING] = true,
+    }
+    if is_point_within_radius_of_mario(o.oPosX, o.oPosY, o.oPosZ, 1200) ~= 0 and not ignore[m.action] then
         local ang = obj_angle_to_object(o, m.marioObj)
         o.oForwardVel = 65
         o.oFaceAngleYaw = ang
@@ -4192,12 +4197,62 @@ local function coin_fountain_loop(o)
         local randomZ = math.random(-500, 500)
         spawn_non_sync_object(chosenObj, chosenModel, o.oPosX + randomX, o.oPosY + 1500, o.oPosZ + randomZ, function() end)
         
+
         if o.oTimer >= 100 then
             obj_mark_for_deletion(o)
         end
     end
 end
 
+local function quicksand_plane_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.collisionData = COL_QUICKSAND_PLANE
+    o.oCollisionDistance = 20000
+    o.header.gfx.skipInViewCheck = true
+    bhv_init_room()
+end
+
+local function quicksand_plane_loop(o)
+    load_object_collision_model()
+
+    local m = gMarioStates[0]
+    local diff = m.pos.y - o.oPosY
+    local ignore = {
+        [ACT_GONE] = true,
+        [ACT_SPAWN_SPIN_AIRBORNE] = true,
+        [ACT_SPAWN_SPIN_LANDING] = true,
+    }
+    if not ignore[m.action] then
+        if diff > 850 then
+            o.oPosY = m.pos.y - 850
+        end
+    end
+end
+
+local function qs_float_plat_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.collisionData = COL_QS_FLOATING_PLATFORM
+    o.oCollisionDistance = 1500
+    o.header.gfx.skipInViewCheck = true
+    bhv_init_room()
+end
+
+local function qs_float_plat_loop(o)
+    load_object_collision_model()
+    if o.oBehParams2ndByte == 1 then
+        obj_scale_xyz(o, 1.06, 1.3, 2.67)
+    else
+        obj_scale_xyz(o, 1.06, 1.3, 1.06)
+        o.oFaceAngleYaw = -16384
+    end
+
+    local qsPlane = obj_get_first_with_behavior_id(id_bhvQuicksandPlane)
+    if qsPlane then
+        if o.oPosY < qsPlane.oPosY then
+            o.oPosY = qsPlane.oPosY
+        end
+    end
+end
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
@@ -4355,3 +4410,5 @@ id_bhvWaterBombExplosionParticles = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, tru
 id_bhvDeadlyStar = hook_behavior(nil, OBJ_LIST_GENACTOR, true, deadly_star_init, deadly_star_loop, "bhvDeadlyStar")
 id_bhvThwompEvent = hook_behavior(nil, OBJ_LIST_SURFACE, true, cork_thwomp_init, cork_thwomp_loop, "bhvThwompEvent")
 id_bhvCoinFountain = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, nil, coin_fountain_loop, "bhvCoinFountain")
+id_bhvQuicksandPlane = hook_behavior(nil, OBJ_LIST_SURFACE, true, quicksand_plane_init, quicksand_plane_loop, "bhvQuicksandPlane")
+id_bhvQSFloatingPlatform = hook_behavior(nil, OBJ_LIST_SURFACE, true, qs_float_plat_init, qs_float_plat_loop, "bhvQSFloatingPlatform")

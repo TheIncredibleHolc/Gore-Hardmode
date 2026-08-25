@@ -1,0 +1,17 @@
+extern const GeoLayout qs_floating_platform_square_geo[];
+extern Lights1 qs_floating_platform_square_f3dlite_material_001_lights;
+extern Lights1 qs_floating_platform_square_f3dlite_material_lights;
+extern u8 qs_floating_platform_square_floatingplatform_topbottom_ci8[];
+extern u8 qs_floating_platform_square_floatingplatform_topbottom_pal_rgba16[];
+extern u8 qs_floating_platform_square_floatingplatform_sides_ci8[];
+extern u8 qs_floating_platform_square_floatingplatform_sides_pal_rgba16[];
+extern Vtx qs_floating_platform_square_Cube_mesh_layer_1_vtx_cull[8];
+extern Vtx qs_floating_platform_square_Cube_mesh_layer_1_vtx_0[8];
+extern Gfx qs_floating_platform_square_Cube_mesh_layer_1_tri_0[];
+extern Vtx qs_floating_platform_square_Cube_mesh_layer_1_vtx_1[16];
+extern Gfx qs_floating_platform_square_Cube_mesh_layer_1_tri_1[];
+extern Gfx mat_qs_floating_platform_square_f3dlite_material_001[];
+extern Gfx mat_revert_qs_floating_platform_square_f3dlite_material_001[];
+extern Gfx mat_qs_floating_platform_square_f3dlite_material[];
+extern Gfx mat_revert_qs_floating_platform_square_f3dlite_material[];
+extern Gfx qs_floating_platform_square_Cube_mesh_layer_1[];

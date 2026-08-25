@@ -708,12 +708,12 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             set_override_envfx(ENVFX_MODE_NONE)
         end
 
-        ---WDW is now just Dry World! 
+        ---Wet-Dry World? More like Dry-Dry World! hhaahahhahahahahhahahhahahha
         if np.currLevelNum == LEVEL_WDW then
             for i = 0, 3 do
                 set_environment_region(i, -10000)
             end
-        end
+        end 
 
         if np.currLevelNum == LEVEL_SSL and np.currAreaIndex == 1 then
             local singleplayerPaused = network_player_connected_count() <= 1 and is_game_paused()
@@ -1792,7 +1792,7 @@ function hook_update()
         s.highdeathtimer = 0
         set_override_fov(0)
     end
- ----------------------------------------------------------------------------------------------------------------------------------  
+----------------------------------------------------------------------------------------------------------------------------------  
     -- Adds a visual death counter beside all players on the player list.
     for i = 0, MAX_PLAYERS - 1 do
         network_player_set_description(gNetworkPlayers[i], "Deaths:  " ..tostring(gPlayerSyncTable[i].personaldeathcount), 175, 0, 0, 255)
@@ -2041,11 +2041,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
     if obj_has_behavior_id(o, id_bhvBigChillBully) ~= 0 and (m.action == ACT_SOFT_FORWARD_GROUND_KB or m.action == ACT_SOFT_BACKWARD_GROUND_KB) then
         m.squishTimer = 50
-    end
--------------------------------------------------------------------------------------------------------------------------------------------------
-    if obj_has_behavior_id(o, id_bhvRedCoin) ~= 0 then
-        m.healCounter = 0
-        m.hurtCounter = 8
     end
 end
 

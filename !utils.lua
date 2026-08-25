@@ -466,6 +466,10 @@ E_MODEL_VOMIT = smlua_model_util_get_id("vomit_geo")
 E_MODEL_HELL_ENTRANCE = smlua_model_util_get_id("hellentrance_geo")
 E_MODEL_ROCK_SHRAPNEL = smlua_model_util_get_id("rock_shrapnel_geo")
 E_MODEL_SNOW_PILE = smlua_model_util_get_id("snowpile_geo")
+E_MODEL_QUICKSAND_PLANE = smlua_model_util_get_id("quicksandPlane_geo")
+COL_QUICKSAND_PLANE = smlua_collision_util_get("quicksandPlane_collision")
+E_MODEL_QS_FLOATING_PLATFORM= smlua_model_util_get_id("qs_floating_platform_square_geo")
+COL_QS_FLOATING_PLATFORM = smlua_collision_util_get("qs_floating_platform_square_collision")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -499,7 +503,7 @@ LEVEL_SECRETHUB = level_register('level_secretroom_entry', COURSE_NONE, 'Secret 
 smlua_audio_utils_replace_sequence(SEQ_EVENT_CUTSCENE_ENDING, 35, 76, "gorepeach") --Custom Audio for end cutscene
 
 smlua_text_utils_course_name_replace(COURSE_CCM, 'COLD, Cold Mountain')
-smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry World')
+smlua_text_utils_course_name_replace(COURSE_WDW, 'Dry-Dry World')
 smlua_text_utils_course_name_replace(COURSE_JRB, 'Jolly Roger Hell')
 smlua_text_utils_course_name_replace(COURSE_TTM, 'Dark Dark Mountain')
 end
@@ -792,6 +796,29 @@ sOnWarpToFunc = {
                 local_play(sMini, m.pos, 2)
             end
         end
+    end,
+
+    [LEVEL_WDW] = function()
+        local np = gNetworkPlayers[0]
+        if np.currAreaIndex == 1 then
+            set_water_level(0, -2500, false)
+        end
+        
+        -- Removes express elevator
+        obj_mark_for_deletion(obj_get_first_with_behavior_id(id_bhvWdwExpressElevator))
+
+        --adds more dry to dry world
+        spawn_non_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, 0, 50, 0, function(obj) obj_scale_xyz(obj, 5, 1, 5) end)
+        
+        -- squares
+        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 3390, 64, 384, function() end)
+        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 64, 3584, function() end)
+        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 448, 1536, function() end)
+        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -1279, function() end)
+
+        -- rectangles
+        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 1216, 128, function(obj) obj.oBehParams2ndByte = 1 end)
+        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -2687, function(obj) obj.oBehParams2ndByte = 1 end)
     end
 }
 
@@ -954,6 +981,19 @@ sOnLvlInitToFunc = {
             end
         --end
 
+    end,
+    [LEVEL_WDW] = function()
+        local sq = obj_get_first_with_behavior_id(id_bhvWdwSquareFloatingPlatform)
+        local rect = obj_get_first_with_behavior_id(id_bhvWdwRectangularFloatingPlatform)
+
+        while sq do
+            obj_mark_for_deletion(sq)
+            sq = obj_get_next_with_same_behavior_id(sq)
+        end
+        while rect do 
+            obj_mark_for_deletion(rect)
+            rect = obj_get_next_with_same_behavior_id(rect)
+        end
     end
 }
 ----------------------------------------------------------------------------------------------------------------------
