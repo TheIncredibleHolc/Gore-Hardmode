@@ -491,9 +491,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         obj_set_model_extended(m.marioObj, E_MODEL_NONE)
     end
 
-    --djui_chat_message_create(tostring(np.currLevelNum))
-    --djui_chat_message_create(tostring(np.currAreaIndex))
-
     if np.currLevelNum == LEVEL_HELL or np.currLevelNum == LEVEL_SECRETHUB then
         gLevelValues.fixCollisionBugs = true
     else
@@ -1802,7 +1799,7 @@ function hook_update()
     end
 
     -- move wdw secrets star to bobomb buddy position
-    if np.currLevelNum == LEVEL_WDW then
+    if np.currLevelNum == LEVEL_WDW and not gGlobalSyncTable.romhackcompatibility then
         local secretsStar = obj_get_first_with_behavior_id(id_bhvHiddenStar)
         if secretsStar then
             secretsStar.oPosX = 0

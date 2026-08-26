@@ -214,6 +214,7 @@ gSamples = {
     audio_sample_load("yeetToad.ogg"),
     audio_sample_load("yeetWario.ogg"),
     audio_sample_load("yeetWaluigi.ogg"),
+    audio_sample_load("launchTwinkle.ogg")
 }
 
 sBoneBreak = 1
@@ -283,6 +284,7 @@ sYeetLuigi = 64
 sYeetToad = 65
 sYeetWario = 66
 sYeetWaluigi = 67
+sTwinkleKO = 68
 
 function loop(music) audio_stream_set_looping(music, true) end
 
@@ -483,6 +485,7 @@ COL_QS_FLOATING_PLATFORM = smlua_collision_util_get("qs_floating_platform_square
 E_MODEL_WDW_TUNNEL_CAGE = smlua_model_util_get_id("wdwtunnelcagefloor_geo")
 COL_WDW_TUNNEL_CAGE = smlua_collision_util_get("wdwtunnelcagefloor_collision")
 E_MODEL_QS_FOG_PLANE = smlua_model_util_get_id("quicksandFogPlane_geo")
+E_MODEL_STAR_KO = smlua_model_util_get_id("starKO_geo")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -916,19 +919,31 @@ sOnLvlInitToFunc = {
     end,
 
     [LEVEL_LLL] = function()
-        local e = obj_get_first_with_behavior_id(id_bhvExclamationBox)
         local r = obj_get_first_with_behavior_id(id_bhvRedCoin)
-        local f = obj_get_first_with_behavior_id(id_bhvFadingWarp)
+        local coin_pos = {
+            {x = 0, y = 1200, z = 6170},
+            {x = 0, y = 720, z = -2330},
+            {x = -3210, y = 80, z = 3460},
+            {x = 4064, y = 670, z = 6878},
+            {x = 7168, y = 1000, z = 1400},
+            {x = 6300, y = 740, z = -6565},
+            {x = 0, y = 840, z = -7110},
+            {x = -5130, y = 560, z = -4080}
+        }
+        for _, pos in ipairs(coin_pos) do
+            if not r then break end
+
+            r.oPosX, r.oPosY, r.oPosZ = pos.x, pos.y, pos.z
+            r = obj_get_next_with_same_behavior_id(r)
+        end
+
+        local e = obj_get_first_with_behavior_id(id_bhvExclamationBox)
         while e do
             obj_mark_for_deletion(e)
             e = obj_get_next_with_same_behavior_id(e)
         end
-        if r.oPosY < 250 and r.oPosX < -4000 then
-            while r do
-                obj_mark_for_deletion(r)
-                r = obj_get_next_with_same_behavior_id(r)
-            end
-        end
+
+        local f = obj_get_first_with_behavior_id(id_bhvFadingWarp)
         while f do
             obj_mark_for_deletion(f)
             f = obj_get_next_with_same_behavior_id(f)
@@ -995,14 +1010,21 @@ sOnLvlInitToFunc = {
             rect = obj_get_next_with_same_behavior_id(rect)
         end
 
-        -- Deletes all secrets (and replaced them with new secrets)
+        -- moves all secrets to new locations
         local secrets = obj_get_first_with_behavior_id(id_bhvHiddenStarTrigger)
-        --if secrets.oPosZ > 2400 then
-            while secrets do
-                obj_mark_for_deletion(secrets)
-                secrets = obj_get_next_with_same_behavior_id(secrets)
-            end
-        --end
+        local secret_pos = {
+            {x = 640, y = 640, z = 3455},
+            {x = 1960, y = 1990, z = 2180},
+            {x = 3310, y = 420, z = 2925},
+            {x = -2075, y = 3000, z = -524},
+            {x = 943, y = 3830, z = -1779}
+        }
+        for _, pos in ipairs(secret_pos) do
+            if not secrets then break end
+
+            secrets.oPosX, secrets.oPosY, secrets.oPosZ = pos.x, pos.y, pos.z
+            secrets = obj_get_next_with_same_behavior_id(secrets)
+        end
 
         --Deletes bobomb buddy
         local buddy = obj_get_first_with_behavior_id(id_bhvBobombBuddyOpensCannon)
@@ -1014,6 +1036,13 @@ sOnLvlInitToFunc = {
         local switch = obj_get_first_with_behavior_id(id_bhvBlueCoinSwitch)
         if switch then
             obj_mark_for_deletion(switch)
+        end
+
+        -- deletes fading warps
+        local o = obj_get_first_with_behavior_id(id_bhvFadingWarp)
+        while o do
+            obj_mark_for_deletion(o)
+            o = obj_get_next_with_same_behavior_id(o)
         end
     end
 }
@@ -1068,15 +1097,6 @@ sOnSyncValidtoFunc = {
         end)
     end,
     [LEVEL_LLL] = function()
-        --Spawns new red coins to replace the old ones
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -5130, 560, -4080, function() end)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 840, -7110, function() end)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 6300, 740, -6565, function() end)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 7168, 1000, 1400, function() end)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 4064, 670, 6878, function() end)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -3210, 80, 3460, function(o) o.oBehParams2ndByte = 10 end)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 1200, 6170, function() end)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 720, -2330, function() end)
         spawn_sync_object(id_bhvBouncingFireball, E_MODEL_RED_FLAME, -760, 355, 5045, function() end)
     end,
     [LEVEL_WDW] = function()
@@ -1089,7 +1109,7 @@ sOnSyncValidtoFunc = {
             spawn_sync_object(id_bhvQuicksandFogPlane, E_MODEL_QS_FOG_PLANE, 375, 150, 150, function (o) o.oFaceAngleYaw = 0 end)
 
             --blocks tunnel to area 2 
-            --spawn_sync_object(id_bhvWDWTunnelCageFloor, E_MODEL_WDW_TUNNEL_CAGE, 4096, 3072, -3325, function(o) o.oFaceAngleYaw = 32768 end)
+            spawn_sync_object(id_bhvWDWTunnelCageFloor, E_MODEL_WDW_TUNNEL_CAGE, 4096, 3072, -3325, function(o) o.oFaceAngleYaw = 32768 end)
 
             -- squares
             spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 3390, 64, 384, function() end)
@@ -1102,18 +1122,9 @@ sOnSyncValidtoFunc = {
             spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 1216, 128, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
             spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -2687, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
 
-            -- old secrets locations
-            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, -2075, 3000, -524, function() end)
-            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, 943, 3830, -1779, function() end)
-
-            -- new secrets locations
-            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, 640, 640, 3455, function() end)
-            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, 1960, 1990, 2180, function() end)
-            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, 3310, 420, 2925, function() end)
-
             -- 10 coin exclam box (also secret indicator)
-            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 1960, 2040, 2180, function(o) o.oBehParams2ndByte = 6 end)
-            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 640, 1090, 3710, function(o) o.oBehParams2ndByte = 6 end)
+            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 1960, 2040, 2180, function(o) o.oBehParams2ndByte = 5 end)
+            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 640, 1090, 3710, function(o) o.oBehParams2ndByte = 5 end)
             spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 3310, 470, 2925, function(o) o.oBehParams2ndByte = 5 end)
 
             -- spawns new blue coin switch inside the metal box nearby
@@ -1125,6 +1136,24 @@ sOnSyncValidtoFunc = {
                 o.oBehParams = 13 << 16
                 o.oBehParams2ndByte = 60
                 area_create_warp_node(13, LEVEL_WDW, 2, 16, WARP_NO_CHECKPOINT, o)
+            end)
+            
+            -- spawn more enemies
+            spawn_sync_object(id_bhvSkeeter, E_MODEL_SKEETER, -1260, 384, 1850, function() end)
+            spawn_sync_object(id_bhvFireSpitter, E_MODEL_BOWLING_BALL, -740, 1280, 180, function() end)
+            spawn_sync_object(id_bhvFireSpitter, E_MODEL_BOWLING_BALL, 0, 3200, 3590, function() end)
+            spawn_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 120, 2304, -1885, function() end)
+            spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, 895, 2410, -1740, function() end)
+
+            spawn_sync_object(id_bhvFadingWarp, E_MODEL_NONE, -3093, 620, 3297, function(o)
+                o.oBehParams = 14 << 16
+                o.oBehParams2ndByte = 21
+                area_create_warp_node(14, LEVEL_WDW, 1, 15, WARP_NO_CHECKPOINT, o)
+            end)
+            spawn_sync_object(id_bhvFadingWarp, E_MODEL_NONE, 3392, 1600, 888, function(o)
+                o.oBehParams = 15 << 16
+                o.oBehParams2ndByte = 22
+                area_create_warp_node(15, LEVEL_WDW, 1, 14, WARP_NO_CHECKPOINT, o)
             end)
 
         else
@@ -1138,7 +1167,6 @@ sOnSyncValidtoFunc = {
 
             --adds more dry to dry world
             spawn_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, -760, -2555, 1250, function() end)
-
             spawn_sync_object(id_bhvFloorSwitchHiddenObjects, E_MODEL_PURPLE_SWITCH, -780, -1300, -450, function() end)
             spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, -3680, -2075, 1420, function(o) o.oBehParams2ndByte = 2 end)
         end
@@ -1477,13 +1505,13 @@ function act_ragdoll(m)
         end
 
         return set_mario_action(m, ACT_GONE, 0)
-    elseif m.ceil then -- plays twice for some reason
+    elseif m.pos.y >= m.ceilHeight - 250 and m.pos.y < gLevelValues.cellHeightLimit - 250 then -- may need to cahnge depending on hitbox height
         bloodmist(m.marioObj)
         m.health = 0xff
         network_play(sSplatter, m.pos, 1, m.playerIndex)
-        spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
+        spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y + 249, m.pos.z, function(o)
             local z, normal = vec3f(), m.ceil.normal
-            o.oFaceAnglePitch = 32786
+            o.oFaceAnglePitch = 0
             o.oFaceAngleYaw = calculate_yaw(z, normal)
             o.oFaceAngleRoll = 0
             o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
@@ -1492,6 +1520,7 @@ function act_ragdoll(m)
         for i = 0, gibAmount do
             local random = math.random()
             spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
+                gib.oBehParams2ndByte = 1
                 obj_scale(gib, random)
             end)
         end
@@ -1501,6 +1530,7 @@ function act_ragdoll(m)
         
         return set_mario_action(m, ACT_GONE, 0)
     end
+
     set_character_animation(m, CHAR_ANIM_AIRBORNE_ON_STOMACH)
     m.marioBodyState.eyeState = MARIO_EYES_DEAD
     if m.actionArg == 1 then
@@ -1511,7 +1541,6 @@ function act_ragdoll(m)
         l.posHSpeed, l.posVSpeed = 0, 0
 
         if m.actionTimer == 1 then
-            djui_chat_message_create("play")
             local charSoundTable = {
                 sYeetMario,
                 sYeetLuigi,
@@ -1521,13 +1550,18 @@ function act_ragdoll(m)
             }
             network_play(charSoundTable[m.character.type+1], m.pos, 1, m.playerIndex)
         end
-        if m.actionTimer >= 60 then
+        if m.actionTimer >= 60 then -- freezes player position, spawns star ko model, plays twinkle ko sound, makes player invisible and kicks them out of them level
+            if m.actionTimer == 60 then
+                spawn_non_sync_object(id_bhvStarKO, E_MODEL_STAR_KO, m.pos.x, m.pos.y, m.pos.z, function() end)
+                network_play(sTwinkleKO, m.pos, 1, m.playerIndex)
+            end
+            m.vel.x, m.vel.y, m.vel.z = 0, 0, 0
+            obj_set_model_extended(m.marioObj, E_MODEL_NONE)
             level_trigger_warp(m, WARP_OP_DEATH)
         end
     end
-    
-    m.actionTimer = m.actionTimer + 1
 
+    m.actionTimer = m.actionTimer + 1
     vec3s_set(m.angleVel, 2000, 1000, 400)
     vec3s_add(m.faceAngle, m.angleVel)
     vec3s_copy(m.marioObj.header.gfx.angle, m.faceAngle)

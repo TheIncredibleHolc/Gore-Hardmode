@@ -1957,11 +1957,18 @@ local function gib_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
     o.header.gfx.skipInViewCheck = true
     local randomfvel = math.random(1,20) --Perhaps we can partially add Mario's velocity into this equation?
+    local randomNeg = math.random(0,5)
     local random = math.random(20,50)
     local randomyaw = math.random(1,65536)
     o.oBounciness = 0
     o.oGravity = -4
-    o.oVelY = random
+
+    --2ndbyte is just used for ceiling splats
+    if o.oBehParams2ndByte == 1 then
+        o.oVelY = 0
+    else
+        o.oVelY = random
+    end
     o.oForwardVel = randomfvel
     o.oFaceAngleYaw = randomyaw
     o.oMoveAngleYaw = o.oFaceAngleYaw
@@ -2778,11 +2785,21 @@ local function hoot_loop(o)
 end
 
 local function chuckya(o)
-    local nm = nearest_mario_state_to_object(o)
+    local n = nearest_mario_state_to_object(o)
     local m = gMarioStates[0]
     if o.oTimer == 10 and o.oAction == 1 then
         network_play(sChuckster, m.pos, 1, m.playerIndex)
         --cutscene_object_with_dialog(CUTSCENE_DIALOG, nm.marioObj, DIALOG_116)
+    end
+
+    local angleToMario = obj_angle_to_object(o, m.marioObj)
+    if o.oAction == 0 then
+        if o.oSubAction == 1 then
+            o.oForwardVel = o.oForwardVel + 10
+            if lateral_dist_between_objects(n.marioObj, o) > 500 then
+                o.oMoveAngleYaw = angleToMario
+            end
+        end
     end
 end
 
@@ -2870,7 +2887,7 @@ local function heaveho_loop(o)
             end
             o.oHeaveHoUnkF4 = 1.5
         else
-            o.oHeaveHoUnkF4 = 5.0
+            o.oHeaveHoUnkF4 = 3.0
         end
         cur_obj_init_animation_with_accel_and_sound(0, o.oHeaveHoUnkF4)
         o.oForwardVel = o.oHeaveHoUnkF4 * 10.0
@@ -2970,11 +2987,13 @@ end
 
 local function spawn_more_mr_i_particles(index, o)
     local particle = spawn_sync_object(id_bhvMrIParticle, E_MODEL_PURPLE_MARBLE, o.oPosX, o.oPosY, o.oPosZ, function() end)
-    particle.oMoveAngleYaw = o.oMoveAngleYaw
-    particle.oMoveAnglePitch = o.oMoveAnglePitch
-    HackerSM64_mr_i_pitch_shooting(particle, o)
-    particle.oMoveAngleYaw = particle.oMoveAngleYaw + 0x400 * (index - 2)
-    particle.oTimer = 2
+    if particle then
+        particle.oMoveAngleYaw = o.oMoveAngleYaw
+        particle.oMoveAnglePitch = o.oMoveAnglePitch
+        HackerSM64_mr_i_pitch_shooting(particle, o)
+        particle.oMoveAngleYaw = particle.oMoveAngleYaw + 0x400 * (index - 2)
+        particle.oTimer = 2
+    end
 end
 
 local function mr_i_particle(o)
@@ -4302,6 +4321,18 @@ local function qs_fog_plane_loop(o)
     end
 end
 
+local function star_ko_init(o)
+    obj_set_billboard(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE | OBJ_FLAG_COMPUTE_ANGLE_TO_MARIO
+    o.header.gfx.skipInViewCheck = true
+end
+
+local function star_ko_loop(o)
+    obj_scale(o, (12/15^2) * o.oTimer * (o.oTimer - 15))
+    if o.oTimer > 15 then
+        obj_mark_for_deletion(o)
+    end
+end
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
@@ -4463,3 +4494,4 @@ id_bhvQuicksandPlane = hook_behavior(nil, OBJ_LIST_SURFACE, true, quicksand_plan
 id_bhvQSFloatingPlatform = hook_behavior(nil, OBJ_LIST_SURFACE, true, qs_float_plat_init, qs_float_plat_loop, "bhvQSFloatingPlatform")
 id_bhvWDWTunnelCageFloor = hook_behavior(nil, OBJ_LIST_SURFACE, true, wdw_tunnel_cage_floor_init, wdw_tunnel_cage_floor_loop, "bhvWDWTunnelCageFloor")
 id_bhvQuicksandFogPlane = hook_behavior(nil, OBJ_LIST_GENACTOR, true, qs_fog_plane_init, qs_fog_plane_loop, "bhvQuicksandFogPlane")
+id_bhvStarKO = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, star_ko_init, star_ko_loop, "bhvStarKO")
