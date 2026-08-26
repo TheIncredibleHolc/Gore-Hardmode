@@ -1,0 +1,10 @@
+extern const GeoLayout quicksandFogPlane_geo[];
+extern Lights1 quicksandFogPlane_f3dlite_material_001_layer5_lights;
+extern u8 quicksandFogPlane_quicksandtransparentfogsm64_ci8[];
+extern u8 quicksandFogPlane_quicksandtransparentfogsm64_pal_rgba16[];
+extern Vtx quicksandFogPlane_Plane_mesh_layer_5_vtx_cull[8];
+extern Vtx quicksandFogPlane_Plane_mesh_layer_5_vtx_0[4];
+extern Gfx quicksandFogPlane_Plane_mesh_layer_5_tri_0[];
+extern Gfx mat_quicksandFogPlane_f3dlite_material_001_layer5[];
+extern Gfx mat_revert_quicksandFogPlane_f3dlite_material_001_layer5[];
+extern Gfx quicksandFogPlane_Plane_mesh_layer_5[];

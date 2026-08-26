@@ -208,7 +208,12 @@ gSamples = {
     audio_sample_load("slidedanger_Luigi.ogg"),
     audio_sample_load("slidedanger_Toad.ogg"),
     audio_sample_load("slidedanger_Wario.ogg"),
-    audio_sample_load("slidedanger_Waluigi.ogg")
+    audio_sample_load("slidedanger_Waluigi.ogg"),
+    audio_sample_load("yeetMario.ogg"),
+    audio_sample_load("yeetLuigi.ogg"),
+    audio_sample_load("yeetToad.ogg"),
+    audio_sample_load("yeetWario.ogg"),
+    audio_sample_load("yeetWaluigi.ogg"),
 }
 
 sBoneBreak = 1
@@ -273,6 +278,11 @@ sSDangerLuigi = 59
 sSDangerToad = 60
 sSDangerWario = 61
 sSDangerWaluigi = 62
+sYeetMario = 63
+sYeetLuigi = 64
+sYeetToad = 65
+sYeetWario = 66
+sYeetWaluigi = 67
 
 function loop(music) audio_stream_set_looping(music, true) end
 
@@ -470,6 +480,9 @@ E_MODEL_QUICKSAND_PLANE = smlua_model_util_get_id("quicksandPlane_geo")
 COL_QUICKSAND_PLANE = smlua_collision_util_get("quicksandPlane_collision")
 E_MODEL_QS_FLOATING_PLATFORM= smlua_model_util_get_id("qs_floating_platform_square_geo")
 COL_QS_FLOATING_PLATFORM = smlua_collision_util_get("qs_floating_platform_square_collision")
+E_MODEL_WDW_TUNNEL_CAGE = smlua_model_util_get_id("wdwtunnelcagefloor_geo")
+COL_WDW_TUNNEL_CAGE = smlua_collision_util_get("wdwtunnelcagefloor_collision")
+E_MODEL_QS_FOG_PLANE = smlua_model_util_get_id("quicksandFogPlane_geo")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -804,21 +817,7 @@ sOnWarpToFunc = {
             set_water_level(0, -2500, false)
         end
         
-        -- Removes express elevator
-        obj_mark_for_deletion(obj_get_first_with_behavior_id(id_bhvWdwExpressElevator))
-
-        --adds more dry to dry world
-        spawn_non_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, 0, 50, 0, function(obj) obj_scale_xyz(obj, 5, 1, 5) end)
         
-        -- squares
-        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 3390, 64, 384, function() end)
-        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 64, 3584, function() end)
-        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 448, 1536, function() end)
-        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -1279, function() end)
-
-        -- rectangles
-        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 1216, 128, function(obj) obj.oBehParams2ndByte = 1 end)
-        spawn_non_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -2687, function(obj) obj.oBehParams2ndByte = 1 end)
     end
 }
 
@@ -996,8 +995,26 @@ sOnLvlInitToFunc = {
             rect = obj_get_next_with_same_behavior_id(rect)
         end
 
-        -- Deletes all secrets under Y: 900
+        -- Deletes all secrets (and replaced them with new secrets)
         local secrets = obj_get_first_with_behavior_id(id_bhvHiddenStarTrigger)
+        --if secrets.oPosZ > 2400 then
+            while secrets do
+                obj_mark_for_deletion(secrets)
+                secrets = obj_get_next_with_same_behavior_id(secrets)
+            end
+        --end
+
+        --Deletes bobomb buddy
+        local buddy = obj_get_first_with_behavior_id(id_bhvBobombBuddyOpensCannon)
+        if buddy then
+            obj_mark_for_deletion(buddy)
+        end
+
+        -- deletes blue coin switch
+        local switch = obj_get_first_with_behavior_id(id_bhvBlueCoinSwitch)
+        if switch then
+            obj_mark_for_deletion(switch)
+        end
     end
 }
 
@@ -1025,28 +1042,16 @@ sOnSyncValidtoFunc = {
     [LEVEL_JRB] = function()
         local np = gNetworkPlayers[0]
         local gorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
-        --local stonewall = obj_get_first_with_behavior_id(id_bhvStonewall)
-        
-        if np.currLevelNum == LEVEL_JRB then   
 
-            if gorrie ~= nil then
-                --djui_chat_message_create('dorrie exists')
-            else
+        -- Spawns gorrie
+        if np.currLevelNum == LEVEL_JRB then
+            if not gorrie then
                 spawn_sync_object(id_bhvGorrie, E_MODEL_RED_DORRIE, -5269, 1050, 3750, function() end)
             end
-            --if stonewall ~= nil then
-                --djui_chat_message_create('stonewall exists')
-            --else
-                --spawn_sync_object(id_bhvStonewall, E_MODEL_STONEWALL, 6307, 1090, 2600, function (wall) 
-                    --wall.oFaceAngleYaw = 0
-                    --wall.oMoveAngleYaw = wall.oFaceAngleYaw
-                    --obj_scale(wall, 1.4)
-                --end)
-            --end
         end
     end,
     [LEVEL_HMC] = function()
-        -- spawns coins to hint towards the new floor switch location
+        -- Spawns coins to hint towards the new floor switch location
         spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, function() end)
         spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4460, 4890, function() end)
         spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4260, 4890, function() end)
@@ -1057,25 +1062,91 @@ sOnSyncValidtoFunc = {
         spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -1760, -6327, 3630, function() end)
         spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 4910, function() end)
         spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3560, -6327, 5330, function() end)
-        spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3580, -5221, -825, function(f)
-            f.oBehParams2ndByte = 4
-            f.oFaceAngleYaw = 0
+        spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3580, -5221, -825, function(o)
+            o.oBehParams2ndByte = 4
+            o.oFaceAngleYaw = 0
         end)
     end,
     [LEVEL_LLL] = function()
+        --Spawns new red coins to replace the old ones
         spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -5130, 560, -4080, function() end)
         spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 840, -7110, function() end)
         spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 6300, 740, -6565, function() end)
         spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 7168, 1000, 1400, function() end)
         spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 4064, 670, 6878, function() end)
-        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -3210, 80, 3460, function(r) r.oBehParams2ndByte = 10 end)
+        spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, -3210, 80, 3460, function(o) o.oBehParams2ndByte = 10 end)
         spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 1200, 6170, function() end)
         spawn_sync_object(id_bhvRedCoin, E_MODEL_RED_COIN, 0, 720, -2330, function() end)
         spawn_sync_object(id_bhvBouncingFireball, E_MODEL_RED_FLAME, -760, 355, 5045, function() end)
     end,
+    [LEVEL_WDW] = function()
+        if gNetworkPlayers[0].currAreaIndex == 1 then
+            -- Removes express elevator
+            obj_mark_for_deletion(obj_get_first_with_behavior_id(id_bhvWdwExpressElevator))
+
+            --adds more dry to dry world
+            spawn_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, 375, 50, 150, function(o) o.oFaceAngleYaw = 0 end)
+            spawn_sync_object(id_bhvQuicksandFogPlane, E_MODEL_QS_FOG_PLANE, 375, 150, 150, function (o) o.oFaceAngleYaw = 0 end)
+
+            --blocks tunnel to area 2 
+            --spawn_sync_object(id_bhvWDWTunnelCageFloor, E_MODEL_WDW_TUNNEL_CAGE, 4096, 3072, -3325, function(o) o.oFaceAngleYaw = 32768 end)
+
+            -- squares
+            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 3390, 64, 384, function() end)
+            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 64, 3584, function() end)
+            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 448, 1536, function(o) o.oBehParams2ndByte = 2 end)
+            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -1279, function() end)
+            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 1940, 64, 4150, function() end)
+
+            -- rectangles
+            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 1216, 128, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
+            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -2687, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
+
+            -- old secrets locations
+            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, -2075, 3000, -524, function() end)
+            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, 943, 3830, -1779, function() end)
+
+            -- new secrets locations
+            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, 640, 640, 3455, function() end)
+            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, 1960, 1990, 2180, function() end)
+            spawn_sync_object(id_bhvHiddenStarTrigger, E_MODEL_NONE, 3310, 420, 2925, function() end)
+
+            -- 10 coin exclam box (also secret indicator)
+            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 1960, 2040, 2180, function(o) o.oBehParams2ndByte = 6 end)
+            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 640, 1090, 3710, function(o) o.oBehParams2ndByte = 6 end)
+            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 3310, 470, 2925, function(o) o.oBehParams2ndByte = 5 end)
+
+            -- spawns new blue coin switch inside the metal box nearby
+            spawn_sync_object(id_bhvBlueCoinSwitch, E_MODEL_BLUE_COIN_SWITCH, -2190, 385, 1105, function() end)
+
+            -- spawn pipe
+            spawn_sync_object(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 4096, 3072, -3325, function(o)
+                o.oFaceAngleYaw = -16384
+                o.oBehParams = 13 << 16
+                o.oBehParams2ndByte = 60
+                area_create_warp_node(13, LEVEL_WDW, 2, 16, WARP_NO_CHECKPOINT, o)
+            end)
+
+        else
+            -- spawn pipe
+            spawn_sync_object(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, -2545, -2550, -2055, function(o)
+                o.oFaceAngleYaw = -16384
+                o.oBehParams = 16 << 16
+                o.oBehParams2ndByte = 60
+                area_create_warp_node(16, LEVEL_WDW, 1, 13, WARP_NO_CHECKPOINT, o)
+            end)
+
+            --adds more dry to dry world
+            spawn_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, -760, -2555, 1250, function() end)
+
+            spawn_sync_object(id_bhvFloorSwitchHiddenObjects, E_MODEL_PURPLE_SWITCH, -780, -1300, -450, function() end)
+            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, -3680, -2075, 1420, function(o) o.oBehParams2ndByte = 2 end)
+        end
+    end,
     [LEVEL_SECRETHUB] = function()
         local np = gNetworkPlayers[0]
         local hellentrance = obj_get_first_with_behavior_id(id_bhvHellEntrance)
+        --adds hell entrance
         if np.currLevelNum == LEVEL_SECRETHUB and np.currAreaIndex == 1 then
             if not hellentrance then
                 spawn_non_sync_object(id_bhvHellEntrance, E_MODEL_HELL_ENTRANCE, 895, 195, 388, function() end)
@@ -1360,11 +1431,11 @@ end
 hook_mario_action(ACT_SHOCKED_DEATH, act_shocked_death)
 
 --If Mario takes damage mid-air, he will ragdoll down to his death.
-_G.ACT_RAGDOLL = allocate_mario_action(ACT_GROUP_CUTSCENE|ACT_FLAG_STATIONARY|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
+_G.ACT_RAGDOLL = allocate_mario_action(ACT_GROUP_AIRBORNE|ACT_FLAG_AIR|ACT_FLAG_INTANGIBLE|ACT_FLAG_INVULNERABLE)
 function act_ragdoll(m)
     local s = gStateExtras[0]
     local stepResult = perform_air_step(m, 0)
-    m.actionTimer = m.actionTimer + 1
+    
     if m.actionTimer == 1 then
         initangle = m.faceAngle.y
         --djui_chat_message_create(tostring(initangle))
@@ -1406,13 +1477,57 @@ function act_ragdoll(m)
         end
 
         return set_mario_action(m, ACT_GONE, 0)
+    elseif m.ceil then -- plays twice for some reason
+        bloodmist(m.marioObj)
+        m.health = 0xff
+        network_play(sSplatter, m.pos, 1, m.playerIndex)
+        spawn_sync_object(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER, m.pos.x, m.pos.y, m.pos.z, function(o)
+            local z, normal = vec3f(), m.ceil.normal
+            o.oFaceAnglePitch = 32786
+            o.oFaceAngleYaw = calculate_yaw(z, normal)
+            o.oFaceAngleRoll = 0
+            o.oPosX = o.oPosX - (48 * sins(o.oFaceAngleYaw))
+            o.oPosZ = o.oPosZ - (48 * coss(o.oFaceAngleYaw))
+        end)
+        for i = 0, gibAmount do
+            local random = math.random()
+            spawn_sync_object(id_bhvGib, E_MODEL_GIB, m.pos.x, m.pos.y, m.pos.z, function (gib)
+                obj_scale(gib, random)
+            end)
+        end
+        if not s.iwbtg then
+            --common_death_handler(m, 0, -1)
+        end
+        
+        return set_mario_action(m, ACT_GONE, 0)
     end
     set_character_animation(m, CHAR_ANIM_AIRBORNE_ON_STOMACH)
     m.marioBodyState.eyeState = MARIO_EYES_DEAD
     if m.actionArg == 1 then
         local l = gLakituState
         l.posHSpeed, l.posVSpeed, l.focHSpeed, l.focVSpeed = 0, 0, 0, 0
+    elseif m.actionArg == 2 then
+        local l = gLakituState
+        l.posHSpeed, l.posVSpeed = 0, 0
+
+        if m.actionTimer == 1 then
+            djui_chat_message_create("play")
+            local charSoundTable = {
+                sYeetMario,
+                sYeetLuigi,
+                sYeetToad,
+                sYeetWaluigi,
+                sYeetWario
+            }
+            network_play(charSoundTable[m.character.type+1], m.pos, 1, m.playerIndex)
+        end
+        if m.actionTimer >= 60 then
+            level_trigger_warp(m, WARP_OP_DEATH)
+        end
     end
+    
+    m.actionTimer = m.actionTimer + 1
+
     vec3s_set(m.angleVel, 2000, 1000, 400)
     vec3s_add(m.faceAngle, m.angleVel)
     vec3s_copy(m.marioObj.header.gfx.angle, m.faceAngle)
@@ -1600,3 +1715,21 @@ function invert_float(x)
 end
 
 originalTempo = sequence_player_get_tempo(SEQ_PLAYER_LEVEL) + (48 * 48)
+
+function uv_scroll_right(input_vtx, original_uv, current_uv)
+    local speed = 10
+
+    current_uv[1] = current_uv[1] + speed
+end
+
+function uv_scroll_spin(input_vtx, original_uv, current_uv)
+    -- adjustable constants
+    local speed = 0.005
+
+    -- equation for circular motion
+    local t = get_global_timer() * speed
+    local orig_theta = math.atan(original_uv[2], original_uv[1])
+    local orig_dist = math.sqrt((original_uv[1] ^ 2) + (original_uv[2] ^ 2))
+    current_uv[1] = orig_dist * math.cos(orig_theta + t)
+    current_uv[2] = orig_dist * math.sin(orig_theta + t)
+end

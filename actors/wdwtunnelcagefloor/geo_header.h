@@ -1,0 +1,10 @@
+extern const GeoLayout wdwtunnelcagefloor_geo[];
+extern Lights1 wdwtunnelcagefloor_f3dlite_material_lights;
+extern u8 wdwtunnelcagefloor_wdwgratecagething_ci8[];
+extern u8 wdwtunnelcagefloor_wdwgratecagething_pal_rgba16[];
+extern Vtx wdwtunnelcagefloor_Plane_mesh_layer_4_vtx_cull[8];
+extern Vtx wdwtunnelcagefloor_Plane_mesh_layer_4_vtx_0[4];
+extern Gfx wdwtunnelcagefloor_Plane_mesh_layer_4_tri_0[];
+extern Gfx mat_wdwtunnelcagefloor_f3dlite_material[];
+extern Gfx mat_revert_wdwtunnelcagefloor_f3dlite_material[];
+extern Gfx wdwtunnelcagefloor_Plane_mesh_layer_4[];

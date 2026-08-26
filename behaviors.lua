@@ -814,8 +814,8 @@ end
 
 local function bhv_custom_sign(o) --This is the single most evil addition to the game. Real proud of this one :')
     --m.particleFlags = m.particleFlags | PARTICLE_SPARKLES
-    local m = nearest_player_to_object(o)
-    if dist_between_objects(m, o) < 500 then
+    local m = nearest_mario_state_to_object(o)
+    if dist_between_objects(m.marioObj, o) < 500 then
         spawn_sync_if_main(id_bhvGoomba, E_MODEL_WOODEN_SIGNPOST, o.oPosX, o.oPosY, o.oPosZ, function (goomba)
             obj_copy_angle(goomba, o)
             goomba.oBehParams = o.oBehParams2ndByte
@@ -834,47 +834,49 @@ end
 local function bhv_custom_tree(o) -- Trees shoot into the sky until blowing up after 1.66 seconds.
     local m = nearest_mario_state_to_object(o)
     local np = gNetworkPlayers[0]
-    local mObj = m.marioObj
-    local grab_pole = m.action == ACT_GRAB_POLE_FAST or m.action == ACT_GRAB_POLE_SLOW
     local hoot_act = np.currLevelNum == LEVEL_WF and np.currActNum > 2
 
-    if dist_between_objects(mObj, o) < 600 and grab_pole and o.oAction ~= 2 then
-        o.oTimer = 0
-        o.oAction = 2
-    end
+    if m then
+        local grab_pole = m.action == ACT_GRAB_POLE_FAST or m.action == ACT_GRAB_POLE_SLOW
 
-    if o.oAction == 2 and o.oTimer == 1 then
-        local_play(sFireworkLaunch, m.pos, 2)
-    end
-
-    if o.oAction == 2 and o.oTimer < 50 then
-        o.oPosY = o.oPosY + 50
-        if o.oTimer % 5 == 0 then
-            spawn_non_sync_object(id_bhvFireworkSparkle, E_MODEL_YOSHI_EGG, o.oPosX, o.oPosY, o.oPosZ, function() end)
+        if dist_between_objects(m.marioObj, o) < 600 and grab_pole and o.oAction ~= 2 then
+            o.oTimer = 0
+            o.oAction = 2
         end
-    elseif o.oAction == 2 and o.oTimer == 50 then
-        obj_spawn_yellow_coins(o, 3)
-        obj_mark_for_deletion(o)
-        spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY + 240, o.oPosZ, function(e)
-            obj_scale(e, 4)
-        end)
-        set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
-        if dist_between_object_and_point(mObj, o.oPosX, o.oPosY + 240, o.oPosZ) < 500 then
-            if m.flags & MARIO_METAL_CAP == 0 then 
-                m.squishTimer = 50
-            elseif m.flags & MARIO_METAL_CAP ~= 0 then -- doesn't do anything and i have no idea why
-                set_mario_action(m, ACT_FLAG_AIR, 0)
-                set_mario_action(m, ACT_HARD_BACKWARD_AIR_KB, 0)
-                play_sound(SOUND_ACTION_METAL_BONK, m.pos)
-                stop_cap_music()
+
+        if o.oAction == 2 and o.oTimer == 1 then
+            local_play(sFireworkLaunch, m.pos, 2)
+        end
+
+        if o.oAction == 2 and o.oTimer < 50 then
+            o.oPosY = o.oPosY + 50
+            if o.oTimer % 5 == 0 then
+                spawn_non_sync_object(id_bhvFireworkSparkle, E_MODEL_YOSHI_EGG, o.oPosX, o.oPosY, o.oPosZ, function() end)
             end
-        end
+        elseif o.oAction == 2 and o.oTimer == 50 then
+            obj_spawn_yellow_coins(o, 3)
+            obj_mark_for_deletion(o)
+            spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, o.oPosX, o.oPosY + 240, o.oPosZ, function(e)
+                obj_scale(e, 4)
+            end)
+            set_camera_shake_from_hit(SHAKE_POS_MEDIUM)
+            if dist_between_object_and_point(m.marioObj, o.oPosX, o.oPosY + 240, o.oPosZ) < 500 then
+                if m.flags & MARIO_METAL_CAP == 0 then 
+                    m.squishTimer = 50
+                elseif m.flags & MARIO_METAL_CAP ~= 0 then -- doesn't do anything and i have no idea why
+                    set_mario_action(m, ACT_FLAG_AIR, 0)
+                    set_mario_action(m, ACT_HARD_BACKWARD_AIR_KB, 0)
+                    play_sound(SOUND_ACTION_METAL_BONK, m.pos)
+                    stop_cap_music()
+                end
+            end
 
-        if hoot_act and not gGlobalSyncTable.romhackcompatibility then
-            local hoot = obj_get_nearest_object_with_behavior_id(mObj, id_bhvHoot)
-            if hoot and hoot.oHootAvailability ~= HOOT_AVAIL_WANTS_TO_TALK then
-                hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
-                play_secondary_music(0,0,0,0)
+            if hoot_act and not gGlobalSyncTable.romhackcompatibility then
+                local hoot = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHoot)
+                if hoot and hoot.oHootAvailability ~= HOOT_AVAIL_WANTS_TO_TALK then
+                    hoot.oHootAvailability = HOOT_AVAIL_WANTS_TO_TALK
+                    play_secondary_music(0,0,0,0)
+                end
             end
         end
     end
@@ -2844,25 +2846,37 @@ end
 
 local function heaveho_loop(o)
     local m = nearest_mario_state_to_object(o)
+
     if o.oHeaveHoUnk88 >= 1 then
-        set_mario_action(m, ACT_RAGDOLL, 0)
-        m.pos.y = m.pos.y + 4
-    end
-    if is_within_100_units_of_mario(o.oPosX, o.oPosY, o.oPosZ) and m.forwardVel == -45 then
-        m.forwardVel = 45
-        m.vel.y = m.vel.y + 80
-    end
-    if o.oAction == 1 then 
-        o.oAction = 2
-    end
-    if o.oAction == 2 then
-        o.oForwardVel = 60  -- this isnt doing anything
-        --djui_chat_message_create("zoooom")
-        if o.oTimer == 30 then
-            o.oTimer = 0
-        end
+        m.pos.y = m.pos.y + 5
+        m.vel.y = m.vel.y + 280
+        set_mario_action(m, ACT_RAGDOLL, 2)
     end
 
+    --switch to custom action 2
+    if o.oAction == 1 then
+        o.oAction = 9
+    end
+
+    -- recreating heaveho's movement since o.oForwardVel/o.oHeaveHoUnkF4 cant be modified properly
+    if o.oAction == 9 then
+        local player = nearest_player_to_object(o);
+        local angleToPlayer = obj_angle_to_object(o, player)
+
+        local angleVel = 0
+        if cur_obj_lateral_dist_from_mario_to_home() > 1000 then
+            if player then 
+                angleToPlayer = cur_obj_angle_to_home() 
+            end
+            o.oHeaveHoUnkF4 = 1.5
+        else
+            o.oHeaveHoUnkF4 = 5.0
+        end
+        cur_obj_init_animation_with_accel_and_sound(0, o.oHeaveHoUnkF4)
+        o.oForwardVel = o.oHeaveHoUnkF4 * 10.0
+        angleVel = o.oHeaveHoUnkF4 * 0x400
+        o.oMoveAngleYaw = approach_s16_symmetric(o.oMoveAngleYaw, angleToPlayer, angleVel)
+    end
 end
 
 local function skeeter_loop(o)
@@ -4213,13 +4227,16 @@ end
 
 local function quicksand_plane_loop(o)
     load_object_collision_model()
+    obj_scale_xyz(o, 4.23, 1, 4.5)
 
     local m = gMarioStates[0]
+    local np = gNetworkPlayers[0]
     local diff = m.pos.y - o.oPosY
     local ignore = {
         [ACT_GONE] = true,
         [ACT_SPAWN_SPIN_AIRBORNE] = true,
         [ACT_SPAWN_SPIN_LANDING] = true,
+        [ACT_RAGDOLL] = true
     }
     if not ignore[m.action] then
         if diff > 850 then
@@ -4240,6 +4257,10 @@ local function qs_float_plat_loop(o)
     load_object_collision_model()
     if o.oBehParams2ndByte == 1 then
         obj_scale_xyz(o, 1.06, 1.3, 2.67)
+        o.oFaceAngleYaw = 0
+    elseif o.oBehParams2ndByte == 2 then
+        obj_scale_xyz(o, 1.06, 1.3, 1.56)
+        o.oFaceAngleYaw = 0
     else
         obj_scale_xyz(o, 1.06, 1.3, 1.06)
         o.oFaceAngleYaw = -16384
@@ -4252,6 +4273,35 @@ local function qs_float_plat_loop(o)
         end
     end
 end
+
+local function wdw_tunnel_cage_floor_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.collisionData = COL_WDW_TUNNEL_CAGE
+    o.oCollisionDistance = 3000
+    o.header.gfx.skipInViewCheck = true
+    bhv_init_room()
+end
+
+local function wdw_tunnel_cage_floor_loop(o)
+    load_object_collision_model()
+    obj_scale_xyz(o, 5.12, 1, 5.12)
+end
+
+local function qs_fog_plane_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+    bhv_init_room()
+end
+
+local function qs_fog_plane_loop(o)
+    obj_scale_xyz(o, 4.23, 1, 4.5)
+
+    local obj = obj_get_first_with_behavior_id(id_bhvQuicksandPlane)
+    if obj then
+        o.oPosY = obj.oPosY + 100
+    end
+end
+
 
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
@@ -4411,3 +4461,5 @@ id_bhvThwompEvent = hook_behavior(nil, OBJ_LIST_SURFACE, true, cork_thwomp_init,
 id_bhvCoinFountain = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, nil, coin_fountain_loop, "bhvCoinFountain")
 id_bhvQuicksandPlane = hook_behavior(nil, OBJ_LIST_SURFACE, true, quicksand_plane_init, quicksand_plane_loop, "bhvQuicksandPlane")
 id_bhvQSFloatingPlatform = hook_behavior(nil, OBJ_LIST_SURFACE, true, qs_float_plat_init, qs_float_plat_loop, "bhvQSFloatingPlatform")
+id_bhvWDWTunnelCageFloor = hook_behavior(nil, OBJ_LIST_SURFACE, true, wdw_tunnel_cage_floor_init, wdw_tunnel_cage_floor_loop, "bhvWDWTunnelCageFloor")
+id_bhvQuicksandFogPlane = hook_behavior(nil, OBJ_LIST_GENACTOR, true, qs_fog_plane_init, qs_fog_plane_loop, "bhvQuicksandFogPlane")

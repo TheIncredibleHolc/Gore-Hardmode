@@ -115,6 +115,9 @@ play_transition, network_is_server, obj_check_hitbox_overlap, network_player_con
 
 -------------------helpers------------------------------
 
+-- uv-scroll lib
+local UvScroll = require('/lib/uv-scroll')
+
 --Scrolling textures
 add_scroll_target(1, "hell_dl_cave_and_lava_mesh_layer_1_vtx_0", 0, 79)
 
@@ -874,7 +877,7 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     end
 
     -- BONK DEATH DETECTION FOR HEAVEHO THROWS SPECIFICALLY (Really just for WDW)
-    if (m.action == ACT_THROWN_BACKWARD) or (m.action == ACT_THROWN_FORWARD) and (s.flyingVel > 60) and np.currLevelNum == LEVEL_WDW then
+    if (m.action == ACT_RAGDOLL) and (s.flyingVel > 60) and np.currLevelNum == LEVEL_WDW then
         local heaveho = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvHeaveHoThrowMario)
         if heaveho ~= nil and mario_is_within_rectangle(heaveho.oPosX - 100, heaveho.oPosX + 100, heaveho.oPosZ - 100, heaveho.oPosZ + 100) == 0 and m.wall ~= nil then
             mario_blow_off_cap(m, 45)
@@ -1797,6 +1800,28 @@ function hook_update()
     for i = 0, MAX_PLAYERS - 1 do
         network_player_set_description(gNetworkPlayers[i], "Deaths:  " ..tostring(gPlayerSyncTable[i].personaldeathcount), 175, 0, 0, 255)
     end
+
+    -- move wdw secrets star to bobomb buddy position
+    if np.currLevelNum == LEVEL_WDW then
+        local secretsStar = obj_get_first_with_behavior_id(id_bhvHiddenStar)
+        if secretsStar then
+            secretsStar.oPosX = 0
+            secretsStar.oPosY = 3450
+            secretsStar.oPosZ = 3590
+        end
+        local rm = obj_get_first_with_behavior_id(id_bhvRedCoinStarMarker)
+        local r = obj_get_first_with_behavior_id(id_bhvHiddenRedCoinStar)
+        if rm then
+            rm.oPosX = -770
+            rm.oPosY = -300
+            rm.oPosZ = 1800
+        end
+        if r then
+            r.oPosX = -770
+            r.oPosY = 0
+            r.oPosZ = 1800
+        end
+    end
 end
 
 ----------------------------------------------------------------------------------------------------------------------------------
@@ -2058,7 +2083,6 @@ function before_mario_action(m, action)
         network_play(sSplash, m.pos, 1, m.playerIndex)
         spawn_non_sync_object(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, m.pos.x, m.pos.y, m.pos.z, function() end)
         m.health = 0xff
-        
         return 1
     end
 
@@ -2699,6 +2723,11 @@ hook_event(HOOK_ON_SYNC_VALID, function()
 
     if syncFunc and not gGlobalSyncTable.romhackcompatibility then
         syncFunc()
+    end
+
+    if gNetworkPlayers[0].currLevelNum == LEVEL_WDW then
+        UvScroll.hook_scrolling_function('quicksandPlane_Plane_mesh_layer_1_tri_0', uv_scroll_right)
+        UvScroll.hook_scrolling_function('quicksandFogPlane_Plane_mesh_layer_5_tri_0', uv_scroll_spin)
     end
 end)
 
