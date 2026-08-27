@@ -115,11 +115,20 @@ play_transition, network_is_server, obj_check_hitbox_overlap, network_player_con
 
 -------------------helpers------------------------------
 
--- uv-scroll lib
+-- libraries (thank you blocky and peachy for providing libs)
 local UvScroll = require('/lib/uv-scroll')
+local warpUtils = require('/lib/warps')
+osync = require('/lib/osync')
+
+-- adding pipes in wdw (thank you blocky)
+warpUtils.newWarpNode(LEVEL_WDW, 1, 0x015, LEVEL_WDW, 2, 0x016, pipe_entry, pipe_exit, true)
+warpUtils.createWarpObj(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 0x015, nil, LEVEL_WDW, 1, {4096, 3072, -3325}, nil)
+
+warpUtils.newWarpNode(LEVEL_WDW, 2, 0x016, LEVEL_WDW, 1, 0x015, pipe_entry, pipe_exit, true)
+warpUtils.createWarpObj(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 0x016, nil, LEVEL_WDW, 2, {-2545, -2550, -2055}, nil)
 
 --Scrolling textures
-add_scroll_target(1, "hell_dl_cave_and_lava_mesh_layer_1_vtx_0", 0, 79)
+add_scroll_target(1, "hell_dl_cave_and_lava_mesh_layer_1_vtx_0")
 
 -- Unlock JRB cannon
 save_file_set_star_flags(get_current_save_file_num() - 1, COURSE_JRB, 0x80)

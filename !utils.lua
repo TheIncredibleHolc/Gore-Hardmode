@@ -1039,34 +1039,46 @@ sOnLvlInitToFunc = {
         end
 
         -- deletes fading warps
-        local o = obj_get_first_with_behavior_id(id_bhvFadingWarp)
-        while o do
-            obj_mark_for_deletion(o)
-            o = obj_get_next_with_same_behavior_id(o)
+        local f = obj_get_first_with_behavior_id(id_bhvFadingWarp)
+        while f do
+            obj_mark_for_deletion(f)
+            f = obj_get_next_with_same_behavior_id(f)
+        end
+
+        --adds more dry to dry world
+        local qsPlane = obj_get_first_with_behavior_id(id_bhvQuicksandPlane)
+        local qsFogPlane = obj_get_first_with_behavior_id(id_bhvQuicksandFogPlane)
+        if not qsPlane then
+            spawn_non_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, 375, 50, 150, function(o) o.oFaceAngleYaw = 0 end)
+        end
+        if not qsFogPlane then
+            spawn_non_sync_object(id_bhvQuicksandFogPlane, E_MODEL_QS_FOG_PLANE, 375, 150, 150, function (o) o.oFaceAngleYaw = 0 end)
         end
     end
 }
 
 sOnSyncValidtoFunc = {
     [LEVEL_BOB] = function()
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6233, 975, 3337, function() end)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 3337, 791, 3265, function() end)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 4499, 768, 6669, function() end)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 5294, 1020, 5154, function() end)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6948, 873, 5019, function() end)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6394, 768, 6766, function() end)
-        spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 2586, 768, 6719, function() end)
+        osync.spawn_sync_objects("bob", function()
+            osync.spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6233, 975, 3337, function() end)
+            osync.spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 3337, 791, 3265, function() end)
+            osync.spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 4499, 768, 6669, function() end)
+            osync.spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 5294, 1020, 5154, function() end)
+            osync.spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6948, 873, 5019, function() end)
+            osync.spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 6394, 768, 6766, function() end)
+            osync.spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 2586, 768, 6719, function() end)
 
-        spawn_sync_object(id_bhvCannonClosed, E_MODEL_DL_CANNON_LID, 4348, 3071, 1230, function(obj) obj.oFaceAngleYaw = 0 end)
-        spawn_sync_object(id_bhvCannon, E_MODEL_CANNON_BASE, 4352, 2732, 1229, function(obj) obj.oFaceAngleYaw = -32768 end)
+            osync.spawn_sync_object(id_bhvCannonClosed, E_MODEL_DL_CANNON_LID, 4348, 3071, 1230, function(obj) obj.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvCannon, E_MODEL_CANNON_BASE, 4352, 2732, 1229, function(obj) obj.oFaceAngleYaw = -32768 end)
 
-        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 5389, 1597, 4617, function(obj) obj.oWaterCannonUnk100 = -16384 obj.oMoveAngleYaw = -16384 end)
-        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, -5008, 1402, -3521, function(obj) obj.oWaterCannonUnk100 = 8192 obj.oMoveAngleYaw = 8192 end)
-        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 6350, 2150, -7072,  function(obj) obj.oWaterCannonUnk100 = -8192 obj.oMoveAngleYaw = -8192 end)
-        spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 4248, 3141, -2456, function(obj) obj.oWaterCannonUnk100 = -4096 obj.oMoveAngleYaw = -4096 end)
-        if gNetworkPlayers[0].currActNum > 1 then
-            spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, -5694, 198, 5600, function(obj) obj.oWaterCannonUnk100 = 24576 obj.oMoveAngleYaw = 24576 end)
-        end
+            osync.spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 5389, 1597, 4617, function(obj) obj.oWaterCannonUnk100 = -16384 obj.oMoveAngleYaw = -16384 end)
+            osync.spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, -5008, 1402, -3521, function(obj) obj.oWaterCannonUnk100 = 8192 obj.oMoveAngleYaw = 8192 end)
+            osync.spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 6350, 2150, -7072,  function(obj) obj.oWaterCannonUnk100 = -8192 obj.oMoveAngleYaw = -8192 end)
+            osync.spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 4248, 3141, -2456, function(obj) obj.oWaterCannonUnk100 = -4096 obj.oMoveAngleYaw = -4096 end)
+            if gNetworkPlayers[0].currActNum > 1 then
+                osync.spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, -5694, 198, 5600, function(obj) obj.oWaterCannonUnk100 = 24576 obj.oMoveAngleYaw = 24576 end)
+            end
+        end)
     end,
     [LEVEL_JRB] = function()
         local np = gNetworkPlayers[0]
@@ -1080,20 +1092,22 @@ sOnSyncValidtoFunc = {
         end
     end,
     [LEVEL_HMC] = function()
-        -- Spawns coins to hint towards the new floor switch location
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, function() end)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4460, 4890, function() end)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4260, 4890, function() end)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -5321, -6327, 3500, function() end)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4900, -6327, 2220, function() end)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3500, -6327, 1750, function() end)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 2150, function() end)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -1760, -6327, 3630, function() end)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 4910, function() end)
-        spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3560, -6327, 5330, function() end)
-        spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3580, -5221, -825, function(o)
-            o.oBehParams2ndByte = 4
-            o.oFaceAngleYaw = 0
+        osync.spawn_sync_objects("hmc", function()
+            -- Spawns coins to hint towards the new floor switch location
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4660, 4890, function() end)
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4460, 4890, function() end)
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4890, -4260, 4890, function() end)
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -5321, -6327, 3500, function() end)
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -4900, -6327, 2220, function() end)
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3500, -6327, 1750, function() end)
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 2150, function() end)
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -1760, -6327, 3630, function() end)
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -2170, -6327, 4910, function() end)
+            osync.spawn_sync_object(id_bhvYellowCoin, E_MODEL_YELLOW_COIN, -3560, -6327, 5330, function() end)
+            osync.spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3580, -5221, -825, function(o)
+                o.oBehParams2ndByte = 4
+                o.oFaceAngleYaw = 0
+            end)
         end)
     end,
     [LEVEL_LLL] = function()
@@ -1104,71 +1118,118 @@ sOnSyncValidtoFunc = {
             -- Removes express elevator
             obj_mark_for_deletion(obj_get_first_with_behavior_id(id_bhvWdwExpressElevator))
 
-            --adds more dry to dry world
-            spawn_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, 375, 50, 150, function(o) o.oFaceAngleYaw = 0 end)
-            spawn_sync_object(id_bhvQuicksandFogPlane, E_MODEL_QS_FOG_PLANE, 375, 150, 150, function (o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_objects("wdw_area_1", function()
+                -- squares
+                osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 3390, 64, 384, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 64, 3584, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 448, 1536, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 2 end)
+                osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -1279, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 1940, 64, 4150, function(o) o.oFaceAngleYaw = 0 end)
 
-            --blocks tunnel to area 2 
-            spawn_sync_object(id_bhvWDWTunnelCageFloor, E_MODEL_WDW_TUNNEL_CAGE, 4096, 3072, -3325, function(o) o.oFaceAngleYaw = 32768 end)
+                -- rectangles
+                osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 1216, 128, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -2687, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
 
-            -- squares
-            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 3390, 64, 384, function() end)
-            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 64, 3584, function() end)
-            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 448, 1536, function(o) o.oBehParams2ndByte = 2 end)
-            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -1279, function() end)
-            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 1940, 64, 4150, function() end)
+                --blocks tunnel to area 2 
+                osync.spawn_sync_object(id_bhvWDWTunnelCageFloor, E_MODEL_WDW_TUNNEL_CAGE, 4096, 3072, -3325, function(o) o.oFaceAngleYaw = 32768 end)
 
-            -- rectangles
-            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 1216, 128, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
-            spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -2687, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
+                -- 10 coin exclam box (also secret indicator)
+                osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 1960, 2040, 2180, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 5 end)
+                osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 640, 1090, 3710, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 5 end)
+                osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 3310, 470, 2925, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 5 end)
 
-            -- 10 coin exclam box (also secret indicator)
-            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 1960, 2040, 2180, function(o) o.oBehParams2ndByte = 5 end)
-            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 640, 1090, 3710, function(o) o.oBehParams2ndByte = 5 end)
-            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 3310, 470, 2925, function(o) o.oBehParams2ndByte = 5 end)
+                -- spawns new blue coin switch inside the metal box nearby
+                osync.spawn_sync_object(id_bhvBlueCoinSwitch, E_MODEL_BLUE_COIN_SWITCH, -2190, 385, 1105, function(o) o.oFaceAngleYaw = 0 end)
 
-            -- spawns new blue coin switch inside the metal box nearby
-            spawn_sync_object(id_bhvBlueCoinSwitch, E_MODEL_BLUE_COIN_SWITCH, -2190, 385, 1105, function() end)
+                -- spawn pipe
+                --[[ osync.spawn_sync_object(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 4096, 3072, -3325, function(o)
+                    o.oFaceAngleYaw = -16384
+                    o.oBehParams = 13 << 16
+                    o.oBehParams2ndByte = 60
+                    area_create_warp_node(13, LEVEL_WDW, 2, 16, WARP_NO_CHECKPOINT, o)
+                end) ]]
+                
+                -- spawn more enemies
+                osync.spawn_sync_object(id_bhvSkeeter, E_MODEL_SKEETER, -1260, 384, 1850, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvFireSpitter, E_MODEL_BOWLING_BALL, -740, 1280, 180, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvFireSpitter, E_MODEL_BOWLING_BALL, 0, 3200, 3590, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 120, 2304, -1885, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, 895, 2410, -1740, function(o) o.oFaceAngleYaw = 0 end)
 
-            -- spawn pipe
-            spawn_sync_object(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 4096, 3072, -3325, function(o)
-                o.oFaceAngleYaw = -16384
-                o.oBehParams = 13 << 16
-                o.oBehParams2ndByte = 60
-                area_create_warp_node(13, LEVEL_WDW, 2, 16, WARP_NO_CHECKPOINT, o)
+                osync.spawn_sync_object(id_bhvFadingWarp, E_MODEL_NONE, -3093, 620, 3297, function(o)
+                    o.oBehParams = 14 << 16
+                    o.oBehParams2ndByte = 21
+                    area_create_warp_node(14, LEVEL_WDW, 1, 15, WARP_NO_CHECKPOINT, o)
+                end)
+                osync.spawn_sync_object(id_bhvFadingWarp, E_MODEL_NONE, 3392, 1600, 888, function(o)
+                    o.oBehParams = 15 << 16
+                    o.oBehParams2ndByte = 22
+                    area_create_warp_node(15, LEVEL_WDW, 1, 14, WARP_NO_CHECKPOINT, o)
+                end)
+
             end)
-            
-            -- spawn more enemies
-            spawn_sync_object(id_bhvSkeeter, E_MODEL_SKEETER, -1260, 384, 1850, function() end)
-            spawn_sync_object(id_bhvFireSpitter, E_MODEL_BOWLING_BALL, -740, 1280, 180, function() end)
-            spawn_sync_object(id_bhvFireSpitter, E_MODEL_BOWLING_BALL, 0, 3200, 3590, function() end)
-            spawn_sync_object(id_bhvHeaveHo, E_MODEL_HEAVE_HO, 120, 2304, -1885, function() end)
-            spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, 895, 2410, -1740, function() end)
-
-            spawn_sync_object(id_bhvFadingWarp, E_MODEL_NONE, -3093, 620, 3297, function(o)
-                o.oBehParams = 14 << 16
-                o.oBehParams2ndByte = 21
-                area_create_warp_node(14, LEVEL_WDW, 1, 15, WARP_NO_CHECKPOINT, o)
-            end)
-            spawn_sync_object(id_bhvFadingWarp, E_MODEL_NONE, 3392, 1600, 888, function(o)
-                o.oBehParams = 15 << 16
-                o.oBehParams2ndByte = 22
-                area_create_warp_node(15, LEVEL_WDW, 1, 14, WARP_NO_CHECKPOINT, o)
-            end)
-
         else
-            -- spawn pipe
-            spawn_sync_object(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, -2545, -2550, -2055, function(o)
-                o.oFaceAngleYaw = -16384
-                o.oBehParams = 16 << 16
-                o.oBehParams2ndByte = 60
-                area_create_warp_node(16, LEVEL_WDW, 1, 13, WARP_NO_CHECKPOINT, o)
+            osync.spawn_sync_objects("wdw_area_2", function()
+                --[[ -- spawn pipe
+                osync.spawn_sync_object(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, -2545, -2550, -2055, function(o)
+                    o.oFaceAngleYaw = -16384
+                    o.oBehParams = 16 << 16
+                    o.oBehParams2ndByte = 60
+                    area_create_warp_node(16, LEVEL_WDW, 1, 13, WARP_NO_CHECKPOINT, o)
+                end) ]]
+
+                --adds more dry to dry world (non-sync to prevent cheese)
+                spawn_non_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, -760, -2555, 1250, function(o) o.oFaceAngleYaw = 0 end)
+
+                osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 705, -2560, 2770, function(o) o.oFaceAngleYaw = 0 end)
+
+                osync.spawn_sync_object(id_bhvFloorSwitchHiddenObjects, E_MODEL_PURPLE_SWITCH, -770, -1791, 3450, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, -3680, -1800, 1400, function(o) o.oFaceAngleYaw = 32768 o.oBehParams2ndByte = 2 end)
+
+                -- adds extra hidden objects to be activated with the floor switch
+                
+                osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -3680, -2200, 1400, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -3480, -2200, 1400, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -3280, -2200, 1400, function(o) o.oFaceAngleYaw = 0 end)
+
+                osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -2100, -1645, 2610, function(o) o.oFaceAngleYaw = 0 end)
+                osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -2300, -1645, 2610, function(o) o.oFaceAngleYaw = 0 end)
+
+                osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 1660, -2290, -1270, function(o) o.oFaceAngleYaw = 0 end)
+
+                osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -3085, -1075, -1435, function(o) o.oFaceAngleYaw = 0 end)
+
+                osync.spawn_sync_object(id_bhvWDWTunnelCageFloor, E_MODEL_WDW_TUNNEL_CAGE, -365, -1000, -3315, function(o) end)
+                osync.spawn_sync_object(id_bhvMessagePanel, E_MODEL_WOODEN_SIGNPOST, -500, -1496, -3322, function(o)
+                    o.oFaceAngleYaw = 0
+                    o.oBehParams2ndByte = 52
+                end)
             end)
 
-            --adds more dry to dry world
-            spawn_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, -760, -2555, 1250, function() end)
-            spawn_sync_object(id_bhvFloorSwitchHiddenObjects, E_MODEL_PURPLE_SWITCH, -780, -1300, -450, function() end)
-            spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, -3680, -2075, 1420, function(o) o.oBehParams2ndByte = 2 end)
+            local e = obj_get_first_with_behavior_id(id_bhvExclamationBox)
+            while e do
+                obj_mark_for_deletion(e)
+                e = obj_get_next_with_same_behavior_id(e)
+            end
+
+            local r = obj_get_first_with_behavior_id(id_bhvRedCoin)
+            local coin_pos = {
+                {x = 100, y = -1771, z = -1500},
+                {x = -370, y = -1795, z = -180},
+                {x = -1180, y = -1795, z = -180},
+                {x = -780, y = -2155, z = 2860},
+                {x = -780, y = -1020, z = 3400},
+                {x = 1820, y = -1387, z = 1020},
+                {x = -3720, y = -1131, z = 520},
+                {x = 1660, y = -1790, z = -1270}
+            }
+
+            for _, pos in ipairs(coin_pos) do
+                if not r then break end
+
+                r.oPosX, r.oPosY, r.oPosZ = pos.x, pos.y, pos.z
+                r = obj_get_next_with_same_behavior_id(r)
+            end
         end
     end,
     [LEVEL_SECRETHUB] = function()
@@ -1750,6 +1811,7 @@ end
 
 originalTempo = sequence_player_get_tempo(SEQ_PLAYER_LEVEL) + (48 * 48)
 
+
 function uv_scroll_right(input_vtx, original_uv, current_uv)
     local speed = 10
 
@@ -1766,4 +1828,13 @@ function uv_scroll_spin(input_vtx, original_uv, current_uv)
     local orig_dist = math.sqrt((original_uv[1] ^ 2) + (original_uv[2] ^ 2))
     current_uv[1] = orig_dist * math.cos(orig_theta + t)
     current_uv[2] = orig_dist * math.sin(orig_theta + t)
+end
+
+function pipe_entry(m, o)
+    play_sound(SOUND_MENU_ENTER_PIPE, gGlobalSoundSource)
+end
+
+function pipe_exit(m, o)
+    play_sound(SOUND_MENU_ENTER_PIPE, gGlobalSoundSource)
+    set_mario_action(m, ACT_EMERGE_FROM_PIPE, 0)
 end

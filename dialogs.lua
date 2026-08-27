@@ -573,16 +573,31 @@ Jump off from the\
 handstand for a high,\
 stylin' dismount."))
 
-smlua_text_utils_dialog_replace(DIALOG_052,1,5,30,200, ("Stop and press [Z] to\
-crouch, then press [A]\
-to do a high, Backward\
-Somersault!\
+smlua_text_utils_dialog_replace(DIALOG_052,1,5,30,200, ("While reworking Dry World,\
+I had a lot of ideas that\
+sprung up after the\
+addition of the Quicksand.\
 \
-To perform a Side\
-Somersault, run, do a\
-sharp U-turn and jump.\
-You can catch lots of\
-air with both jumps."))
+Yes, this was based off\
+of Nova Stars' quicksand\
+challenge.\
+\
+Is that really surprising?\
+Anyways, everything just\
+fell into place during\
+development. It's one of\
+the cleaner levels in my\
+opinion.\
+Thanks again Blocky and\
+Peachy for providing really\
+useful libraries cuz I\
+wouldn't have figured these\
+bugs out by myself.\
+Definitely one of my\
+favorite levels, hopefully\
+whoever is reading this\
+enjoyed it too.\
+- sherbie"))
 
 smlua_text_utils_dialog_replace(DIALOG_053,1,5,30,200, ("Sometimes, if you pass\
 through a coin ring or\

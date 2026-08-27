@@ -4249,17 +4249,18 @@ local function quicksand_plane_loop(o)
     obj_scale_xyz(o, 4.23, 1, 4.5)
 
     local m = gMarioStates[0]
-    local np = gNetworkPlayers[0]
     local diff = m.pos.y - o.oPosY
     local ignore = {
         [ACT_GONE] = true,
         [ACT_SPAWN_SPIN_AIRBORNE] = true,
         [ACT_SPAWN_SPIN_LANDING] = true,
-        [ACT_RAGDOLL] = true
+        [ACT_RAGDOLL] = true,
+        [ACT_EMERGE_FROM_PIPE] = true,
+        [ACT_UNINITIALIZED] = true
     }
     if not ignore[m.action] then
-        if diff > 850 then
-            o.oPosY = m.pos.y - 850
+        if diff > 900 then
+            o.oPosY = m.pos.y - 900
         end
     end
 end
@@ -4304,6 +4305,11 @@ end
 local function wdw_tunnel_cage_floor_loop(o)
     load_object_collision_model()
     obj_scale_xyz(o, 5.12, 1, 5.12)
+    if gNetworkPlayers[0].currAreaIndex == 2 then
+        o.oFaceAngleYaw = -16384
+        o.oFaceAnglePitch = 16384
+        o.oFaceAngleRoll = 0
+    end 
 end
 
 local function qs_fog_plane_init(o)
