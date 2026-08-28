@@ -306,7 +306,16 @@ tetrisphere2 = audio_stream_load("iwbtg3.ogg")          loop(tetrisphere2)
 finalegg = audio_stream_load("iwbtg4.ogg")              loop(finalegg)
 millionaire = audio_stream_load("millionaire.ogg")      loop(millionaire)
 jackpotShort = audio_stream_load("jackpotCork.ogg")
+pianoKris = audio_stream_load("pianoKris.ogg")
 pianoLullaby = audio_stream_load("pianoLullaby.ogg")
+pianoMansion = audio_stream_load("pianoMansion.ogg")
+pianoMGR = audio_stream_load("pianoMGR.ogg")
+pianoOmori = audio_stream_load("pianoOmori.ogg")
+pianoSA2 = audio_stream_load("pianoSA2.ogg")
+pianoSMB2 = audio_stream_load("pianoSMB2.ogg")
+pianoWater = audio_stream_load("pianoWater.ogg")
+
+
 
 iwbtgMusic = {
     iwbtg,
@@ -355,7 +364,14 @@ function stream_stop_all()
     audio_stream_stop(finalegg)
     audio_stream_stop(millionaire)
     audio_stream_stop(jackpotShort)
+    audio_stream_stop(pianoKris)
     audio_stream_stop(pianoLullaby)
+    audio_stream_stop(pianoMansion)
+    audio_stream_stop(pianoMGR)
+    audio_stream_stop(pianoOmori)
+    audio_stream_stop(pianoSA2)
+    audio_stream_stop(pianoSMB2)
+    audio_stream_stop(pianoWater)
     currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()
@@ -633,6 +649,7 @@ define_custom_obj_fields({
     oFountainChosenID = "f32",
     oFountainChosenModel = "f32",
     oPrevPianoVolume = "f32",
+    oRandomPianoTrack = "u32"
 })
 end
 
@@ -1196,15 +1213,19 @@ sOnSyncValidtoFunc = {
                 end) ]]
 
                 --adds more dry to dry world (non-sync to prevent cheese)
+                spawn_non_sync_object(id_bhvQuicksandFogPlane, E_MODEL_QS_FOG_PLANE, -760, -2455, 1250, function (o) o.oFaceAngleYaw = 0 end)
                 spawn_non_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, -760, -2555, 1250, function(o) o.oFaceAngleYaw = 0 end)
 
                 osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 705, -2560, 2770, function(o) o.oFaceAngleYaw = 0 end)
 
                 osync.spawn_sync_object(id_bhvFloorSwitchHiddenObjects, E_MODEL_PURPLE_SWITCH, -770, -1791, 3450, function(o) o.oFaceAngleYaw = 0 end)
-                osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, -3680, -1800, 1400, function(o) o.oFaceAngleYaw = 32768 o.oBehParams2ndByte = 2 end)
+                osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, -3680, -1800, 1400, function(o)
+                    o.parentObj = nil
+                    o.oFaceAngleYaw = 0
+                    o.oBehParams2ndByte = 2
+                end)
 
                 -- adds extra hidden objects to be activated with the floor switch
-                
                 osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -3680, -2200, 1400, function(o) o.oFaceAngleYaw = 0 end)
                 osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -3480, -2200, 1400, function(o) o.oFaceAngleYaw = 0 end)
                 osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -3280, -2200, 1400, function(o) o.oFaceAngleYaw = 0 end)
@@ -1218,7 +1239,8 @@ sOnSyncValidtoFunc = {
 
                 osync.spawn_sync_object(id_bhvWDWTunnelCageFloor, E_MODEL_WDW_TUNNEL_CAGE, -365, -1000, -3315, function(o) end)
                 osync.spawn_sync_object(id_bhvMessagePanel, E_MODEL_WOODEN_SIGNPOST, -500, -1496, -3322, function(o)
-                    o.oFaceAngleYaw = 0
+                    o.parentObj = nil
+                    o.oFaceAngleYaw = -16384
                     o.oBehParams2ndByte = 52
                 end)
             end)

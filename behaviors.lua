@@ -1516,7 +1516,10 @@ function bhv_custom_piano_init(o)
     initHomeX = o.oHomeX
     initHomeZ = o.oHomeZ
     initAngleYaw = o.oFaceAngleYaw
-    spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(obj) obj.oBehParams2ndByte = 1 obj.oAction = 1 end)
+    spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(obj)
+        obj.parentObj = o
+        obj.oAction = 1
+    end)
 end
 
 function bhv_custom_piano_loop(o)
@@ -1541,7 +1544,7 @@ function bhv_custom_piano_loop(o)
         o.oAction = MAD_PIANO_ACT_WAIT
     end
 
-    if dist_between_objects(m.marioObj, o) < 700 and not ignore[m.action] then
+    if dist_between_objects(m.marioObj, o) < 1000 and not ignore[m.action] then
         local angleToPlayer = obj_angle_to_object(o, m.marioObj)
         o.oPosX = m.pos.x
         o.oPosZ = m.pos.z
@@ -1560,9 +1563,6 @@ function bhv_custom_piano_loop(o)
     if o.activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM ~= 0 then
         o.oAction = MAD_PIANO_ACT_WAIT
     end
-
-    --djui_chat_message_create(tostring(m.currentRoom))
-    --djui_chat_message_create(tostring(o.oRoom))
 end
 
 function bhv_custom_chairs(o)
@@ -2821,7 +2821,7 @@ function hoot_loop(o)
     end
 end
 
-function chuckya(o)
+function custom_chuckya_loop(o)
     local n = nearest_mario_state_to_object(o)
     local m = gMarioStates[0]
     if o.oTimer == 10 and o.oAction == 1 then
@@ -2833,7 +2833,7 @@ function chuckya(o)
     if o.oAction == 0 then
         if o.oSubAction == 1 then
             o.oForwardVel = o.oForwardVel + 10
-            if lateral_dist_between_objects(n.marioObj, o) > 500 then
+            if lateral_dist_between_objects(n.marioObj, o) > 300 then
                 o.oMoveAngleYaw = angleToMario
             end
         end
@@ -3496,47 +3496,71 @@ function static_obj_loop(o)
 
     local m = gMarioStates[0]
     local piano = obj_get_nearest_object_with_behavior_id(o, id_bhvMadPiano)
-    if piano then
-        if o.oBehParams2ndByte == 1 then
-            obj_copy_pos(o, piano)
-        end
-        if piano.oAction == MAD_PIANO_ACT_ATTACK then
+    local track = {
+        [1] = pianoLullaby,
+        [2] = pianoMansion,
+        [3] = pianoMGR,
+        [4] = pianoOmori,
+        [5] = pianoSA2,
+        [6] = pianoSMB2,
+        [7] = pianoWater,
+        [8] = pianoKris,
+    }
+
+    if o.parentObj == piano and m then
+        obj_copy_pos(o, piano)
+
+        if o.parentObj.oAction == MAD_PIANO_ACT_ATTACK and o.oAction ~= 3 then
             stream_stop_all()
             o.oAction = 3
         end
-        if (m.currentRoom ~= piano.oRoom and o.oAction == 3) then
+
+        -- comment out if tp instakill isnt chosen
+        if (m.currentRoom ~= o.parentObj.oRoom and o.oAction == 3) then
             o.oAction = 4
         end
-        if o.oAction == 4 and o.oTimer == 150 then
-            o.oAction = 1
+
+        if o.oAction == 4 then
+            if o.oTimer == 150 then
+                o.oAction = 1
+            end
         end
-        --djui_chat_message_create(tostring(piano.oRoom))
 
         local dist = dist_between_objects(m.marioObj, o)
         local maxDist = 4000
-        local validRooms = {
-            [9] = true,
-            [10] = true,
-            [11] = true,
-            [12] = true,
-            [13] = true,
-            [29] = true,
-            [30] = true,
-            [31] = true,
-            [32] = true,
-            [0] = true,
-        }
+        local validRooms = { [9] = true, [10] = true, [11] = true, [12] = true, [13] = true, [29] = true, [30] = true, [31] = true, [32] = true, [0] = true }
 
-        if (gGlobalSyncTable.romhackcompatibility == false and not validRooms[m.currentRoom] and dist < maxDist) or (gGlobalSyncTable.romhackcompatibility and dist < maxDist) then
+        local pianoValid = gGlobalSyncTable.romhackcompatibility or not validRooms[m.currentRoom]
+
+        if pianoValid and dist < maxDist then
 
             local volume = math.floor((math.max(0, math.min(2, 2 * (1 - ((dist - 1500) / (maxDist - 1500)))))) * 10 + 0.5) / 10
 
+            if m.currentRoom == o.parentObj.oRoom then
+                volume = math.min(2.5, volume + 0.5)
+            end
+
             if ia(m) then
                 if o.oAction == 1 then
+
+                    -- 25% chance for any rare song, 75% for common songs
+                    local roll = math.random(1, 4)
+                    if roll == 4 then
+                        local rareSongs = { 4, 5, 8 } -- Omori, SA2, Kris
+                        o.oRandomPianoTrack = rareSongs[math.random(1, #rareSongs)]
+                    else
+                        local normalSongs = { 1, 2, 3, 6, 7 } -- Lullaby, Mansion, MGR, SMB2, Water
+                        o.oRandomPianoTrack = normalSongs[math.random(1, #normalSongs)]
+                    end
+
+                    local randomTrack = track[o.oRandomPianoTrack]
+
                     fadeout_level_music(900)
-                    stream_play(pianoLullaby)
+                    stream_play(randomTrack)
                     o.oAction = 2
+
                 elseif o.oAction == 2 then
+
                     if o.oPrevPianoVolume == nil then o.oPrevPianoVolume = 0 end
 
                     if math.abs(volume - o.oPrevPianoVolume) >= 0.09 or (volume == 0 and o.oPrevPianoVolume > 0) then
@@ -3550,15 +3574,25 @@ function static_obj_loop(o)
                     else
                         fadeout_level_music(900)
                     end
+
+                    local currentAudio = track[o.oRandomPianoTrack]
+                    if currentAudio and not currentAudio.playing then
+                        o.oAction = 4
+                        o.oTimer = 0
+                    end
                 end
             end
         else
-            if ia(m) then
+            if ia(m) and o.oAction < 3 then
                 o.oAction = 1
                 stream_stop_all()
-                --set_background_music(0, get_current_background_music(), 0)
+                set_background_music(0, get_current_background_music(), 0)
             end
+            
         end
+    elseif not piano and ia(m) then
+        stream_stop_all()
+        set_background_music(0, get_current_background_music(), 0)
     end
 end
 
@@ -4542,7 +4576,7 @@ hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_custom_init, bhv_bowse
 --hook_gore_behavior(id_bhvWingCap, false, nil, bhv_custom_wc)
 --hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
 hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
-hook_gore_behavior(id_bhvChuckya, false, nil, chuckya)
+hook_gore_behavior(id_bhvChuckya, false, nil, custom_chuckya_loop)
 hook_gore_behavior(id_bhvFlame, false, flame_loop)
 hook_gore_behavior(id_bhvBreakableBoxSmall, false, nil, bhv_custom_cork_box)
 hook_gore_behavior(id_bhvBooInCastle, false, castle_boo_init, castle_boo_loop)
