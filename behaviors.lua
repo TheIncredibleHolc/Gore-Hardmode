@@ -45,8 +45,6 @@ local function bhv_red_flood_flag_loop(o)
     bhv_pole_base_loop()
 end
 
---local ACT_KING_WHOMP_CHASE_FAST = 15
-
 local function bhv_custom_kingwhomp(o)
     local m = nearest_mario_state_to_object(o)
     if o.oHealth == 3 then
@@ -1513,16 +1511,61 @@ local function bhv_custom_tumbling_bridge(o)
     end
 end
 
-local function bhv_custom_piano(o)
+local initHomeX = 0
+local initHomeZ = 0
+local initAngleYaw = 0
+
+local function bhv_custom_piano_init(o)
+    initHomeX = o.oHomeX
+    initHomeZ = o.oHomeZ
+    initAngleYaw = o.oFaceAngleYaw
+    spawn_non_sync_object(id_bhvStaticObject, E_MODEL_NONE, o.oPosX, o.oPosY, o.oPosZ, function(obj) obj.oBehParams2ndByte = 1 obj.oAction = 1 end)
+end
+
+local function bhv_custom_piano_loop(o)
     local m = nearest_mario_state_to_object(o)
-    if dist_between_objects(m.marioObj, o) < 700 then
+    local ignore = {
+        [ACT_IDLE] = true,
+        [ACT_START_CROUCHING] = true,
+        [ACT_CROUCHING] = true,
+        [ACT_STOP_CROUCHING] = true,
+        [ACT_START_CRAWLING] = true,
+        [ACT_CRAWLING] = true,
+        [ACT_STOP_CRAWLING] = true,
+        [ACT_START_SLEEPING] = true,
+        [ACT_SLEEPING] = true,
+        [ACT_WAKING_UP] = true,
+        [ACT_BITTEN_IN_HALF] = true,
+    }
+    if o.oAction == MAD_PIANO_ACT_ATTACK then
+        o.oPosX = initHomeX
+        o.oPosZ = initHomeZ
+        o.oFaceAngleYaw = initAngleYaw
+        o.oAction = MAD_PIANO_ACT_WAIT
+    end
+
+    if dist_between_objects(m.marioObj, o) < 700 and not ignore[m.action] then
         local angleToPlayer = obj_angle_to_object(o, m.marioObj)
-        o.oHomeX = m.pos.x
-        o.oHomeZ = m.pos.z
+        o.oPosX = m.pos.x
+        o.oPosZ = m.pos.z
         o.oAction = MAD_PIANO_ACT_ATTACK
-        o.oForwardVel = 25
         cur_obj_rotate_yaw_toward(angleToPlayer, 2400)
     end
+    if m.currentRoom ~= o.oRoom then
+        o.oHomeX = initHomeX
+        o.oHomeZ = initHomeZ
+        o.oPosX = initHomeX
+        o.oPosZ = initHomeZ
+    end
+
+    -- sm64 code is stupid and doesnt reset mad piano's action when leaving its room
+    -- adding this lets piano's music reset properly
+    if o.activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM ~= 0 then
+        o.oAction = MAD_PIANO_ACT_WAIT
+    end
+
+    --djui_chat_message_create(tostring(m.currentRoom))
+    --djui_chat_message_create(tostring(o.oRoom))
 end
 
 local function bhv_custom_chairs(o)
@@ -3465,6 +3508,80 @@ local function static_obj_loop(o)
             end
         end
     end
+
+    -- piano music functionality
+    -- Action 1 = transition to Action 2
+    -- Action 2 = playing music, piano in ACT_WAIT
+    -- Action 3 = piano disturbed, music stops
+    -- Action 4 = waiting period, plays music after 5 seconds if close to piano
+
+    local m = gMarioStates[0]
+    local piano = obj_get_nearest_object_with_behavior_id(o, id_bhvMadPiano)
+    if piano then
+        if o.oBehParams2ndByte == 1 then
+            obj_copy_pos(o, piano)
+        end
+        if piano.oAction == MAD_PIANO_ACT_ATTACK then
+            stream_stop_all()
+            o.oAction = 3
+        end
+        if (m.currentRoom ~= piano.oRoom and o.oAction == 3) then
+            o.oAction = 4
+        end
+        if o.oAction == 4 and o.oTimer == 150 then
+            o.oAction = 1
+        end
+        --djui_chat_message_create(tostring(piano.oRoom))
+
+        local dist = dist_between_objects(m.marioObj, o)
+        local maxDist = 4000
+        local validRooms = {
+            [9] = true,
+            [10] = true,
+            [11] = true,
+            [12] = true,
+            [13] = true,
+            [29] = true,
+            [30] = true,
+            [31] = true,
+            [32] = true,
+            [0] = true,
+        }
+
+        if (gGlobalSyncTable.romhackcompatibility == false and not validRooms[m.currentRoom] and dist < maxDist) or (gGlobalSyncTable.romhackcompatibility and dist < maxDist) then
+
+            local volume = math.floor((math.max(0, math.min(2, 2 * (1 - ((dist - 1500) / (maxDist - 1500)))))) * 10 + 0.5) / 10
+
+            if ia(m) then
+                if o.oAction == 1 then
+                    fadeout_level_music(900)
+                    stream_play(pianoLullaby)
+                    o.oAction = 2
+                elseif o.oAction == 2 then
+                    if o.oPrevPianoVolume == nil then o.oPrevPianoVolume = 0 end
+
+                    if math.abs(volume - o.oPrevPianoVolume) >= 0.09 or (volume == 0 and o.oPrevPianoVolume > 0) then
+                        stream_set_volume(volume)
+                        o.oPrevPianoVolume = volume
+                    end
+
+                    if dist > 2750 then
+                        set_background_music(0, get_current_background_music(), 0)
+                        seq_player_lower_volume(0, 30, 100)
+                    else
+                        fadeout_level_music(900)
+                    end
+                end
+            end
+        else
+            if ia(m) then
+                o.oAction = 1
+                stream_stop_all()
+                --set_background_music(0, get_current_background_music(), 0)
+            end
+        end
+    end
+    djui_chat_message_create(tostring(m.currentRoom))
 end
 
 function mrboneswildride(o) --The fun never ends!!
@@ -4391,7 +4508,7 @@ hook_gore_behavior(id_bhvSpindrift, false, nil, bhv_custom_spindrift)
 hook_gore_behavior(id_bhvSnowmansBottom, false, nil, snowman_body_loop)
 hook_gore_behavior(id_bhvHauntedChair, false, nil, bhv_custom_chairs)
 hook_gore_behavior(id_bhvFlyingBookend, false, nil, bhv_custom_books)
-hook_gore_behavior(id_bhvMadPiano, false, nil, bhv_custom_piano)
+hook_gore_behavior(id_bhvMadPiano, false, bhv_custom_piano_init, bhv_custom_piano_loop)
 hook_gore_behavior(id_bhvMerryGoRound, false, nil, bhv_custom_merry_go_round)
 hook_gore_behavior(id_bhvTumblingBridgePlatform, false, nil, bhv_custom_tumbling_bridge)
 hook_gore_behavior(id_bhvSmallPenguin, false, nil, bhv_custom_tuxie)

@@ -214,7 +214,7 @@ gSamples = {
     audio_sample_load("yeetToad.ogg"),
     audio_sample_load("yeetWario.ogg"),
     audio_sample_load("yeetWaluigi.ogg"),
-    audio_sample_load("launchTwinkle.ogg")
+    audio_sample_load("launchTwinkle.ogg"),
 }
 
 sBoneBreak = 1
@@ -306,6 +306,7 @@ tetrisphere2 = audio_stream_load("iwbtg3.ogg")          loop(tetrisphere2)
 finalegg = audio_stream_load("iwbtg4.ogg")              loop(finalegg)
 millionaire = audio_stream_load("millionaire.ogg")      loop(millionaire)
 jackpotShort = audio_stream_load("jackpotCork.ogg")
+pianoLullaby = audio_stream_load("pianoLullaby.ogg")
 
 iwbtgMusic = {
     iwbtg,
@@ -353,6 +354,8 @@ function stream_stop_all()
     audio_stream_stop(iwbtg)
     audio_stream_stop(finalegg)
     audio_stream_stop(millionaire)
+    audio_stream_stop(jackpotShort)
+    audio_stream_stop(pianoLullaby)
     currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()
@@ -629,6 +632,7 @@ define_custom_obj_fields({
     oFountainSpawned = "f32",
     oFountainChosenID = "f32",
     oFountainChosenModel = "f32",
+    oPrevPianoVolume = "f32",
 })
 end
 

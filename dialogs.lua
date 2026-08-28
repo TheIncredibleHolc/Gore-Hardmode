@@ -591,13 +591,33 @@ opinion.\
 Thanks again Blocky and\
 Peachy for providing really\
 useful libraries cuz I\
-wouldn't have figured these\
-bugs out by myself.\
-Definitely one of my\
-favorite levels, hopefully\
-whoever is reading this\
-enjoyed it too.\
-- sherbie"))
+wouldn't have figured out\
+the warp and dupe bugs.\
+DDW is on the harder side\
+of difficulty, which is\
+perfect for me given that\
+I play lots of kaizos.\
+\
+If you're reading this,\
+then that means you have\
+to be at least somewhat\
+decent enough at SM64 to\
+get here.\
+Good job man or woman or\
+player.\
+\
+\
+\
+Anyways, hopefully you\
+found some enjoyment\
+trying to figure out this\
+puzzle of a level.\
+\
+You can go perish now.\
+\
+- sherbie\
+\
+"))
 
 smlua_text_utils_dialog_replace(DIALOG_053,1,5,30,200, ("Sometimes, if you pass\
 through a coin ring or\

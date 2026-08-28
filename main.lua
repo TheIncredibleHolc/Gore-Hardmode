@@ -2142,6 +2142,7 @@ end
 
 function mariodeath() -- If mario is dead, this will pause the counter to prevent false positive 2nd deaths, like getting neck snapped (death 1) and then falling into lava. (death 2) 
     --Will also reset other functions as well.
+    local m = gMarioStates[0]
     local s = gStateExtras[0]
 
     s.snowexpose = 0 -- resets the snow exposure timer
@@ -2156,7 +2157,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
     stream_fade(50) --Stops the Hazy Maze Cave custom music after death. Stops the ukiki minigame music if Mario falls to death. 
     if not s.isdead and not s.disableuntilnextwarp then
         gGlobalSyncTable.deathcounter = gGlobalSyncTable.deathcounter + 1
-        gPlayerSyncTable[0].personaldeathcount = gPlayerSyncTable[0].personaldeathcount + 1
+        gPlayerSyncTable[m.playerIndex].personaldeathcount = gPlayerSyncTable[m.playerIndex].personaldeathcount + 1
         s.isdead = true
     end
     serverguitimer = 300
@@ -2327,7 +2328,7 @@ function hud_render_behind() -- Displays the total amount of mario deaths a serv
     --Toad gives 3 stars. I have set this to give these stars after every 100 toad kills.
     if serverguitimer > 0 then
         serverguitimer = serverguitimer - 1
-        djui_hud_set_color(255, 255, 255, lerp(0, 255, (math.max(0, serverguitimer))/300))
+        djui_hud_set_color(255, 255, 255, lerp(0, 255, (math.max(0, serverguitimer))/150))
 
         local deathcount = "Total server death count: "..gGlobalSyncTable.deathcounter
         djui_hud_print_text(deathcount, screenW - 30 - djui_hud_measure_text(deathcount), screenH - 78, 1)
@@ -2476,12 +2477,12 @@ function hud_render_behind() -- Displays the total amount of mario deaths a serv
             local x = 53
             djui_hud_set_color(205, 0, 0, 255)
             if not gGlobalSyncTable.hellenabled then
-                djui_hud_print_text(tostring(gPlayerSyncTable[0].personaldeathcount), x, 15, 1)
+                djui_hud_print_text(tostring(gPlayerSyncTable[m.playerIndex].personaldeathcount), x, 15, 1)
             else
-                djui_hud_print_text(tostring(gPlayerSyncTable[0].personaldeathcount), x, 33, 1)
+                djui_hud_print_text(tostring(gPlayerSyncTable[m.playerIndex].personaldeathcount), x, 33, 1)
             end
 
-            if gPlayerSyncTable[0].personaldeathcount >= 100 then
+            if gPlayerSyncTable[m.playerIndex].personaldeathcount >= 100 then
                 x = x + 5
             end
         end
