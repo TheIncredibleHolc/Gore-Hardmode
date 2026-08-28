@@ -876,6 +876,12 @@ sOnLvlInitToFunc = {
         if gGlobalSyncTable.gameisbeat and not trophy_unlocked(10) then
             spawn_non_sync_object(id_bhvStopwatch, E_MODEL_STOPWATCH, -7135, -2764, -3, function() end)
         end
+
+        local pyr = obj_get_first_with_behavior_id(id_bhvBitfsTiltingInvertedPyramid)
+        while pyr do 
+            obj_mark_for_deletion(pyr)
+            pyr = obj_get_next_with_same_behavior_id(pyr)
+        end
     end,
 
     [LEVEL_CASTLE_GROUNDS] = function()
@@ -1012,6 +1018,13 @@ sOnLvlInitToFunc = {
         while rect do 
             obj_mark_for_deletion(rect)
             rect = obj_get_next_with_same_behavior_id(rect)
+        end
+
+        -- Deletes all water diamonds
+        local d = obj_get_first_with_behavior_id(id_bhvWaterLevelDiamond)
+        while d do 
+            obj_mark_for_deletion(d)
+            d = obj_get_next_with_same_behavior_id(d)
         end
 
         -- moves all secrets to new locations
