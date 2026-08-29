@@ -21,12 +21,11 @@ end
 
 delete_on_spawn = obj_mark_for_deletion
 
-function killer_exclamation_boxes(m) -- Makes exclamation boxes drop on top of you! (squishes)
-    local box = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvExclamationBox)
-
-    if box then
-        if lateral_dist_between_objects(m.marioObj, box) < 50 and m.pos.y < box.oPosY and m.pos.y > box.oPosY - 400 then
-            box.oPosY = box.oPosY - 100
+function custom_exclam_box_loop(o) -- Makes exclamation boxes drop on top of you! (squishes)
+    local m = nearest_mario_state_to_object(o)
+    if o.oAction ~= 1 then
+        if lateral_dist_between_objects(m.marioObj, o) < 50 and m.pos.y < o.oPosY and m.pos.y > o.oPosY - 400 then
+            o.oPosY = o.oPosY - 100
         end
     end
 end
@@ -1181,19 +1180,16 @@ local function get_pressure_point(o)
 end
 
 function bhv_ferris_wheel(o)
-    local np = gNetworkPlayers[0]
-    if np.currLevelNum ~= LEVEL_BITS then
-        local pressure = get_pressure_point(o)
-        o.oAngleVelRoll = (o.oAngleVelRoll + (-pressure.x*30 - o.oFaceAngleRoll)*0.1)*0.95
-        if cur_obj_is_mario_ground_pounding_platform() ~= 0 then
-            o.oAngleVelRoll = -pressure.x*300
-        end
-        if o.oFaceAngleRoll ~= limit_angle(o.oFaceAngleRoll) then
-            cur_obj_play_sound_1(SOUND_GENERAL_BIG_CLOCK)
-            o.oFaceAngleRoll = limit_angle(o.oFaceAngleRoll)
-        end
-        cur_obj_rotate_face_angle_using_vel()
+    local pressure = get_pressure_point(o)
+    o.oAngleVelRoll = (o.oAngleVelRoll + (-pressure.x*30 - o.oFaceAngleRoll)*0.1)*0.95
+    if cur_obj_is_mario_ground_pounding_platform() ~= 0 then
+        o.oAngleVelRoll = -pressure.x*300
     end
+    if o.oFaceAngleRoll ~= limit_angle(o.oFaceAngleRoll) then
+        cur_obj_play_sound_1(SOUND_GENERAL_BIG_CLOCK)
+        o.oFaceAngleRoll = limit_angle(o.oFaceAngleRoll)
+    end
+    cur_obj_rotate_face_angle_using_vel()
 end
 
 function bhv_custom_grindel(o)
@@ -3493,6 +3489,7 @@ end
 STATIC_OBJ_FLICKER_TIMER = 40
 
 function static_obj_loop(o)
+    -- visual level geometry timer
     if gNetworkPlayers[0].currLevelNum == LEVEL_BITS and not gGlobalSyncTable.romhackcompatibility then
         if o.oAction == 0 then
             if o.oTimer == 1 then
@@ -4548,7 +4545,8 @@ local function hook_gore_behavior(id, override, init, loop)
     return hook_behavior(id, objectList, override, init, loop, newBehaviorName)
 end
 
-hook_gore_behavior(id_bhvBookSwitch, false, nil, custom_book_switch_loop)
+
+hook_event(HOOK_ON_PLAY_SOUND, sfx_management)
 
 hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
@@ -4583,8 +4581,8 @@ hook_gore_behavior(id_bhvBalconyBigBoo, false, nil, boo_loop)
 hook_gore_behavior(id_bhvMerryGoRoundBigBoo, false, nil, boo_loop)
 hook_gore_behavior(id_bhvMrIParticle, false, nil, mr_i_particle)
 hook_gore_behavior(id_bhvMrI, false, nil, mr_i)
-hook_event(HOOK_ON_PLAY_SOUND, sfx_management)
-hook_event(HOOK_MARIO_UPDATE, killer_exclamation_boxes)
+hook_gore_behavior(id_bhvBookSwitch, false, nil, custom_book_switch_loop)
+hook_gore_behavior(id_bhvExclamationBox, false, nil, custom_exclam_box_loop)
 hook_gore_behavior(id_bhvStarDoor, true, star_door_init, star_door_loop)
 hook_gore_behavior(id_bhvDorrie, false, nil, dorrie_dead)
 hook_gore_behavior(id_bhvEyerokBoss, false, nil, eyerok_loop)

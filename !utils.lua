@@ -953,13 +953,13 @@ sOnLvlInitToFunc = {
         local r = obj_get_first_with_behavior_id(id_bhvRedCoin)
         local coin_pos = {
             {x = -1505, y = 0, z = 2500},
-            {x = -1575, y = 190, z = -900},
+            {x = -1575, y = 20, z = -900},
             {x = 2540, y = 820, z = 2174},
             {x = -130, y = 795, z = -760},
             {x = 2600, y = 815, z = -380},
             {x = 2950, y = 815, z = -1250},
             {x = -2030, y = 1025, z = 1530},
-            {x = 965, y = 245, z = 25},
+            {x = 965, y = 245, z = 250},
         }
         for _, pos in ipairs(coin_pos) do
             if not r then break end
@@ -967,6 +967,12 @@ sOnLvlInitToFunc = {
             r.oPosX, r.oPosY, r.oPosZ = pos.x, pos.y, pos.z
             r.oHomeX, r.oHomeY, r.oHomeZ = pos.x, pos.y, pos.z
             r = obj_get_next_with_same_behavior_id(r)
+        end
+
+        local b = obj_get_first_with_behavior_id(id_bhvExclamationBox)
+        while b do
+            obj_mark_for_deletion(b)
+            b = obj_get_next_with_same_behavior_id(b)
         end
     end,
 
@@ -1234,6 +1240,19 @@ sOnSyncValidtoFunc = {
             osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2150, 1185, -1360, function(o)
                 o.oFaceAngleYaw = 8192
                 o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, -1560, 330, -900, function(o)
+                o.parentObj = nil
+                o.oFaceAngleYaw = 0
+                o.oBehParams2ndByte = 2
+            end)
+            osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 700, 80, -2800, function(o)
+                o.oFaceAngleYaw = 0
+                o.oBehParams2ndByte = 6
+            end)
+            osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 660, 3200, 1160, function(o)
+                o.oFaceAngleYaw = 0
+                o.oBehParams2ndByte = 7
             end)
 
             osync.spawn_sync_object(id_bhvBookendSpawn, E_MODEL_NONE, -1550, 935, -1050, function(o) end)
