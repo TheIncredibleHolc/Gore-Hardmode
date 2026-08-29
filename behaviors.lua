@@ -1524,6 +1524,7 @@ end
 
 function bhv_custom_piano_loop(o)
     local m = nearest_mario_state_to_object(o)
+    local validRooms = { [3] = true, [15] = true, [25] = true}
     local ignore = {
         [ACT_IDLE] = true,
         [ACT_START_CROUCHING] = true,
@@ -1537,25 +1538,68 @@ function bhv_custom_piano_loop(o)
         [ACT_WAKING_UP] = true,
         [ACT_BITTEN_IN_HALF] = true,
     }
-    if o.oAction == MAD_PIANO_ACT_ATTACK then
-        o.oPosX = initHomeX
-        o.oPosZ = initHomeZ
-        o.oFaceAngleYaw = initAngleYaw
-        o.oAction = MAD_PIANO_ACT_WAIT
-    end
 
     if dist_between_objects(m.marioObj, o) < 1000 and not ignore[m.action] then
         local angleToPlayer = obj_angle_to_object(o, m.marioObj)
-        o.oPosX = m.pos.x
-        o.oPosZ = m.pos.z
-        o.oAction = MAD_PIANO_ACT_ATTACK
+        o.oHomeX = m.pos.x
+        o.oHomeZ = m.pos.z
+        o.oAction = 3
         cur_obj_rotate_yaw_toward(angleToPlayer, 2400)
     end
-    if m.currentRoom ~= o.oRoom then
+
+    if gGlobalSyncTable.romhackcompatibility or not validRooms[m.currentRoom] then
         o.oHomeX = initHomeX
         o.oHomeZ = initHomeZ
         o.oPosX = initHomeX
         o.oPosZ = initHomeZ
+        o.oFaceAngleYaw = initAngleYaw
+    end
+
+    -- recreating MAD_PIANO_ACT_ATTACK because speed is hardcoded and thats stupid
+    if o.oAction == 3 then
+        cur_obj_update_floor_and_walls()
+        cur_obj_init_animation_with_sound(1)
+        cur_obj_play_sound_at_anim_range(0, 0, SOUND_OBJ_MAD_PIANO_CHOMPING)
+
+        local marioState = nearest_mario_state_to_object(o)
+        local player = marioState and marioState.marioObj or nil
+        local distanceToPlayer = player and dist_between_objects(o, player) or 10000
+        local angleToPlayer = player and obj_angle_to_object(o, player) or 0
+
+        if distanceToPlayer < 500 then
+            o.oTimer = 0
+        end
+
+        if o.oTimer > 80 and cur_obj_check_if_near_animation_end() then
+            o.oAction = 0
+            o.oForwardVel = 0
+            cur_obj_become_intangible()
+        else
+            local dx = o.oPosX - o.oHomeX
+            local dz = o.oPosZ - o.oHomeZ
+            local distToHome = math.sqrt(dx * dx + dz * dz)
+
+            if distToHome > 400 then
+                distToHome = 400 / distToHome
+                o.oPosX = o.oHomeX + dx * distToHome
+                o.oPosZ = o.oHomeZ + dz * distToHome
+            end
+
+            cur_obj_rotate_yaw_toward(angleToPlayer, 600)
+            o.oForwardVel = 25
+        end
+
+        local pianoHitbox = get_temp_object_hitbox()
+        o.oInteractType = INTERACT_MR_BLIZZARD
+        o.oDamageOrCoinValue = 3
+        o.oHealth = 99
+        o.hitboxRadius = 300
+        o.hitboxHeight = 150
+        o.hurtboxRadius = 300
+        o.hurtboxHeight = 150
+
+        obj_check_attacks(pianoHitbox, o.oAction)
+        cur_obj_move_standard(78)
     end
 
     -- sm64 code is stupid and doesnt reset mad piano's action when leaving its room
@@ -2882,21 +2926,6 @@ function vomit_loop(o)
     o.oGraphYOffset = o.oGraphYOffset + -2.5
 
 end
--------Behavior Hooks-------
-
-local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
-hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior
-
-local function hook_gore_behavior(id, override, init, loop)
-    if not id then return end
-
-    local behavior = get_behavior_from_id(id)
-    local name = get_behavior_name_from_id(id) or ("bhvUnk" .. id)
-    local objectList = get_object_list_from_behavior(behavior)
-    local newBehaviorName = "bhvGore" .. name:sub(4)
-
-    return hook_behavior(id, objectList, override, init, loop, newBehaviorName)
-end
 
 function heaveho_loop(o)
     local m = nearest_mario_state_to_object(o)
@@ -3087,6 +3116,12 @@ local function sfx_management(sfx)
     local distboo = dist_between_objects(m.marioObj, boo)
     if sfx == SOUND_OBJ_BOO_LAUGH_LONG and boo and (m.action & ACT_FLAG_AIR > 0 and boo.oAction ~= 3) then
         return 0
+    end
+
+    -- plays unique sound when guessing book switch incorrectly but hitting one of the valid book switches
+    local book = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvBookSwitch)
+    if sfx == SOUND_MENU_CAMERA_BUZZ and book.oBehParams2ndByte ~= book.parentObj.oHauntedChairUnkF4 and book.oBehParams2ndByte < 3 then
+        cur_obj_play_sound_2(SOUND_GENERAL_VANISH_SFX)
     end
 end
 
@@ -3505,12 +3540,14 @@ function static_obj_loop(o)
         [6] = pianoSMB2,
         [7] = pianoWater,
         [8] = pianoKris,
+        [9] = pianoBoo,
+        [10] = pianoPrison,
     }
 
     if o.parentObj == piano and m then
         obj_copy_pos(o, piano)
 
-        if o.parentObj.oAction == MAD_PIANO_ACT_ATTACK and o.oAction ~= 3 then
+        if o.parentObj.oAction == 3 and o.oAction ~= 3 then
             stream_stop_all()
             o.oAction = 3
         end
@@ -3527,35 +3564,42 @@ function static_obj_loop(o)
         end
 
         local dist = dist_between_objects(m.marioObj, o)
-        local maxDist = 4000
-        local validRooms = { [9] = true, [10] = true, [11] = true, [12] = true, [13] = true, [29] = true, [30] = true, [31] = true, [32] = true, [0] = true }
-
-        local pianoValid = gGlobalSyncTable.romhackcompatibility or not validRooms[m.currentRoom]
+        local maxDist = 5000
+        local invalidRooms = { [9] = true, [10] = true, [11] = true, [12] = true, [13] = true, [29] = true, [30] = true, [31] = true, [32] = true, [0] = true }
+        local nearPianoRoom = { [3] = true, [15] = true, [25] = true, [26] = true }
+        local pianoValid = gGlobalSyncTable.romhackcompatibility or not invalidRooms[m.currentRoom]
 
         if pianoValid and dist < maxDist then
 
-            local volume = math.floor((math.max(0, math.min(2, 2 * (1 - ((dist - 1500) / (maxDist - 1500)))))) * 10 + 0.5) / 10
+            local volume = math.floor((math.max(0, math.min(1, 1 * (1 - ((dist - 1500) / (maxDist - 1500)))))) * 10 + 0.5) / 10
 
-            if m.currentRoom == o.parentObj.oRoom then
-                volume = math.min(2.5, volume + 0.5)
+            if nearPianoRoom[m.currentRoom] then
+                volume = math.min(2.5, volume + 1)
             end
+
+            local fixedVol = math.floor(volume * 10 + 0.5) / 10
 
             if ia(m) then
                 if o.oAction == 1 then
 
                     -- 25% chance for any rare song, 75% for common songs
-                    local roll = math.random(1, 4)
-                    if roll == 4 then
+                    local roll = math.random(1, 10)
+                    if roll == 10 then
                         local rareSongs = { 4, 5, 8 } -- Omori, SA2, Kris
                         o.oRandomPianoTrack = rareSongs[math.random(1, #rareSongs)]
                     else
-                        local normalSongs = { 1, 2, 3, 6, 7 } -- Lullaby, Mansion, MGR, SMB2, Water
+                        local normalSongs = { 1, 2, 3, 6, 7 , 9, 10 } -- Lullaby, Mansion, MGR, SMB2, Water
                         o.oRandomPianoTrack = normalSongs[math.random(1, #normalSongs)]
                     end
 
                     local randomTrack = track[o.oRandomPianoTrack]
 
-                    fadeout_level_music(900)
+                    if dist > 3250 then
+                        seq_player_lower_volume(0, 30, 100)
+                    else
+                        fadeout_level_music(900)
+                    end
+
                     stream_play(randomTrack)
                     o.oAction = 2
 
@@ -3563,12 +3607,12 @@ function static_obj_loop(o)
 
                     if o.oPrevPianoVolume == nil then o.oPrevPianoVolume = 0 end
 
-                    if math.abs(volume - o.oPrevPianoVolume) >= 0.09 or (volume == 0 and o.oPrevPianoVolume > 0) then
-                        stream_set_volume(volume)
-                        o.oPrevPianoVolume = volume
+                    if math.abs(fixedVol - o.oPrevPianoVolume) >= 0.09 or (fixedVol == 0 and o.oPrevPianoVolume > 0) then
+                        stream_set_volume(fixedVol)
+                        o.oPrevPianoVolume = fixedVol
                     end
 
-                    if dist > 2750 then
+                    if dist > 3250 then
                         set_background_music(0, get_current_background_music(), 0)
                         seq_player_lower_volume(0, 30, 100)
                     else
@@ -3588,11 +3632,7 @@ function static_obj_loop(o)
                 stream_stop_all()
                 set_background_music(0, get_current_background_music(), 0)
             end
-            
         end
-    elseif not piano and ia(m) then
-        stream_stop_all()
-        set_background_music(0, get_current_background_music(), 0)
     end
 end
 
@@ -3658,7 +3698,7 @@ function mrboneswildride(o) --The fun never ends!!
         --djui_chat_message_create("running!")
     end
 end
-hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
+
 
 
 function bhv_custom_1up(o) -- Chases the nearest player for 5 seconds in a green demon state before despawning.
@@ -4423,22 +4463,24 @@ function qs_float_plat_loop(o)
     end
 end
 
-function wdw_tunnel_cage_floor_init(o)
+function custom_plane_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-    o.collisionData = COL_WDW_TUNNEL_CAGE
-    o.oCollisionDistance = 3000
+    o.collisionData = COL_CUSTOM_PLANE
+    o.oCollisionDistance = 5000
     o.header.gfx.skipInViewCheck = true
     bhv_init_room()
 end
 
-function wdw_tunnel_cage_floor_loop(o)
+function custom_plane_loop(o)
     load_object_collision_model()
-    obj_scale_xyz(o, 5.12, 1, 5.12)
-    if gNetworkPlayers[0].currAreaIndex == 2 then
-        o.oFaceAngleYaw = -16384
-        o.oFaceAnglePitch = 16384
-        o.oFaceAngleRoll = 0
-    end 
+
+    local m = nearest_mario_state_to_object(o)
+    if obj_get_model_id_extended(o) == E_MODEL_NONE then
+        if m.wall and m.wall.object == o then
+            obj_set_model_extended(o, E_MODEL_GLASS_WALL)
+            cur_obj_play_sound_2(SOUND_ACTION_TELEPORT)
+        end
+    end
 end
 
 function qs_fog_plane_init(o)
@@ -4469,6 +4511,46 @@ function star_ko_loop(o)
     end
 end
 
+-- oBookSwitchManagerUnkF4 tracks the streak of books you successfully hit
+-- ^ increments by 1 for every successful guess up to 3
+-- ^ sets to -1 for any wrong guess, throws book at you
+
+-- oBookSwitchManagerUnkF8 is used to reset the book switches
+-- ^ sets to 1 when initializing AND when guessing incorrectly
+-- ^ otherwise is always 0
+
+function custom_book_switch_loop(o)
+    local shelf = obj_get_first_with_behavior_id(id_bhvHauntedBookshelfManager)
+    if shelf then
+        o.parentObj = shelf
+    end
+
+    -- deletes all book switches (to prevent players from seeing the buggy transition when they al despawn)
+    if o.parentObj.oBookSwitchManagerUnkF4 >= 3 then
+        spawn_mist_particles()
+        obj_mark_for_deletion(o)
+    end
+end
+
+-------Behavior Hooks-------
+
+local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
+hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior
+
+local function hook_gore_behavior(id, override, init, loop)
+    if not id then return end
+
+    local behavior = get_behavior_from_id(id)
+    local name = get_behavior_name_from_id(id) or ("bhvUnk" .. id)
+    local objectList = get_object_list_from_behavior(behavior)
+    local newBehaviorName = "bhvGore" .. name:sub(4)
+
+    return hook_behavior(id, objectList, override, init, loop, newBehaviorName)
+end
+
+hook_gore_behavior(id_bhvBookSwitch, false, nil, custom_book_switch_loop)
+
+hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
 hook_gore_behavior(id_bhvStaticObject, false, nil, static_obj_loop)
 hook_gore_behavior(id_bhvWoodenPost, false, nil, bhv_custom_signpost)
 hook_gore_behavior(id_bhvBowserShockWave, false, nil, shockwave)
@@ -4625,6 +4707,6 @@ id_bhvThwompEvent = hook_behavior(nil, OBJ_LIST_SURFACE, true, cork_thwomp_init,
 id_bhvCoinFountain = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, nil, coin_fountain_loop, "bhvCoinFountain")
 id_bhvQuicksandPlane = hook_behavior(nil, OBJ_LIST_SURFACE, true, quicksand_plane_init, quicksand_plane_loop, "bhvQuicksandPlane")
 id_bhvQSFloatingPlatform = hook_behavior(nil, OBJ_LIST_SURFACE, true, qs_float_plat_init, qs_float_plat_loop, "bhvQSFloatingPlatform")
-id_bhvWDWTunnelCageFloor = hook_behavior(nil, OBJ_LIST_SURFACE, true, wdw_tunnel_cage_floor_init, wdw_tunnel_cage_floor_loop, "bhvWDWTunnelCageFloor")
+id_bhvCustomPlane = hook_behavior(nil, OBJ_LIST_SURFACE, true, custom_plane_init, custom_plane_loop, "bhvCustomPlane")
 id_bhvQuicksandFogPlane = hook_behavior(nil, OBJ_LIST_GENACTOR, true, qs_fog_plane_init, qs_fog_plane_loop, "bhvQuicksandFogPlane")
 id_bhvStarKO = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, star_ko_init, star_ko_loop, "bhvStarKO")

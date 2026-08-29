@@ -306,16 +306,16 @@ tetrisphere2 = audio_stream_load("iwbtg3.ogg")          loop(tetrisphere2)
 finalegg = audio_stream_load("iwbtg4.ogg")              loop(finalegg)
 millionaire = audio_stream_load("millionaire.ogg")      loop(millionaire)
 jackpotShort = audio_stream_load("jackpotCork.ogg")
+pianoBoo = audio_stream_load("pianoBoo.ogg")
 pianoKris = audio_stream_load("pianoKris.ogg")
 pianoLullaby = audio_stream_load("pianoLullaby.ogg")
 pianoMansion = audio_stream_load("pianoMansion.ogg")
 pianoMGR = audio_stream_load("pianoMGR.ogg")
 pianoOmori = audio_stream_load("pianoOmori.ogg")
+pianoPrison = audio_stream_load("pianoPrison.ogg")
 pianoSA2 = audio_stream_load("pianoSA2.ogg")
 pianoSMB2 = audio_stream_load("pianoSMB2.ogg")
 pianoWater = audio_stream_load("pianoWater.ogg")
-
-
 
 iwbtgMusic = {
     iwbtg,
@@ -364,11 +364,13 @@ function stream_stop_all()
     audio_stream_stop(finalegg)
     audio_stream_stop(millionaire)
     audio_stream_stop(jackpotShort)
+    audio_stream_stop(pianoBoo)
     audio_stream_stop(pianoKris)
     audio_stream_stop(pianoLullaby)
     audio_stream_stop(pianoMansion)
     audio_stream_stop(pianoMGR)
     audio_stream_stop(pianoOmori)
+    audio_stream_stop(pianoPrison)
     audio_stream_stop(pianoSA2)
     audio_stream_stop(pianoSMB2)
     audio_stream_stop(pianoWater)
@@ -502,9 +504,11 @@ COL_QUICKSAND_PLANE = smlua_collision_util_get("quicksandPlane_collision")
 E_MODEL_QS_FLOATING_PLATFORM= smlua_model_util_get_id("qs_floating_platform_square_geo")
 COL_QS_FLOATING_PLATFORM = smlua_collision_util_get("qs_floating_platform_square_collision")
 E_MODEL_WDW_TUNNEL_CAGE = smlua_model_util_get_id("wdwtunnelcagefloor_geo")
-COL_WDW_TUNNEL_CAGE = smlua_collision_util_get("wdwtunnelcagefloor_collision")
+E_MODEL_GLASS_WALL = smlua_model_util_get_id("glassWall_geo")
+COL_CUSTOM_PLANE = smlua_collision_util_get("wdwtunnelcagefloor_collision")
 E_MODEL_QS_FOG_PLANE = smlua_model_util_get_id("quicksandFogPlane_geo")
 E_MODEL_STAR_KO = smlua_model_util_get_id("starKO_geo")
+
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -945,6 +949,27 @@ sOnLvlInitToFunc = {
         s.snowexpose = 0
     end,
 
+    [LEVEL_BBH] = function()
+        local r = obj_get_first_with_behavior_id(id_bhvRedCoin)
+        local coin_pos = {
+            {x = -1505, y = 0, z = 2500},
+            {x = -1575, y = 190, z = -900},
+            {x = 2540, y = 820, z = 2174},
+            {x = -130, y = 795, z = -760},
+            {x = 2600, y = 815, z = -380},
+            {x = 2950, y = 815, z = -1250},
+            {x = -2030, y = 1025, z = 1530},
+            {x = 965, y = 245, z = 25},
+        }
+        for _, pos in ipairs(coin_pos) do
+            if not r then break end
+
+            r.oPosX, r.oPosY, r.oPosZ = pos.x, pos.y, pos.z
+            r.oHomeX, r.oHomeY, r.oHomeZ = pos.x, pos.y, pos.z
+            r = obj_get_next_with_same_behavior_id(r)
+        end
+    end,
+
     [LEVEL_LLL] = function()
         local r = obj_get_first_with_behavior_id(id_bhvRedCoin)
         local coin_pos = {
@@ -1114,6 +1139,7 @@ sOnSyncValidtoFunc = {
             end
         end)
     end,
+
     [LEVEL_JRB] = function()
         local np = gNetworkPlayers[0]
         local gorrie = obj_get_first_with_behavior_id(id_bhvGorrie)
@@ -1125,6 +1151,95 @@ sOnSyncValidtoFunc = {
             end
         end
     end,
+
+    [LEVEL_BBH] = function()
+        osync.spawn_sync_objects("bbh_area_1", function()
+            osync.spawn_sync_object(id_bhvCustomPlane, E_MODEL_NONE, -1862, 1325, 1630, function(o)
+                obj_scale_xyz(o, 5.1, 1, 3.2)
+                o.oFaceAngleYaw = 0
+                o.oFaceAnglePitch = 16384
+                o.oFaceAngleRoll = -16384
+            end)
+            osync.spawn_sync_object(id_bhvCustomPlane, E_MODEL_NONE, -1962, 1325, 2235, function(o)
+                obj_scale_xyz(o, 1.4, 1, 3.2)
+                o.oFaceAngleYaw = 0
+                o.oFaceAnglePitch = 16384
+                o.oFaceAngleRoll = -8192
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2220, 850, -406, function(o)
+                o.oFaceAngleYaw = 16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2220, 990, -100, function(o)
+                o.oFaceAngleYaw = 16384
+                o.oBehParams2ndByte = 3
+            end)
+            
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2220, 1250, -705, function(o)
+                o.oFaceAngleYaw = 16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2220, 1150, -1010, function(o)
+                o.oFaceAngleYaw = 16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2220, 1060, -680, function(o)
+                o.oFaceAngleYaw = 16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2220, 1060, -330, function(o)
+                o.oFaceAngleYaw = 16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2220, 915, -915, function(o)
+                o.oFaceAngleYaw = 16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2220, 1010, -1230, function(o)
+                o.oFaceAngleYaw = 16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -1840, 1080, 0, function(o)
+                o.oFaceAngleYaw = 32786
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2010, 890, 0, function(o)
+                o.oFaceAngleYaw = 32786
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -1915, 1380, 0, function(o)
+                o.oFaceAngleYaw = 32786
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -1780, 1180, -675, function(o)
+                o.oFaceAngleYaw = -16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -1780, 985, -540, function(o)
+                o.oFaceAngleYaw = -16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -1780, 1420, -150, function(o)
+                o.oFaceAngleYaw = -16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -1780, 1300, -885, function(o)
+                o.oFaceAngleYaw = -16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -1780, 1270, -365, function(o)
+                o.oFaceAngleYaw = -16384
+                o.oBehParams2ndByte = 3
+            end)
+            osync.spawn_sync_object(id_bhvBookSwitch, E_MODEL_BOOKEND, -2150, 1185, -1360, function(o)
+                o.oFaceAngleYaw = 8192
+                o.oBehParams2ndByte = 3
+            end)
+
+            osync.spawn_sync_object(id_bhvBookendSpawn, E_MODEL_NONE, -1550, 935, -1050, function(o) end)
+        end)
+    end,
+
     [LEVEL_HMC] = function()
         osync.spawn_sync_objects("hmc", function()
             -- Spawns coins to hint towards the new floor switch location
@@ -1144,9 +1259,11 @@ sOnSyncValidtoFunc = {
             end)
         end)
     end,
+
     [LEVEL_LLL] = function()
         spawn_sync_object(id_bhvBouncingFireball, E_MODEL_RED_FLAME, -760, 355, 5045, function() end)
     end,
+
     [LEVEL_WDW] = function()
         if gNetworkPlayers[0].currAreaIndex == 1 then
             -- Removes express elevator
@@ -1165,7 +1282,10 @@ sOnSyncValidtoFunc = {
                 osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -2687, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
 
                 --blocks tunnel to area 2 
-                osync.spawn_sync_object(id_bhvWDWTunnelCageFloor, E_MODEL_WDW_TUNNEL_CAGE, 4096, 3072, -3325, function(o) o.oFaceAngleYaw = 32768 end)
+                osync.spawn_sync_object(id_bhvCustomPlane, E_MODEL_GLASS_WALL, 4096, 3072, -3325, function(o)
+                    obj_scale_xyz(o, 5.12, 1, 5.12)
+                    o.oFaceAngleYaw = 32768
+                end)
 
                 -- 10 coin exclam box (also secret indicator)
                 osync.spawn_sync_object(id_bhvExclamationBox, E_MODEL_EXCLAMATION_BOX, 1960, 2040, 2180, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 5 end)
@@ -1182,7 +1302,7 @@ sOnSyncValidtoFunc = {
                     o.oBehParams2ndByte = 60
                     area_create_warp_node(13, LEVEL_WDW, 2, 16, WARP_NO_CHECKPOINT, o)
                 end) ]]
-                
+
                 -- spawn more enemies
                 osync.spawn_sync_object(id_bhvSkeeter, E_MODEL_SKEETER, -1260, 384, 1850, function(o) o.oFaceAngleYaw = 0 end)
                 osync.spawn_sync_object(id_bhvFireSpitter, E_MODEL_BOWLING_BALL, -740, 1280, 180, function(o) o.oFaceAngleYaw = 0 end)
@@ -1237,7 +1357,12 @@ sOnSyncValidtoFunc = {
 
                 osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, -3085, -1075, -1435, function(o) o.oFaceAngleYaw = 0 end)
 
-                osync.spawn_sync_object(id_bhvWDWTunnelCageFloor, E_MODEL_WDW_TUNNEL_CAGE, -365, -1000, -3315, function(o) end)
+                osync.spawn_sync_object(id_bhvCustomPlane, E_MODEL_WDW_TUNNEL_CAGE, -365, -1000, -3315, function(o)
+                    obj_scale_xyz(o, 5.12, 1, 5.12)
+                    o.oFaceAngleYaw = -16384
+                    o.oFaceAnglePitch = 16384
+                    o.oFaceAngleRoll = 0
+                end)
                 osync.spawn_sync_object(id_bhvMessagePanel, E_MODEL_WOODEN_SIGNPOST, -500, -1496, -3322, function(o)
                     o.parentObj = nil
                     o.oFaceAngleYaw = -16384
@@ -1271,6 +1396,7 @@ sOnSyncValidtoFunc = {
             end
         end
     end,
+
     [LEVEL_SECRETHUB] = function()
         local np = gNetworkPlayers[0]
         local hellentrance = obj_get_first_with_behavior_id(id_bhvHellEntrance)

@@ -12,12 +12,13 @@
 -- standing within range of hallway boo while in another room causes it to switch between oAction 1 and 2, moving 1 unit every frame (presumably)
 -- walking on slopes while buried in snow ignores slope deceleration (i do not know of a fix)
 -- ACT_SNOWY_SLIDE does not switch to ACT_BUTT_SLIDE_STOP when below 4 speed (couldnt figure this out but the solution feels obvious)
+-- amps lose their hitbox after colliding with a player
+-- piano music can play the previous track again
+-- wdw area 2's vanish box is rotated weirdly, isnt fixed with oFaceAngleYaw or o.parentobj == nil
 
 -------EVENTUAL ADDITIONS/CHANGES-------------
 
 -- change thi's mini form to work like normal mario but mini (current mini doesnt provide any interesting gameplay changes other than novelty)
--- change cork boxes to kill the player if held for too long
--- allow cork boxes to be thrown and maintain its size after being thrown before shrinking it back down to its normal size
 -- force players into ACT_GONE before they use in-level warps
 -- add death anim where the player faceplants and slides forward a bit before death warp
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2588,6 +2589,34 @@ local function on_pause_exit(m)
         return false 
     end
 end
+
+local function on_obj_load(o)
+    if gGlobalSyncTable.romhackcompatibility then return end
+
+    local m = gMarioStates[0]
+    local np = gNetworkPlayers[0]
+
+    -- moves existing books switches to specific places
+    local validRooms = { [6] = true, [18] = true }
+    if np.currLevelNum == LEVEL_BBH and validRooms[m.currentRoom] then
+        if obj_has_behavior_id(o, id_bhvBookSwitch) then
+            o = obj_get_first_with_behavior_id(id_bhvBookSwitch)
+            local book_pos = {
+                {x = -1780, y = 1035, z = -307, yaw = -16384},
+                {x = -2032, y = 1233, z = 0, yaw = 32786},
+                {x = -2118, y = 990, z = -1393, yaw = 8192},
+            }
+            for _, pos in ipairs(book_pos) do
+                if not o then break end
+
+                o.oPosX, o.oPosY, o.oPosZ, o.oFaceAngleYaw = pos.x, pos.y, pos.z, pos.yaw
+                o.oHomeX, o.oHomeY, o.oHomeZ = pos.x, pos.y, pos.z
+                o = obj_get_next_with_same_behavior_id(o)
+            end
+        end
+    end
+end
+
 ---------hooks--------
 hook_event(HOOK_MARIO_UPDATE, mario_update)
 hook_event(HOOK_UPDATE, hook_update)
@@ -2636,6 +2665,7 @@ hook_event(HOOK_MARIO_UPDATE, function (m) -- Prevents players from attempting t
         m.numLives = lives
     end
 end)
+hook_event(HOOK_ON_OBJECT_LOAD, on_obj_load)
 
 -------------PvP-----------------------
 --Custom PvP

@@ -1,0 +1,10 @@
+extern const GeoLayout glassWall_geo[];
+extern Lights1 glassWall_f3dlite_material_lights;
+extern u8 glassWall_ghmglass_ci8[];
+extern u8 glassWall_ghmglass_pal_rgba16[];
+extern Vtx glassWall_Plane_mesh_layer_5_vtx_cull[8];
+extern Vtx glassWall_Plane_mesh_layer_5_vtx_0[4];
+extern Gfx glassWall_Plane_mesh_layer_5_tri_0[];
+extern Gfx mat_glassWall_f3dlite_material[];
+extern Gfx mat_revert_glassWall_f3dlite_material[];
+extern Gfx glassWall_Plane_mesh_layer_5[];

@@ -116,13 +116,13 @@ function mario_update(m)
     if gGlobalSyncTable.romhackcompatibility then return end
     if np.currLevelNum == LEVEL_CCM and np.currAreaIndex <= 1 then -- changed from SL to CCM
         if not obj_get_first_with_behavior_id(id_bhvFog) then
-            spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)
+            spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, function() end)
         end
     elseif np.currLevelNum == LEVEL_CCM and np.currAreaIndex ~= 1 then -- changed from SL to CCM
         set_override_envfx(-1)
     elseif np.currLevelNum == LEVEL_TTM then
         if not obj_get_first_with_behavior_id(id_bhvFog) then
-            spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, nil)
+            spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, function() end)
             spawn_non_sync_object(id_bhvFog, E_MODEL_FOG, 0, 0, 0, function(morefog)
                 morefog.oBehParams = 2
             end)
@@ -151,11 +151,6 @@ function mario_update(m)
         set_fog_color(0, 255)
         set_fog_color(1, 255)
         set_fog_color(2, 255)
-    elseif np.currLevelNum == LEVEL_BBH then
-        set_lighting_color(0,50)
-        set_lighting_color(1,50)
-        set_lighting_color(2,65)
-        set_lighting_dir(1,128)
     end
 end
 
