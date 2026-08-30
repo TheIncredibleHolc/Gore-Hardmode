@@ -3009,7 +3009,7 @@ function boo_vanish_or_appear(o) -- Translation of the boo hiding function
 
     --o.oVelY = 0
 
-    if (m.action & ACT_FLAG_AIR > 0 and dist < 500 * o.header.gfx.scale.y and o.oAction ~= 3) then -- Check if mario is ground pounding, near and hadn't attacked
+    if (m.action & ACT_FLAG_AIR > 0 and dist < 500 * o.header.gfx.scale.y and o.oAction ~= 3 and o.oAction ~= 9) then -- Check if mario is ground pounding, near and hadn't attacked
         o.oBooTargetOpacity = 40
         o.oInteractType = 0
         if (o.oOpacity == 40) then
@@ -3024,19 +3024,154 @@ function boo_vanish_or_appear(o) -- Translation of the boo hiding function
     return doneAppearing
 end
 
-function boo_loop(o)
+function universal_boo_bhv(o)
     local m = nearest_mario_state_to_object(o)
+
     if boo_vanish_or_appear(o) then
         o.oTimer = 0
     elseif o.oAction > 0 and o.oTimer <= 30 then
         o.oInteractType = 0
-        o.oForwardVel = 32 -- Doesn't seem to work
-        cur_obj_rotate_yaw_toward(o.oAngleToMario, 0x300) -- Neither this
+
+        -- move to boss boos, maybe nerf for regular boos
+        --[[ 
+        if o.oAction < 9 then
+            -- the new o.oForwardVel
+            o.oPosX = o.oPosX + (math.sin(o.oMoveAngleYaw / 32768 * math.pi) * 32)
+            o.oPosZ = o.oPosZ + (math.cos(o.oMoveAngleYaw / 32768 * math.pi) * 32)
+
+            cur_obj_rotate_yaw_toward(o.oAngleToMario, 0x300)
+            o.oFaceAngleYaw = o.oMoveAngleYaw -- required to get the above function to work
+        end 
+        ]]
+
     end
-    if obj_check_if_collided_with_object(o, m.marioObj) == 1 then
-        obj_set_model_extended(m.marioObj.prevObj, E_MODEL_BLUE_FLAME)
+
+    -- kill detection
+    -- if boo is behind Mario and Mario is facing away from boo, then instakill
+    -- if boo is instead beside or somewhat facing mario and mario isnt behind boo, then longer instakill (but you still have a chance at survival)
+    if o.oAction < 9 then
+        if dist_between_objects(m.marioObj, o) < o.hitboxRadius * 0.6 then
+
+            local faceAngleDiff = abs_angle_diff(m.faceAngle.y, o.oFaceAngleYaw)
+            local angleToMario = obj_angle_to_object(o, m.marioObj)
+            local booToMarioDiff = abs_angle_diff(o.oFaceAngleYaw, angleToMario)
+
+            if booToMarioDiff <= 16384 then
+                if faceAngleDiff < 10923 then
+
+                    local ignore = {
+                        [ACT_PUSHING_DOOR] = true,
+                        [ACT_PULLING_DOOR] = true,
+                        [ACT_HARD_BACKWARD_AIR_KB] = true,
+                        [ACT_SUFFOCATION] = true,
+                        [ACT_ELECTROCUTION] = true
+                    }
+
+                    if not ignore[m.action] and m.action & ACT_FLAG_AIR == 0 then
+
+                        play_sound(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.pos)
+                        set_mario_action(m, ACT_ELECTROCUTION, 0)
+                        set_camera_shake_from_hit(SHAKE_SMALL_DAMAGE)
+
+                    end
+
+                elseif faceAngleDiff >= 10923 and faceAngleDiff <= 27306 then
+
+                    o.oAction = 9
+                end
+            end
+        end
     end
-    --djui_chat_message_create(tostring(o.oInteractStatus & INT_STATUS_INTERACTED))
+
+    -- spooks Mario if he's facing directly away from nearest Boo and Mario angleYaw and boo angleYaw are within 90 degrees of each other
+    -- else boo enters Mario, inputs random moves, and suffocates him
+    if o.oAction == 9 then
+        local angleToMario = obj_angle_to_object(o, m.marioObj)
+        o.oFaceAngleYaw = angleToMario
+        o.oMoveAngleYaw = angleToMario
+
+        o.oPosY = m.pos.y
+
+        local dist = dist_between_objects(o, m.marioObj)
+        if dist > 20 then
+            o.oOpacity = math.max(20, o.oOpacity - 50)
+            o.oForwardVel = 15
+            if dist > 300 then
+                o.oAction = 1
+            end
+        else
+            if m.action ~= ACT_SUFFOCATION and m.action ~= ACT_ELECTROCUTION and m.action ~= ACT_GONE then -- add extra actions after the kb OR shorten timer to kill when kb action ends also add all kb/death acitons to check through idk some global table
+                drop_and_set_mario_action(m, ACT_HARD_BACKWARD_AIR_KB, 0)
+            end
+            o.oTimer = 0
+            o.oOpacity = 20
+            o.oAction = 10
+        end
+    end
+
+    -- boo enters Mario, mario inputs random actions(?), then after 5 seconds suffocate Mario
+    if o.oAction == 10 then
+        local booScale = 1
+
+        o.oPosY = m.pos.y
+
+        if o.oTimer < 150 then
+            obj_scale(o, 0.01)
+            o.oOpacity = 20
+            o.oPosX, o.oPosZ = m.pos.x, m.pos.z
+            o.oForwardVel = 0
+        elseif o.oTimer >= 150 and o.oTimer < 200 then
+            if m.action ~= ACT_SUFFOCATION then
+                set_mario_action(m, ACT_SUFFOCATION, 0)
+            end
+
+            o.oOpacity = math.min(o.oOpacity + 10, 255)
+            obj_scale(o, booScale)
+            o.oForwardVel = 60
+        elseif o.oTimer >= 180 then -- failsafe in case natural opacity increase breaks
+            o.oOpacity = 255
+        end
+
+        if o.oOpacity == 255 then
+            o.oTimer = 0
+            o.oAction = 1
+        end
+    end
+end
+
+function custom_balcony_boo_init(o)
+    local hitbox = get_temp_object_hitbox()
+    o.oInteractType = 0
+    o.oDamageOrCoinValue = 3
+    o.oHealth = 5
+    o.hitboxRadius = 140
+    o.hitboxHeight = 80
+    o.hurtboxRadius = 40
+    o.hurtboxHeight = 60
+
+    obj_set_hitbox(o, hitbox)
+end
+
+function custom_balcony_boo_loop(o)
+    if o.oAction > 0 and o.oAction < 9 and o.oTimer <= 30 then
+        -- the new o.oForwardVel
+        o.oPosX = o.oPosX + (math.sin(o.oMoveAngleYaw / 32768 * math.pi) * 8)
+        o.oPosZ = o.oPosZ + (math.cos(o.oMoveAngleYaw / 32768 * math.pi) * 8)
+
+        cur_obj_rotate_yaw_toward(o.oAngleToMario, 0x200)
+        o.oFaceAngleYaw = o.oMoveAngleYaw -- required to get the above function to work
+    end
+
+    -- faiolsafe to make sure oHealth is always 5
+    if o.oPrevAction == 0 and o.oAction == 1 then
+        o.oHealth = 5
+    end
+
+    if o.oAction == 3 then
+        o.oInteractType = 0
+    end
+
+    universal_boo_bhv(o)
 end
 
 function HackerSM64_mr_i_pitch_shooting(particle, o) --Thx HackerSM64 devs
@@ -4546,6 +4681,8 @@ local function hook_gore_behavior(id, override, init, loop)
 end
 
 
+
+hook_event(HOOK_ALLOW_INTERACT, goom_int)
 hook_event(HOOK_ON_PLAY_SOUND, sfx_management)
 
 hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
@@ -4573,12 +4710,17 @@ hook_gore_behavior(id_bhvCoinFormationSpawn, true, bhv_custom_coins_init, bhv_cu
 hook_gore_behavior(id_bhvScuttlebug, false, nil, scuttlebug_loop)
 hook_gore_behavior(id_bhvSkeeter, false, nil, skeeter_loop)
 hook_gore_behavior(id_bhvHeaveHo, false, nil, heaveho_loop)
-hook_gore_behavior(id_bhvGhostHuntBoo, false, nil, boo_loop)
-hook_gore_behavior(id_bhvBoo, false, nil, boo_loop)
-hook_gore_behavior(id_bhvMerryGoRoundBoo, false, nil, boo_loop)
-hook_gore_behavior(id_bhvGhostHuntBigBoo, false, nil, boo_loop)
-hook_gore_behavior(id_bhvBalconyBigBoo, false, nil, boo_loop)
-hook_gore_behavior(id_bhvMerryGoRoundBigBoo, false, nil, boo_loop)
+
+
+hook_gore_behavior(id_bhvGhostHuntBoo, false, nil, universal_boo_bhv)
+hook_gore_behavior(id_bhvBoo, false, nil, universal_boo_bhv)
+hook_gore_behavior(id_bhvMerryGoRoundBoo, false, nil, universal_boo_bhv)
+
+hook_gore_behavior(id_bhvGhostHuntBigBoo, false, nil, universal_boo_bhv)
+hook_gore_behavior(id_bhvMerryGoRoundBigBoo, false, nil, universal_boo_bhv)
+hook_gore_behavior(id_bhvBalconyBigBoo, false, custom_balcony_boo_init, custom_balcony_boo_loop)
+
+
 hook_gore_behavior(id_bhvMrIParticle, false, nil, mr_i_particle)
 hook_gore_behavior(id_bhvMrI, false, nil, mr_i)
 hook_gore_behavior(id_bhvBookSwitch, false, nil, custom_book_switch_loop)
@@ -4606,7 +4748,6 @@ hook_gore_behavior(id_bhvPlatformOnTrack, false, nil, bhv_custom_moving_plats)
 hook_gore_behavior(id_bhvRecoveryHeart, false, nil, bhv_custom_heart)
 hook_gore_behavior(id_bhvRrRotatingBridgePlatform, false, nil, bhv_custom_rotating_platform)
 hook_gore_behavior(id_bhvSwingPlatform, false, nil, bhv_custom_swing)
---hook_gore_behavior(id_bhv1Up, false, nil, bhv_custom_1up)
 hook_gore_behavior(id_bhvHidden1upInPole, false, nil, bhv_custom_1up)
 hook_gore_behavior(id_bhvFlyGuy, false, nil, bhv_custom_flyguy)
 hook_gore_behavior(id_bhvBigBoulder, false, nil, bhv_custom_boulder)
@@ -4636,7 +4777,6 @@ hook_gore_behavior(id_bhvSeesawPlatform, false, nil, bhv_custom_seesaw)
 hook_gore_behavior(id_bhvBbhTiltingTrapPlatform, false, nil, bhv_custom_tilting_plat)
 hook_gore_behavior(id_bhvCoffin, false, nil, bhv_custom_coffin)
 hook_gore_behavior(id_bhvHiddenStaircaseStep, false, nil, bhv_custom_staircase_step)
---hook_gore_behavior(id_bhvHauntedBookshelf, false, nil, bhv_custom_haunted_bookshelf)
 hook_gore_behavior(id_bhvMessagePanel, false, nil, bhv_custom_sign)
 hook_gore_behavior(id_bhvTree, false, nil, bhv_custom_tree)
 hook_gore_behavior(id_bhvWhompKingBoss, false, nil, bhv_custom_kingwhomp)
@@ -4650,11 +4790,8 @@ hook_gore_behavior(id_bhvBobBowlingBallSpawner, false, nil, bhv_custom_bowlballs
 hook_gore_behavior(id_bhvExplosion, false, bhv_custom_explosion, function() end)
 hook_gore_behavior(id_bhvBobomb, false, nil, bobomb_loop)
 hook_gore_behavior(id_bhvGoomba, false, nil, bhv_custom_goomba_loop)
-hook_event(HOOK_ALLOW_INTERACT, goom_int)
 hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
 hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_custom_init, bhv_bowser_key_custom_loop)
---hook_gore_behavior(id_bhvWingCap, false, nil, bhv_custom_wc)
---hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
 hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
 hook_gore_behavior(id_bhvChuckya, false, nil, custom_chuckya_loop)
 hook_gore_behavior(id_bhvFlame, false, flame_loop)
@@ -4708,3 +4845,7 @@ id_bhvQSFloatingPlatform = hook_behavior(nil, OBJ_LIST_SURFACE, true, qs_float_p
 id_bhvCustomPlane = hook_behavior(nil, OBJ_LIST_SURFACE, true, custom_plane_init, custom_plane_loop, "bhvCustomPlane")
 id_bhvQuicksandFogPlane = hook_behavior(nil, OBJ_LIST_GENACTOR, true, qs_fog_plane_init, qs_fog_plane_loop, "bhvQuicksandFogPlane")
 id_bhvStarKO = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, star_ko_init, star_ko_loop, "bhvStarKO")
+
+----------------------- UNUSED -----------------------
+--hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)
+--hook_gore_behavior(id_bhvHauntedBookshelf, false, nil, bhv_custom_haunted_bookshelf)

@@ -32,21 +32,23 @@ function test()
         --m.faceAngle.y = 16384
         --m.numStars = 100
         --m.pos.x = m.pos.x - 200
-        djui_chat_message_create(tostring(m.actionArg))
+        --djui_chat_message_create(tostring(m.actionArg))
 
-        local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvWaterBombCannon)
-        --local n = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvCannonBarrel)
-        --[[ djui_chat_message_create(tostring(o.oPosX))
-        djui_chat_message_create(tostring(o.oPosY))
-        djui_chat_message_create(tostring(o.oPosZ)) ]]
-        djui_chat_message_create(tostring(o.oMoveAngleYaw))
-        --djui_chat_message_create(tostring(o.oFaceAngleYaw))
---[[         obj_mark_for_deletion(o)
-        obj_mark_for_deletion(n) ]]
+        local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvBalconyBigBoo)
+        if not o then
+            spawn_non_sync_object(id_bhvBalconyBigBoo, E_MODEL_BOO, m.pos.x + 500, m.pos.y, m.pos.z, function() end)
+        else
+            djui_chat_message_create("PosX: " ..tostring(o.oPosX))
+            djui_chat_message_create("PosY: " ..tostring(o.oPosY))
+            djui_chat_message_create("PosZ: " ..tostring(o.oPosZ))
+            djui_chat_message_create("Opacity: " ..tostring(o.oOpacity))
+            djui_chat_message_create("BehParams2ndByte: " ..tostring(o.oBehParams2ndByte))
+            djui_chat_message_create("Action: " ..tostring(o.oAction))
+            djui_chat_message_create("Health: " ..tostring(o.oHealth))
+        end
     end
 
 end
-
 hook_event(HOOK_UPDATE, test)
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2009,15 +2011,6 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
         else
             m.squishTimer = 50
         end
-    end
-
-    if (m.hurtCounter > 0) and (obj_has_behavior_id(o, id_bhvGhostHuntBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBoo) ~= 0
-    or obj_has_behavior_id(o, id_bhvMerryGoRoundBoo) ~= 0 or obj_has_behavior_id(o, id_bhvGhostHuntBigBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBalconyBigBoo) ~= 0
-    or obj_has_behavior_id(o, id_bhvMerryGoRoundBigBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBooWithCage) ~= 0) and (not s.headless) then
-        set_mario_action(m, ACT_BURNING_JUMP, 0)
-        spawn_mist_particles()
-        set_camera_shake_from_hit(SHAKE_SMALL_DAMAGE)
-        obj_set_model_extended(m.marioObj.prevObj, E_MODEL_BLUE_FLAME) -- Only works for id_bhvBooWithCage
     end
 
     handle_object_interaction(m, o)

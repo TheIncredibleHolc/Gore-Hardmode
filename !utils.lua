@@ -715,10 +715,10 @@ sOnWarpToFunc = {
     end,
 
     [LEVEL_BBH] = function()
-        set_lighting_color(0,50)
+        --[[ set_lighting_color(0,50)
         set_lighting_color(1,50)
         set_lighting_color(2,65)
-        set_lighting_dir(1,128)
+        set_lighting_dir(1,128) ]]
     end,
 
     [LEVEL_JRB] = function()
@@ -887,10 +887,10 @@ sOnLvlInitToFunc = {
     end,
 
     [LEVEL_BBH] = function()
-        set_lighting_color(0,50)
+        --[[ set_lighting_color(0,50)
         set_lighting_color(1,50)
         set_lighting_color(2,65)
-        set_lighting_dir(1,128)
+        set_lighting_dir(1,128) ]]
     end,
 
     [LEVEL_BITFS] = function()
@@ -1159,6 +1159,8 @@ sOnSyncValidtoFunc = {
     end,
 
     [LEVEL_BBH] = function()
+        obj_mark_for_deletion(obj_get_first_with_behavior_id(id_bhvBalconyBigBoo))
+
         osync.spawn_sync_objects("bbh_area_1", function()
             osync.spawn_sync_object(id_bhvCustomPlane, E_MODEL_NONE, -1862, 1325, 1630, function(o)
                 obj_scale_xyz(o, 5.1, 1, 3.2)
@@ -1254,6 +1256,7 @@ sOnSyncValidtoFunc = {
                 o.oFaceAngleYaw = 0
                 o.oBehParams2ndByte = 7
             end)
+            osync.spawn_sync_object(id_bhvBalconyBigBoo, E_MODEL_BOO, 666, 2150, 2875, function() end)
 
             osync.spawn_sync_object(id_bhvBookendSpawn, E_MODEL_NONE, -1550, 935, -1050, function(o) end)
         end)
