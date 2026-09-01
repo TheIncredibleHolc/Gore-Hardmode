@@ -37,6 +37,82 @@ local function get_sync_object_queue_id(...)
     return tconcat({...}, "_")
 end
 
+--- @param behaviorId BehaviorId
+--- @param parent Object
+--- @return Object|nil
+_G.obj_get_first_with_behavior_id_and_parent = function (behaviorId, parent)
+    local obj = obj_get_first_with_behavior_id(behaviorId)
+    while obj do
+        if obj.activeFlags ~= 0 and obj.parentObj == parent then
+            return obj
+        end
+        obj = obj_get_next_with_same_behavior_id(obj)
+    end
+    return nil
+end
+
+--- @param behaviorId BehaviorId
+--- @param callbackFunc function
+local function register_sync_behavior(behaviorId, callbackFunc)
+    hook_behavior(behaviorId, nil, false, nil, function (o)
+        if o.oSyncID ~= 0 then
+            callbackFunc(o)
+        end
+    end)
+end
+
+----------------------
+--- Sync behaviors ---
+----------------------
+
+register_sync_behavior(id_bhvWaterBombCannon, function (o)
+    if not obj_get_first_with_behavior_id_and_parent(id_bhvCannonBarrelBubbles, o) then
+        o.oAction = 0
+    end
+end)
+
+register_sync_behavior(id_bhvLllBowserPuzzle, function (o)
+    if not obj_get_first_with_behavior_id_and_parent(id_bhvLllBowserPuzzlePiece, o) then
+        o.oAction = 0
+    end
+end)
+
+register_sync_behavior(id_bhvCapSwitch, function (o)
+    if not obj_get_first_with_behavior_id_and_parent(id_bhvCapSwitchBase, o) then
+        o.oAction = 0
+    end
+end)
+
+register_sync_behavior(id_bhvExclamationBox, function (o)
+    if o.oAction == 1 and not obj_get_first_with_behavior_id_and_parent(id_bhvRotatingExclamationMark, o) then
+        o.oPrevAction = 0
+    end
+end)
+
+register_sync_behavior(id_bhvOpenableGrill, function (o)
+    if not obj_get_first_with_behavior_id_and_parent(id_bhvOpenableCageDoor, o) then
+        o.oAction = 0
+    end
+end)
+
+register_sync_behavior(id_bhvLllFloatingWoodBridge, function (o)
+    if not obj_get_first_with_behavior_id_and_parent(id_bhvLllWoodPiece, o) then
+        o.oAction = 0
+    end
+end)
+
+register_sync_behavior(id_bhvGiantPole, function (o)
+    if not obj_get_first_with_behavior_id_and_parent(id_bhvYellowBall, o) then
+        o.oPrevAction = o.oAction + 1
+    end
+end)
+
+register_sync_behavior(id_bhvWigglerHead, function (o)
+    if not obj_get_first_with_behavior_id_and_parent(id_bhvWigglerBody, o) then
+        o.oAction = 0
+    end
+end)
+
 --- @param context string
 --- @param func function
 local function spawn_sync_objects(context, func)
@@ -272,11 +348,13 @@ hook_event(HOOK_BEFORE_PLAY_MODE_UPDATE, osync_update) -- runs before object upd
 hook_event(HOOK_ON_PACKET_RECEIVE, osync_receive_packet)
 
 local _osync = {
+    register_sync_behavior = register_sync_behavior,
     spawn_sync_objects = spawn_sync_objects,
     spawn_sync_object = spawn_sync_object,
 }
 
 ---@class osync
+---@field register_sync_behavior fun(behaviorId: BehaviorId, callbackFunc: function)
 ---@field spawn_sync_objects fun(context: string, func: fun())
 ---@field spawn_sync_object fun(behaviorId: BehaviorId, modelId: ModelExtendedId, x: number, y: number, z: number, objSetupFunction?: function)
 local osync = setmetatable({}, {

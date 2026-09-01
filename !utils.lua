@@ -1,3 +1,15 @@
+-- libraries (thank you blocky and peachy for providing libs)
+local UvScroll = require('/lib/uv-scroll')
+local warpUtils = require('/lib/warps')
+local osync = require('/lib/osync')
+
+-- adding pipes in wdw (thank you blocky)
+warpUtils.newWarpNode(LEVEL_WDW, 1, 0x015, LEVEL_WDW, 2, 0x016, pipe_entry, pipe_exit, true)
+warpUtils.createWarpObj(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 0x015, nil, LEVEL_WDW, 1, {4096, 3072, -3325}, nil)
+
+warpUtils.newWarpNode(LEVEL_WDW, 2, 0x016, LEVEL_WDW, 1, 0x015, pipe_entry, pipe_exit, true)
+warpUtils.createWarpObj(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 0x016, nil, LEVEL_WDW, 2, {-2545, -2550, -2055}, nil)
+
 -------------------------------------------------------------------------------------------------------
 --GUI Gore Customizations
 local function levelspawnstoggle()
@@ -215,6 +227,7 @@ gSamples = {
     audio_sample_load("yeetWario.ogg"),
     audio_sample_load("yeetWaluigi.ogg"),
     audio_sample_load("launchTwinkle.ogg"),
+    audio_sample_load("possession.ogg"),
 }
 
 sBoneBreak = 1
@@ -285,6 +298,7 @@ sYeetToad = 65
 sYeetWario = 66
 sYeetWaluigi = 67
 sTwinkleKO = 68
+sPossession = 69 -- hehe nice
 
 function loop(music) audio_stream_set_looping(music, true) end
 
@@ -315,7 +329,7 @@ pianoOmori = audio_stream_load("pianoOmori.ogg")
 pianoPrison = audio_stream_load("pianoPrison.ogg")
 pianoSA2 = audio_stream_load("pianoSA2.ogg")
 pianoSMB2 = audio_stream_load("pianoSMB2.ogg")
-pianoWater = audio_stream_load("pianoWater.ogg")
+pianoYoshi = audio_stream_load("pianoYoshi.ogg")
 
 iwbtgMusic = {
     iwbtg,
@@ -373,7 +387,7 @@ function stream_stop_all()
     audio_stream_stop(pianoPrison)
     audio_stream_stop(pianoSA2)
     audio_stream_stop(pianoSMB2)
-    audio_stream_stop(pianoWater)
+    audio_stream_stop(pianoYoshi)
     currentlyPlaying = nil
 end
 hook_event(HOOK_UPDATE, function ()
@@ -443,6 +457,7 @@ TEX_FIREWORK_SPARKLE_3A = get_texture_info("sparkle_3a")
 TEX_FIREWORK_SPARKLE_3B = get_texture_info("sparkle_3b")
 TEX_FIREWORK_SPARKLE_4A = get_texture_info("sparkle_4a")
 TEX_FIREWORK_SPARKLE_4B = get_texture_info("sparkle_4b")
+TEX_VIGNETTE = get_texture_info("harshvignette")
 end
 
 --! models
@@ -1998,6 +2013,26 @@ end
 
 originalTempo = sequence_player_get_tempo(SEQ_PLAYER_LEVEL) + (48 * 48)
 
+local deathActions = {
+    [ACT_GONE] = true,
+    [ACT_NOTHING] = true,
+    [ACT_NECKSNAP] = true,
+    [ACT_SHOCKED_DEATH] = true,
+    [ACT_DECAPITATED] = true,
+    [ACT_BITTEN_IN_HALF] = true,
+    [ACT_STANDING_DEATH] = true,
+    [ACT_QUICKSAND_DEATH] = true,
+    [ACT_ELECTROCUTION] = true,
+    [ACT_SUFFOCATION] = true,
+    [ACT_DEATH_ON_STOMACH] = true,
+    [ACT_DEATH_ON_BACK] = true,
+}
+
+function is_in_death_action(m)
+    return not not deathActions[m.action]
+end
+
+--! scrolling functions
 
 function uv_scroll_right(input_vtx, original_uv, current_uv)
     local speed = 10
@@ -2024,4 +2059,12 @@ end
 function pipe_exit(m, o)
     play_sound(SOUND_MENU_ENTER_PIPE, gGlobalSoundSource)
     set_mario_action(m, ACT_EMERGE_FROM_PIPE, 0)
+end
+
+function scrolling_behaviors()
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum == LEVEL_WDW then
+        UvScroll.hook_scrolling_function('quicksandPlane_Plane_mesh_layer_1_tri_0', uv_scroll_right)
+        UvScroll.hook_scrolling_function('quicksandFogPlane_Plane_mesh_layer_5_tri_0', uv_scroll_spin)
+    end
 end

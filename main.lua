@@ -21,6 +21,7 @@
 -- change thi's mini form to work like normal mario but mini (current mini doesnt provide any interesting gameplay changes other than novelty)
 -- force players into ACT_GONE before they use in-level warps
 -- add death anim where the player faceplants and slides forward a bit before death warp
+-- change burning death to turn mario into smoke/pvz explosion death
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 function test()
@@ -36,7 +37,9 @@ function test()
 
         local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvBalconyBigBoo)
         if not o then
-            spawn_non_sync_object(id_bhvBalconyBigBoo, E_MODEL_BOO, m.pos.x + 500, m.pos.y, m.pos.z, function() end)
+            spawn_non_sync_object(id_bhvBalconyBigBoo, E_MODEL_BOO, m.pos.x + 500, m.pos.y, m.pos.z, function(obj) 
+                obj.oRoom = 0
+            end)
         else
             djui_chat_message_create("PosX: " ..tostring(o.oPosX))
             djui_chat_message_create("PosY: " ..tostring(o.oPosY))
@@ -47,7 +50,6 @@ function test()
             djui_chat_message_create("Health: " ..tostring(o.oHealth))
         end
     end
-
 end
 hook_event(HOOK_UPDATE, test)
 
@@ -117,18 +119,6 @@ clamp, djui_hud_render_texture_tile, nearest_interacting_mario_state_to_object, 
 play_transition, network_is_server, obj_check_hitbox_overlap, network_player_connected_count
 
 -------------------helpers------------------------------
-
--- libraries (thank you blocky and peachy for providing libs)
-local UvScroll = require('/lib/uv-scroll')
-local warpUtils = require('/lib/warps')
-osync = require('/lib/osync')
-
--- adding pipes in wdw (thank you blocky)
-warpUtils.newWarpNode(LEVEL_WDW, 1, 0x015, LEVEL_WDW, 2, 0x016, pipe_entry, pipe_exit, true)
-warpUtils.createWarpObj(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 0x015, nil, LEVEL_WDW, 1, {4096, 3072, -3325}, nil)
-
-warpUtils.newWarpNode(LEVEL_WDW, 2, 0x016, LEVEL_WDW, 1, 0x015, pipe_entry, pipe_exit, true)
-warpUtils.createWarpObj(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 0x016, nil, LEVEL_WDW, 2, {-2545, -2550, -2055}, nil)
 
 --Scrolling textures
 add_scroll_target(1, "hell_dl_cave_and_lava_mesh_layer_1_vtx_0")
@@ -1797,13 +1787,6 @@ function hook_update()
             end
         end
     end
-
-    -- Removes any instances of gas effects after leaving HMC.
-    if np.currLevelNum ~= LEVEL_HMC and s.highdeathtimer > 0 and s.ishigh and not gGlobalSyncTable.romhackcompatibility then
-        s.ishigh = false
-        s.highdeathtimer = 0
-        set_override_fov(0)
-    end
 ----------------------------------------------------------------------------------------------------------------------------------  
     -- Adds a visual death counter beside all players on the player list.
     for i = 0, MAX_PLAYERS - 1 do
@@ -2066,6 +2049,44 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
 
     if obj_has_behavior_id(o, id_bhvBigChillBully) ~= 0 and (m.action == ACT_SOFT_FORWARD_GROUND_KB or m.action == ACT_SOFT_BACKWARD_GROUND_KB) then
         m.squishTimer = 50
+    end
+
+    -- disable boo hitbox
+    if (m.hurtCounter > 0) and (obj_has_behavior_id(o, id_bhvGhostHuntBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBoo) ~= 0
+    or obj_has_behavior_id(o, id_bhvMerryGoRoundBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBooWithCage) ~= 0) and (not s.headless) then
+
+        local angleToMario = obj_angle_to_object(o, m.marioObj)
+        local marioToBooYawDiff = sm64_to_degrees(abs_angle_diff(m.faceAngle.y, o.oFaceAngleYaw))
+        local marioInBooSightCone  = sm64_to_degrees(abs_angle_diff(o.oFaceAngleYaw, angleToMario))
+
+        if marioToBooYawDiff >= 90 and marioToBooYawDiff <= 150 and marioInBooSightCone <= 90 then
+
+            djui_chat_message_create("-------------------------1")
+            set_mario_action(m, ACT_BURNING_JUMP, 0)
+            spawn_mist_particles()
+            set_camera_shake_from_hit(SHAKE_SMALL_DAMAGE)
+            obj_set_model_extended(m.marioObj.prevObj, E_MODEL_BLUE_FLAME)
+
+        elseif marioInBooSightCone <= 90 and marioToBooYawDiff < 90 then
+
+            djui_chat_message_create("-------------------------2")
+            play_sound(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.pos)
+            set_mario_action(m, ACT_SUFFOCATION, 0)
+            set_camera_shake_from_hit(SHAKE_SMALL_DAMAGE)
+
+        elseif marioInBooSightCone > 90 and marioToBooYawDiff >= 90 then
+            djui_chat_message_create("-------------------------3")
+        end
+    end
+
+    if (m.hurtCounter > 0) and (obj_has_behavior_id(o, id_bhvGhostHuntBigBoo) ~= 0
+    or obj_has_behavior_id(o, id_bhvBalconyBigBoo) ~= 0
+    or obj_has_behavior_id(o, id_bhvMerryGoRoundBigBoo) ~= 0)
+    and (not s.headless) then
+        m.hurtCounter = 0
+        drop_and_set_mario_action(m, ACT_HARD_BACKWARD_AIR_KB, 0)
+        network_play(sPossession, m.pos, 2, m.playerIndex)
+        o.oAction = 10
     end
 end
 
@@ -2610,6 +2631,40 @@ local function on_obj_load(o)
     end
 end
 
+local function on_hud_render()
+    local m = gMarioStates[0]
+    local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvBalconyBigBoo)
+    if o and dist_between_objects(m.marioObj, o) < 5 and o.oAction == 10 then
+
+        local alpha = math.min(255, o.oTimer * 2.125)
+        djui_hud_set_resolution(RESOLUTION_N64)
+        djui_hud_set_color(255, 255, 255, alpha)
+
+        local screen_width = djui_hud_get_screen_width()
+        local screen_height = djui_hud_get_screen_height()
+        djui_hud_render_texture(TEX_VIGNETTE, screen_width * 0.002 - 5, screen_height * 0.002 - 5, screen_width * 0.002, screen_height * 0.002)
+    end
+end
+
+local function allow_interact(m, o, intType)
+    local np = gNetworkPlayers[0]
+    local s = gStateExtras[m.playerIndex]
+    
+    --Wing Cap intangibility check for players with no hat on.
+    if (obj_has_behavior_id(o, id_bhvWingCap) ~= 0) and m.flags & MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD == 0 and not gGlobalSyncTable.romhackcompatibility then
+        return false 
+    end
+
+    --[[ -- disable boo hitbox
+    if (m.hurtCounter > 0) and (obj_has_behavior_id(o, id_bhvGhostHuntBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBoo) ~= 0
+    or obj_has_behavior_id(o, id_bhvMerryGoRoundBoo) ~= 0 or obj_has_behavior_id(o, id_bhvGhostHuntBigBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBalconyBigBoo) ~= 0
+    or obj_has_behavior_id(o, id_bhvMerryGoRoundBigBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBooWithCage) ~= 0) and (not s.headless) then
+        djui_chat_message_create("TRUE")
+        return 0
+    end ]]
+end
+
+
 ---------hooks--------
 hook_event(HOOK_MARIO_UPDATE, mario_update)
 hook_event(HOOK_UPDATE, hook_update)
@@ -2649,6 +2704,8 @@ hook_event(HOOK_ON_SET_MARIO_ACTION, action_start)
 hook_event(HOOK_ON_DEATH, mariodeath)
 hook_event(HOOK_ON_OBJECT_UNLOAD, toaddeath)
 hook_event(HOOK_ON_INTERACT, on_interact)
+hook_event(HOOK_ALLOW_INTERACT, allow_interact)
+hook_event(HOOK_ON_HUD_RENDER, on_hud_render)
 hook_event(HOOK_ON_HUD_RENDER_BEHIND, hud_render_behind)
 hook_event(HOOK_BEFORE_PHYS_STEP, before_phys_step) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
 hook_event(HOOK_ON_PAUSE_EXIT, on_pause_exit)
@@ -2745,6 +2802,13 @@ hook_event(HOOK_ON_LEVEL_INIT, function()
     else
         default_level_func()
     end
+
+    if not gGlobalSyncTable.romhackcompatibility then
+        s.ishigh = false
+        s.highdeathtimer = 0
+    end
+    
+    set_override_fov(0)
 end)
 
 hook_event(HOOK_ON_SYNC_VALID, function()
@@ -2755,10 +2819,7 @@ hook_event(HOOK_ON_SYNC_VALID, function()
         syncFunc()
     end
 
-    if gNetworkPlayers[0].currLevelNum == LEVEL_WDW then
-        UvScroll.hook_scrolling_function('quicksandPlane_Plane_mesh_layer_1_tri_0', uv_scroll_right)
-        UvScroll.hook_scrolling_function('quicksandFogPlane_Plane_mesh_layer_5_tri_0', uv_scroll_spin)
-    end
+    scrolling_behaviors()
 end)
 
 hook_event(HOOK_ON_WARP, function()
@@ -2824,13 +2885,7 @@ hook_event(HOOK_ON_PLAY_SOUND, function(sound)
 end)
 
 
-function obj_interact(m, o, intType)
-    local np = gNetworkPlayers[0]
-    if (obj_has_behavior_id(o, id_bhvWingCap) ~= 0) and m.flags & MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD == 0 and not gGlobalSyncTable.romhackcompatibility then
-        return false --Wing Cap intangibility check for players with no hat on.
-    end
-end
-hook_event(HOOK_ALLOW_INTERACT, obj_interact)
+
 ----------------------------------------------------------------------------------------------------
 -- This function and all other moveset functions cover Mini Mode and Metal Cap (and maybe Vanish Cap)
 local function movesets_before_phys_step(m, stepType)
