@@ -3,13 +3,50 @@ local UvScroll = require('/lib/uv-scroll')
 local warpUtils = require('/lib/warps')
 local osync = require('/lib/osync')
 
--- adding pipes in wdw (thank you blocky)
+--! scrolling textures
+
+local function uv_scroll_right(input_vtx, original_uv, current_uv)
+    local speed = 10
+
+    current_uv[1] = current_uv[1] + speed
+end
+
+local function uv_scroll_spin(input_vtx, original_uv, current_uv)
+    -- adjustable constants
+    local speed = 0.005
+
+    -- equation for circular motion
+    local t = get_global_timer() * speed
+    local orig_theta = math.atan(original_uv[2], original_uv[1])
+    local orig_dist = math.sqrt((original_uv[1] ^ 2) + (original_uv[2] ^ 2))
+    current_uv[1] = orig_dist * math.cos(orig_theta + t)
+    current_uv[2] = orig_dist * math.sin(orig_theta + t)
+end
+
+function scrolling_behaviors()
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum == LEVEL_WDW then
+        UvScroll.hook_scrolling_function('quicksandPlane_Plane_mesh_layer_1_tri_0', uv_scroll_right)
+        UvScroll.hook_scrolling_function('quicksandFogPlane_Plane_mesh_layer_5_tri_0', uv_scroll_spin)
+    end
+end
+
+-- !custom warping
+
+local function pipe_entry(m, o)
+    play_sound(SOUND_MENU_ENTER_PIPE, gGlobalSoundSource)
+end
+
+local function pipe_exit(m, o)
+    play_sound(SOUND_MENU_ENTER_PIPE, gGlobalSoundSource)
+    set_mario_action(m, ACT_EMERGE_FROM_PIPE, 0)
+end
+
 warpUtils.newWarpNode(LEVEL_WDW, 1, 0x015, LEVEL_WDW, 2, 0x016, pipe_entry, pipe_exit, true)
 warpUtils.createWarpObj(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 0x015, nil, LEVEL_WDW, 1, {4096, 3072, -3325}, nil)
 
 warpUtils.newWarpNode(LEVEL_WDW, 2, 0x016, LEVEL_WDW, 1, 0x015, pipe_entry, pipe_exit, true)
 warpUtils.createWarpObj(id_bhvWarpPipe, E_MODEL_BITS_WARP_PIPE, 0x016, nil, LEVEL_WDW, 2, {-2545, -2550, -2055}, nil)
-
 -------------------------------------------------------------------------------------------------------
 --GUI Gore Customizations
 local function levelspawnstoggle()
@@ -405,11 +442,17 @@ end)
 function local_play(id, pos, vol)
     audio_sample_play(gSamples[id], pos, (is_game_paused() and 0 or vol))
 end
+
 function network_play(id, pos, vol, i)
     local_play(id, pos, vol)
     network_send(true, {type = PACKET_SOUND, id = id, x = pos.x, y = pos.y, z = pos.z, vol = vol, i = network_global_index_from_local(i)})
 end
-function stop_all_samples()
+
+function sample_stop(id)
+    audio_sample_stop(gSamples[id])
+end
+
+function samples_stop_all()
     for _, audio in pairs(gSamples) do
         audio_sample_stop(audio)
     end
@@ -2032,39 +2075,3 @@ function is_in_death_action(m)
     return not not deathActions[m.action]
 end
 
---! scrolling functions
-
-function uv_scroll_right(input_vtx, original_uv, current_uv)
-    local speed = 10
-
-    current_uv[1] = current_uv[1] + speed
-end
-
-function uv_scroll_spin(input_vtx, original_uv, current_uv)
-    -- adjustable constants
-    local speed = 0.005
-
-    -- equation for circular motion
-    local t = get_global_timer() * speed
-    local orig_theta = math.atan(original_uv[2], original_uv[1])
-    local orig_dist = math.sqrt((original_uv[1] ^ 2) + (original_uv[2] ^ 2))
-    current_uv[1] = orig_dist * math.cos(orig_theta + t)
-    current_uv[2] = orig_dist * math.sin(orig_theta + t)
-end
-
-function pipe_entry(m, o)
-    play_sound(SOUND_MENU_ENTER_PIPE, gGlobalSoundSource)
-end
-
-function pipe_exit(m, o)
-    play_sound(SOUND_MENU_ENTER_PIPE, gGlobalSoundSource)
-    set_mario_action(m, ACT_EMERGE_FROM_PIPE, 0)
-end
-
-function scrolling_behaviors()
-    local np = gNetworkPlayers[0]
-    if np.currLevelNum == LEVEL_WDW then
-        UvScroll.hook_scrolling_function('quicksandPlane_Plane_mesh_layer_1_tri_0', uv_scroll_right)
-        UvScroll.hook_scrolling_function('quicksandFogPlane_Plane_mesh_layer_5_tri_0', uv_scroll_spin)
-    end
-end

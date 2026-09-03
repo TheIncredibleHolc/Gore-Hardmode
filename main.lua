@@ -38,7 +38,7 @@ function test()
         local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvBalconyBigBoo)
         if not o then
             spawn_non_sync_object(id_bhvBalconyBigBoo, E_MODEL_BOO, m.pos.x + 500, m.pos.y, m.pos.z, function(obj) 
-                obj.oRoom = 0
+
             end)
         else
             djui_chat_message_create("PosX: " ..tostring(o.oPosX))
@@ -48,6 +48,7 @@ function test()
             djui_chat_message_create("BehParams2ndByte: " ..tostring(o.oBehParams2ndByte))
             djui_chat_message_create("Action: " ..tostring(o.oAction))
             djui_chat_message_create("Health: " ..tostring(o.oHealth))
+            djui_chat_message_create("Room: " ..tostring(o.oRoom))
         end
     end
 end
@@ -255,21 +256,15 @@ end
 -------ACT_FUNCTIONS------------
 
 function squishblood(o) -- Creates instant pool of impact-blood under an object.
-    local m = gMarioStates[0].playerIndex
-    --local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
     spawn_non_sync_object(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, function() end)
     bloodmist(o)
-    --djui_chat_message_create(tostring(count))
 
 end
 
 function squishblood_if_main(o) -- Creates instant pool of impact-blood under an object.
     local m = gMarioStates[0].playerIndex
-    --local count = obj_count_objects_with_behavior_id(id_bhvSquishblood)
     spawn_sync_if_main(id_bhvSquishblood, E_MODEL_BLOOD_SPLATTER, o.oPosX, find_floor_height(o.oPosX, o.oPosY, o.oPosZ) + 2, o.oPosZ, nil, 0)
     bloodmist(o)
-    --djui_chat_message_create(tostring(count))
-
 end
 
 function squishblood_nogibs(o) -- Creates instant pool of impact-blood under an object.
@@ -298,21 +293,20 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
     if s.enablesplattimer == 1 then
         s.splattimer = s.splattimer + 1
     end
-    if s.splattimer == 0 and m.action == ACT_RAGDOLL then -- hacky fix to prevent initangle from reading as 0 outside of ACT_RAGDOLL (i have no idea ahow thix fixed it)
+
+    if s.splattimer == 0 and m.action == ACT_RAGDOLL then -- hacky fix to prevent initangle from reading as 0 outside of ACT_RAGDOLL (i have no idea how this fixed it)
         m.prevAction = prevAction
-    end
-    if s.splattimer == 1 then
+    elseif s.splattimer == 1 then
         -- keeps ACT_DEATH_ON_STOMACH from taking the players faceAngle.y during ACT_RAGDOLL
         if m.prevAction == prevAction then
             m.faceAngle.y = initangle
         end
         return m.faceAngle.y
-    end
-    if s.splattimer == 2 then
+    elseif s.splattimer == 2 then
         initangle = 0
         m.health = 0xff
         gPlayerSyncTable[m.playerIndex].gold = false
-        set_mario_action(m, ACT_THROWN_FORWARD, 0) --Throws mario forward more to "sell" the fall damage big impact.
+        set_mario_action(m, ACT_FORWARD_GROUND_KB, 0) --Throws mario forward more to "sell" the fall damage big impact. (may revert back to thrown forward once i fix timed death)
         if s.disappear == 1 then --No fall damage, so Mario got squished. No corpse. It's funnier this way. 
             set_mario_action(m, ACT_GONE, 78)
         end
@@ -322,19 +316,14 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
             mario_blow_off_cap(m, 45)
         end
         s.splattimer = s.splattimer + 1
-    end
-
-
-    if (s.splattimer) == 14 then
+    elseif (s.splattimer) == 14 then
         spawn_sync_if_main(id_bhvStaticObject, E_MODEL_BLOOD_SPLATTER2, m.pos.x, find_floor_height(m.pos.x, m.pos.y, m.pos.z) + 2, m.pos.z,
         function (obj)
             local z, normal = vec3f(), cur_obj_update_floor_height_and_get_floor().normal
             obj.oFaceAnglePitch = 16384-calculate_pitch(z, normal)
             obj.oFaceAngleRoll = 0
         end, 0)
-    end
-
-    if (s.splattimer) == 20 then
+    elseif (s.splattimer) == 20 then -- THIS SHOULDNT TRIGGER ONLY AFTER 20 FRAMES, THIS SHOULD INSTEAD TRIGGER WHEN GROUNDED AND 20 FRAMES HAVE PASSED
         if (s.disappear) == 0 then
             set_mario_action(m, ACT_DEATH_ON_STOMACH, 0)
         else
@@ -343,8 +332,7 @@ function splattertimer(m) --This timer is needed to prevent mario from immediate
             s.splattimer = 0
             s.disappear = 0
         end
-    end
-    if (s.splattimer) == 150 then
+    elseif (s.splattimer) == 150 then
         s.enablesplattimer = 0
         s.splatter = 1
         s.splattimer = 0
@@ -942,24 +930,29 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     --IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
     --This gets set to '0' when Mario IS splattered. After the splatter timer is up, it sets s.splatter back to 1 to re-enable splattering. 
     if (s.splatter) == 1 and m.health > 0xff and not (m.action == ACT_BBH_ENTER_SPIN or m.action == ACT_BBH_ENTER_JUMP) then
-        if m.peakHeight >= 750 and m.vel.y <= -55 then  --Checks if Mario takes fall damage
-            s.jumpland = 1 --If fall damage, then 1
-        else
-            s.jumpland = 0 --No fall damage
+
+        -- Checks if Mario has fallen 750 units below his peak height AND is 10 units above the floor he's about to land on
+        if m.peakHeight - m.pos.y >= 750 and m.pos.y - m.floorHeight <= 10 then
+            s.jumpland = 1 -- resets to 0 in mariodeath()
         end
 
-        if s.jumpland == 1 and m.squishTimer >= 1 then -- Checks if Mario is squished from fall damage. If so, his mangled corpse will stay on screen.
-            network_play(sSplatter, m.pos, 1, m.playerIndex)
-            s.splatterdeath = 1
-            s.splatter = 0
+        -- resets peakHeight to allow for another fall damage check later
+        if m.action & ACT_FLAG_AIR == 0 and s.jumpland == 0 then
+            m.peakHeight = m.pos.y
         end
-        if s.jumpland == 0 and m.squishTimer >= 1 then --Checks if Mario was squished from NON-FALL damage. Objects/enemies that squish Mario will smoosh his corpse to invisible. 
+
+        -- Uses squishTimer as a new instakill
+        -- regular squishing makes mario disappear whereas fall damage squish doesn't
+        if m.squishTimer > 0 then
             network_play(sSplatter, m.pos, 1, m.playerIndex)
             s.splatterdeath = 1
             s.splatter = 0
-            s.disappear = 1 -- No corpse mode.  +
+            if s.jumpland == 0 then
+                s.disappear = 1
+            end
         end
     end
+
     if (s.splatterdeath) == 1 then
         m.particleFlags = PARTICLE_MIST_CIRCLE
         squishblood(m.marioObj)
@@ -970,35 +963,35 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     --Mario Disintegrates when on fire
     local flame = m.marioObj.prevObj
     if flame and obj_has_behavior_id(flame, id_bhvFireParticleSpawner) ~= 0 then
-        --* for the love of god please use for loops holc!!!!!!.......
+        -- hey im not holc and i added for loops here, youre welcome
         cur_obj_shake_screen(SHAKE_POS_SMALL)
         flame.oInteractType = INTERACT_FLAME
         flame.hookRender = 1 -- see resize_flame
         m.marioObj.oMarioBurnTimer = 1
 
-        if (m.health <= 300) then
-            m.squishTimer = 50
-            audio_sample_stop(gSamples[sAgonyMario])
-            audio_sample_stop(gSamples[sAgonyLuigi])
-            audio_sample_stop(gSamples[sAgonyWario])
-            audio_sample_stop(gSamples[sAgonyToad]) --Stops Mario's super long scream
-            audio_sample_stop(gSamples[sAgonyWaluigi])
-        end
+        local touchingWater = m.pos.y <= m.waterLevel
+        local agonySamples = {
+            sAgonyMario,
+            sAgonyLuigi,
+            sAgonyToad,
+            sAgonyWario,
+            sAgonyWaluigi,
+        }
 
-        local touchingwater = m.pos.y <= m.waterLevel
-        if touchingwater then
-            spawn_mist_particles()
-            spawn_mist_particles()
-            spawn_mist_particles()
-            spawn_mist_particles()
+        if touchingWater then
             spawn_mist_particles()
             network_play(sCoolOff, m.pos, 1, m.playerIndex)
-            audio_sample_stop(gSamples[sAgonyMario])
-            audio_sample_stop(gSamples[sAgonyToad]) --Stops Mario's super long scream
-            audio_sample_stop(gSamples[sAgonyLuigi])
-            audio_sample_stop(gSamples[sAgonyWario])
-            audio_sample_stop(gSamples[sAgonyWaluigi])
             flame = nil
+
+            for _, sample in ipairs(agonySamples) do
+                sample_stop(sample)
+            end
+        elseif m.health <= 0x12C then
+            m.squishTimer = 50
+
+            for _, sample in ipairs(agonySamples) do
+                sample_stop(sample)
+            end
         end
     end
  ----------------------------------------------------------------------------------------------------------------------------------
@@ -2051,31 +2044,13 @@ function on_interact(m, o, intType, interacted) --Best place to switch enemy beh
         m.squishTimer = 50
     end
 
-    -- disable boo hitbox
     if (m.hurtCounter > 0) and (obj_has_behavior_id(o, id_bhvGhostHuntBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBoo) ~= 0
     or obj_has_behavior_id(o, id_bhvMerryGoRoundBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBooWithCage) ~= 0) and (not s.headless) then
-
-        local angleToMario = obj_angle_to_object(o, m.marioObj)
-        local marioToBooYawDiff = sm64_to_degrees(abs_angle_diff(m.faceAngle.y, o.oFaceAngleYaw))
-        local marioInBooSightCone  = sm64_to_degrees(abs_angle_diff(o.oFaceAngleYaw, angleToMario))
-
-        if marioToBooYawDiff >= 90 and marioToBooYawDiff <= 150 and marioInBooSightCone <= 90 then
-
-            djui_chat_message_create("-------------------------1")
+        if m.action ~= ACT_BURNING_JUMP and m.action ~= ACT_BURNING_GROUND and m.action ~= ACT_BURNING_FALL then
             set_mario_action(m, ACT_BURNING_JUMP, 0)
             spawn_mist_particles()
             set_camera_shake_from_hit(SHAKE_SMALL_DAMAGE)
             obj_set_model_extended(m.marioObj.prevObj, E_MODEL_BLUE_FLAME)
-
-        elseif marioInBooSightCone <= 90 and marioToBooYawDiff < 90 then
-
-            djui_chat_message_create("-------------------------2")
-            play_sound(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.pos)
-            set_mario_action(m, ACT_SUFFOCATION, 0)
-            set_camera_shake_from_hit(SHAKE_SMALL_DAMAGE)
-
-        elseif marioInBooSightCone > 90 and marioToBooYawDiff >= 90 then
-            djui_chat_message_create("-------------------------3")
         end
     end
 
@@ -2163,6 +2138,7 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
     s.snowexpose = 0 -- resets the snow exposure timer
     s.snowtimer = 0 -- resets the snow accumulation timer
     s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
+    s.jumpland = 0
     audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
     audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
     audio_sample_stop(gSamples[sAgonyToad]) --Stops Toad's super long scream
@@ -2649,7 +2625,7 @@ end
 local function allow_interact(m, o, intType)
     local np = gNetworkPlayers[0]
     local s = gStateExtras[m.playerIndex]
-    
+
     --Wing Cap intangibility check for players with no hat on.
     if (obj_has_behavior_id(o, id_bhvWingCap) ~= 0) and m.flags & MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD == 0 and not gGlobalSyncTable.romhackcompatibility then
         return false 
@@ -2786,7 +2762,7 @@ hook_event(HOOK_ON_LEVEL_INIT, function()
         stream_stop_all()
         stream_set_volume(1)
     end
-    stop_all_samples()
+    samples_stop_all()
 
     ----------------------------------------------------------------------------------------------------------------------------------
     --Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)

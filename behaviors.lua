@@ -1,3 +1,6 @@
+-- the important libs
+local osync = require('/lib/osync')
+
 --Math! -Baldi
 
 local function easeOutSine(x)
@@ -545,14 +548,6 @@ function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredictable. W
     end
 
     metalhit_attack(o)
-end
-
-local function goom_int(m, o, intType) -- Intangibility check specifically for Huge Goombas' goomba spawns on death, could cause unresponsiveness when killing goombas too early.
-    if obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and o.oBehParams2ndByte == 4 and o.oTimer <= 5 then
-    --djui_chat_message_create("goom")
-        if o.oTimer <= 5 then
-        return false end
-    end
 end
 
 function bhv_custom_thwomp(o)
@@ -1484,7 +1479,7 @@ function bhv_netherportal_loop(o)
         loadingscreen = 30 + math.random(30)
         set_mario_action(m, ACT_GONE, 0)
         stream_stop_all()
-        stop_all_samples()
+        samples_stop_all()
     end
 end
 
@@ -3037,69 +3032,60 @@ function universal_boo_bhv(o)
     end
 
     -- boo tp's behind Mario if stalled for too long
-    if dist < 800 then
+    if dist < 1000 then
         if o.oAction == 1 and o.oTimer == 90 and o.oOpacity <= 40 then
-            local distBehind = o.hitboxRadius * 0.6
+            local distBehind = o.hitboxRadius
 
             -- because oFaceAngleYaw = m.faceAngle.y doesnt work???
             o.oMoveAngleYaw = m.faceAngle.y
 
             o.oPosX = m.pos.x - (sins(m.faceAngle.y) * distBehind)
-            o.oPosY = m.pos.y
+            o.oPosY = m.pos.y + 50
             o.oPosZ = m.pos.z - (coss(m.faceAngle.y) * distBehind)
 
+            -- scare player (instakill with suffocation, find scared voice clip)
+            if not is_in_death_action(m) then
+                --[[ if o.oAction ~= 9  then
+                    o.oTimer = 0
+                    o.oAction = 9
+                end ]]
+            end
         end
     end
 
-    -- if boo is behind Mario and Mario is facing away from boo, then instakill
-    if dist <= o.hitboxRadius * 0.7 then
+    if o.oAction == 9 then
+        o.oMoveAngleYaw = m.faceAngle.y
 
-        local angleToMario = obj_angle_to_object(o, m.marioObj)
-        local marioToBooYawDiff = sm64_to_degrees(abs_angle_diff(m.faceAngle.y, o.oFaceAngleYaw))
-        local marioInBooSightCone  = sm64_to_degrees(abs_angle_diff(o.oFaceAngleYaw, angleToMario))
+        o.oPosX = m.pos.x - (sins(m.faceAngle.y) * o.hitboxRadius)
+        o.oPosY = m.pos.y + 50
+        o.oPosZ = m.pos.z - (coss(m.faceAngle.y) * o.hitboxRadius)
 
-        if (marioToBooYawDiff >= 90 and marioToBooYawDiff <= 150 and marioInBooSightCone <= 90) or (marioInBooSightCone > 90 and marioToBooYawDiff >= 90) then
-
-            if not is_in_death_action(m) and not doorActions[m.action] then
-
-                --[[ 
-                if marioInBooSightCone <= 90 then
-                    djui_chat_message_create("sides facing boo")
-                else
-                    djui_chat_message_create("bac to back")
-                end
-                ]]
-
-                set_mario_action(m, ACT_BURNING_JUMP, 0)
-                spawn_mist_particles()
-                set_camera_shake_from_hit(SHAKE_SMALL_DAMAGE)
-                obj_set_model_extended(m.marioObj.prevObj, E_MODEL_BLUE_FLAME)
-
-            end
-        elseif marioInBooSightCone <= 90 and marioToBooYawDiff < 90 then
-
-            if not is_in_death_action(m) and not doorActions[m.action] and m.action & ACT_FLAG_AIR == 0 then
-
-                play_sound(SOUND_OBJ_BOO_LAUGH_LONG, o.header.gfx.pos)
-                set_mario_action(m, ACT_SUFFOCATION, 0)
-                set_camera_shake_from_hit(SHAKE_SMALL_DAMAGE)
-
-            end
-
+        if o.oTimer < 55 then
+            o.oOpacity = 40
+        elseif o.oTimer >= 55 and o.oTimer < 85 then
+            o.oOpacity = 255
+        elseif o.oTimer >= 85 then
+            o.oTimer = 0
+            o.oAction = 1
         end
+
     end
+
 end
 
 function universal_boss_boo_bhv(o)
     local m = nearest_mario_state_to_object(o)
     local dist = dist_between_objects(m.marioObj, o)
-    local doorActions = { [ACT_PUSHING_DOOR] = true, [ACT_PULLING_DOOR] = true, }
+    local doorActions = { [ACT_PUSHING_DOOR] = true, [ACT_PULLING_DOOR] = true }
+    local validAttacks = { [ACT_PUNCHING] = true, [ACT_MOVE_PUNCHING] = true }
 
     -- opacity resets o.oTimer, also anti-cheese at the end
     -- checks for minimum of 75 because of how boo_vanish_or_appear(o) works ( id need to rerite all boo code, im not doing that shit) x2
     if gGlobalSyncTable.romhackcompatibility or m.currentRoom == o.oRoom then
-        if (o.oOpacity > 75 and o.oOpacity <= 180) or boo_vanish_or_appear(o) then
-            o.oTimer = 0
+        if o.oAction < 9 then
+            if (o.oOpacity > 75 and o.oOpacity <= 180) or boo_vanish_or_appear(o) then
+                o.oTimer = 0
+            end
         end
     end
 
@@ -3127,7 +3113,7 @@ function universal_boss_boo_bhv(o)
         if dist <= o.hitboxRadius * 0.6 then
             local marioToBooYawDiff = abs_angle_diff(m.faceAngle.y, o.oFaceAngleYaw)
             if marioToBooYawDiff <= 27306 then
-                if not is_in_death_action(m) and not doorActions[m.action] then
+                if not is_in_death_action(m) and not doorActions[m.action] and not validAttacks[m.action] then
                     o.oAction = 9
                 end
             end
@@ -3152,7 +3138,7 @@ function universal_boss_boo_bhv(o)
                 o.oAction = 1
             end
         else
-            if not is_in_death_action(m) and not doorActions[m.action] then -- add extra actions after the kb OR shorten timer to kill when kb action ends also add all kb/death acitons to check through idk some global table
+            if not is_in_death_action(m) then -- add extra actions after the kb OR shorten timer to kill when kb action ends also add all kb/death acitons to check through idk some global table
                 drop_and_set_mario_action(m, ACT_HARD_BACKWARD_AIR_KB, 0)
                 network_play(sPossession, m.pos, 2, m.playerIndex)
             end
@@ -3182,6 +3168,9 @@ function universal_boss_boo_bhv(o)
         elseif o.oTimer >= 150 and o.oTimer < 160 then
             if not is_in_death_action(m) then
                 m.squishTimer = 50
+                if m.action == ACT_JUMP then
+                    m.action = ACT_GONE
+                end
             end
 
             o.oOpacity = math.min(o.oOpacity + 10, 255)
@@ -3222,24 +3211,35 @@ function custom_boo_cage_loop(o)
 end
 
 function custom_boo_loop(o)
-    increase_boo_speed(o, 8, 0x400)
+    increase_boo_speed(o, 12, 0x400)
     universal_boo_bhv(o)
 end
 
 function custom_hunt_boo_loop(o)
-    increase_boo_speed(o, 4, 0x200)
+    increase_boo_speed(o, 8, 0x200)
     universal_boo_bhv(o)
 end
 
 function custom_mgr_boo_loop(o)
-    increase_boo_speed(o, 12, 0x300)
+    increase_boo_speed(o, 8, 0x300)
     universal_boo_bhv(o)
 end
 
 function custom_hunt_boo_boss_loop(o)
     if o.oAction == 3 then
         o.oInteractType = 0
+        if o.oTimer == 0 and o.oHealth > 0 then
+            osync.spawn_sync_objects("ghost_dhunt_boo", function()
+                spawn_sync_object(id_bhvBoo, E_MODEL_BOO, o.oPosX, o.oPosY, o.oPosZ, function(obj)
+                    obj.oMoveAngleYaw = o.oMoveAngleYaw - 16384
+                end)
+                spawn_sync_object(id_bhvBoo, E_MODEL_BOO, o.oPosX, o.oPosY, o.oPosZ, function(obj)
+                    obj.oMoveAngleYaw = o.oMoveAngleYaw + 16384
+                end)
+            end)
+        end
     end
+
     universal_boss_boo_bhv(o)
     increase_boo_speed(o, 16, 0x300)
 end
@@ -4786,8 +4786,6 @@ local function hook_gore_behavior(id, override, init, loop)
 end
 
 
-
-hook_event(HOOK_ALLOW_INTERACT, goom_int)
 hook_event(HOOK_ON_PLAY_SOUND, sfx_management)
 
 hook_gore_behavior(id_bhvHmcElevatorPlatform, false, nil, mrboneswildride)
@@ -4818,8 +4816,8 @@ hook_gore_behavior(id_bhvHeaveHo, false, nil, heaveho_loop)
 
 hook_gore_behavior(id_bhvMerryGoRoundBigBoo, false, nil, universal_boss_boo_bhv)
 
-hook_gore_behavior(id_bhvGhostHuntBoo, false, nil, custom_boo_loop)
-hook_gore_behavior(id_bhvBoo, false, nil, custom_hunt_boo_loop)
+hook_gore_behavior(id_bhvGhostHuntBoo, false, nil, custom_hunt_boo_loop)
+hook_gore_behavior(id_bhvBoo, false, nil, custom_boo_loop)
 hook_gore_behavior(id_bhvMerryGoRoundBoo, false, nil, custom_mgr_boo_loop)
 hook_gore_behavior(id_bhvBooWithCage, false, nil, custom_boo_cage_loop)
 hook_gore_behavior(id_bhvGhostHuntBigBoo, false, nil, custom_hunt_boo_boss_loop)

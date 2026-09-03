@@ -54,7 +54,7 @@ end
 --- @param behaviorId BehaviorId
 --- @param callbackFunc function
 local function register_sync_behavior(behaviorId, callbackFunc)
-    hook_behavior(behaviorId, nil, false, nil, function (o)
+    hook_behavior(behaviorId, get_object_list_from_behavior(get_behavior_from_id(behaviorId)), false, nil, function (o)
         if o.oSyncID ~= 0 then
             callbackFunc(o)
         end
