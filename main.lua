@@ -289,6 +289,7 @@ end
 
 function splattertimer(m) --This timer is needed to prevent mario from immediately splatting again right after respawning. Adds some fluff to his death too.
     local s = gStateExtras[m.playerIndex]
+
     local prevAction = 0
     if s.enablesplattimer == 1 then
         s.splattimer = s.splattimer + 1
@@ -930,14 +931,10 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     --IF S.splatter is equal to 1, that means splattering is enabled and Mario CAN be splattered. (Doesn't mean he IS splattered) 
     --This gets set to '0' when Mario IS splattered. After the splatter timer is up, it sets s.splatter back to 1 to re-enable splattering. 
     if (s.splatter) == 1 and m.health > 0xff and not (m.action == ACT_BBH_ENTER_SPIN or m.action == ACT_BBH_ENTER_JUMP) then
-
-        -- Checks if Mario has fallen 750 units below his peak height AND is 10 units above the floor he's about to land on
-        if m.peakHeight - m.pos.y >= 750 and m.pos.y - m.floorHeight <= 10 then
-            s.jumpland = 1 -- resets to 0 in mariodeath()
-        end
+        local splatHeight = (m.peakHeight - m.pos.y >= 750) and ((m.action & ACT_FLAG_AIR) == 0)
 
         -- resets peakHeight to allow for another fall damage check later
-        if m.action & ACT_FLAG_AIR == 0 and s.jumpland == 0 then
+        if (m.action & ACT_FLAG_AIR) == 0 and not splatHeight then
             m.peakHeight = m.pos.y
         end
 
@@ -947,7 +944,9 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             network_play(sSplatter, m.pos, 1, m.playerIndex)
             s.splatterdeath = 1
             s.splatter = 0
-            if s.jumpland == 0 then
+            if splatHeight then
+                s.disappear = 0
+            else
                 s.disappear = 1
             end
         end
@@ -2138,7 +2137,6 @@ function mariodeath() -- If mario is dead, this will pause the counter to preven
     s.snowexpose = 0 -- resets the snow exposure timer
     s.snowtimer = 0 -- resets the snow accumulation timer
     s.penguintimer = 0 -- Resets the baby-penguin timer since Mario is dead.
-    s.jumpland = 0
     audio_sample_stop(gSamples[sAgonyMario]) --Stops Mario's super long scream
     audio_sample_stop(gSamples[sAgonyLuigi]) --Stops Luigi's super long scream
     audio_sample_stop(gSamples[sAgonyToad]) --Stops Toad's super long scream
@@ -2607,11 +2605,25 @@ local function on_obj_load(o)
     end
 end
 
+local bossBoos = {
+    id_bhvBalconyBigBoo,
+    id_bhvGhostHuntBigBoo,
+    id_bhvMerryGoRoundBigBoo
+}
+
 local function on_hud_render()
     local m = gMarioStates[0]
-    local o = obj_get_nearest_object_with_behavior_id(m.marioObj, id_bhvBalconyBigBoo)
-    if o and dist_between_objects(m.marioObj, o) < 5 and o.oAction == 10 then
+    local o = nil
 
+    for i = 1, #bossBoos do
+        local boo = obj_get_nearest_object_with_behavior_id(m.marioObj, bossBoos[i])
+        if boo and dist_between_objects(m.marioObj, boo) < 5 and boo.oAction == 10 then
+            o = boo
+            break
+        end
+    end
+
+    if o then
         local alpha = math.min(255, o.oTimer * 2.125)
         djui_hud_set_resolution(RESOLUTION_N64)
         djui_hud_set_color(255, 255, 255, alpha)
@@ -2631,13 +2643,10 @@ local function allow_interact(m, o, intType)
         return false 
     end
 
-    --[[ -- disable boo hitbox
-    if (m.hurtCounter > 0) and (obj_has_behavior_id(o, id_bhvGhostHuntBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBoo) ~= 0
-    or obj_has_behavior_id(o, id_bhvMerryGoRoundBoo) ~= 0 or obj_has_behavior_id(o, id_bhvGhostHuntBigBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBalconyBigBoo) ~= 0
-    or obj_has_behavior_id(o, id_bhvMerryGoRoundBigBoo) ~= 0 or obj_has_behavior_id(o, id_bhvBooWithCage) ~= 0) and (not s.headless) then
-        djui_chat_message_create("TRUE")
-        return 0
-    end ]]
+    -- prevents spawned goombas fro big goombas from attacking player
+    if obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and o.oBehParams2ndByte == 4 and o.oTimer <= 10 then
+        return false
+    end
 end
 
 
@@ -2743,7 +2752,6 @@ end)
 ---------------------------------------
 
 local function default_level_func()
-    local np = gNetworkPlayers[0]
     set_lighting_color(0, 255)
     set_lighting_color(1, 255)
     set_lighting_color(2, 255)
@@ -2754,7 +2762,9 @@ local function default_level_func()
 end
 
 hook_event(HOOK_ON_LEVEL_INIT, function()
+    local m = gMarioStates[0]
     local s = gStateExtras[0]
+    local sIndex = gStateExtras[m.playerIndex]
     local np = gNetworkPlayers[0]
 
     -- Stop music and samples when exiting levels
@@ -2766,8 +2776,8 @@ hook_event(HOOK_ON_LEVEL_INIT, function()
 
     ----------------------------------------------------------------------------------------------------------------------------------
     --Forces Mario to go to hell if he's anywhere but Hell while the variable is true. (Fixes Gameovers from spawning M to overworld)
-    if gStateExtras[0].isinhell and np.currLevelNum ~= LEVEL_HELL and gGlobalSyncTable.hellenabled then
-        gMarioStates[0].numLives = 0
+    if s.isinhell and np.currLevelNum ~= LEVEL_HELL and gGlobalSyncTable.hellenabled then
+        m.numLives = 0
         warp_to_level(LEVEL_HELL, 1, 0)
     end
 
@@ -2780,10 +2790,9 @@ hook_event(HOOK_ON_LEVEL_INIT, function()
     end
 
     if not gGlobalSyncTable.romhackcompatibility then
-        s.ishigh = false
-        s.highdeathtimer = 0
+        sIndex.ishigh = false
+        sIndex.highdeathtimer = 0
     end
-    
     set_override_fov(0)
 end)
 

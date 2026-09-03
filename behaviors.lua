@@ -533,7 +533,7 @@ function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredictable. W
     if o.oTimer >= 16 and o.oAction == OBJ_ACT_SQUISHED then
         squishblood(o)
         local_play(sSplatter, m.pos, 1)
-    
+
         local mo = m.marioObj --Spawns Goombas when Mario kills a Huge Goomba.
         if obj_has_behavior_id(o, id_bhvGoomba) ~= 0 and (o.oBehParams2ndByte & GOOMBA_BP_SIZE_MASK == 1) then
             spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, o.oPosX, o.oPosY, o.oPosZ, function(g)

@@ -615,7 +615,6 @@ for i = 0, MAX_PLAYERS-1 do
         flyingVel = 0,
         enablesplattimer = 0, --w
         splattimer = 0,
-        jumpland = 0,
         disappear = 0,
         isdead = false,
         isinhell = false,
