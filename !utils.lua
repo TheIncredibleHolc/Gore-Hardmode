@@ -1125,12 +1125,7 @@ sOnLvlInitToFunc = {
             rect = obj_get_next_with_same_behavior_id(rect)
         end
 
-        -- Deletes all water diamonds
-        local d = obj_get_first_with_behavior_id(id_bhvWaterLevelDiamond)
-        while d do 
-            obj_mark_for_deletion(d)
-            d = obj_get_next_with_same_behavior_id(d)
-        end
+        
 
         -- moves all secrets to new locations
         local secrets = obj_get_first_with_behavior_id(id_bhvHiddenStarTrigger)
@@ -1344,6 +1339,14 @@ sOnSyncValidtoFunc = {
     end,
 
     [LEVEL_WDW] = function()
+
+        -- Deletes all water diamonds
+        local d = obj_get_first_with_behavior_id(id_bhvWaterLevelDiamond)
+        while d do
+            obj_mark_for_deletion(d)
+            d = obj_get_next_with_same_behavior_id(d)
+        end
+
         if gNetworkPlayers[0].currAreaIndex == 1 then
             -- Removes express elevator
             obj_mark_for_deletion(obj_get_first_with_behavior_id(id_bhvWdwExpressElevator))
@@ -1361,7 +1364,7 @@ sOnSyncValidtoFunc = {
                 osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 2368, -2687, function(o) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 0 end)
 
                 --blocks tunnel to area 2 
-                osync.spawn_sync_object(id_bhvCustomPlane, E_MODEL_GLASS_WALL, 4096, 3072, -3325, function(o)
+                osync.spawn_sync_object(id_bhvCustomPlane, E_MODEL_WDW_TUNNEL_CAGE, 4096, 3072, -3325, function(o)
                     obj_scale_xyz(o, 5.12, 1, 5.12)
                     o.oFaceAngleYaw = 32768
                 end)
@@ -1862,7 +1865,13 @@ function act_ragdoll(m)
             end
             m.vel.x, m.vel.y, m.vel.z = 0, 0, 0
             obj_set_model_extended(m.marioObj, E_MODEL_NONE)
-            level_trigger_warp(m, WARP_OP_DEATH)
+
+            if s.iwbtg then
+                m.health = 0xff
+            else
+                level_trigger_warp(m, WARP_OP_DEATH)
+            end
+           
         end
     end
 

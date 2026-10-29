@@ -20,7 +20,7 @@ hook_event(HOOK_BEFORE_PHYS_STEP, function(m)
     end
 
     -- Adds the inertia to his velocity, then decreases it due to drag
-    if not is_mario_grounded(m) and m.action ~= ACT_GROUND_POUND then
+    if not is_mario_grounded(m) and (m.action ~= ACT_GROUND_POUND and m.action ~= ACT_FALL_AFTER_STAR_GRAB) then
         if kbAirActions[m.action] then
             mario_set_forward_vel(m, m.forwardVel) -- Without this you just accelerate to infinity
         end

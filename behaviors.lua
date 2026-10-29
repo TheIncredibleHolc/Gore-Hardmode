@@ -2886,11 +2886,49 @@ function stonewall_loop(o)
     load_object_collision_model()
 end
 
-function flame_loop(o) --This is to help prevent a bunch of stuck flames from building up in Hell near the beginning. 
-    np = gNetworkPlayers[0]
+function flame_init(o)
+    --This is to help prevent a bunch of stuck flames from building up in Hell near the beginning. 
     if o.oBehParams == 4 and o.oTimer > 400 then -- BehParam 4 is set to the usedflame when mario ignites. This will cause that flame to burn out within 500 frames.
         obj_unused_die()
         obj_mark_for_deletion(o)
+    end
+end
+
+function flame_loop(o)
+
+    if o.oBehParams2ndByte == 0 then
+        local m = nearest_mario_state_to_object(o)
+        local dist = dist_between_objects(o, m.marioObj)
+
+        if dist <= 800 and o.oAction == 0 then
+            play_sound(SOUND_AIR_BOWSER_SPIT_FIRE, m.marioObj.header.gfx.cameraToObject)
+            o.oVelY = 30
+            o.oAction = 1
+        end
+
+        if o.oAction == 1 then
+            cur_obj_move_using_fvel_and_gravity()
+            cur_obj_update_floor_height()
+            cur_obj_update_floor_and_walls()
+            o.oGravity = -4
+
+            if o.oTimer == 1 then
+                o.oHomeX = m.pos.x + (m.vel.x * 25)
+                o.oHomeZ = m.pos.z + (m.vel.z * 25)
+
+                o.oVelY = 30
+            else
+                o.oFaceAngleYaw = obj_angle_to_point(o, o.oHomeX, o.oHomeZ)
+                o.oMoveAngleYaw = o.oFaceAngleYaw
+            end
+
+            o.oForwardVel = 16
+
+            if o.oPosY <= o.oFloorHeight or o.oMoveFlags == o.oMoveFlags | OBJ_MOVE_HIT_WALL then
+                spawn_mist_particles_with_sound(SOUND_OBJ_DEFAULT_DEATH)
+                obj_mark_for_deletion(o)
+            end
+        end
     end
 end
 
@@ -2986,11 +3024,7 @@ function scuttlebug_loop(o)
                 o.oVelY = -60
             end
         end
-    --[[elseif o.oInteractStatus & INT_STATUS_WAS_ATTACKED ~= 0 then
-        squishblood(o)
-        local_play(sSplatter, m.pos, 1)]]
     end
-    --djui_chat_message_create(tostring(o.oSubAction))
 
     metalhit_attack(o)
 end
@@ -3369,7 +3403,7 @@ function coin_switch(o)
 end
 
 function mips(o)
-    o.oMipsForwardVelocity = 100
+    object_step()
 end
 
 -- I had to make this behavior because i can't change the interactType of a hitbox twice --Flipflop Bell
@@ -3936,8 +3970,6 @@ function mrboneswildride(o) --The fun never ends!!
     end
 end
 
-
-
 function bhv_custom_1up(o) -- Chases the nearest player for 5 seconds in a green demon state before despawning.
     local m = nearest_mario_state_to_object(o)
 
@@ -3970,10 +4002,12 @@ function castle_boo_init(o) -- Move the castle Boo further from the door to even
 end
 
 function castle_boo_loop(o) -- tried rewriting source code, turns out thats harder than i thought itd be, but this works so im happy with it
+    djui_chat_message_create(tostring(o.oAction))
+
     obj_scale(o, 3)
     cur_obj_move_using_fvel_and_gravity()
     local m = nearest_mario_state_to_object(o)
-    if o.oAction == 2 and o.oAction ~= 1 and o.oPosZ <= 7000 and m.pos.z <= -3000 then
+    if o.oAction == 2 and o.oAction ~= 1 and ((o.oPosZ <= 7000 and m.pos.z <= -3000)) then
         o.oAction = 3
     elseif o.oAction == 3 then
         o.oPosX = -1000
@@ -4895,7 +4929,7 @@ hook_gore_behavior(id_bhvKlepto, false, bhv_klepto_init, bhv_klepto_loop)
 hook_gore_behavior(id_bhvBowserKey, false, bhv_bowser_key_custom_init, bhv_bowser_key_custom_loop)
 hook_gore_behavior(id_bhvHoot, false, nil, hoot_loop)
 hook_gore_behavior(id_bhvChuckya, false, nil, custom_chuckya_loop)
-hook_gore_behavior(id_bhvFlame, false, flame_loop)
+hook_gore_behavior(id_bhvFlame, false, flame_init, flame_loop)
 hook_gore_behavior(id_bhvBreakableBoxSmall, false, nil, bhv_custom_cork_box)
 hook_gore_behavior(id_bhvBooInCastle, false, castle_boo_init, castle_boo_loop)
 hook_gore_behavior(id_bhvFallingPillar, false, nil, custom_falling_pillar)

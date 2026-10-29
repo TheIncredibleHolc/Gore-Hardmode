@@ -561,7 +561,6 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
             end
         end
 
-        
         if m.action == ACT_QUICKSAND_DEATH and not s.death and not quicksand then
             m.health = 0xff
             m.marioObj.oTimer = 0
@@ -576,6 +575,8 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
         end
 
         if m.health == 0xff and not s.death then
+            m.health = 0x880
+            samples_stop_all()
             stream_stop_all()
             local_play(sIwbtgDeath, gLakituState.pos, 1)
             djui_popup_create_global("Total Stars: " .. tostring(m.numStars), 1)
@@ -2278,6 +2279,7 @@ function hud_render_behind() -- Displays the total amount of mario deaths a serv
         hud_hide()
         hud_set_value(HUD_DISPLAY_FLAGS, hud_get_value(HUD_DISPLAY_FLAGS) & ~HUD_DISPLAY_FLAG_POWER)
         if (m.controller.buttonPressed & A_BUTTON) ~= 0 and m.marioObj.oTimer > 60 then
+            drop_and_set_mario_action(m, ACT_FREEFALL, 0)
             gGlobalSyncTable.iwbtgGameoverEveryone = false
         end
     end
