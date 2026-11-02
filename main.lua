@@ -1271,6 +1271,15 @@ function mario_update(m) -- ALL Mario_Update hooked commands.,
     if m.marioObj.oMarioTornadoYawVel >= 4096 and m.marioObj.oMarioTornadoYawVel < 24576 then
         m.marioObj.oMarioTornadoYawVel = m.marioObj.oMarioTornadoYawVel + 256
     end
+
+    if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 3 and not gGlobalSyncTable.romhackcompatibility then
+        if m.pos.x < 1100 and m.pos.y < -1263 then
+            if m.action == ACT_WALKING then
+                m.forwardVel = math.min(m.forwardVel, 15)
+                m.quicksandDepth = 51
+            end
+        end
+    end
 end
 
 function hook_update()
@@ -1278,8 +1287,27 @@ function hook_update()
     local s = gStateExtras[0]
     local np = gNetworkPlayers[0]
 
+    if not gGlobalSyncTable.romhackcompatibility then
+
+        -- texture overrides
+        if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 3 then
+            for i = 0, 3 do
+                set_environment_region(i, -11000)
+            end
+        elseif np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC or np.currLevelNum == LEVEL_COTMC then
+            texture_override_set("texture_waterbox_jrb_water", TEX_JRHLAVA)
+            texture_override_set("texture_waterbox_water", TEX_JRHLAVA)
+        else
+            texture_override_reset("texture_waterbox_jrb_water")
+            texture_override_reset("texture_waterbox_water")
+        end
+
+    end
+
+
+
     -- Prevents flying via triple jumps. (still possible with cannons and flying on spawn)
-    if m.prevAction == ACT_FLYING_TRIPLE_JUMP and m.action == ACT_FLYING and not gGlobalSyncTable.romhackcompatibility then
+    if m.prevAction == ACT_FLYING_TRIPLE_JUMP and m.action == ACT_FLYING then
         m.flags = MARIO_NORMAL_CAP | MARIO_CAP_ON_HEAD
         set_mario_action(m, ACT_FREEFALL, 0)
         mario_blow_off_cap(m, 75)
@@ -1635,8 +1663,8 @@ function hook_update()
 ----------------------------------------------------------------------------------------------------------------------------------
     -- Jolly Roger Hell rework (Metal Cap required)
     if np.currLevelNum == LEVEL_JRB or np.currLevelNum == LEVEL_HMC or np.currLevelNum == LEVEL_COTMC and not gGlobalSyncTable.romhackcompatibility then
-        texture_override_set("texture_waterbox_jrb_water", TEX_JRHLAVA)
-        texture_override_set("texture_waterbox_water", TEX_JRHLAVA)
+        --texture_override_set("texture_waterbox_jrb_water", TEX_JRHLAVA)
+        --texture_override_set("texture_waterbox_water", TEX_JRHLAVA)
         if m.area.camera then
             local singleplayerPaused = network_player_connected_count() <= 1 and is_game_paused()
             local inCutscene = m.area.camera.cutscene == CUTSCENE_STAR_SPAWN or m.area.camera.cutscene == CUTSCENE_DIALOG or m.area.camera.cutscene == CUTSCENE_CAP_SWITCH_PRESS or m.area.camera.cutscene == CUTSCENE_DANCE_DEFAULT
@@ -1658,8 +1686,8 @@ function hook_update()
             end
         end
     else
-        texture_override_reset("texture_waterbox_jrb_water")
-        texture_override_reset("texture_waterbox_water")
+        --texture_override_reset("texture_waterbox_jrb_water")
+        --texture_override_reset("texture_waterbox_water")
     end
 ----------------------------------------------------------------------------------------------------------------------------------
     --(Hazy Maze Cave) Mario get high when walking in gas.
@@ -2527,6 +2555,17 @@ function mario_before_phys_step(m)
     m.vel.y = m.vel.y * vScale
     m.vel.z = m.vel.z * hScale
 
+    local np = gNetworkPlayers[0]
+    if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 3 and not gGlobalSyncTable.romhackcompatibility then
+        if m.pos.x < 1100 and m.pos.y < -1263 then
+            if m.action == ACT_JUMP or m.action == ACT_HOLD_JUMP or m.action == ACT_FORWARD_ROLLOUT or m.action == ACT_BACKWARD_ROLLOUT or m.action == ACT_SLIDE_KICK then
+                m.vel.y = m.vel.y - 30
+            end
+            if m.action == ACT_DOUBLE_JUMP or m.action == ACT_BACKFLIP or m.action == ACT_SIDE_FLIP or m.action == ACT_JUMP_KICK then
+                return set_mario_action(m, ACT_JUMP, 0)
+            end
+        end
+    end
 end
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 local function before_phys_step(m,stepType) --Called once per player per frame before physics code is run, return an integer to cancel it with your own step result
@@ -2573,11 +2612,11 @@ end
 
 -- Prevents pause exiting if you aren't idle.
 local function on_pause_exit(m)
-    local idle = gMarioStates[0].action == ACT_IDLE or gMarioStates[0].action == ACT_WATER_IDLE or gMarioStates[0].action == ACT_PANTING
+    --[[ local idle = gMarioStates[0].action == ACT_IDLE or gMarioStates[0].action == ACT_WATER_IDLE or gMarioStates[0].action == ACT_PANTING
     if not idle then 
         djui_popup_create("You cannot exit the level in this state!", 1)
         return false 
-    end
+    end ]]
 end
 
 local function on_obj_load(o)

@@ -1,0 +1,10 @@
+extern const GeoLayout dirtyWater_geo[];
+extern Lights1 dirtyWater_f3dlite_material_lights;
+extern u8 dirtyWater_tex_dirty_water_ci8[];
+extern u8 dirtyWater_tex_dirty_water_pal_rgba16[];
+extern Vtx dirtyWater_Plane_mesh_layer_5_vtx_cull[8];
+extern Vtx dirtyWater_Plane_mesh_layer_5_vtx_0[4];
+extern Gfx dirtyWater_Plane_mesh_layer_5_tri_0[];
+extern Gfx mat_dirtyWater_f3dlite_material[];
+extern Gfx mat_revert_dirtyWater_f3dlite_material[];
+extern Gfx dirtyWater_Plane_mesh_layer_5[];

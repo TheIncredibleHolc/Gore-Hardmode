@@ -11,9 +11,21 @@ local function uv_scroll_right(input_vtx, original_uv, current_uv)
     current_uv[1] = current_uv[1] + speed
 end
 
-local function uv_scroll_spin(input_vtx, original_uv, current_uv)
+local function uv_scroll_spin_fast(input_vtx, original_uv, current_uv)
     -- adjustable constants
     local speed = 0.005
+
+    -- equation for circular motion
+    local t = get_global_timer() * speed
+    local orig_theta = math.atan(original_uv[2], original_uv[1])
+    local orig_dist = math.sqrt((original_uv[1] ^ 2) + (original_uv[2] ^ 2))
+    current_uv[1] = orig_dist * math.cos(orig_theta + t)
+    current_uv[2] = orig_dist * math.sin(orig_theta + t)
+end
+
+local function uv_scroll_spin_slow(input_vtx, original_uv, current_uv)
+    -- adjustable constants
+    local speed = 0.0025
 
     -- equation for circular motion
     local t = get_global_timer() * speed
@@ -27,7 +39,11 @@ function scrolling_behaviors()
     local np = gNetworkPlayers[0]
     if np.currLevelNum == LEVEL_WDW then
         UvScroll.hook_scrolling_function('quicksandPlane_Plane_mesh_layer_1_tri_0', uv_scroll_right)
-        UvScroll.hook_scrolling_function('quicksandFogPlane_Plane_mesh_layer_5_tri_0', uv_scroll_spin)
+        UvScroll.hook_scrolling_function('quicksandFogPlane_Plane_mesh_layer_5_tri_0', uv_scroll_spin_fast)
+    end
+
+    if np.currLevelNum == LEVEL_CASTLE and np.currAreaIndex == 3 then
+        UvScroll.hook_scrolling_function('dirtyWater_Plane_mesh_layer_5_tri_0', uv_scroll_spin_slow)
     end
 end
 
@@ -566,7 +582,7 @@ E_MODEL_GLASS_WALL = smlua_model_util_get_id("glassWall_geo")
 COL_CUSTOM_PLANE = smlua_collision_util_get("wdwtunnelcagefloor_collision")
 E_MODEL_QS_FOG_PLANE = smlua_model_util_get_id("quicksandFogPlane_geo")
 E_MODEL_STAR_KO = smlua_model_util_get_id("starKO_geo")
-
+E_MODEL_DIRTY_WATER = smlua_model_util_get_id("dirtyWater_geo")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -1476,6 +1492,17 @@ sOnSyncValidtoFunc = {
                 r.oPosX, r.oPosY, r.oPosZ = pos.x, pos.y, pos.z
                 r = obj_get_next_with_same_behavior_id(r)
             end
+        end
+    end,
+
+    [LEVEL_CASTLE] = function()
+        if gNetworkPlayers[0].currAreaIndex == 3 then
+            osync.spawn_sync_objects("basement", function()
+                osync.spawn_sync_object(id_bhvCustomPlane, E_MODEL_DIRTY_WATER, -1100, -1228, -1765, function(o)
+                    obj_scale_xyz(o, 22, 13, 18)
+                    o.oBehParams2ndByte = 1
+                end)
+            end)
         end
     end,
 

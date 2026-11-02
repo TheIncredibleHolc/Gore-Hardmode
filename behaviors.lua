@@ -2895,15 +2895,16 @@ function flame_init(o)
 end
 
 function flame_loop(o)
-
     if o.oBehParams2ndByte == 0 then
         local m = nearest_mario_state_to_object(o)
         local dist = dist_between_objects(o, m.marioObj)
 
         if dist <= 800 and o.oAction == 0 then
-            play_sound(SOUND_AIR_BOWSER_SPIT_FIRE, m.marioObj.header.gfx.cameraToObject)
-            o.oVelY = 30
-            o.oAction = 1
+            if m.currentRoom == o.oRoom then
+                play_sound(SOUND_AIR_BOWSER_SPIT_FIRE, m.marioObj.header.gfx.cameraToObject)
+                o.oVelY = 30
+                o.oAction = 1
+            end
         end
 
         if o.oAction == 1 then
@@ -3403,6 +3404,7 @@ function coin_switch(o)
 end
 
 function mips(o)
+    object_step()
     object_step()
 end
 
@@ -4736,16 +4738,20 @@ end
 
 function custom_plane_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-    o.collisionData = COL_CUSTOM_PLANE
-    o.oCollisionDistance = 5000
+    if o.oBehParams2ndByte == 0 then
+        o.collisionData = COL_CUSTOM_PLANE
+        o.oCollisionDistance = 5000
+    end
     o.header.gfx.skipInViewCheck = true
     bhv_init_room()
 end
 
 function custom_plane_loop(o)
-    load_object_collision_model()
+    if o.oBehParams2ndByte ~= 0 then return end
 
     local m = nearest_mario_state_to_object(o)
+    load_object_collision_model()
+
     if obj_get_model_id_extended(o) == E_MODEL_NONE then
         if m.wall and m.wall.object == o then
             obj_set_model_extended(o, E_MODEL_GLASS_WALL)
