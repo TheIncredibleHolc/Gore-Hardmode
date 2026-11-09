@@ -30,18 +30,36 @@ Star from that tyrant!\
 \
 FOR ALL OF BOB-OMB KIND!!!"))
 
-smlua_text_utils_dialog_replace(DIALOG_002,1,4,95,200, ("hey this is sherb\
-workin on the dialog\
-all by myself\
-no one else in sight\
-yea im breaking the 4th\
-wall, so what?\
-it's not like i'll blow\
-up the instant you leave\
-this unused dialog box.\
+smlua_text_utils_dialog_replace(DIALOG_002,1,3,95,200, ("Hey man, just wanted to\
+mention how brave you are\
+for coming to talk to me.\
+Knowing I'll blow up after\
+my dialog is over usually\
+scares others away.\
+But because of your bold\
+move, I'll give a useful\
+tip.\
+Every cannon you see is\
+unusable in their current\
+state but one:\
+\
+The island in the sky...\
+\
+I'll open it after you \
+defeat King Bob-omb.\
+That's the easy part.\
+But you must be wondering\
+how to reach the island.\
+\
+...\
 \
 \
-...maybe."))
+Let's just say that the\
+Wing Cap is useful even\
+without flight.\
+Good luck, my friend.\
+\
+"))
 
 smlua_text_utils_dialog_replace(DIALOG_003,1,5,95,200, ("Thank you, Mario! The Big\
 Bob-omb is nothing but a\
@@ -58,15 +76,15 @@ waiting for you. Be sure\
 to talk to them--they'll\
 set up cannons for you."))
 
-smlua_text_utils_dialog_replace(DIALOG_004,1,3,95,200, ("We're peace-loving\
-Bob-ombs, so we don't use\
-cannons.\
-But if you'd like\
-to blast off, we don't\
-mind. Help yourself.\
-We'll prepare all of the\
-cannons in this course for\
-you to use. Bon Voyage!"))
+smlua_text_utils_dialog_replace(DIALOG_004,1,3,95,200, ("So...\
+You want the cannon\
+unlocked, huh?\
+...\
+\
+\
+Sure man, I'll open it\
+for you. But good luck\
+reaching it."))
 
 smlua_text_utils_dialog_replace(DIALOG_005,1,3,30,200, ("Hey, Mario! You may have\
 have killed King Bob-omb\
@@ -573,6 +591,7 @@ Jump off from the\
 handstand for a high,\
 stylin' dismount."))
 
+-- DDW custom sign
 smlua_text_utils_dialog_replace(DIALOG_052,1,5,30,200, ("While reworking Dry World,\
 I had a lot of ideas that\
 sprung up after the\
@@ -1130,18 +1149,27 @@ Marker.』 When you collect\
 all 8 Red Coins, the Star\
 will appear here."))
 
-smlua_text_utils_dialog_replace(DIALOG_105,1,3,95,200, ("Ready for blastoff! Come\
-on, hop into the cannon!\
+smlua_text_utils_dialog_replace(DIALOG_105,1,3,95,200, ("Alright, it's ready.\
+Head to the island to use\
+it. \
+...\
 \
-You can reach the Star on\
-the floating island by\
-using the four cannons.\
-Use the Control Stick to\
-aim, then press [A] to fire.\
 \
-If you're handy, you can\
-grab on to trees or poles\
-to land."))
+...If you're confused on\
+how to reach it, talk to\
+me in another time.\
+Maybe I'll have some more\
+to say then.\
+\
+Oh, and don't worry\
+about me exploding. Us\
+cannoneers are much less...\
+tense.\
+\
+\
+Good luck, my friend.\
+(and back to wall staring)\
+"))
 
 smlua_text_utils_dialog_replace(DIALOG_106,1,2,95,200, ("Ready for blastoff! Come\
 on, hop into the cannon!"))
@@ -1542,26 +1570,72 @@ thanks to you--and is\
 Bowser ever upset! Now,\
 on to the final bout!"))
 
-smlua_text_utils_dialog_replace(DIALOG_147,1,5,30,200, ("Are you using the Cap\
-Blocks? You really should,\
-you know.\
+-- RR custom sign
+smlua_text_utils_dialog_replace(DIALOG_147,1,5,30,200, ("How do you like my\
+house? Terrible, right?\
+I jest but this is my\
+first proper model made\
+in Blender.\
+It's not great but I bet\
+you didnt notice some of\
+the problems with the\
+roof on your first look.\
+...or maybe you did.\
+ANYWAYS, this is the\
+second level I've fully\
+reworked, with the first\
+being Dr-Dry World.\
+\
+It was a very early idea\
+for RR that I had when\
+first tackling this whole\
+rework. And I'd say it\
+worked out pretty well.\
+One of the contributors\
+for GHM (hi flipflop bell)\
+said that this was an\
+idea they had for Super\
+Mariofell 64's RR.\
+Apparently it's related\
+to Silvagunner's joke\
+romhack for their 2026\
+April Fools event.\
+\
+I'm not fully sure how\
+it'll work, but check that\
+out when it releases!\
+I'm very interested\
+on their take of RR.\
+Can you believe the\
+electricity ring is based\
+on the same mechanic in\
+a Roblox game? (shoutout\
+to CI players)\
+Back on topic, the focus\
+on inertia was my second\
+plan for RR, which most\
+stars use similar to the\
+Big House in the Sky.\
+And I was able to make\
+Star 6 the hardest star,\
+which hopefully you can\
+attest to.\
+\
+That rotating platform\
+had to have killed you a\
+few times, but you'd\
+never admit to that.\
+\
+Hopefully you enjoyed\
+this level so far, I had\
+a lot of fun making it.\
 \
 \
-To make them solid so you\
-can break them, you have\
-to press the colored Cap\
-Switches in the castle's\
-hidden courses.\
-You'll find the hidden\
-courses only after\
-regaining some of the\
-Power Stars.\
+Maybe now you can skip\
+to that inertia star right\
+below you. (noob)\
 \
-The Cap Blocks are a big\
-help! Red for the Wing\
-Cap, green for the Metal\
-Cap, blue for the Vanish\
-Cap."))
+- sherbie"))
 
 smlua_text_utils_dialog_replace(DIALOG_148,1,6,30,200, ("Snowman Mountain ahead.\
 Keep out! And don't try\

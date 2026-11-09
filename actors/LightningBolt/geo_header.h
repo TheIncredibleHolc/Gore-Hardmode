@@ -1,0 +1,10 @@
+extern const GeoLayout LightningBolt_geo[];
+extern u8 LightningBolt_lightning2_ci8[];
+extern u8 LightningBolt_lightning2_pal_rgba16[];
+extern Vtx LightningBolt_Cube_mesh_layer_1_vtx_cull[8];
+extern Vtx LightningBolt_Cube_mesh_layer_1_vtx_0[120];
+extern Gfx LightningBolt_Cube_mesh_layer_1_tri_0[];
+extern Gfx mat_LightningBolt_f3dlite_material[];
+extern Gfx mat_revert_LightningBolt_f3dlite_material[];
+extern Gfx LightningBolt_Cube_mesh_layer_1[];
+extern Gfx LightningBolt_final_revert_mesh_layer_1[];

@@ -281,6 +281,8 @@ gSamples = {
     audio_sample_load("yeetWaluigi.ogg"),
     audio_sample_load("launchTwinkle.ogg"),
     audio_sample_load("possession.ogg"),
+    audio_sample_load("lightning.ogg"),
+    audio_sample_load("thunder.ogg"),
 }
 
 sBoneBreak = 1
@@ -352,6 +354,8 @@ sYeetWario = 66
 sYeetWaluigi = 67
 sTwinkleKO = 68
 sPossession = 69 -- hehe nice
+sLightning = 70
+sThunderMinor = 71
 
 function loop(music) audio_stream_set_looping(music, true) end
 
@@ -583,6 +587,13 @@ COL_CUSTOM_PLANE = smlua_collision_util_get("wdwtunnelcagefloor_collision")
 E_MODEL_QS_FOG_PLANE = smlua_model_util_get_id("quicksandFogPlane_geo")
 E_MODEL_STAR_KO = smlua_model_util_get_id("starKO_geo")
 E_MODEL_DIRTY_WATER = smlua_model_util_get_id("dirtyWater_geo")
+E_MODEL_SKYBOX_RR = smlua_model_util_get_id("SkyboxRR_geo")
+E_MODEL_LIGHTNING_BOLT = smlua_model_util_get_id("LightningBolt_geo")
+E_MODEL_LIGHTNING_RING = smlua_model_util_get_id("ElectricRing_geo")
+E_MODEL_SMALL_HOUSE = smlua_model_util_get_id("smallHouse_geo")
+COL_SMALL_HOUSE = smlua_collision_util_get("smallHouse_collision")
+E_MODEL_GLASS_BOX = smlua_model_util_get_id("rrBox_geo")
+COL_GLASS_BOX = smlua_collision_util_get("rrBox_collision")
 
 E_MODEL_BLOODY_STAR_DOOR = smlua_model_util_get_id("bsdoor_geo")
 
@@ -713,20 +724,34 @@ end
 define_custom_obj_fields({
     oBloody = "u32",
     oChicken = "u32",
+
     oFlyGuyVel = "f32",
     oFlyGuyTargetTimer = "f32",
     oFlyGuyMoveYaw = "f32",
     oRandomSpinVelX = "f32",
     oRandomSpinVelY = "f32",
     oRandomSpinVelZ = "f32",
+
     oRouletteRoll = "f32",
     oRouletteTimer = "f32",
     oRouletteEnd = "f32",
+
     oFountainSpawned = "f32",
     oFountainChosenID = "f32",
     oFountainChosenModel = "f32",
+
     oPrevPianoVolume = "f32",
-    oRandomPianoTrack = "u32"
+    oRandomPianoTrack = "u32",
+
+    oPathWaypointIndex = "u32",
+    oPathNextWaypointX = "f32",
+    oPathNextWaypointY = "f32",
+    oPathNextWaypointZ = "f32",
+    oPathPrevWaypointX = "f32",
+    oPathPrevWaypointY = "f32",
+    oPathPrevWaypointZ = "f32",
+
+    oFillerField = "f32"
 })
 end
 
@@ -917,8 +942,6 @@ sOnWarpToFunc = {
         if np.currAreaIndex == 1 then
             set_water_level(0, -2500, false)
         end
-        
-        
     end
 }
 
@@ -941,30 +964,6 @@ sOnLvlInitToFunc = {
         set_override_skybox(BACKGROUND_FLAMING_SKY)
     end,
 
-    [LEVEL_TTM] = function()
-        local np = gNetworkPlayers[0]
-        --Lantern spawns with Mario. If you were to disable this spawn, light bubble will naturally follow Mario.
-        if not gGlobalSyncTable.floodenabled then
-            spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, function() end)
-        end
-
-        if np.currActNum > 1 then --Secret lantern spawns near beginning of level
-            spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 342, -2556, 5812, function() end)
-        end
-
-        spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 434, -2000, 3704, function (nvg) 
-            nvg.oFaceAngleYaw = -2600
-            nvg.oMoveAngleYaw = nvg.oFaceAngleYaw
-        end)
-        --spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, -3492, -4100, 3705, function() end)
-    end,
-
-    [LEVEL_BBH] = function()
-        --[[ set_lighting_color(0,50)
-        set_lighting_color(1,50)
-        set_lighting_color(2,65)
-        set_lighting_dir(1,128) ]]
-    end,
 
     [LEVEL_BITFS] = function()
         if gGlobalSyncTable.gameisbeat and not trophy_unlocked(10) then
@@ -993,6 +992,46 @@ sOnLvlInitToFunc = {
         set_lighting_dir(1,0)
         set_override_skybox(-1)
         set_override_envfx(-1)
+    end,
+
+    [LEVEL_BOB] = function()
+        local o = obj_get_first_with_behavior_id(id_bhvWaterBombCannon)
+        local c = obj_get_first_with_behavior_id(id_bhvCannonClosed)
+        local m = obj_get_first_with_behavior_id(id_bhvCannon)
+        local n = obj_get_first_with_behavior_id(id_bhvCannonBarrel)
+        local buddyC = obj_get_first_with_behavior_id(id_bhvBobombBuddyOpensCannon)
+        local buddy = obj_get_first_with_behavior_id(id_bhvBobombBuddy)
+        while o do
+            obj_move_xyz(o, 0, 50, 0)
+            o = obj_get_next_with_same_behavior_id(o)
+        end
+        if c.oPosY < 3062 then
+            while c do
+                obj_mark_for_deletion(c)
+                c = obj_get_next_with_same_behavior_id(c)
+            end
+        end
+        while m do
+            obj_mark_for_deletion(m)
+            m = obj_get_next_with_same_behavior_id(m)
+        end
+        while n do
+            obj_mark_for_deletion(n)
+            n = obj_get_next_with_same_behavior_id(n)
+        end
+        if buddyC then
+            buddyC.oPosX = 1685
+            buddyC.oPosY = 3835
+            buddyC.oPosZ = -5465
+        end
+        while buddy do
+            if buddy.oBehParams2ndByte == 2 then
+                buddy.oPosX = 1685
+                buddy.oPosY = 3835
+                buddy.oPosZ = -5465
+            end
+            buddy = obj_get_next_with_same_behavior_id(buddy)
+        end
     end,
 
     [LEVEL_WF] = function()
@@ -1089,44 +1128,6 @@ sOnLvlInitToFunc = {
         o.oPosZ = 4890
     end,
 
-    [LEVEL_THI] = function()
-        local o = obj_get_first_with_behavior_id(id_bhvGoombaTripletSpawner)
-        while o do 
-            obj_move_xyz(o, 500, 0, -500)
-            o = obj_get_next_with_same_behavior_id(o)
-        end
-    end,
-
-    [LEVEL_BOB] = function()
-        local o = obj_get_first_with_behavior_id(id_bhvWaterBombCannon)
-        local c = obj_get_first_with_behavior_id(id_bhvCannonClosed)
-        local m = obj_get_first_with_behavior_id(id_bhvCannon)
-        local n = obj_get_first_with_behavior_id(id_bhvCannonBarrel)
-
-        while o do
-            obj_move_xyz(o, 0, 50, 0)
-            o = obj_get_next_with_same_behavior_id(o)
-        end
-        if c.oPosY < 3062 then
-            while c do
-                obj_mark_for_deletion(c)
-                c = obj_get_next_with_same_behavior_id(c)
-            end
-        end
-        --if m.oPosY < 2732 then
-            while m do
-                obj_mark_for_deletion(m)
-                m = obj_get_next_with_same_behavior_id(m)
-            end
-        --end
-        --if n.oPosY < 2732 then
-            while n do
-                obj_mark_for_deletion(n)
-                n = obj_get_next_with_same_behavior_id(n)
-            end
-        --end
-
-    end,
     [LEVEL_WDW] = function()
         -- Deletes all floating platforms
         local sq = obj_get_first_with_behavior_id(id_bhvWdwSquareFloatingPlatform)
@@ -1141,7 +1142,15 @@ sOnLvlInitToFunc = {
             rect = obj_get_next_with_same_behavior_id(rect)
         end
 
-        
+        --adds more dry to dry world
+        local qsPlane = obj_get_first_with_behavior_id(id_bhvQuicksandPlane)
+        local qsFogPlane = obj_get_first_with_behavior_id(id_bhvQuicksandFogPlane)
+        if not qsPlane then
+            spawn_non_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, 375, 50, 150, function(o) o.oFaceAngleYaw = 0 end)
+        end
+        if not qsFogPlane then
+            spawn_non_sync_object(id_bhvQuicksandFogPlane, E_MODEL_QS_FOG_PLANE, 375, 150, 150, function (o) o.oFaceAngleYaw = 0 end)
+        end
 
         -- moves all secrets to new locations
         local secrets = obj_get_first_with_behavior_id(id_bhvHiddenStarTrigger)
@@ -1177,15 +1186,135 @@ sOnLvlInitToFunc = {
             obj_mark_for_deletion(f)
             f = obj_get_next_with_same_behavior_id(f)
         end
+    end,
 
-        --adds more dry to dry world
-        local qsPlane = obj_get_first_with_behavior_id(id_bhvQuicksandPlane)
-        local qsFogPlane = obj_get_first_with_behavior_id(id_bhvQuicksandFogPlane)
-        if not qsPlane then
-            spawn_non_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, 375, 50, 150, function(o) o.oFaceAngleYaw = 0 end)
+    [LEVEL_TTM] = function()
+        local np = gNetworkPlayers[0]
+        --Lantern spawns with Mario. If you were to disable this spawn, light bubble will naturally follow Mario.
+        if not gGlobalSyncTable.floodenabled then
+            spawn_non_sync_object(id_bhvLantern, E_MODEL_LANTERN, 342, -2556, 5712, function() end)
         end
-        if not qsFogPlane then
-            spawn_non_sync_object(id_bhvQuicksandFogPlane, E_MODEL_QS_FOG_PLANE, 375, 150, 150, function (o) o.oFaceAngleYaw = 0 end)
+
+        if np.currActNum > 1 then --Secret lantern spawns near beginning of level
+            spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 342, -2556, 5812, function() end)
+        end
+
+        spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, 434, -2000, 3704, function (nvg) 
+            nvg.oFaceAngleYaw = -2600
+            nvg.oMoveAngleYaw = nvg.oFaceAngleYaw
+        end)
+        --spawn_non_sync_object(id_bhvGoggles, E_MODEL_GOGGLES, -3492, -4100, 3705, function() end)
+    end,
+
+    [LEVEL_THI] = function()
+        local o = obj_get_first_with_behavior_id(id_bhvGoombaTripletSpawner)
+        while o do 
+            obj_move_xyz(o, 500, 0, -500)
+            o = obj_get_next_with_same_behavior_id(o)
+        end
+    end,
+
+    [LEVEL_RR] = function()
+        stormDelay = -1
+        lightningDelay = 148
+        lightningDelayMinor = -1
+
+        local skyboxcheck = obj_get_first_with_behavior_id(id_bhv3DSkybox)
+        local l = gLakituState
+        if skyboxcheck == nil  then
+            spawn_non_sync_object(id_bhv3DSkybox, E_MODEL_SKYBOX_RR, l.pos.x, l.pos.y, l.pos.z, function() end)
+        end
+
+        local r = obj_get_first_with_behavior_id(id_bhvRedCoin)
+        local r_coin_pos = {
+            {x = 6520, y = -660, z = 865},
+            {x = -2680, y = 1230, z = -25},
+            {x = 7315, y = -891, z = 6565},
+            {x = 2600, y = 345, z = 290},
+            {x = 2560, y = 1080, z = -1595},
+            {x = 3370, y = 4280, z = -2120},
+            {x = -3550, y = -990, z = 4955},
+            {x = 614, y = -805, z = -20}
+        }
+        for _, pos in ipairs(r_coin_pos) do
+            if not r then break end
+
+            r.oPosX, r.oPosY, r.oPosZ = pos.x, pos.y, pos.z
+            r = obj_get_next_with_same_behavior_id(r)
+        end
+
+        local h = obj_get_first_with_behavior_id(id_bhvHiddenBlueCoin)
+        local b_coin_pos = {
+            {x = -5285, y = 0, z = -45},
+            {x = -5045, y = 1035, z = -45},
+            {x = -3985, y = 795, z = -45},
+            {x = -5555, y = 600, z = -45},
+            {x = -2945, y = 160, z = -45},
+            {x = -2945, y = -185, z = -45},
+        }
+        for _, pos in ipairs(b_coin_pos) do
+            if not h then break end
+
+            h.oPosX, h.oPosY, h.oPosZ = pos.x, pos.y, pos.z
+            h = obj_get_next_with_same_behavior_id(h)
+        end
+
+        local s = obj_get_first_with_behavior_id(id_bhvStar)
+        while s do
+            if s.oBehParams >> 24 == 3 then
+                s.oPosX = -7105
+                s.oPosY = 900
+                s.oPosZ = 7500
+            elseif s.oBehParams >> 24 == 4 then
+                s.oPosX = 4470
+                s.oPosY = 1400
+                s.oPosZ = 6560
+            end
+            s = obj_get_next_with_same_behavior_id(s)
+        end
+
+        local e = obj_get_first_with_behavior_id(id_bhvExclamationBox)
+        while e do
+            if e.oBehParams2ndByte == 14 then
+                e.oPosX = -5600
+                e.oPosY = 7850
+                e.oPosZ = 4090
+            end
+            e = obj_get_next_with_same_behavior_id(e)
+        end
+
+        local b = obj_get_first_with_behavior_id(id_bhvBlueCoinSwitch)
+        if b then
+            b.oPosX = -4895
+            b.oPosY = -502
+            b.oPosZ = -45
+        end
+
+        local g = obj_get_first_with_behavior_id(id_bhvPoleGrabbing)
+        while g do 
+            if g.oPosX == 3811 and g.oPosY == 1033 and g.oPosZ == 295 then
+                obj_mark_for_deletion(g)
+            end
+            g = obj_get_next_with_same_behavior_id(g)
+        end
+
+        local octagon = obj_get_first_with_behavior_id(id_bhvOctagonalPlatformRotating)
+        while octagon do
+            obj_mark_for_deletion(octagon)
+            octagon = obj_get_next_with_same_behavior_id(octagon)
+        end
+
+        local h = obj_get_first_with_behavior_id(id_bhvRecoveryHeart)
+        if h then
+            obj_mark_for_deletion(h)
+        end
+
+        local c = obj_get_first_with_behavior_id(id_bhvBobombBuddyOpensCannon)
+        if c then
+            c.oPosX = -5350
+            c.oPosY = 3072
+            c.oPosZ = -3675
+            c.oFaceAngleYaw = 24676
         end
     end
 }
@@ -1202,7 +1331,6 @@ sOnSyncValidtoFunc = {
             osync.spawn_sync_object(id_bhvWaterBombSpawner, E_MODEL_NONE, 2586, 768, 6719, function() end)
 
             osync.spawn_sync_object(id_bhvCannonClosed, E_MODEL_DL_CANNON_LID, 4348, 3071, 1230, function(obj) obj.oFaceAngleYaw = 0 end)
-            osync.spawn_sync_object(id_bhvCannon, E_MODEL_CANNON_BASE, 4352, 2732, 1229, function(obj) obj.oFaceAngleYaw = -32768 end)
 
             osync.spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, 5389, 1597, 4617, function(obj) obj.oWaterCannonUnk100 = -16384 obj.oMoveAngleYaw = -16384 end)
             osync.spawn_sync_object(id_bhvWaterBombCannon, E_MODEL_CANNON_BASE, -5008, 1402, -3521, function(obj) obj.oWaterCannonUnk100 = 8192 obj.oMoveAngleYaw = 8192 end)
@@ -1364,10 +1492,12 @@ sOnSyncValidtoFunc = {
         end
 
         if gNetworkPlayers[0].currAreaIndex == 1 then
+
             -- Removes express elevator
             obj_mark_for_deletion(obj_get_first_with_behavior_id(id_bhvWdwExpressElevator))
 
             osync.spawn_sync_objects("wdw_area_1", function()
+
                 -- squares
                 osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 3390, 64, 384, function(o) o.oFaceAngleYaw = 0 end)
                 osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, -767, 64, 3584, function(o) o.oFaceAngleYaw = 0 end)
@@ -1431,8 +1561,11 @@ sOnSyncValidtoFunc = {
                 end) ]]
 
                 --adds more dry to dry world (non-sync to prevent cheese)
-                spawn_non_sync_object(id_bhvQuicksandFogPlane, E_MODEL_QS_FOG_PLANE, -760, -2455, 1250, function (o) o.oFaceAngleYaw = 0 end)
-                spawn_non_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, -760, -2555, 1250, function(o) o.oFaceAngleYaw = 0 end)
+                local actSelect = obj_get_first_with_behavior_id(id_bhvActSelector)
+                if not actSelect then
+                    spawn_non_sync_object(id_bhvQuicksandFogPlane, E_MODEL_QS_FOG_PLANE, -760, -2455, 1250, function (o) o.oFaceAngleYaw = 0 end)
+                    spawn_non_sync_object(id_bhvQuicksandPlane, E_MODEL_QUICKSAND_PLANE, -760, -2555, 1250, function(o) o.oFaceAngleYaw = 0 end)
+                end
 
                 osync.spawn_sync_object(id_bhvQSFloatingPlatform, E_MODEL_QS_FLOATING_PLATFORM, 705, -2560, 2770, function(o) o.oFaceAngleYaw = 0 end)
 
@@ -1464,6 +1597,7 @@ sOnSyncValidtoFunc = {
                 osync.spawn_sync_object(id_bhvMessagePanel, E_MODEL_WOODEN_SIGNPOST, -500, -1496, -3322, function(o)
                     o.parentObj = nil
                     o.oFaceAngleYaw = -16384
+                    o.oMoveAngleYaw = -16384
                     o.oBehParams2ndByte = 52
                 end)
             end)
@@ -1493,6 +1627,113 @@ sOnSyncValidtoFunc = {
                 r = obj_get_next_with_same_behavior_id(r)
             end
         end
+    end,
+
+    [LEVEL_RR] = function()
+
+        local c = obj_get_first_with_behavior_id(id_bhvCoinFormationSpawn)
+        while c do
+            if c.oPosX >= 0 and c.oPosX <= 1000 
+                and c.oPosY >= -1100 and c.oPosY <= -1000
+                and c.oPosZ >= -2000 and c.oPosZ <= 2000 then
+                obj_mark_for_deletion(c)
+            end
+            c = obj_get_next_with_same_behavior_id(c)
+        end
+
+
+        osync.spawn_sync_objects("rainbow ride", function()
+
+            -- maze coins
+            osync.spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3970, -1025, -45, function(o)
+                o.oBehParams2ndByte = 16
+                o.oFaceAngleYaw = 16384
+            end)
+            osync.spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -5045, 835, -45, function(o)
+                o.oBehParams2ndByte = 19
+                o.oFaceAngleYaw = 16384
+            end)
+            osync.spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -5290, 1648, -45, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvCoinFormation, E_MODEL_NONE, -3990, 1648, -45, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvSwingPlatform, E_MODEL_RR_SWINGING_PLATFORM, -7350, -200, 4955, function(o) o.oFaceAngleYaw = 16384 end)
+
+            -- donut blocks
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 2695, -888, 6560, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 2495, -888, 6560, function(o) o.oFaceAngleYaw = 0 end)
+
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 1865, -888, 6560, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 1665, -888, 6560, function(o) o.oFaceAngleYaw = 0 end)
+
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 2795, 300, 6560, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 2995, 300, 6560, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 3195, 300, 6560, function(o) o.oFaceAngleYaw = 0 end)
+
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 614, -1320, -520, function(o) o.oFaceAngleYaw = 16384 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 614, -1320, -320, function(o) o.oFaceAngleYaw = 16384 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 614, -1320, -120, function(o) o.oFaceAngleYaw = 16384 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 614, -1320, 80, function(o) o.oFaceAngleYaw = 16384 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 614, -1320, 280, function(o) o.oFaceAngleYaw = 16384 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 614, -1320, 480, function(o) o.oFaceAngleYaw = 16384 end)
+
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 1535, 4125, 1640, function(o) o.oFaceAngleYaw = 16384 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 1535, 4125, 1840, function(o) o.oFaceAngleYaw = 16384 end)
+            osync.spawn_sync_object(id_bhvDonutPlatform, E_MODEL_RR_DONUT_PLATFORM, 1535, 4125, 2040, function(o) o.oFaceAngleYaw = 16384 end)
+
+            -- new box switch + boxes
+            osync.spawn_sync_object(id_bhvFloorSwitchHiddenObjects, E_MODEL_PURPLE_SWITCH, 3715, -732, 6575, function(o) o.oFaceAngleYaw = 0 end)
+
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 700, -400, 6560, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 900, -400, 6560, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 1100, -400, 6560, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 2020, 0, 6560, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 2220, 0, 6560, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 1820, 0, 6560, function(o) o.oFaceAngleYaw = 0 end)
+
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 4370, 500, 6460, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 4570, 500, 6660, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 4370, 500, 6660, function(o) o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvHiddenObject, E_MODEL_NONE, 4570, 500, 6460, function(o) o.oFaceAngleYaw = 0 end)
+
+            -- enemies
+            osync.spawn_sync_object(id_bhvBobomb, E_MODEL_BLACK_BOBOMB, 6660, -2243, 6500, function() end)
+            osync.spawn_sync_object(id_bhvBobomb, E_MODEL_BLACK_BOBOMB, 5423, -2243, 6850, function() end)
+            osync.spawn_sync_object(id_bhvFlyGuy, E_MODEL_FLYGUY, 5120, 4500, 4180, function() end)
+
+            -- vertical flamethrower
+            osync.spawn_sync_object(id_bhvFlamethrower, E_MODEL_NONE, 3811, 550, 295, function(o) o.oBehParams = 4 << 16 o.oBehParams2ndByte = 4 end)
+            osync.spawn_sync_object(id_bhvFlamethrower, E_MODEL_NONE, 1530, 4130, 850, function(o) o.oBehParams = 5 << 16 o.oBehParams2ndByte = 4 end)
+            osync.spawn_sync_object(id_bhvFlamethrower, E_MODEL_NONE, 1530, 4130, 1050, function(o) o.oBehParams = 6 << 16 o.oBehParams2ndByte = 4 end)
+            osync.spawn_sync_object(id_bhvFlamethrower, E_MODEL_NONE, 1530, 4130, 1250, function(o) o.oBehParams = 7 << 16 o.oBehParams2ndByte = 4 end)
+
+            -- horizontal flamethrower
+            osync.spawn_sync_object(id_bhvFlamethrower, E_MODEL_NONE, 2980, 4150, 4065, function(o) o.oBehParams = 9 << 16 o.oMoveAngleYaw = -16384 end)
+
+            -- carpets
+            osync.spawn_sync_object(id_bhvCustomPathFollow, E_MODEL_RR_FLYING_CARPET, 3565, 3785, 4060, function(o) o.oBehParams = 1 << 16 o.oBehParams2ndByte = 0 o.oFaceAngleYaw = -16384 end)
+            osync.spawn_sync_object(id_bhvCustomPathFollow, E_MODEL_RR_FLYING_CARPET, 2475, -1120, -20, function(o) o.oBehParams = 2 << 16 o.oBehParams2ndByte = 1 o.oFaceAngleYaw = 16384 end)
+
+            -- amps
+            osync.spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, 3065, 3900, 6525, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 3 end)
+            osync.spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, 3065, 3900, 6675, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 3 end)
+            osync.spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, 2600, 4350, 4065, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 3 end)
+            osync.spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, 2600, 4550, 4065, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 3 end)
+
+            osync.spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, -1000, 4335, 3860, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 3 end)
+            osync.spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, -1000, 4335, 4060, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 3 end)
+            osync.spawn_sync_object(id_bhvCirclingAmp, E_MODEL_AMP, -1000, 4335, 4260, function(o) o.oFaceAngleYaw = 0 o.oBehParams2ndByte = 3 end)
+
+            -- platforms
+            osync.spawn_sync_object(id_bhvCollisionModel, E_MODEL_GLASS_BOX, -7105, 50, 7300, function(o) obj_scale_xyz(o, 5, 3, 5) o.oBehParams2ndByte = 2 o.oFaceAngleYaw = 0 end)
+            osync.spawn_sync_object(id_bhvCollisionModel, E_MODEL_SMALL_HOUSE, -5300, 7400, 4090, function(o) obj_scale(o, 10) o.oBehParams2ndByte = 1 o.oFaceAngleYaw = -16384 end)
+
+            -- obligatory sign
+            osync.spawn_sync_object(id_bhvMessagePanel, E_MODEL_WOODEN_SIGNPOST, -5825, 8250, 4080, function(o)
+                o.parentObj = nil
+                o.oFaceAngleYaw = 16384
+                o.oMoveAngleYaw = 16384
+                o.oBehParams2ndByte = 147
+            end)
+        end)
     end,
 
     [LEVEL_CASTLE] = function()
@@ -1789,7 +2030,10 @@ function act_shocked_death(m)
         m.squishTimer = 50
     end
 
-    stop_and_set_height_to_floor(m)
+    m.peakHeight = m.pos.y
+    cur_obj_move_using_fvel_and_gravity()
+    mario_set_forward_vel(m, 0)
+    m.vel.y = 0
 end
 hook_mario_action(ACT_SHOCKED_DEATH, act_shocked_death)
 
@@ -1947,6 +2191,51 @@ end
 hook_mario_action(ACT_BITTEN_IN_HALF, act_bitten_in_half)
 end
 
+_G.ACT_SPOOKED = allocate_mario_action(ACT_GROUP_AUTOMATIC|ACT_FLAG_INVULNERABLE|ACT_FLAG_STATIONARY)
+
+function act_spooked(m)
+    local s = gStateExtras[m.playerIndex]
+
+    -- FIX
+    if m.actionState == 1 then
+        set_character_animation(m, CHAR_ANIM_IDLE_HEAD_LEFT)
+    elseif m.actionState == 2 then
+        set_character_animation(m, CHAR_ANIM_IDLE_HEAD_RIGHT)
+    elseif m.actionState == 3 then
+        set_character_animation(m, CHAR_ANIM_IDLE_HEAD_CENTER)
+    end
+
+    djui_chat_message_create(tostring(m.actionState))
+
+    if is_anim_at_end(m) then
+        if m.actionState > 0 and m.actionState < 4 then
+            m.actionState = m.actionState + 1
+        elseif m.actionState == 4 then
+            m.actionState = 1
+        end
+    end
+
+    if m.actionTimer == 0 then
+        m.actionState = 1
+    elseif m.actionTimer == 59 then
+        m.actionState = 0
+        m.faceAngle.y = m.faceAngle.y + 16384
+        m.marioObj.header.gfx.angle.y = m.marioObj.header.gfx.angle.y + 32768
+    elseif m.actionTimer > 60 and m.actionTimer < 85 then
+        set_character_animation(m, CHAR_ANIM_SOFT_BACK_KB)
+    elseif m.actionTimer >= 85 then
+        m.faceAngle.y = m.marioObj.header.gfx.angle.y
+        if not s.iwbtg then
+            common_death_handler(m, MARIO_ANIM_SUFFOCATING, 86)
+        else
+            set_character_animation(m, CHAR_ANIM_SUFFOCATING)
+        end
+        gPlayerSyncTable[m.playerIndex].gold = false
+    end
+
+    m.actionTimer = m.actionTimer + 1
+end
+hook_mario_action(ACT_SPOOKED, act_spooked)
 --! helper functions
 
 function adjust_slide_velocity(m, slide_speed)
@@ -2110,3 +2399,50 @@ function is_in_death_action(m)
     return not not deathActions[m.action]
 end
 
+function is_cutscene_playing(m)
+    return m.area.camera and (m.area.camera.cutscene == CUTSCENE_STAR_SPAWN or m.area.camera.cutscene == CUTSCENE_DIALOG)
+end
+
+function is_singleplayer_paused()
+    return network_player_connected_count() <= 1 and is_game_paused()
+end
+
+function math.sign(x)
+    if x > 0 then
+        return 1
+    elseif x < 0 then
+        return -1
+    else
+        return 0
+    end
+end
+
+-- why does cur_obj_is_any_player_on_platform not work but this does?????
+function is_any_player_on_obj_platform(o)
+    for i = 0, MAX_PLAYERS - 1 do
+        if gMarioStates[i].marioObj.platform == o then
+            return true
+        end
+    end
+    return false
+end
+
+-- why does cur_obj_wait_then_blink not work but this does?????
+function obj_wait_then_blink(o, timeUntilBlinking, numBlinks)
+    if not o then return end
+    local done = false
+    local timeBlinking = o.oTimer - timeUntilBlinking
+
+    if o.oTimer >= timeUntilBlinking then
+        if timeBlinking % 2 ~= 0 then 
+            o.header.gfx.node.flags = o.header.gfx.node.flags | GRAPH_RENDER_INVISIBLE
+            if timeBlinking/2 > numBlinks then
+                done = true
+            end
+        else
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_INVISIBLE
+        end
+    end
+
+    return done
+end

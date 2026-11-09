@@ -17,6 +17,7 @@ function obj_call_action_function(o, actionFunctions)
     actionFunctions[o.oAction](o)
 end
 
+local osync = require('/lib/osync')
 ------------------------------------------------------------------------------
 function custom_bowser(obj)
     local m = gMarioStates[0]
@@ -665,8 +666,9 @@ function spawn_explosion_ring(o, x, z, radius, numSegments)
         local angle = (i * (2 * math.pi) / numSegments)
         local spawnX = x + radius * math.cos(angle)
         local spawnZ = z + radius * math.sin(angle)
-        spawn_non_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, spawnX, o.oPosY, spawnZ, function() end)
-
+        osync.spawn_sync_objects("explosion_ring", function() 
+            osync.spawn_sync_object(id_bhvSmallExplosion, E_MODEL_EXPLOSION, spawnX, o.oPosY, spawnZ, function() end) 
+        end)
     end
 end
 

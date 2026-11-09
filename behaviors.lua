@@ -27,7 +27,7 @@ delete_on_spawn = obj_mark_for_deletion
 function custom_exclam_box_loop(o) -- Makes exclamation boxes drop on top of you! (squishes)
     local m = nearest_mario_state_to_object(o)
     if o.oAction ~= 1 then
-        if lateral_dist_between_objects(m.marioObj, o) < 50 and m.pos.y < o.oPosY and m.pos.y > o.oPosY - 400 then
+        if lateral_dist_between_objects(m.marioObj, o) < 50 and m.pos.y < o.oPosY and m.pos.y > o.oPosY - 600 and o.oPosY > o.oFloorHeight + 100 then
             o.oPosY = o.oPosY - 100
         end
     end
@@ -139,11 +139,6 @@ end
 
 function bobomb_loop(o) -- makes bobombs SCARY fast (Thanks blocky.cmd!!)
     local player = nearest_player_to_object(o)
-    local np = gNetworkPlayers[0]
-
-    if np.currLevelNum == LEVEL_BITS then
-        obj_mark_for_deletion(o)
-    end
 
     if o.oAction == 0 then
         if player ~= nil and
@@ -411,7 +406,7 @@ local function bhv_custom_explosion(o) -- replaces generic explosions with NUKES
         local_play(sBigExplosion, m.pos, 1)
         cur_obj_shake_screen(SHAKE_POS_LARGE)
         spawn_sync_if_main(id_bhvBowserBombExplosion, E_MODEL_BOWSER_FLAMES, o.oPosX, o.oPosY, o.oPosZ, nil, 0)
-        if dist_between_objects(o, m.marioObj) <= 850 and m.flags & MARIO_METAL_CAP == 0 then
+        if dist_between_objects(o, m.marioObj) <= 850 and m.flags & MARIO_METAL_CAP == 0 and m.action ~= ACT_IN_CANNON then
             m.squishTimer = 50
         elseif dist_between_objects(o, m.marioObj) <= 850 and MARIO_METAL_CAP ~= 0 then -- i think i did this for testing, may keep it for romhack compatibility
             m.capTimer = 1
@@ -513,14 +508,19 @@ function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredictable. W
         o.oForwardVel = 30
     end
 
-    if o.oAction == GOOMBA_ACT_JUMP and o.oTimer < 6 then
-        cur_obj_rotate_yaw_toward(o.oGoombaTargetYaw, 0x200)
+    if o.oAction == GOOMBA_ACT_JUMP then
+        if o.oTimer < 6 then
+            cur_obj_rotate_yaw_toward(o.oGoombaTargetYaw, 0x200)
+        end
     end
 
     if not ignore and dist_between_objects(o, m.marioObj) < 3000 then
         o.oHomeX = m.pos.x
         o.oHomeY = m.pos.y
         o.oHomeZ = m.pos.z
+        if o.oPosY == o.oFloorHeight then
+            o.oForwardVel = math.min(o.oForwardVel + 0.5, 20)
+        end
     end
 
     if obj_has_model_extended(o, E_MODEL_WOODEN_SIGNPOST) ~= 0 then
@@ -539,10 +539,12 @@ function bhv_custom_goomba_loop(o) -- make goombas faster, more unpredictable. W
             spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, o.oPosX, o.oPosY, o.oPosZ, function(g)
                 g.oBehParams2ndByte = 4
                 g.oMoveAngleYaw = mo.oMoveAngleYaw + 16384
+                o.oFaceAnglePitch = 0
             end)
             spawn_non_sync_object(id_bhvGoomba, E_MODEL_GOOMBA, o.oPosX, o.oPosY, o.oPosZ, function(g)
                 g.oBehParams2ndByte = 4
                 g.oMoveAngleYaw = mo.oMoveAngleYaw - 16384
+                o.oFaceAnglePitch = 0
             end)
         end
     end
@@ -813,6 +815,13 @@ function bhv_custom_sign(o) --This is the single most evil addition to the game.
             goomba.oBehParams = o.oBehParams2ndByte
         end, 0)
         obj_mark_for_deletion(o)
+    end
+
+    -- i actually have to do this for rr because the sign snaps to the death plane on sync valid
+    if o.oBehParams2ndByte == 147 and not gGlobalSyncTable.romhackcompatibility then
+        if o.oPosY ~= 8250 then
+            o.oPosY = 8250
+        end
     end
 end
 
@@ -2875,14 +2884,22 @@ function custom_chuckya_loop(o)
     end
 end
 
-function stonewall_init(o)
+-- changing stone wall to be a universal bhv for models with just collision
+function obj_col_init(o)
     o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
-    o.collisionData = COL_STONEWALL
-    o.oCollisionDistance = 10000
+    o.oCollisionDistance = 5000
     o.header.gfx.skipInViewCheck = true
+
+    if o.oBehParams2ndByte == 0 then
+        o.collisionData = COL_STONEWALL
+    elseif o.oBehParams2ndByte == 1 then
+        o.collisionData = COL_SMALL_HOUSE
+    elseif o.oBehParams2ndByte == 2 then
+        o.collisionData = COL_GLASS_BOX
+    end
 end
 
-function stonewall_loop(o)
+function obj_col_loop()
     load_object_collision_model()
 end
 
@@ -4600,7 +4617,7 @@ function deadly_star_loop(o)
     local dist = dist_between_objects(o, m.marioObj)
     o.oFaceAngleYaw = o.oFaceAngleYaw + 2048
     if dist < 150 then
-        set_mario_action(m, ACT_SHOCKED_DEATH, 0)
+        drop_and_set_mario_action(m, ACT_SHOCKED_DEATH, 0)
     end
 end
 
@@ -4809,6 +4826,292 @@ function custom_book_switch_loop(o)
     end
 end
 
+function donut_block_loop(o)
+    if o.oGravity == 0 then
+        if cur_obj_is_any_player_on_platform() then
+            if o.oTimer > 3 then
+                o.oGravity = o.oGravity - 2
+            end
+        end
+    end
+end
+
+ACT_PATH_FOLLOW_WAIT = 0
+ACT_PATH_FOLLOW_MOVE = 1
+ACT_PATH_FOLLOW_FALL = 2
+ACT_PATH_LOOP = 3
+
+function path_follow_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+    o.collisionData = smlua_collision_util_get("rr_seg7_collision_07029038")
+    o.oCollisionDistance = 20000
+
+    o.oHomeX = o.oPosX
+    o.oHomeY = o.oPosY
+    o.oHomeZ = o.oPosZ
+
+    o.oGravity = 0
+    o.oPathWaypointIndex = 0
+    if o.oBehParams2ndByte == 1 then
+        o.oAction = 1
+    end
+
+    -- this could very well break cuz i have no idea what im doing
+    network_init_object(o, true, {
+        'oPathWaypointIndex',
+        'oPathNextWaypointX',
+        'oPathNextWaypointY',
+        'oPathNextWaypointZ',
+        'oPathPrevWaypointX',
+        'oPathPrevWaypointY',
+        'oPathPrevWaypointZ',
+        'oPosX',
+        'oPosY',
+        'oPosZ',
+        'oAction'
+    })
+end
+
+function path_follow_loop(o)
+
+    load_object_collision_model()
+
+    local waypoint = {}
+
+    if o.oBehParams == 1 << 16 then
+        waypoint = {
+            [0] = {x = 3565, y = 3785, z = 4060}, -- START
+            [1] = {x = 3565, y = 3785, z = 6000}, -- STRAIGHT
+            [2] = {x = 3365, y = 3785, z = 6400}, -- TURN IN
+            [3] = {x = 3065, y = 3785, z = 6500}, -- VERTEX
+            [4] = {x = 2765, y = 3785, z = 6400}, -- TURN OUT
+            [5] = {x = 2565, y = 3785, z = 6000}, -- STRAIGHT
+            [6] = {x = 2565, y = 4285, z = 2000}, -- STRAIGHT
+            [7] = {x = 2265, y = 4285, z = 1300}, -- TURN IN
+            [8] = {x = 1865, y = 4285, z = 1050}, -- VERTEX
+            [9] = {x = 1265, y = 4285, z = 1050}, -- VERTEX
+            [10] = {x = 865, y = 4285, z = 1300}, -- TURN OUT
+            [11] = {x = 565, y = 4285, z = 2000}, -- STRAIGHT
+            [12] = {x = 565, y = 4285, z = 3460}, -- STRAIGHT
+            [13] = {x = 490, y = 4285, z = 3765}, -- TURN IN
+            [14] = {x = 265, y = 4285, z = 3965}, -- TURN OUT
+            [15] = {x = -35, y = 4285, z = 4060}, -- STRAIGHT
+            [16] = {x = -1000, y = 4285, z = 4060},
+            [17] = {x = -1600, y = 5085, z = 4060},
+        }
+    elseif o.oBehParams == 2 << 16 then
+        waypoint = {
+            [0] = {x = 2400, y = -1120, z = -20}, -- 1
+            [1] = {x = 2150, y = -1120, z = -870}, -- 1.1
+            [2] = {x = 1450, y = -1120, z = -1625}, -- 1.2
+            [3] = {x = 614, y = -1120, z = -1875}, -- 2
+            [4] = {x = -250, y = -1120, z = -1625}, -- 2.1
+            [5] = {x = -900, y = -1120, z = -870}, -- 2.2
+            [6] = {x = -1150, y = -1120, z = -20}, -- 3
+            [7] = {x = -900, y = -1120, z = 870}, -- 3.1
+            [8] = {x = -250, y = -1120, z = 1625}, -- 3.2
+            [9] = {x = 614, y = -1120, z = 1875}, -- 4
+            [10] = {x = 1450, y = -1120, z = 1625}, -- 4.1
+            [11] = {x = 2150, y = -1120, z = 870}, -- 4.2
+            -- LOOP BACK TO 1
+        }
+    else
+        djui_chat_message_create("wait whats going on with this waypoint system")
+        return
+    end
+
+    if o.oAction == ACT_PATH_FOLLOW_WAIT then
+        o.oForwardVel = 0
+        o.oVelX, o.oVelY, o.oVelZ = 0, 0, 0
+
+        if is_any_player_on_obj_platform(o) then
+            if o.oTimer >= 20 then
+                o.oAction = ACT_PATH_FOLLOW_MOVE
+            end
+        else
+            o.oPosX = waypoint[0].x
+            o.oPosY = waypoint[0].y
+            o.oPosZ = waypoint[0].z
+            o.oFaceAngleYaw = obj_angle_to_point(o, waypoint[1].x, waypoint[1].z) - 16384
+
+            o.oTimer = 0
+        end
+    elseif o.oAction == ACT_PATH_FOLLOW_MOVE then
+        local i = o.oPathWaypointIndex
+        cur_obj_move_using_fvel_and_gravity()
+
+        --djui_chat_message_create("index: " ..tostring(i))
+
+        if waypoint[i] == nil then
+            if o.oBehParams2ndByte == 1 then
+                local preloopIndex = i - 1
+
+                i = 0
+                o.oPathWaypointIndex = 0
+                o.oPathNextWaypointX, o.oPathNextWaypointY, o.oPathNextWaypointZ = waypoint[0].x, waypoint[0].y, waypoint[0].z
+                o.oPathPrevWaypointX, o.oPathPrevWaypointY, o.oPathPrevWaypointZ = waypoint[preloopIndex].x, waypoint[preloopIndex].y, waypoint[preloopIndex].z
+                network_send_object(o, true)
+            else
+                o.oAction = ACT_PATH_FOLLOW_FALL
+            end
+            return
+        end
+
+        --[[ 
+        if not o.oFillerField or o.oFillerField == 0 then
+            for index, goomba in pairs(waypoint) do
+                if index == nil then break end
+                spawn_non_sync_object(id_bhvStaticObject, E_MODEL_BOWLING_BALL, goomba.x, goomba.y - 50, goomba.z, function(o) obj_scale(o, 0.2) obj_set_billboard(o) end)
+            end 
+            o.oFillerField = 1
+        end 
+        ]]
+
+        o.oPathNextWaypointX, o.oPathNextWaypointY, o.oPathNextWaypointZ = waypoint[i].x, waypoint[i].y, waypoint[i].z
+        o.oPathPrevWaypointX = i <= 1 and waypoint[0].x or waypoint[i-1].x
+        o.oPathPrevWaypointY = i <= 1 and waypoint[0].y or waypoint[i-1].y
+        o.oPathPrevWaypointZ = i <= 1 and waypoint[0].z or waypoint[i-1].z
+
+        local dx = o.oPathNextWaypointX - o.oPosX
+        local dy = o.oPathNextWaypointY - o.oPosY
+        local dz = o.oPathNextWaypointZ - o.oPosZ
+        local dist = math.sqrt(dx^2 + dy^2 + dz^2)
+
+        local dwx = o.oPathNextWaypointX - o.oPathPrevWaypointX
+        local dwy = o.oPathNextWaypointY - o.oPathPrevWaypointY
+        local dwz = o.oPathNextWaypointZ - o.oPathPrevWaypointZ
+        local distXZ = math.sqrt(dwx^2 + dwz^2)
+        local steepness = distXZ > 5 and dwy/distXZ or 0
+
+        if dist <= 100 then
+            i = i + 1
+            o.oPathWaypointIndex = i
+        else
+            local targetAngle = obj_angle_to_point(o, waypoint[i].x, waypoint[i].z) - 16384
+            local angleDelta = (targetAngle - o.oFaceAngleYaw + 32768) % 65536 - 32768
+            local turnSeverity = math.abs(angleDelta) / 32768
+
+            o.oForwardVel = o.oBehParams2ndByte == 1 and 60 - math.floor(turnSeverity * 40) or 50 - math.floor(turnSeverity * 40)
+            o.oVelY = o.oForwardVel * steepness
+
+            o.oAngleVelYaw = math.floor(angleDelta/8)
+            if math.abs(o.oAngleVelYaw) < 0x40 and angleDelta ~= 0 then
+                o.oAngleVelYaw = angleDelta > 0 and 0x40 or -0x40
+            end
+            o.oFaceAngleYaw = (o.oFaceAngleYaw + o.oAngleVelYaw) % 65536
+
+            o.oMoveAngleYaw = o.oFaceAngleYaw + 16384
+        end
+    elseif o.oAction == ACT_PATH_FOLLOW_FALL then
+        cur_obj_move_using_fvel_and_gravity()
+        o.oGravity = -0.2
+        o.oVelY = o.oVelY - 1
+        o.oAngleVelYaw = 0
+    end
+
+    if o.oAction ~= 0 and o.oBehParams2ndByte == 0 then
+        if is_any_player_on_obj_platform(o) then
+            o.oTimer = 0
+            o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_INVISIBLE
+        else
+            if obj_wait_then_blink(o, 60, 40) then
+                o.header.gfx.node.flags = o.header.gfx.node.flags & ~GRAPH_RENDER_INVISIBLE
+                o.oPathWaypointIndex = 0
+                o.oGravity = 0
+                o.oVelY = 0
+                cur_obj_set_pos_to_home_and_stop()
+                o.oAction = ACT_PATH_FOLLOW_WAIT
+                network_send_object(o, true)
+            end
+        end
+    end
+end
+
+function electric_ring_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+    obj_scale(o, 1 * (0.015 *gMarioStates[0].marioObj.hitboxRadius))
+end
+
+function electric_ring_loop(o)
+    local m = gMarioStates[0]
+    local isFloorAboveMario = find_floor_height(m.pos.x, m.pos.y + 3500, m.pos.z) > m.floorHeight and true or false
+    local interval = math.max(2, 30 - (o.oTimer/10))
+
+    local baseSize = 0.015 * m.marioObj.hitboxRadius
+    local maxSize = 2.3
+    local increment = math.min(1, math.max(0, (o.oTimer - 55) / 20))
+    local size = baseSize + (maxSize - baseSize) * increment
+
+    obj_scale(o, size)
+    o.oFaceAnglePitch = o.oTimer % (interval * 2) and 0 or 32768
+    o.oFaceAngleYaw = o.oFaceAngleYaw + (1024 + (o.oTimer * 32))
+
+    if o.oTimer <= 60 then
+        o.oPosX = m.pos.x
+        o.oPosY = isFloorAboveMario and find_floor_height(m.pos.x, m.pos.y + 3500, m.pos.z) + 75 or m.pos.y + (m.marioObj.hitboxHeight/2)
+        o.oPosZ = m.pos.z
+
+    elseif o.oTimer >= 90 then
+        spawn_non_sync_object(id_bhvLightningBolt, E_MODEL_LIGHTNING_BOLT, o.oPosX, o.oPosY - (m.marioObj.hitboxHeight/2), o.oPosZ, function(obj)
+            obj.oFaceAngleYaw = 0
+            obj.oFaceAnglePitch = 0
+            obj.oFaceAngleRoll = 0
+            obj.oBehParams2ndByte = 0
+        end)
+
+        obj_mark_for_deletion(o)
+    end
+end
+
+-- CURSE YOU PERSON WHO MADE THE STAR FIGHT FOR HAVING ARBITRARY LIGHTNING AS WELL
+function bolt_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+    o.oFaceAngleYaw = math.random(0, 32768) * math.random(-1, 1)
+
+    local m = gMarioStates[0]
+    if o.oBehParams2ndByte == 1 then
+        obj_scale_xyz(o, 5, 10, 5)
+        local_play(sThunderMinor, m.pos, math.max(0.35, math.random()))
+    else
+        obj_scale_xyz(o, 2, 3, 2)
+        local_play(sLightning, m.pos, 1)
+    end
+end
+
+function bolt_loop(o)
+    local m = gMarioStates[0]
+    if o.oTimer >= 3 and
+    (lateral_dist_between_objects(o, m.marioObj) <= 150 and m.pos.y >= o.oPosY - 150) or 
+    (dist_between_objects(o, m.marioObj) <= 500 and m.pos.y > o.oPosY - 150 and m.pos.y < o.oPosY + 300) then
+        if not is_in_death_action(m) and not is_cutscene_playing(m) then
+            set_mario_action(m, ACT_SHOCKED, 0)
+        end
+    end
+
+    if o.oTimer >= 10 then
+        obj_mark_for_deletion(o)
+    end
+end
+
+local l = gLakituState
+
+function bhv_skybox_init(o)
+    o.oFlags = OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE
+    o.header.gfx.skipInViewCheck = true
+    obj_scale(o, 10.0)
+end
+
+function bhv_skybox_loop(o)
+    o.oPosX = l.pos.x
+    o.oPosY = l.pos.y
+    o.oPosZ = l.pos.z
+
+    o.oFaceAngleYaw = o.oFaceAngleYaw - 64
+end
+
 -------Behavior Hooks-------
 
 local hook_behavior, get_behavior_from_id, get_behavior_name_from_id, get_object_list_from_behavior =
@@ -4947,6 +5250,11 @@ hook_gore_behavior(id_bhvWaterBomb, false, bhv_custom_water_bomb_init, bhv_custo
 hook_gore_behavior(id_bhvWaterBombCannon, false, nil, bhv_custom_waterbomb_cannon_loop)
 hook_gore_behavior(id_bhvCannonBarrelBubbles, false, nil, bhv_custom_cannon_barrel_loop)
 hook_gore_behavior(id_bhvBobombBuddy, false, nil, bhv_custom_bobomb_buddy)
+hook_gore_behavior(id_bhvDonutPlatform, false, nil, donut_block_loop)
+hook_gore_behavior(id_bhvOctagonalPlatformRotating, false, nil, octagonal_rotating_platform_loop)
+
+id_bhvCollisionModel = hook_behavior(nil, OBJ_LIST_SURFACE, true, obj_col_init, obj_col_loop)
+
 id_bhvHellEntrance = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, hell_entrance_init, hell_entrance_loop, "HellEntrance")
 id_bhvBloodMist = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, blood_mist_init, blood_mist_loop, "bhvBloodMist")
 id_bhvRedFloodFlag = hook_behavior(nil, OBJ_LIST_POLELIKE, true, bhv_red_flood_flag_init, bhv_red_flood_flag_loop)
@@ -4969,7 +5277,6 @@ id_bhvGorrie = hook_behavior(nil, OBJ_LIST_SURFACE, true, gorrie_init, gorrie_lo
 id_bhvLantern = hook_behavior(nil, OBJ_LIST_SURFACE, true, lantern_init, lantern_loop)
 id_bhvGlow = hook_behavior(nil, OBJ_LIST_GENACTOR, true, glow_init, glow_loop)
 id_bhvGoggles = hook_behavior(nil, OBJ_LIST_GENACTOR, true, goggles_init, goggles_loop)
-id_bhvStonewall = hook_behavior(nil, OBJ_LIST_SURFACE, true, stonewall_init, stonewall_loop)
 id_bhvVomit = hook_behavior(nil, OBJ_LIST_GENACTOR, true, vomit_init, vomit_loop)
 id_bhvPokeySpike = hook_behavior(nil, OBJ_LIST_GENACTOR, true, pokey_spike_init, pokey_spike_loop)
 id_bhvRacerHitbox = hook_behavior(nil, OBJ_LIST_GENACTOR, true, RacerHitbox_init, RacerHitbox_loop)
@@ -4986,6 +5293,10 @@ id_bhvQSFloatingPlatform = hook_behavior(nil, OBJ_LIST_SURFACE, true, qs_float_p
 id_bhvCustomPlane = hook_behavior(nil, OBJ_LIST_SURFACE, true, custom_plane_init, custom_plane_loop, "bhvCustomPlane")
 id_bhvQuicksandFogPlane = hook_behavior(nil, OBJ_LIST_GENACTOR, true, qs_fog_plane_init, qs_fog_plane_loop, "bhvQuicksandFogPlane")
 id_bhvStarKO = hook_behavior(nil, OBJ_LIST_UNIMPORTANT, true, star_ko_init, star_ko_loop, "bhvStarKO")
+id_bhv3DSkybox = hook_behavior(nil, OBJ_LIST_LEVEL, false, bhv_skybox_init, bhv_skybox_loop, "bhv3DSkybox")
+id_bhvCustomPathFollow = hook_behavior(nil, OBJ_LIST_SURFACE, true, path_follow_init, path_follow_loop, "bhvCustomPathFollow")
+id_bhvElectricRing = hook_behavior(nil, OBJ_LIST_GENACTOR, true, electric_ring_init, electric_ring_loop, "bhvElectricRing")
+id_bhvLightningBolt = hook_behavior(nil, OBJ_LIST_GENACTOR, true, bolt_init, bolt_loop, "bhvLightningBolt")
 
 ----------------------- UNUSED -----------------------
 --hook_gore_behavior(id_bhvBobombBuddy, false, bobomb_lantern_init, bobomb_lantern_loop)

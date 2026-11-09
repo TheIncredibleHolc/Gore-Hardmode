@@ -1,0 +1,10 @@
+extern const GeoLayout ElectricRing_geo[];
+extern u8 ElectricRing_electricring_ci4[];
+extern u8 ElectricRing_electricring_pal_rgba16[];
+extern Vtx ElectricRing_Plane_mesh_layer_4_vtx_cull[8];
+extern Vtx ElectricRing_Plane_mesh_layer_4_vtx_0[32];
+extern Gfx ElectricRing_Plane_mesh_layer_4_tri_0[];
+extern Gfx mat_ElectricRing_f3dlite_material[];
+extern Gfx mat_revert_ElectricRing_f3dlite_material[];
+extern Gfx ElectricRing_Plane_mesh_layer_4[];
+extern Gfx ElectricRing_final_revert_mesh_layer_4[];
